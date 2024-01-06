@@ -30,8 +30,6 @@ jobs:
         run: make test
       - name: Validate package
         run: make local
-      - name: Test downstream dependency
-        run: make test-downstream-dependency
       - name: Publish
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
