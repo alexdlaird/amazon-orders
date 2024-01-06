@@ -11,7 +11,4 @@ MANIFEST
 *.egg-info
 _build
 
-pyngrok/bin
-tests/.ngrok
 .dmypy.json
-pyngrok-example-django
