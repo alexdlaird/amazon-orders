@@ -48,8 +48,6 @@ jobs:
         run: make install
       - name: Test
         run: make test
-      - name: Build docs
-        run: make docs
       - name: Validate package
         run: make local
       - name: Upload coverage
