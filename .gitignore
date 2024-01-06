@@ -1,0 +1,17 @@
+.idea/
+*.iml
+*.pyc
+.coverage
+*.log
+*.pytest_cache
+*.mypy_cache
+venv
+dist/
+MANIFEST
+*.egg-info
+_build
+
+pyngrok/bin
+tests/.ngrok
+.dmypy.json
+pyngrok-example-django

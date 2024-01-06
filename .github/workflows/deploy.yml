@@ -1,0 +1,41 @@
+name: "Deploy"
+
+run-name: "Release ${{ github.ref_name }}"
+
+on:
+  release:
+    types: [ created ]
+
+jobs:
+  deploy:
+    name: Deploy
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - name: Install dependencies
+        run: |
+          make install
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+      - name: Validate version
+        run: make validate-release VERSION=${{ steps.get_version.outputs.VERSION }}
+      - name: Test
+        run: make test
+      - name: Build docs
+        run: make docs
+      - name: Validate package
+        run: make local
+      - name: Test downstream dependency
+        run: make test-downstream-dependency
+      - name: Publish
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: make upload

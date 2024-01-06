@@ -1,0 +1,11 @@
+labels:
+  - name: invalid-forum
+    labeled:
+      issue:
+        body: |
+          This is a bug tracker and not a support forum.
+
+          While we'd love to be able to support every person on their projects, that would simply be infeasible. Luckily, that's what the helpful developer community over at Stack Overflow is for! Please [create a question there](https://stackoverflow.com/questions/ask?tags=python) if what you're looking for is a programming question or you need help with an integration.
+
+          If you [support the project](https://github.com/sponsors/alexdlaird), contact me directly and I'd be happy to help you troubleshoot.
+        action: close
