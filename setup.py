@@ -2,7 +2,7 @@ from setuptools import setup
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2023, Alex Laird"
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 with open("README.md", "r") as f:
     long_description = f.read()
@@ -21,7 +21,7 @@ setup(
         amazon-orders=amazonorders.cli:amazon_orders
     """,
     include_package_data=True,
-    description="A library for interacting with Amazon orders.",
+    description="A CLI and library for interacting with Amazon orders.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Alex Laird",

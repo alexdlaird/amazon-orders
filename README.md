@@ -1,8 +1,8 @@
 [![PyPI Version](https://badge.fury.io/py/amazon-orders.svg)](https://badge.fury.io/py/amazon-orders)
 [![Build](https://github.com/alexdlaird/amazon-orders-python/actions/workflows/build.yml/badge.svg)](https://github.com/alexdlaird/amazon-orders-python/actions/workflows/build.yml)
 [![Codecov](https://codecov.io/gh/alexdlaird/amazon-orders-python/branch/main/graph/badge.svg)](https://codecov.io/gh/alexdlaird/amazon-orders-python)
-[![Python Versions](https://img.shields.io/pypi/pyversions/amazon-orders-python.svg)](https://pypi.org/project/amazon-orders-python/)
-[![PyPI License](https://img.shields.io/pypi/l/amazon-orders-python.svg)](https://pypi.org/project/amazon-orders-python/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/amazon-orders.svg)](https://pypi.org/project/amazon-orders/)
+[![PyPI License](https://img.shields.io/pypi/l/amazon-orders.svg)](https://pypi.org/project/amazon-orders/)
 
 # Amazon Orders
 
