@@ -6,12 +6,12 @@
 
 # Amazon Orders
 
-The `amazon-orders` library is an unofficial library for interaction with your Amazon orders and returns.
+`amazon-orders` is an unofficial library that provides a command line interface alongside a programmatic API that can
+be used to interact with your Amazon orders and returns.
 
 ## Installation
 
-`amazon-orders` is available on [PyPI](https://pypi.org/project/amazon-orders/) and can be installed
-using `pip`:
+`amazon-orders` is available on [PyPI](https://pypi.org/project/amazon-orders/) and can be installed using `pip`:
 
 ```sh
 pip install amazon-orders
@@ -27,8 +27,8 @@ That's it! `amazon-orders` is now available as a Python package is available fro
 
 ## Basic Usage
 
-`amazon-orders` is under active development, and the present build does nothing. But it will eventually provide a
-command line client alongside a programmatic API that can be used to interact with Amazon orders and returns. 
+`amazon-orders` is under active development, and at present does nothing. But soon it will be functional, and this
+README will be updated then.
 
 ## Contributing
 
