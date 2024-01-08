@@ -7,7 +7,10 @@
 # Amazon Orders
 
 `amazon-orders` is an unofficial library that provides a command line interface alongside a programmatic API that can
-be used to interact with your Amazon orders and returns.
+be used to interact with Amazon.com's consumer-facing website.
+
+This package works by parsing website data from Amazon.com. A nightly build validates this functionality to ensure its
+stability, but as it is not officially supported, it may break at any time.
 
 ## Installation
 
@@ -17,18 +20,14 @@ be used to interact with your Amazon orders and returns.
 pip install amazon-orders
 ```
 
-or `conda`:
-
-```sh
-conda install -c conda-forge amazon-orders
-```
-
 That's it! `amazon-orders` is now available as a Python package is available from the command line.
 
 ## Basic Usage
 
 `amazon-orders` is under active development, and at present does nothing. But soon it will be functional, and this
-README will be updated then.
+README will be updated then. The first goal is to be able to a customer's Orders page so order and return data,
+alongside payment information, can be gathered. Depending on the success of that functionality, additional features may
+be added as well for browsing Amazon as a whole (the library would probably be renamed at that point).
 
 ## Contributing
 

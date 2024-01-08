@@ -14,6 +14,7 @@ setup(
     python_requires=">=3.6",
     install_requires=[
         "click",
+        "requests",
         "beautifulsoup4"
     ],
     entry_points="""
