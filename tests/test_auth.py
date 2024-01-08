@@ -1,9 +1,5 @@
 import unittest
 
-from amazonorders.parser import get_orders
-
-from amazonorders.auth import login
-
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2023, Alex Laird"
 __version__ = "0.0.2"

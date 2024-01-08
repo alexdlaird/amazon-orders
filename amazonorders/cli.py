@@ -1,7 +1,7 @@
 import click
 
 from amazonorders.auth import login
-from amazonorders.parser import get_orders
+from amazonorders.orders import get_orders
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2023, Alex Laird"
