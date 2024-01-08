@@ -1,5 +1,7 @@
 import os
 import sys
+from io import BytesIO
+from PIL import Image
 
 from bs4 import BeautifulSoup
 from requests import Session
@@ -60,7 +62,7 @@ def _get_sign_in(session):
 
 
 def _post_sign_in(r, session, soup):
-    _is_captcha(r, soup)
+    r, soup = _process_captcha(r, session, soup)
 
     data = {}
     form = soup.find("form", {"name": "signIn"})
@@ -93,7 +95,7 @@ def _post_sign_in(r, session, soup):
 
 
 def _process_mfa_select(r, session, soup):
-    _is_captcha(r, soup)
+    r, soup = _process_captcha(r, session, soup)
 
     data = {}
     form = soup.find("form", {"id": "auth-select-device-form"})
@@ -134,18 +136,50 @@ def _process_mfa_select(r, session, soup):
     return r, soup
 
 
-def _is_captcha(r, soup):
-    if (soup.find("div", {"id": "cvf-page-content"}) or "/cvf/request" in r.url):
+def _process_captcha(r, session, soup):
+    captcha = soup.find("div", {"id": "cvf-page-content"})
+    if captcha:
         with open("post-signin-captcha.html", "w") as text_file:
-            text_file.write(soup.text)
+            text_file.write(str(soup))
 
-        print("Sorry, this library doesn't know how to handle Captcha.")
+        img_src = captcha.find("img", {"alt": "captcha"}).attrs["src"]
+        img = session.get(img_src)
+        Image.open(BytesIO(img.content)).show()
 
-        sys.exit(1)
+        form = captcha.find("form", {"class": "cvf-widget-form"})
+        data = {}
+        for field in form.find_all("input"):
+            try:
+                data[field["name"]] = field["value"]
+            except:
+                pass
+        data["cvf_captcha_input"] = input("Enter the Captcha from the image opened: ")
+        action = form.attrs["action"]
+        if not action:
+            action = r.url
+        if "/" not in action:
+            action = "https://www.amazon.com/ap/cvf/" + action
+        print("Action: " + action)
+        r = session.post(action,
+                         headers=HEADERS,
+                         cookies=r.cookies,
+                         data=data)
+        print(r.url + " - " + str(r.status_code))
+        html = r.text
+        with open("post-signin-post-captcha.html", "w") as text_file:
+            text_file.write(html)
+        soup = BeautifulSoup(html, "html.parser")
+
+        error_div = soup.find("div", {"class": "cvf-widget-alert"})
+        if error_div:
+            print("An error occurred: " + error_div.text)
+            sys.exit(1)
+
+    return r, soup
 
 
 def _process_otp(r, session, soup):
-    _is_captcha(r, soup)
+    r, soup = _process_captcha(r, session, soup)
 
     data = {}
     form = soup.find("form", {"id": "auth-mfa-form"})

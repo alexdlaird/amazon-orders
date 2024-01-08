@@ -1,3 +1,4 @@
 click
 requests
+Pillow
 beautifulsoup4

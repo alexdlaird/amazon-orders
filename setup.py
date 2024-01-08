@@ -15,6 +15,7 @@ setup(
     install_requires=[
         "click",
         "requests",
+        "Pillow",
         "beautifulsoup4"
     ],
     entry_points="""
