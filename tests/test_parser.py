@@ -1,5 +1,4 @@
 import unittest
-from amazonorders.parser import get_orders
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2023, Alex Laird"

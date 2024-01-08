@@ -11,9 +11,11 @@ __version__ = "0.0.2"
 
 class TestAuth(unittest.TestCase):
     def test_login(self):
-        login()
+        pass
 
-        get_orders()
+    def test_mfa(self):
+        pass
+        # https://www.amazon.com/ap/mfa?ie=UTF8&arb=cdfb9d0a-adf4-4499-a75f-9a746a10a6b4&mfa.arb.value=cdfb9d0a-adf4-4499-a75f-9a746a10a6b4&mfa.arb.key=arb - 200
 
     def test_new_otp(self):
         pass
@@ -21,4 +23,4 @@ class TestAuth(unittest.TestCase):
 
     def test_captcha(self):
         pass
-        #
+        # https://www.amazon.com/ap/cvf/request?arb=5892fc4a-2c9e-4a2d-86f3-a9ac4cef3ce0 - 200

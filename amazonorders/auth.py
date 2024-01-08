@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 
 from bs4 import BeautifulSoup
 from requests import Session
@@ -74,7 +73,7 @@ def _post_sign_in(r, session, soup):
     data["password"] = os.environ["AMAZON_PASSWORD"]
     data["rememberMe"] = "true"
 
-    print(form.attrs["action"])
+    print("Action: " + form.attrs["action"])
     r = session.post(form.attrs["action"],
                      headers=HEADERS,
                      cookies=r.cookies,
@@ -116,6 +115,7 @@ def _process_mfa_select(r, session, soup):
         action = form.attrs["action"]
         if not action:
             action = r.url
+        print("Action: " + action)
         r = session.post(action,
                          headers=HEADERS,
                          cookies=r.cookies,
@@ -136,6 +136,9 @@ def _process_mfa_select(r, session, soup):
 
 def _is_captcha(r, soup):
     if (soup.find("div", {"id": "cvf-page-content"}) or "/cvf/request" in r.url):
+        with open("post-signin-captcha.html", "w") as text_file:
+            text_file.write(soup.text)
+
         print("Sorry, this library doesn't know how to handle Captcha.")
 
         sys.exit(1)
@@ -155,16 +158,16 @@ def _process_otp(r, session, soup):
                 pass
         otp = input("OTP code: ")
         data["otpCode"] = otp
-        data["rememberDevice"] = "true"
+        data["rememberDevice"] = ""
 
-        print(form.attrs["action"])
+        print("Action: " + form.attrs["action"])
         r = session.post(form.attrs["action"],
                          headers=HEADERS,
                          cookies=r.cookies,
                          data=data)
         print(r.url + " - " + str(r.status_code))
         html = r.text
-        with open("mfa-signin.html", "w") as text_file:
+        with open("post-signin-mfa.html", "w") as text_file:
             text_file.write(html)
         soup = BeautifulSoup(html, "html.parser")
 
