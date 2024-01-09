@@ -1,20 +1,25 @@
 import click
 
-from amazonorders.auth import login
-from amazonorders.orders import get_orders
+from amazonorders.page.orderhistory import OrderHistory
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2023, Alex Laird"
 __version__ = "0.0.2"
 
+from amazonorders.session import AmazonSession
+
 
 @click.group(invoke_without_command=True)
 @click.pass_context
 def amazon_orders(ctx, **kwargs):
-    login()
+  amazon_session = AmazonSession()
+  amazon_session.login()
 
-    get_orders()
+  order_history = OrderHistory(amazon_session)
+  order_history.get_orders()
+
+  amazon_session.close()
 
 
 if __name__ == "__main__":
-    amazon_orders(obj={})
+  amazon_orders(obj={})
