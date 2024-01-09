@@ -4,11 +4,13 @@ __version__ = "0.0.2"
 
 
 class Order:
-    def __init__(self, soup) -> None:
-        self.soup = soup
+    def __init__(self, order_card_parsed) -> None:
+        self.order_card_parsed = order_card_parsed
+
+        self.title = self.order_card_parsed.find("div", {"class": "yohtmlc-item"}).find("a").text.strip()
 
     def __repr__(self) -> str:
-        return self.soup.find("div", {"class": "yohtmlc-product-title"}).text
+        return "<Order: \"{}\">".format(self.title)
 
     def __str__(self) -> str:  # pragma: no cover
-        return self.soup.find("div", {"class": "yohtmlc-product-title"}).text
+        return self.title

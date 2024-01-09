@@ -34,21 +34,23 @@ class AmazonSession:
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     }
     SIGN_IN_FORM_NAME = "signIn"
-    MFA_DEVICE_SELECT_FORM_NAME = "auth-select-device-form"
-    MFA_FORM_NAME = "auth-mfa-form"
-    CAPTCHA_FORM_CLASS_NAME = "cvf-widget-form"
+    MFA_DEVICE_SELECT_FORM_ID = "auth-select-device-form"
+    MFA_FORM_ID = "auth-mfa-form"
+    CAPTCHA_DIV_ID = "cvf-page-content"
+    CAPTCHA_FORM_CLASS = "cvf-widget-form"
 
     def __init__(self,
-                 amazon_username,
-                 amazon_password,
+                 username,
+                 password,
                  debug=False) -> None:
-        self.amazon_username = amazon_username
-        self.amazon_password = amazon_password
+        self.username = username
+        self.password = password
         self.debug = debug
 
         self.session = Session()
-        self.last_request = None
-        self.last_request_parsed = None
+        self.last_response = None
+        self.last_response_parsed = None
+        self.is_authenticated = False
 
     def request(self, method, url, **kwargs):
         if "headers" not in kwargs:
@@ -57,17 +59,17 @@ class AmazonSession:
 
         logger.debug("{} request to {}".format(method, url))
 
-        self.last_request = self.session.request(method, url, **kwargs)
-        self.last_request_parsed = BeautifulSoup(self.last_request.text, "html.parser")
+        self.last_response = self.session.request(method, url, **kwargs)
+        self.last_response_parsed = BeautifulSoup(self.last_response.text, "html.parser")
 
-        logger.debug("Response: {} - {}".format(self.last_request.url, self.last_request.status_code))
+        logger.debug("Response: {} - {}".format(self.last_response.url, self.last_response.status_code))
 
         if self.debug:
-            page_name = self._get_page_from_url(self.last_request.url)
+            page_name = self._get_page_from_url(self.last_response.url)
             with open(page_name, "w") as html_file:
-                html_file.write(self.last_request.text)
+                html_file.write(self.last_response.text)
 
-        return self.last_request
+        return self.last_response
 
     def get(self, url, **kwargs):
         return self.request("GET", url, **kwargs)
@@ -76,29 +78,39 @@ class AmazonSession:
         return self.request("POST", url, **kwargs)
 
     def login(self):
-        # TODO: pull captcha method up to here, in loop, process before any/each page
         self.get("https://www.amazon.com/gp/sign-in.html")
 
-        # TODO: loop this and identify a "logged in" cookie (or some state identifier) to prove when the auth flow is actually done
+        while not self.is_authenticated:
+            if self._is_form_found(self.SIGN_IN_FORM_NAME, attr_name="name"):
+                self._sign_in()
+            elif self._is_form_found(self.CAPTCHA_FORM_CLASS, attr_name="class"):
+                self._captcha_submit()
+            elif self._is_form_found(self.MFA_DEVICE_SELECT_FORM_ID):
+                self._mfa_device_select()
+            elif self._is_form_found(self.MFA_FORM_ID):
+                self._mfa_submit()
+            else:
+                print("An error occurred, this is an unknown page.")
 
-        self._sign_in()
+                sys.exit(1)
 
-        if self._is_form_found(self.MFA_DEVICE_SELECT_FORM_NAME):
-            self._mfa_device_select()
+            # TODO: implement an escape mechanism for a race condition here
 
-        if self._is_form_found(self.MFA_FORM_NAME):
-            self._mfa_submit()
+            # TODO: figure out why BeautifulSoup isn't finding #nav-item-signout as an ID using `find()`
+            if ("Your Account" in self.last_response.text and
+                    "Sign Out" in self.last_response.text and
+                    "nav-item-signout" in self.last_response.text):
+                self.is_authenticated = True
 
     def close(self):
         self.session.close()
 
     def _sign_in(self):
-        self._process_captcha()
-
         data = self._build_from_form(self.SIGN_IN_FORM_NAME,
-                                     {"email": self.amazon_username,
-                                      "password": self.amazon_password,
-                                      "rememberMe": "true"})
+                                     {"email": self.username,
+                                      "password": self.password,
+                                      "rememberMe": "true"},
+                                     attr_name="name")
 
         self.post(self._get_form_action(self.SIGN_IN_FORM_NAME),
                   data=data)
@@ -106,19 +118,17 @@ class AmazonSession:
         self._handle_errors()
 
     def _mfa_device_select(self):
-        self._process_captcha()
-
-        form = self.last_request_parsed.find("form",
-                                             {"id": self.MFA_DEVICE_SELECT_FORM_NAME})
+        form = self.last_response_parsed.find("form",
+                                              {"id": self.MFA_DEVICE_SELECT_FORM_ID})
         contexts = form.find_all("input",
                                  {"name": "otpDeviceContext"})
         i = 1
         for field in contexts:
-            print(str(i) + ": " + field.attrs["value"].strip())
+            print("{}: {}".format(i, field.attrs["value"].strip()))
             i += 1
         otp_device = int(input("Where would you like your one-time passcode sent? "))
 
-        data = self._build_from_form(self.MFA_DEVICE_SELECT_FORM_NAME,
+        data = self._build_from_form(self.MFA_DEVICE_SELECT_FORM_ID,
                                      {"otpDeviceContext": contexts[otp_device - 1].attrs["value"]})
 
         self.post(self._get_form_action(self.SIGN_IN_FORM_NAME),
@@ -127,50 +137,41 @@ class AmazonSession:
         self._handle_errors()
 
     def _mfa_submit(self):
-        self._process_captcha()
-
         otp = input("Enter the one-time passcode sent to your device: ")
 
         # TODO: figure out why Amazon isn't respect rememberDevice
-        data = self._build_from_form(self.MFA_FORM_NAME, {"otpCode": otp, "rememberDevice": ""})
+        data = self._build_from_form(self.MFA_FORM_ID,
+                                     {"otpCode": otp, "rememberDevice": ""})
 
-        self.post(self._get_form_action(self.MFA_FORM_NAME),
+        self.post(self._get_form_action(self.MFA_FORM_ID),
                   data=data)
 
         self._handle_errors()
 
-    def _process_captcha(self):
-        # TODO: clean this up
-        if not self._is_form_found(self.CAPTCHA_FORM_CLASS_NAME, "class"):
-            return
-
-        captcha = self.last_request_parsed.find("form", {"class": self.CAPTCHA_FORM_CLASS_NAME})
-
-        if self.debug:
-            page_name = self._get_page_from_url(self.last_request.url)
-            with open(page_name, "w") as html_file:
-                html_file.write(str(self.last_request_parsed))
+    def _captcha_submit(self):
+        captcha = self.last_response_parsed.find("div", {"id": self.CAPTCHA_DIV_ID})
 
         img_src = captcha.find("img", {"alt": "captcha"}).attrs["src"]
-        img = self.session.get(img_src)
-        Image.open(BytesIO(img.content)).show()
+        img_response = self.session.get(img_src)
+        img = Image.open(BytesIO(img_response.content))
+        img.show()
 
-        captch_response = input("Enter the Captcha seen on the opened image: ")
+        captcha_response = input("Enter the Captcha seen on the opened image: ")
 
-        data = self._build_from_form(self.CAPTCHA_FORM_CLASS_NAME,
-                                     {"cvf_captcha_input": captch_response},
+        data = self._build_from_form(self.CAPTCHA_FORM_CLASS,
+                                     {"cvf_captcha_input": captcha_response},
                                      attr_name="class")
 
-        self.last_request = self.post(
-            self._get_form_action(self.CAPTCHA_FORM_CLASS_NAME, attr_name="class",
-                                  prefix="https://www.amazon.com/ap/cvf/"),
-            data=data)
+        self.post(self._get_form_action(self.CAPTCHA_FORM_CLASS,
+                                        attr_name="class",
+                                        prefix="https://www.amazon.com/ap/cvf/"),
+                  data=data)
 
         self._handle_errors("cvf-widget-alert", "class")
 
-    def _build_from_form(self, form_name, additional_attrs, attr_name="name"):
+    def _build_from_form(self, form_name, additional_attrs, attr_name="id"):
         data = {}
-        form = self.last_request_parsed.find("form", {attr_name: form_name})
+        form = self.last_response_parsed.find("form", {attr_name: form_name})
         for field in form.find_all("input"):
             try:
                 data[field["name"]] = field["value"]
@@ -180,23 +181,23 @@ class AmazonSession:
         return data
 
     def _get_form_action(self, form_name, attr_name="name", prefix=None):
-        form = self.last_request_parsed.find("form", {attr_name: form_name})
-        action = form.attrs.get("action", self.last_request.url)
+        form = self.last_response_parsed.find("form", {attr_name: form_name})
+        action = form.attrs.get("action", self.last_response.url)
         if prefix and "/" not in action:
             action = prefix + action
         return action
 
     def _is_form_found(self, form_name, attr_name="id"):
-        return self.last_request_parsed.find("form", {attr_name: form_name}) is not None
+        return self.last_response_parsed.find("form", {attr_name: form_name}) is not None
 
     def _get_page_from_url(self, url):
-        page_name = url.rsplit('/', 1)[-1].split("?")[0]
+        page_name = url.rsplit("/", 1)[-1].split("?")[0]
         if not page_name.endswith(".html"):
             page_name += ".html"
+        return page_name
 
     def _handle_errors(self, error_div="auth-error-message-box", attr_name="id"):
-        error_div = self.last_request_parsed.find("div",
-                                                  {attr_name: error_div})
+        error_div = self.last_response_parsed.find("div",
+                                                   {attr_name: error_div})
         if error_div:
-            print("An error occurred: " + error_div.text.strip())
-            sys.exit(1)
+            print("An error occurred: {}".format(error_div.text.strip()))
