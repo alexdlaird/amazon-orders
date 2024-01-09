@@ -12,14 +12,14 @@ from amazonorders.session import AmazonSession
 @click.group(invoke_without_command=True)
 @click.pass_context
 def amazon_orders(ctx, **kwargs):
-  amazon_session = AmazonSession()
-  amazon_session.login()
+    amazon_session = AmazonSession()
+    amazon_session.login()
 
-  order_history = OrderHistory(amazon_session)
-  order_history.get_orders()
+    order_history = OrderHistory(amazon_session)
+    order_history.get_orders()
 
-  amazon_session.close()
+    amazon_session.close()
 
 
 if __name__ == "__main__":
-  amazon_orders(obj={})
+    amazon_orders(obj={})
