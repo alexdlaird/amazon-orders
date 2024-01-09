@@ -1,5 +1,3 @@
-from bs4 import BeautifulSoup
-
 from amazonorders.entity.order import Order
 
 __author__ = "Alex Laird"
@@ -14,20 +12,16 @@ class OrderHistory:
     def get_orders(self):
         # TODO: identify if session isn't logged in
 
-        r = self.amazon_session.get(
-            url='https://www.amazon.com/gp/css/order-history')
-        print(r.url + " - " + str(r.status_code))
-        html = r.text
-        with open("orders.html", "w") as text_file:
-            text_file.write(html)
-
-        soup = BeautifulSoup(html, "html.parser")
+        response = self.amazon_session.get(url='https://www.amazon.com/gp/css/order-history')
+        if self.amazon_session.debug:
+            page_name = self.amazon_session._get_page_from_url(response.url)
+            with open(page_name, "w") as html_file:
+                html_file.write(response.text)
 
         # TODO: just a WIP to show output that we've parsed the page
-        for card in soup.find_all("div", {"class": "order-card"}):
+        for card in self.amazon_session.last_request_parsed.find_all("div", {"class": "order-card"}):
             order = Order(card)
             print(order)
 
         # TODO: Add pagination support
-
-        return r.content
+        return response.text

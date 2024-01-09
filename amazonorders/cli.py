@@ -1,3 +1,5 @@
+import os
+
 import click
 
 from amazonorders.page.orderhistory import OrderHistory
@@ -12,7 +14,7 @@ from amazonorders.session import AmazonSession
 @click.group(invoke_without_command=True)
 @click.pass_context
 def amazon_orders(ctx, **kwargs):
-    amazon_session = AmazonSession()
+    amazon_session = AmazonSession(os.environ["AMAZON_USERNAME"], os.environ["AMAZON_PASSWORD"])
     amazon_session.login()
 
     order_history = OrderHistory(amazon_session)
