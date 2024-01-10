@@ -24,10 +24,29 @@ That's it! `amazon-orders` is now available as a Python package is available fro
 
 ## Basic Usage
 
-`amazon-orders` is under active development, and at present does nothing. But soon it will be functional, and this
-README will be updated then. The first goal is to be able to a customer's Orders page so order and return data,
-alongside payment information, can be gathered. Depending on the success of that functionality, additional features may
-be added as well for browsing Amazon as a whole (the library would probably be renamed at that point).
+Execute `amazon-orders` from the command line with:
+
+```sh
+amazon-orders --username <AMAZON_EMAIL> --password <AMAZON_PASSWORD>
+```
+
+Or use `amazon-orders` programmatically:
+
+```python
+from amazonorders.session import AmazonSession
+from amazonorders.page.orderhistory import OrderHistory
+
+amazon_session = AmazonSession("AMAZON_EMAIL", "AMAZON_PASSWORD")
+amazon_session.login()
+
+order_history = OrderHistory(amazon_session, year=2023)
+order_history.get_orders()
+```
+
+`amazon-orders` is under active development, and at present does very little. The first goal is to be able to fetch a
+customer's Orders page so order and return data, alongside payment information, can be gathered. Depending on the
+success of that functionality, additional features may be added as well for browsing Amazon as a whole (the library
+would probably be renamed at that point).
 
 ## Contributing
 

@@ -42,10 +42,13 @@ class AmazonSession:
     def __init__(self,
                  username,
                  password,
-                 debug=False) -> None:
+                 debug=False,
+                 max_auth_attempts=10) -> None:
         self.username = username
         self.password = password
+
         self.debug = debug
+        self.max_auth_attempts = max_auth_attempts
 
         self.session = Session()
         self.last_response = None
@@ -80,7 +83,8 @@ class AmazonSession:
     def login(self):
         self.get("https://www.amazon.com/gp/sign-in.html")
 
-        while not self.is_authenticated:
+        attempts = 0
+        while not self.is_authenticated and attempts < self.max_auth_attempts:
             if self._is_form_found(self.SIGN_IN_FORM_NAME, attr_name="name"):
                 self._sign_in()
             elif self._is_form_found(self.CAPTCHA_FORM_CLASS, attr_name="class"):
@@ -101,6 +105,13 @@ class AmazonSession:
                     "Sign Out" in self.last_response.text and
                     "nav-item-signout" in self.last_response.text):
                 self.is_authenticated = True
+            else:
+                attempts += 1
+
+        if attempts == self.max_auth_attempts:
+            print("Max authentication flow attempts reached.")
+
+            sys.exit(1)
 
     def close(self):
         self.session.close()
@@ -115,7 +126,7 @@ class AmazonSession:
         self.post(self._get_form_action(self.SIGN_IN_FORM_NAME),
                   data=data)
 
-        self._handle_errors()
+        self._handle_errors(critical=True)
 
     def _mfa_device_select(self):
         form = self.last_response_parsed.find("form",
@@ -196,8 +207,11 @@ class AmazonSession:
             page_name += ".html"
         return page_name
 
-    def _handle_errors(self, error_div="auth-error-message-box", attr_name="id"):
+    def _handle_errors(self, error_div="auth-error-message-box", attr_name="id", critical=False):
         error_div = self.last_response_parsed.find("div",
                                                    {attr_name: error_div})
         if error_div:
             print("An error occurred: {}".format(error_div.text.strip()))
+
+            if critical:
+                sys.exit(1)

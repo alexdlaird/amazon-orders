@@ -10,7 +10,9 @@ with open("README.md", "r") as f:
 setup(
     name="amazon-orders",
     version=__version__,
-    packages=["amazonorders"],
+    packages=["amazonorders",
+              "amazonorders.entity",
+              "amazonorders.page"],
     python_requires=">=3.6",
     install_requires=[
         "click",
