@@ -8,37 +8,38 @@ from requests import Session
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2023, Alex Laird"
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 logger = logging.getLogger(__name__)
 
+BASE_URL = "https://www.amazon.com"
+BASE_HEADERS = {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Cache-Control": "max-age=0",
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Origin": BASE_URL,
+    "Referer": "{}/ap/signin".format(BASE_URL),
+    "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+    "Sec-Ch-Ua-Mobile": "?0",
+    "Sec-Ch-Ua-Platform": "macOS",
+    "Sec-Ch-Viewport-Width": "1393",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-User": "?1",
+    "Viewport-Width": "1393",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+}
+SIGN_IN_FORM_NAME = "signIn"
+MFA_DEVICE_SELECT_FORM_ID = "auth-select-device-form"
+MFA_FORM_ID = "auth-mfa-form"
+CAPTCHA_DIV_ID = "cvf-page-content"
+CAPTCHA_FORM_CLASS = "cvf-widget-form"
+
 
 class AmazonSession:
-    BASE_HEADERS = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Cache-Control": "max-age=0",
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Origin": "https://www.amazon.com",
-        "Referer": "https://www.amazon.com/ap/signin",
-        "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": "macOS",
-        "Sec-Ch-Viewport-Width": "1393",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "same-origin",
-        "Sec-Fetch-User": "?1",
-        "Viewport-Width": "1393",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    }
-    SIGN_IN_FORM_NAME = "signIn"
-    MFA_DEVICE_SELECT_FORM_ID = "auth-select-device-form"
-    MFA_FORM_ID = "auth-mfa-form"
-    CAPTCHA_DIV_ID = "cvf-page-content"
-    CAPTCHA_FORM_CLASS = "cvf-widget-form"
-
     def __init__(self,
                  username,
                  password,
@@ -58,7 +59,7 @@ class AmazonSession:
     def request(self, method, url, **kwargs):
         if "headers" not in kwargs:
             kwargs["headers"] = {}
-        kwargs["headers"].update(self.BASE_HEADERS)
+        kwargs["headers"].update(BASE_HEADERS)
 
         logger.debug("{} request to {}".format(method, url))
 
@@ -81,29 +82,24 @@ class AmazonSession:
         return self.request("POST", url, **kwargs)
 
     def login(self):
-        self.get("https://www.amazon.com/gp/sign-in.html")
+        self.get("{}/gp/sign-in.html".format(BASE_URL))
 
         attempts = 0
         while not self.is_authenticated and attempts < self.max_auth_attempts:
-            if self._is_form_found(self.SIGN_IN_FORM_NAME, attr_name="name"):
+            if self._is_form_found(SIGN_IN_FORM_NAME, attr_name="name"):
                 self._sign_in()
-            elif self._is_form_found(self.CAPTCHA_FORM_CLASS, attr_name="class"):
+            elif self._is_form_found(CAPTCHA_FORM_CLASS, attr_name="class"):
                 self._captcha_submit()
-            elif self._is_form_found(self.MFA_DEVICE_SELECT_FORM_ID):
+            elif self._is_form_found(MFA_DEVICE_SELECT_FORM_ID):
                 self._mfa_device_select()
-            elif self._is_form_found(self.MFA_FORM_ID):
+            elif self._is_form_found(MFA_FORM_ID):
                 self._mfa_submit()
             else:
-                print("An error occurred, this is an unknown page.")
+                print("An error occurred, this is an unknown page: {}".format(self.last_response.url))
 
                 sys.exit(1)
 
-            # TODO: implement an escape mechanism for a race condition here
-
-            # TODO: figure out why BeautifulSoup isn't finding #nav-item-signout as an ID using `find()`
-            if ("Your Account" in self.last_response.text and
-                    "Sign Out" in self.last_response.text and
-                    "nav-item-signout" in self.last_response.text):
+            if "Hello, sign in" not in self.last_response.text and "nav-item-signout" in self.last_response.text:
                 self.is_authenticated = True
             else:
                 attempts += 1
@@ -117,20 +113,20 @@ class AmazonSession:
         self.session.close()
 
     def _sign_in(self):
-        data = self._build_from_form(self.SIGN_IN_FORM_NAME,
+        data = self._build_from_form(SIGN_IN_FORM_NAME,
                                      {"email": self.username,
                                       "password": self.password,
                                       "rememberMe": "true"},
                                      attr_name="name")
 
-        self.post(self._get_form_action(self.SIGN_IN_FORM_NAME),
+        self.post(self._get_form_action(SIGN_IN_FORM_NAME),
                   data=data)
 
         self._handle_errors(critical=True)
 
     def _mfa_device_select(self):
         form = self.last_response_parsed.find("form",
-                                              {"id": self.MFA_DEVICE_SELECT_FORM_ID})
+                                              {"id": MFA_DEVICE_SELECT_FORM_ID})
         contexts = form.find_all("input",
                                  name="otpDeviceContext")
         i = 1
@@ -139,10 +135,10 @@ class AmazonSession:
             i += 1
         otp_device = int(input("Where would you like your one-time passcode sent? "))
 
-        data = self._build_from_form(self.MFA_DEVICE_SELECT_FORM_ID,
+        data = self._build_from_form(MFA_DEVICE_SELECT_FORM_ID,
                                      {"otpDeviceContext": contexts[otp_device - 1].attrs["value"]})
 
-        self.post(self._get_form_action(self.SIGN_IN_FORM_NAME),
+        self.post(self._get_form_action(SIGN_IN_FORM_NAME),
                   data=data)
 
         self._handle_errors()
@@ -151,16 +147,16 @@ class AmazonSession:
         otp = input("Enter the one-time passcode sent to your device: ")
 
         # TODO: figure out why Amazon isn't respect rememberDevice
-        data = self._build_from_form(self.MFA_FORM_ID,
+        data = self._build_from_form(MFA_FORM_ID,
                                      {"otpCode": otp, "rememberDevice": ""})
 
-        self.post(self._get_form_action(self.MFA_FORM_ID),
+        self.post(self._get_form_action(MFA_FORM_ID),
                   data=data)
 
         self._handle_errors()
 
     def _captcha_submit(self):
-        captcha = self.last_response_parsed.find("div", {"id": self.CAPTCHA_DIV_ID})
+        captcha = self.last_response_parsed.find("div", {"id": CAPTCHA_DIV_ID})
 
         img_src = captcha.find("img", {"alt": "captcha"}).attrs["src"]
         img_response = self.session.get(img_src)
@@ -169,13 +165,13 @@ class AmazonSession:
 
         captcha_response = input("Enter the Captcha seen on the opened image: ")
 
-        data = self._build_from_form(self.CAPTCHA_FORM_CLASS,
+        data = self._build_from_form(CAPTCHA_FORM_CLASS,
                                      {"cvf_captcha_input": captcha_response},
                                      attr_name="class")
 
-        self.post(self._get_form_action(self.CAPTCHA_FORM_CLASS,
+        self.post(self._get_form_action(CAPTCHA_FORM_CLASS,
                                         attr_name="class",
-                                        prefix="https://www.amazon.com/ap/cvf/"),
+                                        prefix="{}/ap/cvf/".format(BASE_URL)),
                   data=data)
 
         self._handle_errors("cvf-widget-alert", "class")

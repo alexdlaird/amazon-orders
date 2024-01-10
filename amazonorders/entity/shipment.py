@@ -10,10 +10,13 @@ class Shipment:
         self.parsed = parsed
         self.order = order
 
-        self.items = [Item(x) for x in self.parsed.find_all("div", {"class": "yohtmlc-item"})]
+        self.items = self._parse_items()
 
     def __repr__(self) -> str:
         return "<Shipment: \"{}\">".format(self.items)
 
     def __str__(self) -> str:  # pragma: no cover
         return str(self.items)
+
+    def _parse_items(self):
+        return [Item(x) for x in self.parsed.find_all("div", {"class": "yohtmlc-item"})]
