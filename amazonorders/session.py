@@ -132,7 +132,7 @@ class AmazonSession:
         form = self.last_response_parsed.find("form",
                                               {"id": self.MFA_DEVICE_SELECT_FORM_ID})
         contexts = form.find_all("input",
-                                 {"name": "otpDeviceContext"})
+                                 name="otpDeviceContext")
         i = 1
         for field in contexts:
             print("{}: {}".format(i, field.attrs["value"].strip()))

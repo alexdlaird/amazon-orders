@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
 
-from amazonorders.entity.address import Address
+from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
 from amazonorders.entity.item import Item
 
@@ -20,7 +20,11 @@ class Order:
         self.order_number = parse_qs(urlparse(self.order_details_link).query)["orderID"][0]
         self.total = self.parsed.find("div", {"class": "yohtmlc-order-total"}).text.strip().strip("$")
         self.order_placed_date = self.parsed.find("div", {"class": "a-span3"}).find("div", {"value"})
-        self.ship_to = Address(self.parsed.find("div", {"class": "recipient"}))
+        shipping_script_id = self.parsed.find("div",
+                                              id=lambda value:
+                                              value and value.startswith("shipToInsertionNode")).attrs["id"]
+        self.recipient = Recipient(
+            self.parsed.find("script", id="shipToData-shippingAddress-{}".format(shipping_script_id.split("-")[2])))
 
     def __repr__(self) -> str:
         return "<Order: \"{}\">".format(self.items)
