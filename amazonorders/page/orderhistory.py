@@ -5,7 +5,7 @@ from amazonorders.entity.order import Order
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2023, Alex Laird"
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 
 class OrderHistory:
@@ -38,7 +38,6 @@ class OrderHistory:
                 with open(page_name, "w") as html_file:
                     html_file.write(self.amazon_session.last_response.text)
 
-            # TODO: just a WIP to show output that we've parsed the page
             for card in self.amazon_session.last_response_parsed.find_all("div", {"class": "order-card"}):
                 orders.append(Order(card))
 
