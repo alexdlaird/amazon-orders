@@ -25,11 +25,14 @@ class Seller:
         return "<Seller: \"{}\">".format(self.name)
 
     def __str__(self) -> str:  # pragma: no cover
-        return self.name
+        return "Seller: \"{}\"".format(self.name)
 
     def _parse_name(self):
         try:
-            return self.parsed.text.split("Sold by:")[1].strip()
+            tag = self.parsed.find("a")
+            if not tag:
+                tag = self.parsed.find("span")
+            return tag.text.strip()
         except (AttributeError, IndexError):
             logger.warning("When building Seller, `name` could not be parsed.", exc_info=True)
 

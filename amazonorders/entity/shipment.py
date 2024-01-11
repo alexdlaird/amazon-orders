@@ -18,7 +18,7 @@ class Shipment:
         return "<Shipment: \"{}\">".format(self.items)
 
     def __str__(self) -> str:  # pragma: no cover
-        return str(self.items)
+        return "Shipment: \"{}\"".format(self.items)
 
     def _parse_items(self):
         return [Item(x) for x in self.parsed.find_all("div", {"class": "yohtmlc-item"})]

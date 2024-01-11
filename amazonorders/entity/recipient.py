@@ -19,7 +19,7 @@ class Recipient:
         return "<Recipient: \"{}\">".format(self.name)
 
     def __str__(self) -> str:  # pragma: no cover
-        return self.name
+        return "Recipient: \"{}\"".format(self.name)
 
     def _parse_name(self):
         try:

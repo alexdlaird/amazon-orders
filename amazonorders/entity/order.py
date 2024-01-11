@@ -6,7 +6,6 @@ from urllib.parse import parse_qs
 from bs4 import BeautifulSoup
 
 from amazonorders.entity.recipient import Recipient
-from amazonorders.entity.seller import Seller
 from amazonorders.entity.shipment import Shipment
 from amazonorders.entity.item import Item
 from amazonorders.session import BASE_URL
@@ -45,23 +44,23 @@ class Order:
             self.recipient = self._parse_recipient()
 
         if self.full_details:
+            self.items = self._parse_items()
             self.payment_method = self._parse_payment_method()
             self.payment_method_last_4 = self._parse_payment_method_last_4()
             self.subtotal = self._parse_subtotal()
             self.shipping_total = self._parse_shipping_total()
+            self.subscription_discount = self._parse_subscription_discount()
             self.total_before_tax = self._parse_total_before_tax()
             self.estimated_tax = self._parse_estimated_tax()
-            self.seller = self._parse_seller()
-            self.condition = self._parse_condition()
             self.order_shipped_date = self._parse_order_shipping_date()
             self.tracking_link = self._parse_tracking_link()
             self.delivered = self._parse_delivered()
 
     def __repr__(self) -> str:
-        return "<Order: \"{}\">".format(self.items)
+        return "<Order #{}: \"{}\">".format(self.order_number, self.items)
 
     def __str__(self) -> str:  # pragma: no cover
-        return str(self.items)
+        return "Order #{}: \"{}\"".format(self.order_number, self.items)
 
     def _parse_shipments(self):
         return [Shipment(x, self) for x in self.parsed.find_all("div", {"class": "shipment"})]
@@ -132,47 +131,43 @@ class Order:
 
     def _parse_subtotal(self):
         try:
-            tag = self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"})
-            return tag[0].find("div", {"class": "a-span-last"}).text.strip().strip("$")
+            for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+                if "subtotal" in tag.text.lower():
+                    return tag.find("div", {"class": "a-span-last"}).text.strip().strip("$")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `subtotal` could not be parsed.", exc_info=True)
 
     def _parse_shipping_total(self):
         try:
-            tag = self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"})
-            return tag[1].find("div", {"class": "a-span-last"}).text.strip().strip("$")
+            for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+                if "shipping" in tag.text.lower():
+                    return tag.find("div", {"class": "a-span-last"}).text.strip().strip("$")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `shipping_total` could not be parsed.", exc_info=True)
 
+    def _parse_subscription_discount(self):
+        try:
+            for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+                if "subscribe" in tag.text.lower():
+                    return tag.find("div", {"class": "a-span-last"}).text.strip().strip("$")
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `subscription_discount` could not be parsed.", exc_info=True)
+
     def _parse_total_before_tax(self):
         try:
-            tag = self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"})
-            return tag[3].find("div", {"class": "a-span-last"}).text.strip().strip("$")
+            for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+                if "before tax" in tag.text.lower():
+                    return tag.find("div", {"class": "a-span-last"}).text.strip().strip("$")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `total_before_tax` could not be parsed.", exc_info=True)
 
     def _parse_estimated_tax(self):
         try:
-            tag = self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"})
-            return tag[4].find("div", {"class": "a-span-last"}).text.strip().strip("$")
+            for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+                if "estimated tax" in tag.text.lower():
+                    return tag.find("div", {"class": "a-span-last"}).text.strip().strip("$")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `estimated_tax` could not be parsed.", exc_info=True)
-
-    def _parse_seller(self):
-        try:
-            for tag in self.parsed.find("div", {"class": "yohtmlc-item"}).find_all("div"):
-                if "Sold by:" in tag.text:
-                    return Seller(tag, order=self)
-        except (AttributeError, IndexError):
-            logger.warning("When building Order, `seller` could not be parsed.", exc_info=True)
-
-    def _parse_condition(self):
-        try:
-            for tag in self.parsed.find("div", {"class": "yohtmlc-item"}).find_all("div"):
-                if "Condition:" in tag.text:
-                    return tag.text.split("Condition:")[1].strip()
-        except (AttributeError, IndexError):
-            logger.warning("When building Order, `condition` could not be parsed.", exc_info=True)
 
     def _parse_order_shipping_date(self):
         try:
@@ -185,9 +180,10 @@ class Order:
 
     def _parse_tracking_link(self):
         try:
-            tag = self.parsed.find("span", {"class": "track-package-button"}).find("a")
+            tag = self.parsed.find("span", {"class": "track-package-button"})
             if tag:
-                return "{}{}".format(BASE_URL, tag.attrs["href"])
+                link_tag = tag.find("a")
+                return "{}{}".format(BASE_URL, link_tag.attrs["href"])
         except (AttributeError, IndexError):
             logger.warning("When building Order, `tracking_link` could not be parsed.", exc_info=True)
 
