@@ -89,7 +89,7 @@ class Order:
 
     def _parse_grand_total(self):
         try:
-            tag = self.parsed.find("div", {"class": "yohtmlc-order-total"})
+            tag = self.parsed.find("div", {"class": "yohtmlc-order-total"}).find("span", {"class": "value"})
             return tag.text.strip().strip("$")
         except AttributeError:
             logger.warning("When building Order, `grand_total` could not be parsed.", exc_info=True)
@@ -115,71 +115,86 @@ class Order:
 
     def _parse_payment_method(self):
         try:
-            return None
+            tag = self.parsed.find("img", {"class": "pmts-payment-credit-card-instrument-logo"})
+            if tag:
+                return tag.attrs["alt"]
         except (AttributeError, IndexError):
             logger.warning("When building Order, `payment_method` could not be parsed.", exc_info=True)
 
     def _parse_payment_method_last_4(self):
         try:
-            return None
+            tag = self.parsed.find("img", {"class": "pmts-payment-credit-card-instrument-logo"})
+            if tag:
+                ending_sibling = tag.find_next_siblings()[-1]
+                return ending_sibling.text.split("ending in")[1].strip()
         except (AttributeError, IndexError):
             logger.warning("When building Order, `payment_method_last_4` could not be parsed.", exc_info=True)
 
     def _parse_subtotal(self):
         try:
-            return None
+            tag = self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"})
+            return tag[0].find("div", {"class": "a-span-last"}).text.strip().strip("$")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `subtotal` could not be parsed.", exc_info=True)
 
     def _parse_shipping_total(self):
         try:
-            return None
+            tag = self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"})
+            return tag[1].find("div", {"class": "a-span-last"}).text.strip().strip("$")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `shipping_total` could not be parsed.", exc_info=True)
 
     def _parse_total_before_tax(self):
         try:
-            return None
+            tag = self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"})
+            return tag[3].find("div", {"class": "a-span-last"}).text.strip().strip("$")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `total_before_tax` could not be parsed.", exc_info=True)
 
     def _parse_estimated_tax(self):
         try:
-            return None
+            tag = self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"})
+            return tag[4].find("div", {"class": "a-span-last"}).text.strip().strip("$")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `estimated_tax` could not be parsed.", exc_info=True)
 
     def _parse_seller(self):
         try:
-            tag = self.parsed.find("div", {"class": "yohtmlc-item"}).find_all("div")
-            sold_tag = tag[1]
-            if "Sold by:" in tag[2].text:
-                sold_tag = tag[2]
-            return Seller(sold_tag, order=self)
+            for tag in self.parsed.find("div", {"class": "yohtmlc-item"}).find_all("div"):
+                if "Sold by:" in tag.text:
+                    return Seller(tag, order=self)
         except (AttributeError, IndexError):
             logger.warning("When building Order, `seller` could not be parsed.", exc_info=True)
 
     def _parse_condition(self):
         try:
-            return None
+            for tag in self.parsed.find("div", {"class": "yohtmlc-item"}).find_all("div"):
+                if "Condition:" in tag.text:
+                    return tag.text.split("Condition:")[1].strip()
         except (AttributeError, IndexError):
             logger.warning("When building Order, `condition` could not be parsed.", exc_info=True)
 
     def _parse_order_shipping_date(self):
         try:
-            return None
+            # TODO: find a better way to do this
+            if "Items shipped:" in self.parsed.text:
+                date_str = self.parsed.text.split("Items shipped:")[1].strip().split("-")[0].strip()
+                return datetime.strptime(date_str, "%B %d, %Y").date()
         except (AttributeError, IndexError):
             logger.warning("When building Order, `order_shipping_date` could not be parsed.", exc_info=True)
 
     def _parse_tracking_link(self):
         try:
-            return None
+            tag = self.parsed.find("span", {"class": "track-package-button"}).find("a")
+            if tag:
+                return "{}{}".format(BASE_URL, tag.attrs["href"])
         except (AttributeError, IndexError):
             logger.warning("When building Order, `tracking_link` could not be parsed.", exc_info=True)
 
     def _parse_delivered(self):
         # This should just be a boolean
         try:
-            return None
+            tag = self.parsed.find("div", {"class": "js-shipment-info-container"})
+            return "Delivered" in tag.text
         except (AttributeError, IndexError):
             logger.warning("When building Order, `delivered` could not be parsed.", exc_info=True)
