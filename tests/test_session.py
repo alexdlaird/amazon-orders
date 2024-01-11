@@ -4,18 +4,19 @@ import unittest
 from amazonorders.exception import AmazonOrdersAuthError
 from amazonorders.session import AmazonSession
 
+from tests.testcase import UnitTestCase
+
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "0.0.3"
 
 
-class TestSession(unittest.TestCase):
+class TestSession(UnitTestCase):
     def setUp(self):
-        self.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"), os.environ.get("AMAZON_PASSWORD"))
+        self.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
+                                            os.environ.get("AMAZON_PASSWORD"))
 
-    # @unittest.skipIf(not (os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")),
-    #                  "AMAZON_USERNAME and AMAZON_PASSWORD environment variables not set")
-    @unittest.skip("This test requires input to pass, need to refactor")
+    @unittest.skip("This test needs to be mocked against the resource files to work")
     def test_login(self):
         # WHEN
         self.amazon_session.login()
@@ -34,11 +35,11 @@ class TestSession(unittest.TestCase):
         # THEN
         self.assertFalse(amazon_session.is_authenticated)
 
-    # @unittest.skipIf(not os.environ.get("AMAZON_USERNAME"), "AMAZON_USERNAME environment variables not set")
-    @unittest.skip("This test is flaky due to Captcha sometimes triggering, need to refactor")
+    @unittest.skip("This test needs to be mocked against the resource files to work")
     def test_login_invalid_password(self):
         # GIVEN
-        amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"), "fake-password")
+        amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
+                                       "fake-password")
 
         # WHEN
         amazon_session.login()
