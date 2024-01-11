@@ -19,15 +19,18 @@ class AmazonOrders:
         self.debug = debug
         self.print_output = print_output
 
-    # TODO: add support to target a single page, which will allow us to make integration tests a lot faster
     def get_order_history(self,
                           year=datetime.date.today().year,
+                          start_index=None,
                           full_details=False):
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         orders = []
-        next_page = "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL, year)
+        next_page = "{}/your-orders/orders?timeFilter=year-{}{}".format(BASE_URL,
+                                                                        year,
+                                                                        "&startIndex={}".format(
+                                                                            start_index) if start_index else "")
         while next_page:
             self.amazon_session.get(next_page)
             response = self.amazon_session.last_response
@@ -48,15 +51,37 @@ class AmazonOrders:
 
                 orders.append(order)
 
-            try:
-                next_page = "{}{}".format(BASE_URL,
-                                          response_parsed.find("ul", {"class", "a-pagination"}).find(
-                                              "li", {"class": "a-last"}).find("a").attrs["href"])
-            except AttributeError:
-                next_page = None
+            next_page = None
+            if not start_index:
+                try:
+                    next_page = "{}{}".format(BASE_URL,
+                                              response_parsed.find("ul", {"class", "a-pagination"}).find(
+                                                  "li", {"class": "a-last"}).find("a").attrs["href"])
+                except AttributeError:
+                    pass
 
         if self.print_output:
             for order in orders:
                 print(order)
 
         return orders
+
+    def get_order(self, order_id):
+        if not self.amazon_session.is_authenticated:
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
+
+        self.amazon_session.get("{}/your-account/order-details?orderID={}".format(BASE_URL, order_id))
+
+        if self.debug:
+            page_name = self.amazon_session._get_page_from_url(self.amazon_session.last_response.url)
+            with open(page_name, "w") as html_file:
+                html_file.write(self.amazon_session.last_response.text)
+
+        order_details_tag = self.amazon_session.last_response_parsed.find("div", id="orderDetails")
+        # TODO: add support here in the parsing for single order page
+        order = Order(order_details_tag, full_details=True)
+
+        if self.print_output:
+            print(order)
+
+        return order

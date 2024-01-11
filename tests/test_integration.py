@@ -42,9 +42,11 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual("Alex Laird", cat_food_order.recipient.name)
         self.assertIsNotNone(cat_food_order.recipient.address)
         self.assertEqual(1, len(cat_food_order.shipments))
-        # TODO: why aren't these equal?
-        # self.assertEqual(cat_food_order.items, cat_food_order.shipments[0].items)
-        self.assertEqual(cat_food_order, cat_food_order.shipments[0].order)
+        shipment = cat_food_order.shipments[0]
+        self.assertEqual(str(cat_food_order.items), str(shipment.items))
+        self.assertEqual(cat_food_order, shipment.order)
+        self.assertIsNone(shipment.delivery_status)
+        self.assertIsNone(shipment.tracking_link)
         self.assertEqual(1, len(cat_food_order.items))
         self.assertEqual(
             "Taste Of The Wild Rocky Mountain Grain-Free Dry Cat Food With Roasted Venison & Smoked Salmon 15Lb",
@@ -56,51 +58,204 @@ class TestIntegration(unittest.TestCase):
 
     def test_get_orders_full_details(self):
         # GIVEN
-        year = 2018
+        year = 2020
+        start_index = 40
 
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year,
+                                                      start_index=start_index,
                                                       full_details=True)
 
         # THEN
-        self.assertEqual(85, len(orders))
-        cat_food_order = orders[3]
-        self.assertEqual("34.01", cat_food_order.grand_total)
-        self.assertEqual("112-0399923-3070642", cat_food_order.order_number)
-        self.assertIsNotNone(cat_food_order.order_details_link)
-        self.assertEqual(date(2018, 12, 21), cat_food_order.order_placed_date)
-        self.assertEqual("Alex Laird", cat_food_order.recipient.name)
-        self.assertIsNotNone(cat_food_order.recipient.address)
-        self.assertEqual(1, len(cat_food_order.shipments))
-        self.assertEqual(str(cat_food_order.items),
-                         str(cat_food_order.shipments[0].items))
-        self.assertEqual(str(cat_food_order),
-                         str(cat_food_order.shipments[0].order))
-        self.assertEqual(1, len(cat_food_order.items))
+        self.assertEqual(10, len(orders))
+        paper_towels_order = orders[3]
+        self.assertEqual("35.90", paper_towels_order.grand_total)
+        self.assertEqual("114-9460922-7737063", paper_towels_order.order_number)
+        self.assertIsNotNone(paper_towels_order.order_details_link)
+        self.assertEqual(date(2020, 10, 27), paper_towels_order.order_placed_date)
+        self.assertEqual("Alex Laird", paper_towels_order.recipient.name)
+        self.assertIsNotNone(paper_towels_order.recipient.address)
+        self.assertEqual(1, len(paper_towels_order.shipments))
+        shipment = paper_towels_order.shipments[0]
+        self.assertEqual(str(paper_towels_order.items),
+                         str(shipment.items))
+        self.assertEqual(str(paper_towels_order),
+                         str(shipment.order))
+        self.assertIsNone(shipment.tracking_link)
+        self.assertIsNone(shipment.delivery_status)
+        self.assertEqual(1, len(paper_towels_order.items))
+        self.assertEqual("Bounty Quick-Size Paper Towels, White, 16 Family Rolls = 40 Regular Rolls",
+                         paper_towels_order.items[0].title)
+        self.assertIsNotNone(paper_towels_order.items[0].link)
+        self.assertIsNone(paper_towels_order.items[0].return_eligible_date)
+
+        self.assertTrue(paper_towels_order.full_details)
+        self.assertEqual("American Express", paper_towels_order.payment_method)
+        self.assertEqual(4, len(paper_towels_order.payment_method_last_4))
+        self.assertEqual("38.84", paper_towels_order.subtotal)
+        self.assertEqual("0.00", paper_towels_order.shipping_total)
+        self.assertEqual("-5.83", paper_towels_order.subscription_discount)
+        self.assertEqual("33.01", paper_towels_order.total_before_tax)
+        self.assertEqual("2.89", paper_towels_order.estimated_tax)
+        self.assertEqual(date(2020, 10, 28), paper_towels_order.order_shipped_date)
+        self.assertEqual("New", paper_towels_order.items[0].condition)
+        self.assertEqual("38.84", paper_towels_order.items[0].price)
+        self.assertEqual("Amazon.com Services, Inc",
+                         paper_towels_order.items[0].seller.name)
+        self.assertIsNone(paper_towels_order.items[0].seller.link)
+
+    def test_get_orders_multiple_items(self):
+        # GIVEN
+        year = 2020
+        start_index = 40
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year,
+                                                      start_index=start_index,
+                                                      full_details=True)
+
+        # THEN
+        multiple_items_order = orders[6]
+        self.assertEqual(1, len(multiple_items_order.shipments))
+        self.assertEqual(2, len(multiple_items_order.items))
+        self.assertEqual(str(multiple_items_order.items),
+                         str(multiple_items_order.shipments[0].items))
+        self.assertEqual(str(multiple_items_order),
+                         str(multiple_items_order.shipments[0].order))
+        self.assertEqual(
+            "AmazonBasics 36 Pack AAA High-Performance Alkaline Batteries, 10-Year Shelf Life, Easy to Open Value Pack",
+            multiple_items_order.items[0].title)
+        item = multiple_items_order.items[1]
+        self.assertEqual(
+            "AmazonBasics 48 Pack AA High-Performance Alkaline Batteries, 10-Year Shelf Life, Easy to Open Value Pack",
+            item.title)
+        self.assertIsNotNone(item.link)
+        self.assertIsNone(item.return_eligible_date)
+        self.assertEqual("New", item.condition)
+        self.assertEqual("15.49", item.price)
+        self.assertEqual("Amazon.com Services, Inc",
+                         item.seller.name)
+        self.assertIsNone(item.seller.link)
+
+    def test_get_orders_return(self):
+        # GIVEN
+        year = 2020
+        start_index = 50
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year,
+                                                      start_index=start_index,
+                                                      full_details=True)
+
+        # THEN
+        return_order = orders[1]
+        self.assertEqual("76.11", return_order.grand_total)
+        self.assertEqual("112-2961628-4757846", return_order.order_number)
+        self.assertIsNotNone(return_order.order_details_link)
+        self.assertEqual(date(2020, 10, 18), return_order.order_placed_date)
+        self.assertEqual("Alex Laird", return_order.recipient.name)
+        self.assertIsNotNone(return_order.recipient.address)
+        self.assertEqual(1, len(return_order.shipments))
+        shipment = return_order.shipments[0]
+        self.assertEqual(str(return_order.items),
+                         str(shipment.items))
+        self.assertEqual(str(return_order),
+                         str(shipment.order))
+        self.assertIsNone(shipment.tracking_link)
+        self.assertTrue("Return complete", shipment.delivery_status)
+        self.assertEqual(1, len(return_order.items))
+        self.assertEqual("Nintendo Switch Pro Controller",
+                         return_order.items[0].title)
+        self.assertIsNotNone(return_order.items[0].link)
+        self.assertIsNone(return_order.items[0].return_eligible_date)
+
+        self.assertTrue(return_order.full_details)
+        self.assertEqual("American Express", return_order.payment_method)
+        self.assertEqual(4, len(return_order.payment_method_last_4))
+        self.assertEqual("69.99", return_order.subtotal)
+        self.assertEqual("0.00", return_order.shipping_total)
+        self.assertIsNone(return_order.subscription_discount)
+        self.assertEqual("69.99", return_order.total_before_tax)
+        self.assertEqual("6.12", return_order.estimated_tax)
+        self.assertEqual("76.11", return_order.refund_total)
+        self.assertEqual(date(2020, 10, 19), return_order.order_shipped_date)
+        self.assertTrue(date(2020, 11, 2), return_order.refund_completed_date)
+        self.assertEqual("New", return_order.items[0].condition)
+        self.assertEqual("69.99", return_order.items[0].price)
+        self.assertEqual("Amazon.com Services, Inc",
+                         return_order.items[0].seller.name)
+        self.assertIsNone(return_order.items[0].seller.link)
+
+    def test_get_orders_multiple_shipments(self):
+        # GIVEN
+        year = 2023
+        start_index = 10
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year,
+                                                      start_index=start_index,
+                                                      full_details=True)
+
+        # THEN
+        multiple_shipments_order = orders[3]
+        self.assertEqual(2, len(multiple_shipments_order.shipments))
+        self.assertEqual(2, len(multiple_shipments_order.items))
+        self.assertEqual(str(multiple_shipments_order.items),
+                         str(multiple_shipments_order.shipments[0].items + multiple_shipments_order.shipments[1].items))
+        self.assertEqual(str(multiple_shipments_order),
+                         str(multiple_shipments_order.shipments[0].order))
+        seller = multiple_shipments_order.items[0]
+        self.assertEqual("Amazon.com Services, Inc", seller.seller.name)
+        self.assertIsNone(seller.seller.link)
+        seller = multiple_shipments_order.items[1]
+        self.assertEqual("Cadeya", seller.seller.name)
+        self.assertIsNotNone(seller.seller.link)
+
+    def test_get_order(self):
+        # GIVEN
+        order_id = "112-9685975-5907428"
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assertEqual("34.01", order.grand_total)
+        self.assertEqual(order_id, order.order_number)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2018, 12, 21), order.order_placed_date)
+        self.assertEqual("Alex Laird", order.recipient.name)
+        self.assertIsNotNone(order.recipient.address)
+        self.assertEqual(2, len(order.shipments))
+        shipment = order.shipments[0]
+        self.assertEqual(str(order.items),
+                         str(shipment.items))
+        self.assertEqual(str(order),
+                         str(shipment.order))
+        self.assertIsNotNone(shipment.tracking_link)
+        self.assertEqual("Delivered", shipment.delivery_status)
+        self.assertEqual(2, len(order.items))
         self.assertEqual(
             "Taste Of The Wild Rocky Mountain Grain-Free Dry Cat Food With Roasted Venison & Smoked Salmon 15Lb",
-            cat_food_order.items[0].title)
-        self.assertIsNotNone(cat_food_order.items[0].link)
+            order.items[0].title)
+        self.assertIsNotNone(order.items[0].link)
         self.assertEqual(date(2019, 2, 2),
-                         cat_food_order.items[0].return_eligible_date)
+                         order.items[0].return_eligible_date)
 
-        self.assertTrue(cat_food_order.full_details)
-        self.assertEqual("American Express", cat_food_order.payment_method)
-        self.assertIsNotNone(cat_food_order.payment_method_last_4)
-        self.assertEqual("30.99", cat_food_order.subtotal)
-        self.assertEqual("0.00", cat_food_order.shipping_total)
-        # TODO: we should fetch an item and assert on a subscription discount too
-        self.assertIsNone(cat_food_order.subscription_discount)
-        self.assertEqual("30.99", cat_food_order.total_before_tax)
-        self.assertEqual("3.02", cat_food_order.estimated_tax)
-        self.assertEqual(date(2018, 12, 28), cat_food_order.order_shipped_date)
-        # TODO: we should fetch an item and assert on a tracking with a link too
-        self.assertIsNone(cat_food_order.tracking_link)
-        # TODO: we should fetch an item that can parse this
-        # self.assertTrue(cat_food_order.delivered)
-        self.assertEqual("New", cat_food_order.items[0].condition)
-        self.assertEqual("30.99", cat_food_order.items[0].price)
+        self.assertTrue(order.full_details)
+        self.assertEqual("American Express", order.payment_method)
+        self.assertEqual(4, order.payment_method_last_4.length)
+        self.assertEqual("30.99", order.subtotal)
+        self.assertEqual("0.00", order.shipping_total)
+        self.assertIsNone(order.subscription_discount)
+        self.assertEqual("30.99", order.total_before_tax)
+        self.assertEqual("3.02", order.estimated_tax)
+        self.assertEqual(date(2018, 12, 28), order.order_shipped_date)
+        self.assertEqual("New", order.items[0].condition)
+        self.assertEqual("30.99", order.items[0].price)
+        seller = order.items[0].seller
         self.assertEqual("Amazon.com Services, Inc",
-                         cat_food_order.items[0].seller.name)
-        # TODO: we should fetch an item and assert on a seller with a link too
-        self.assertIsNone(cat_food_order.items[0].seller.link)
+                         seller.name)
+        self.assertIsNone(seller.link)
+        seller = order.items[2].seller
+        self.assertEqual("Cadeya", seller.name)
+        self.assertIsNotNone(seller.link)

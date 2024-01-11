@@ -47,7 +47,7 @@ class Item:
         try:
             for tag in self.parsed.find_all("div"):
                 if tag.text.strip().startswith("$"):
-                    return tag.text.strip().strip("$")
+                    return tag.text.strip().replace("$", "")
         except (AttributeError, IndexError):
             logger.warning("When building Item, `price` could not be parsed.", exc_info=True)
 

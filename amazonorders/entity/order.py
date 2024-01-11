@@ -53,9 +53,9 @@ class Order:
             self.subscription_discount = self._parse_subscription_discount()
             self.total_before_tax = self._parse_total_before_tax()
             self.estimated_tax = self._parse_estimated_tax()
+            self.refund_total = self._parse_refund_total()
             self.order_shipped_date = self._parse_order_shipping_date()
-            self.tracking_link = self._parse_tracking_link()
-            self.delivered = self._parse_delivered()
+            self.refund_completed_date = self._parse_refund_completed_date()
 
     def __repr__(self) -> str:
         return "<Order #{}: \"{}\">".format(self.order_number, self.items)
@@ -90,7 +90,7 @@ class Order:
     def _parse_grand_total(self):
         try:
             tag = self.parsed.find("div", {"class": "yohtmlc-order-total"}).find("span", {"class": "value"})
-            return tag.text.strip().strip("$")
+            return tag.text.strip().replace("$", "")
         except AttributeError:
             logger.warning("When building Order, `grand_total` could not be parsed.", exc_info=True)
 
@@ -134,7 +134,7 @@ class Order:
         try:
             for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
                 if "subtotal" in tag.text.lower():
-                    return tag.find("div", {"class": "a-span-last"}).text.strip().strip("$")
+                    return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `subtotal` could not be parsed.", exc_info=True)
 
@@ -142,7 +142,7 @@ class Order:
         try:
             for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
                 if "shipping" in tag.text.lower():
-                    return tag.find("div", {"class": "a-span-last"}).text.strip().strip("$")
+                    return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `shipping_total` could not be parsed.", exc_info=True)
 
@@ -150,7 +150,7 @@ class Order:
         try:
             for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
                 if "subscribe" in tag.text.lower():
-                    return tag.find("div", {"class": "a-span-last"}).text.strip().strip("$")
+                    return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `subscription_discount` could not be parsed.", exc_info=True)
 
@@ -158,7 +158,7 @@ class Order:
         try:
             for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
                 if "before tax" in tag.text.lower():
-                    return tag.find("div", {"class": "a-span-last"}).text.strip().strip("$")
+                    return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `total_before_tax` could not be parsed.", exc_info=True)
 
@@ -166,9 +166,17 @@ class Order:
         try:
             for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
                 if "estimated tax" in tag.text.lower():
-                    return tag.find("div", {"class": "a-span-last"}).text.strip().strip("$")
+                    return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
         except (AttributeError, IndexError):
             logger.warning("When building Order, `estimated_tax` could not be parsed.", exc_info=True)
+
+    def _parse_refund_total(self):
+        try:
+            for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+                if "refund total" in tag.text.lower() and "tax refund" not in tag.text.lower():
+                    return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `refund_total` could not be parsed.", exc_info=True)
 
     def _parse_order_shipping_date(self):
         try:
@@ -179,19 +187,11 @@ class Order:
         except (AttributeError, IndexError):
             logger.warning("When building Order, `order_shipping_date` could not be parsed.", exc_info=True)
 
-    def _parse_tracking_link(self):
+    def _parse_refund_completed_date(self):
         try:
-            tag = self.parsed.find("span", {"class": "track-package-button"})
-            if tag:
-                link_tag = tag.find("a")
-                return "{}{}".format(BASE_URL, link_tag.attrs["href"])
+            # TODO: find a better way to do this
+            if "Refund: Completed" in self.parsed.text:
+                date_str = self.parsed.text.split("Refund: Completed")[1].strip().split("-")[0].strip()
+                return datetime.strptime(date_str, "%B %d, %Y").date()
         except (AttributeError, IndexError):
-            logger.warning("When building Order, `tracking_link` could not be parsed.", exc_info=True)
-
-    def _parse_delivered(self):
-        # This should just be a boolean
-        try:
-            tag = self.parsed.find("div", {"class": "js-shipment-info-container"})
-            return "Delivered" in tag.text if tag else None
-        except (AttributeError, IndexError):
-            logger.warning("When building Order, `delivered` could not be parsed.", exc_info=True)
+            logger.warning("When building Order, `refund_completed_date` could not be parsed.", exc_info=True)
