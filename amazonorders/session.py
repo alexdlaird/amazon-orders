@@ -145,7 +145,7 @@ class AmazonSession:
     def _mfa_submit(self):
         otp = input("Enter the one-time passcode sent to your device: ")
 
-        # TODO: figure out why Amazon isn't respect rememberDevice
+        # TODO: figure out why Amazon doesn't respect rememberDevice
         data = self._build_from_form(MFA_FORM_ID,
                                      {"otpCode": otp, "rememberDevice": ""})
 
