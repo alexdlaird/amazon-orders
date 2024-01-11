@@ -41,13 +41,16 @@ amazon_session = AmazonSession("AMAZON_EMAIL", "AMAZON_PASSWORD")
 amazon_session.login()
 
 order_history = OrderHistory(amazon_session, year=2023)
-order_history.get_orders()
+orders = order_history.get_orders()
+
+for order in orders:
+    print("{} - {}".format(order.order_number, order.grand_total))
 ```
 
-`amazon-orders` is under active development, and while it does work, it is known to be unstable. We are currently
-building out core functionality, tests, and documentation. Our current goal is to provide a stable library that
-fetches customer order data alongside payment information. From there, if we find this scraping route to be stable,
-we may build out the library further to support other functions of Amazon.com.
+`amazon-orders` is under active development and known to be unstable. We are currently building out core functionality,
+tests, and documentation. Our goal is to provide a library that fetches customer order data alongside payment
+information. From there, if we find this scraping route to be stable, we may build out the library further to support
+other functions of Amazon.com.
 
 ## Contributing
 

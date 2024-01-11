@@ -191,6 +191,6 @@ class Order:
         # This should just be a boolean
         try:
             tag = self.parsed.find("div", {"class": "js-shipment-info-container"})
-            return "Delivered" in tag.text
+            return "Delivered" in tag.text if tag else None
         except (AttributeError, IndexError):
             logger.warning("When building Order, `delivered` could not be parsed.", exc_info=True)
