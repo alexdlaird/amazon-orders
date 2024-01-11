@@ -1,5 +1,6 @@
 import os
 import unittest
+from datetime import date
 
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
