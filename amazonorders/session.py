@@ -7,8 +7,10 @@ from bs4 import BeautifulSoup
 from requests import Session
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Alex Laird"
+__copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "0.0.3"
+
+from amazonorders.exception import AmazonOrdersAuthError
 
 logger = logging.getLogger(__name__)
 
@@ -95,9 +97,8 @@ class AmazonSession:
             elif self._is_form_found(MFA_FORM_ID):
                 self._mfa_submit()
             else:
-                print("An error occurred, this is an unknown page: {}".format(self.last_response.url))
-
-                sys.exit(1)
+                raise AmazonOrdersAuthError(
+                    "An error occurred, this is an unknown page: {}".format(self.last_response.url))
 
             if "Hello, sign in" not in self.last_response.text and "nav-item-signout" in self.last_response.text:
                 self.is_authenticated = True
@@ -105,9 +106,7 @@ class AmazonSession:
                 attempts += 1
 
         if attempts == self.max_auth_attempts:
-            print("Max authentication flow attempts reached.")
-
-            sys.exit(1)
+            raise AmazonOrdersAuthError("Max authentication flow attempts reached.")
 
     def close(self):
         self.session.close()
@@ -207,7 +206,9 @@ class AmazonSession:
         error_div = self.last_response_parsed.find("div",
                                                    {attr_name: error_div})
         if error_div:
-            print("An error occurred: {}".format(error_div.text.strip()))
+            error_msg = "An error occurred: {}".format(error_div.text.strip())
 
             if critical:
-                sys.exit(1)
+                raise AmazonOrdersAuthError(error_msg)
+            else:
+                print(error_msg)

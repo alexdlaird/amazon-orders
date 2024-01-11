@@ -8,10 +8,11 @@ from bs4 import BeautifulSoup
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
 from amazonorders.entity.item import Item
+from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Alex Laird"
+__copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "0.0.3"
 
 logger = logging.getLogger(__name__)
@@ -77,8 +78,7 @@ class Order:
 
     def _parse_order_number(self):
         if not self.order_details_link:
-            # TODO: Upgrade this to a lib-specific exception
-            raise Exception("Order._parse_order_link() must be called first.")
+            raise AmazonOrdersError("Order._parse_order_link() must be called first.")
 
         try:
             parsed_url = urlparse(self.order_details_link)

@@ -3,12 +3,13 @@ import os
 
 import click
 
+from amazonorders.exception import AmazonOrdersError
 from amazonorders.page.orderhistory import OrderHistory
 
 from amazonorders.session import AmazonSession
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Alex Laird"
+__copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "0.0.3"
 
 
@@ -30,7 +31,10 @@ def amazon_orders(ctx, **kwargs):
                                  year=kwargs["year"],
                                  print_output=True,
                                  full_details=kwargs["full_details"])
-    order_history.get_orders()
+    try:
+        order_history.get_orders()
+    except AmazonOrdersError as e:
+        ctx.fail(str(e))
 
     amazon_session.close()
 

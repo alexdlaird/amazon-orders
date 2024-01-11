@@ -2,10 +2,11 @@ import datetime
 import sys
 
 from amazonorders.entity.order import Order
+from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
-__copyright__ = "Copyright 2023, Alex Laird"
+__copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "0.0.3"
 
 
@@ -25,9 +26,7 @@ class OrderHistory:
 
     def get_orders(self):
         if not self.amazon_session.is_authenticated:
-            print("Call AmazonSession.login() to authenticate first.")
-
-            sys.exit(1)
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         orders = []
         next_page = "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL, self.year)
