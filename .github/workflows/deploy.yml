@@ -10,6 +10,10 @@ jobs:
   deploy:
     name: Deploy
 
+    env:
+      AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
+      AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
+
     runs-on: ubuntu-latest
 
     steps:

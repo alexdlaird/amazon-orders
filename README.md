@@ -35,13 +35,13 @@ Or use `amazon-orders` programmatically:
 
 ```python
 from amazonorders.session import AmazonSession
-from amazonorders.page.orderhistory import OrderHistory
+from amazonorders.orders import AmazonOrders
 
 amazon_session = AmazonSession("AMAZON_EMAIL", "AMAZON_PASSWORD")
 amazon_session.login()
 
-order_history = OrderHistory(amazon_session, year=2023)
-orders = order_history.get_orders()
+amazon_orders = AmazonOrders(amazon_session)
+orders = amazon_orders.get_order_history(year=2023)
 
 for order in orders:
     print("{} - {}".format(order.order_number, order.grand_total))

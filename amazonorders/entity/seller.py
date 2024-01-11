@@ -32,7 +32,10 @@ class Seller:
             tag = self.parsed.find("a")
             if not tag:
                 tag = self.parsed.find("span")
-            return tag.text.strip()
+            value = tag.text
+            if "Sold by:" in value:
+                value = value.split("Sold by:")[1]
+            return value.strip()
         except (AttributeError, IndexError):
             logger.warning("When building Seller, `name` could not be parsed.", exc_info=True)
 

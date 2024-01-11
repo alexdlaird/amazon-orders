@@ -4,7 +4,7 @@ import os
 import click
 
 from amazonorders.exception import AmazonOrdersError
-from amazonorders.page.orderhistory import OrderHistory
+from amazonorders.orders import AmazonOrders
 
 from amazonorders.session import AmazonSession
 
@@ -20,19 +20,19 @@ __version__ = "0.0.3"
 @click.option('--password', default=os.environ.get("AMAZON_PASSWORD"), help="An Amazon password.")
 @click.option('--full-details', is_flag=True, default=False,
               help="True if the full details should be retreived for each order.")
-def amazon_orders(ctx, **kwargs):
+def get_order_history(ctx, **kwargs):
     if not kwargs["username"] or not kwargs["password"]:
         ctx.fail("Must provide but --username and --password for Amazon.")
 
     amazon_session = AmazonSession(kwargs["username"], kwargs["password"])
     amazon_session.login()
 
-    order_history = OrderHistory(amazon_session,
-                                 year=kwargs["year"],
-                                 print_output=True,
-                                 full_details=kwargs["full_details"])
+    amazon_orders = AmazonOrders(amazon_session,
+                                 print_output=True)
+
     try:
-        order_history.get_orders()
+        amazon_orders.get_order_history(year=kwargs["year"],
+                                        full_details=kwargs["full_details"])
     except AmazonOrdersError as e:
         ctx.fail(str(e))
 
@@ -40,4 +40,4 @@ def amazon_orders(ctx, **kwargs):
 
 
 if __name__ == "__main__":
-    amazon_orders(obj={})
+    get_order_history(obj={})

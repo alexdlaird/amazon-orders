@@ -84,6 +84,7 @@ class Order:
             parsed_url = urlparse(self.order_details_link)
             return parse_qs(parsed_url.query)["orderID"][0]
         except (AttributeError, IndexError):
+            # TODO: refactor entities to all extend a base entity, which has this base parse function with this except
             logger.warning("When building Order, `order_number` could not be parsed.", exc_info=True)
 
     def _parse_grand_total(self):

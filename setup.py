@@ -2,7 +2,7 @@ from setuptools import setup
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 with open("README.md", "r") as f:
     long_description = f.read()
@@ -11,8 +11,7 @@ setup(
     name="amazon-orders",
     version=__version__,
     packages=["amazonorders",
-              "amazonorders.entity",
-              "amazonorders.page"],
+              "amazonorders.entity"],
     python_requires=">=3.6",
     install_requires=[
         "click",
@@ -25,7 +24,7 @@ setup(
         amazon-orders=amazonorders.cli:amazon_orders
     """,
     include_package_data=True,
-    description="A CLI and library for interacting with Amazon orders.",
+    description="A CLI and library for interacting with Amazon order history.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Alex Laird",

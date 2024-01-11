@@ -1,5 +1,4 @@
 import datetime
-import sys
 
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError
@@ -10,26 +9,25 @@ __copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "0.0.3"
 
 
-class OrderHistory:
+class AmazonOrders:
     def __init__(self,
                  amazon_session,
                  debug=False,
-                 year=datetime.date.today().year,
-                 print_output=False,
-                 full_details=False) -> None:
+                 print_output=False) -> None:
         self.amazon_session = amazon_session
 
         self.debug = debug
-        self.year = year
         self.print_output = print_output
-        self.full_details = full_details
 
-    def get_orders(self):
+    # TODO: add support to target a single page, which will allow us to make integration tests a lot faster
+    def get_order_history(self,
+                          year=datetime.date.today().year,
+                          full_details=False):
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         orders = []
-        next_page = "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL, self.year)
+        next_page = "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL, year)
         while next_page:
             self.amazon_session.get(next_page)
             response = self.amazon_session.last_response
@@ -43,7 +41,7 @@ class OrderHistory:
             for order_tag in response_parsed.find_all("div", {"class": "order-card"}):
                 order = Order(order_tag)
 
-                if self.full_details:
+                if full_details:
                     self.amazon_session.get(order.order_details_link)
                     order_details_tag = self.amazon_session.last_response_parsed.find("div", id="orderDetails")
                     order = Order(order_details_tag, full_details=True, clone=order)

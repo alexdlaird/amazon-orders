@@ -16,6 +16,10 @@ jobs:
   build:
     name: Build
 
+    env:
+      AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
+      AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
+
     strategy:
       fail-fast: false
       max-parallel: 3
