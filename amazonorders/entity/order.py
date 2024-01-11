@@ -6,6 +6,7 @@ from urllib.parse import parse_qs
 from bs4 import BeautifulSoup
 
 from amazonorders.entity.recipient import Recipient
+from amazonorders.entity.seller import Seller
 from amazonorders.entity.shipment import Shipment
 from amazonorders.entity.item import Item
 from amazonorders.session import BASE_URL
@@ -18,9 +19,14 @@ logger = logging.getLogger(__name__)
 
 
 class Order:
-    def __init__(self, parsed, clone=None) -> None:
+    def __init__(self,
+                 parsed,
+                 full_details=False,
+                 clone=None) -> None:
         self.parsed = parsed
+        self.full_details = full_details
 
+        # TODO: add support for this to be parsed from the order-details page as well (not just through a clone)
         if clone:
             self.shipments = clone.shipments
             self.items = clone.items
@@ -38,21 +44,18 @@ class Order:
             self.order_placed_date = self._parse_order_placed_date()
             self.recipient = self._parse_recipient()
 
-        # These fields will only be populated from the full order details page
-        # TODO: populate these
-        self.payment_method = None
-        self.payment_method_last_4 = None
-        self.subtotal = None
-        self.shipping_total = None
-        self.total_before_tax = None
-        self.estimated_tax = None
-        self.sold_by = None
-        self.sold_by_link = None
-        self.condition = None
-        self.order_shipped_date = None
-        self.tracking_link = None
-        # This should just be a boolean
-        self.delivered = None
+        if self.full_details:
+            self.payment_method = self._parse_payment_method()
+            self.payment_method_last_4 = self._parse_payment_method_last_4()
+            self.subtotal = self._parse_subtotal()
+            self.shipping_total = self._parse_shipping_total()
+            self.total_before_tax = self._parse_total_before_tax()
+            self.estimated_tax = self._parse_estimated_tax()
+            self.seller = self._parse_seller()
+            self.condition = self._parse_condition()
+            self.order_shipped_date = self._parse_order_shipping_date()
+            self.tracking_link = self._parse_tracking_link()
+            self.delivered = self._parse_delivered()
 
     def __repr__(self) -> str:
         return "<Order: \"{}\">".format(self.items)
@@ -109,3 +112,74 @@ class Order:
             return Recipient(script_parsed)
         except (AttributeError, IndexError):
             logger.warning("When building Order, `recipient` could not be parsed.", exc_info=True)
+
+    def _parse_payment_method(self):
+        try:
+            return None
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `payment_method` could not be parsed.", exc_info=True)
+
+    def _parse_payment_method_last_4(self):
+        try:
+            return None
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `payment_method_last_4` could not be parsed.", exc_info=True)
+
+    def _parse_subtotal(self):
+        try:
+            return None
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `subtotal` could not be parsed.", exc_info=True)
+
+    def _parse_shipping_total(self):
+        try:
+            return None
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `shipping_total` could not be parsed.", exc_info=True)
+
+    def _parse_total_before_tax(self):
+        try:
+            return None
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `total_before_tax` could not be parsed.", exc_info=True)
+
+    def _parse_estimated_tax(self):
+        try:
+            return None
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `estimated_tax` could not be parsed.", exc_info=True)
+
+    def _parse_seller(self):
+        try:
+            tag = self.parsed.find("div", {"class": "yohtmlc-item"}).find_all("div")
+            sold_tag = tag[1]
+            if "Sold by:" in tag[2].text:
+                sold_tag = tag[2]
+            return Seller(sold_tag, order=self)
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `seller` could not be parsed.", exc_info=True)
+
+    def _parse_condition(self):
+        try:
+            return None
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `condition` could not be parsed.", exc_info=True)
+
+    def _parse_order_shipping_date(self):
+        try:
+            return None
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `order_shipping_date` could not be parsed.", exc_info=True)
+
+    def _parse_tracking_link(self):
+        try:
+            return None
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `tracking_link` could not be parsed.", exc_info=True)
+
+    def _parse_delivered(self):
+        # This should just be a boolean
+        try:
+            return None
+        except (AttributeError, IndexError):
+            logger.warning("When building Order, `delivered` could not be parsed.", exc_info=True)

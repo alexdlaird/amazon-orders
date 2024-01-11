@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class Item:
-    def __init__(self, parsed) -> None:
+    def __init__(self,
+                 parsed) -> None:
         self.parsed = parsed
 
         self.title = self._parse_title()

@@ -9,8 +9,9 @@
 `amazon-orders` is an unofficial library that provides a command line interface alongside a programmatic API that can
 be used to interact with Amazon.com's consumer-facing website.
 
-This package works by parsing website data from Amazon.com. A nightly build validates this functionality to ensure its
-stability, but as it is not officially supported, it may break at any time.
+This package works by parsing website data from Amazon.com. A nightly build validates functionality to ensure its
+stability, but as Amazon provides no officially supported API, this package may break at any time. This package only
+supports the English version of the website.
 
 ## Installation
 
@@ -43,10 +44,10 @@ order_history = OrderHistory(amazon_session, year=2023)
 order_history.get_orders()
 ```
 
-`amazon-orders` is under active development, and at present does very little. The first goal is to be able to fetch a
-customer's Orders page so order and return data, alongside payment information, can be gathered. Depending on the
-success of that functionality, additional features may be added as well for browsing Amazon as a whole (the library
-would probably be renamed at that point).
+`amazon-orders` is under active development, and while it does work, it is known to be unstable. We are currently
+building out core functionality, tests, and documentation. Our current goal is to provide a stable library that
+fetches customer order data alongside payment information. From there, if we find this scraping route to be stable,
+we may build out the library further to support other functions of Amazon.com.
 
 ## Contributing
 

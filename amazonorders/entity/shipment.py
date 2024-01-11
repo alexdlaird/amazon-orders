@@ -6,7 +6,9 @@ __version__ = "0.0.3"
 
 
 class Shipment:
-    def __init__(self, parsed, order) -> None:
+    def __init__(self,
+                 parsed,
+                 order) -> None:
         self.parsed = parsed
         self.order = order
 

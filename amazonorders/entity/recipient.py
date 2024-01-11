@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 
 
 class Recipient:
-    def __init__(self, parsed) -> None:
+    def __init__(self,
+                 parsed) -> None:
         self.parsed = parsed
 
         self.name = self._parse_name()

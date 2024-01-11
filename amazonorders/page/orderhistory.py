@@ -1,8 +1,6 @@
 import datetime
 import sys
 
-from bs4 import BeautifulSoup
-
 from amazonorders.entity.order import Order
 from amazonorders.session import BASE_URL
 
@@ -43,19 +41,18 @@ class OrderHistory:
                 with open(page_name, "w") as html_file:
                     html_file.write(response.text)
 
-            for card in response_parsed.find_all("div", {"class": "order-card"}):
-                order = Order(card)
+            for order_tag in response_parsed.find_all("div", {"class": "order-card"}):
+                order = Order(order_tag)
 
                 if self.full_details:
-                    # TODO: this needs finished
-                    order_details_response = BeautifulSoup(self.amazon_session.get(order.order_details_link).text,
-                                                           "html.parser")
-                    order = Order(order_details_response.find("div", id="orderDetails"), clone=order)
+                    self.amazon_session.get(order.order_details_link)
+                    order_details_tag = self.amazon_session.last_response_parsed.find("div", id="orderDetails")
+                    order = Order(order_details_tag, full_details=True, clone=order)
 
                 orders.append(order)
 
             try:
-                next_page = "{}{}".format(self.amazon_session.BASE_URL,
+                next_page = "{}{}".format(BASE_URL,
                                           response_parsed.find("ul", {"class", "a-pagination"}).find(
                                               "li", {"class": "a-last"}).find("a").attrs["href"])
             except AttributeError:
