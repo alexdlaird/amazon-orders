@@ -117,7 +117,8 @@ class Order:
             tag = self.parsed.find("div", {"class": "displayAddressDiv"})
             if not tag:
                 script_id = self.parsed.find("div",
-                                             id=lambda value: value and value.startswith("shipToInsertionNode")).attrs["id"]
+                                             id=lambda value: value and value.startswith("shipToInsertionNode")).attrs[
+                    "id"]
                 tag = self.parsed.find("script",
                                        id="shipToData-shippingAddress-{}".format(script_id.split("-")[2]))
                 tag = BeautifulSoup(str(tag.contents[0]).strip(), "html.parser")

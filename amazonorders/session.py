@@ -42,10 +42,10 @@ CAPTCHA_FORM_CLASS = "cvf-widget-form"
 
 class AmazonSession:
     def __init__(self,
-        username,
-        password,
-        debug=False,
-        max_auth_attempts=10) -> None:
+                 username,
+                 password,
+                 debug=False,
+                 max_auth_attempts=10) -> None:
         self.username = username
         self.password = password
 
@@ -215,7 +215,7 @@ class AmazonSession:
         return page_name
 
     def _handle_errors(self, error_div="auth-error-message-box", attr_name="id",
-        critical=False):
+                       critical=False):
         error_div = self.last_response_parsed.find("div",
                                                    {attr_name: error_div})
         if error_div:

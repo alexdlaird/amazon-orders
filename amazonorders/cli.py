@@ -29,11 +29,12 @@ def amazon_orders(ctx, **kwargs):
     ctx.obj["amazon_session"] = AmazonSession(kwargs["username"], kwargs["password"])
 
 
-@amazon_orders.command()
+@amazon_orders.command(help="Retrieve Amazon order history for a given year.")
 @click.pass_context
-@click.option('--year', default=datetime.date.today().year, help="The year for which to get order history.")
+@click.option('--year', default=datetime.date.today().year,
+              help="The year for which to get order history, defaults to the current year.")
 @click.option('--full-details', is_flag=True, default=False,
-              help="True if the full details should be retreived for each order.")
+              help="Retrieve the full details for each order in the history.")
 def history(ctx, **kwargs):
     amazon_session = ctx.obj["amazon_session"]
     amazon_session.login()
@@ -50,9 +51,9 @@ def history(ctx, **kwargs):
     amazon_session.close()
 
 
-@amazon_orders.command()
+@amazon_orders.command(help="Retrieve the full details for the given Amazon order ID.")
 @click.pass_context
-@click.argument('order_id')
+@click.argument("order_id")
 def order(ctx, order_id):
     amazon_session = ctx.obj["amazon_session"]
     amazon_session.login()
