@@ -8,12 +8,11 @@ from bs4 import BeautifulSoup
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
 from amazonorders.entity.item import Item
-from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 logger = logging.getLogger(__name__)
 

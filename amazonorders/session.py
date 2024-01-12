@@ -1,5 +1,4 @@
 import logging
-import sys
 from io import BytesIO
 
 from PIL import Image
@@ -8,7 +7,7 @@ from requests import Session
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 from amazonorders.exception import AmazonOrdersAuthError
 
@@ -43,10 +42,10 @@ CAPTCHA_FORM_CLASS = "cvf-widget-form"
 
 class AmazonSession:
     def __init__(self,
-                 username,
-                 password,
-                 debug=False,
-                 max_auth_attempts=10) -> None:
+        username,
+        password,
+        debug=False,
+        max_auth_attempts=10) -> None:
         self.username = username
         self.password = password
 
@@ -66,9 +65,11 @@ class AmazonSession:
         logger.debug("{} request to {}".format(method, url))
 
         self.last_response = self.session.request(method, url, **kwargs)
-        self.last_response_parsed = BeautifulSoup(self.last_response.text, "html.parser")
+        self.last_response_parsed = BeautifulSoup(self.last_response.text,
+                                                  "html.parser")
 
-        logger.debug("Response: {} - {}".format(self.last_response.url, self.last_response.status_code))
+        logger.debug("Response: {} - {}".format(self.last_response.url,
+                                                self.last_response.status_code))
 
         if self.debug:
             page_name = self._get_page_from_url(self.last_response.url)
@@ -98,7 +99,8 @@ class AmazonSession:
                 self._mfa_submit()
             else:
                 raise AmazonOrdersAuthError(
-                    "An error occurred, this is an unknown page: {}".format(self.last_response.url))
+                    "An error occurred, this is an unknown page: {}".format(
+                        self.last_response.url))
 
             if "Hello, sign in" not in self.last_response.text and "nav-item-signout" in self.last_response.text:
                 self.is_authenticated = True
@@ -106,7 +108,13 @@ class AmazonSession:
                 attempts += 1
 
         if attempts == self.max_auth_attempts:
-            raise AmazonOrdersAuthError("Max authentication flow attempts reached.")
+            raise AmazonOrdersAuthError(
+                "Max authentication flow attempts reached.")
+
+    def logout(self):
+        self.get("{}/gp/sign-out.html".format(BASE_URL))
+
+        self.close()
 
     def close(self):
         self.session.close()
@@ -132,10 +140,13 @@ class AmazonSession:
         for field in contexts:
             print("{}: {}".format(i, field.attrs["value"].strip()))
             i += 1
-        otp_device = int(input("Where would you like your one-time passcode sent? "))
+        otp_device = int(
+            input("Where would you like your one-time passcode sent? "))
 
         data = self._build_from_form(MFA_DEVICE_SELECT_FORM_ID,
-                                     {"otpDeviceContext": contexts[otp_device - 1].attrs["value"]})
+                                     {"otpDeviceContext":
+                                          contexts[otp_device - 1].attrs[
+                                              "value"]})
 
         self.post(self._get_form_action(SIGN_IN_FORM_NAME),
                   data=data)
@@ -194,7 +205,8 @@ class AmazonSession:
         return action
 
     def _is_form_found(self, form_name, attr_name="id"):
-        return self.last_response_parsed.find("form", {attr_name: form_name}) is not None
+        return self.last_response_parsed.find("form", {
+            attr_name: form_name}) is not None
 
     def _get_page_from_url(self, url):
         page_name = url.rsplit("/", 1)[-1].split("?")[0]
@@ -202,7 +214,8 @@ class AmazonSession:
             page_name += ".html"
         return page_name
 
-    def _handle_errors(self, error_div="auth-error-message-box", attr_name="id", critical=False):
+    def _handle_errors(self, error_div="auth-error-message-box", attr_name="id",
+        critical=False):
         error_div = self.last_response_parsed.find("div",
                                                    {attr_name: error_div})
         if error_div:

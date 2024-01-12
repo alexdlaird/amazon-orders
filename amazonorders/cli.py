@@ -10,7 +10,7 @@ from amazonorders.session import AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 
 @click.group(invoke_without_command=True)
@@ -24,7 +24,7 @@ def amazon_orders(ctx, **kwargs):
             ctx.obj[key] = value
 
     if not kwargs["username"] or not kwargs["password"]:
-        ctx.fail("Must provide but --username and --password for Amazon.")
+        ctx.fail("Must provide --username and --password for Amazon.")
 
     ctx.obj["amazon_session"] = AmazonSession(kwargs["username"], kwargs["password"])
 

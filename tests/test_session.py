@@ -1,51 +1,99 @@
 import os
 import unittest
 
+import responses
+
 from amazonorders.exception import AmazonOrdersAuthError
-from amazonorders.session import AmazonSession
+from amazonorders.session import AmazonSession, BASE_URL
 
 from tests.testcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 
 class TestSession(UnitTestCase):
     def setUp(self):
-        self.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
-                                            os.environ.get("AMAZON_PASSWORD"))
+        self.amazon_session = AmazonSession("some-username",
+                                            "some-password")
 
-    @unittest.skip("This test needs to be mocked against the resource files to work")
+    @responses.activate
     def test_login(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
+            responses.add(
+                responses.GET,
+                "{}/gp/sign-in.html".format(BASE_URL),
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r") as f:
+            orders_page = f.read()
+            responses.add(
+                responses.POST,
+                "{}/ap/signin".format(BASE_URL),
+                body=orders_page,
+                status=200,
+            )
+
         # WHEN
         self.amazon_session.login()
 
         # THEN
         self.assertTrue(self.amazon_session.is_authenticated)
 
+    @responses.activate
     def test_login_invalid_username(self):
         # GIVEN
-        amazon_session = AmazonSession("bad-username", "fake-password")
+        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
+            responses.add(
+                responses.GET,
+                "{}/gp/sign-in.html".format(BASE_URL),
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "post-signin-invalid-email.html"), "r") as f:
+            orders_page = f.read()
+            responses.add(
+                responses.POST,
+                "{}/ap/signin".format(BASE_URL),
+                body=orders_page,
+                status=200,
+            )
 
         # WHEN
         with self.assertRaises(AmazonOrdersAuthError):
-            amazon_session.login()
+            self.amazon_session.login()
 
         # THEN
-        self.assertFalse(amazon_session.is_authenticated)
+        self.assertFalse(self.amazon_session.is_authenticated)
 
-    @unittest.skip("This test needs to be mocked against the resource files to work")
+    @responses.activate
     def test_login_invalid_password(self):
         # GIVEN
-        amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
-                                       "fake-password")
+        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
+            responses.add(
+                responses.GET,
+                "{}/gp/sign-in.html".format(BASE_URL),
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "post-signin-invalid-password.html"), "r") as f:
+            orders_page = f.read()
+            responses.add(
+                responses.POST,
+                "{}/ap/signin".format(BASE_URL),
+                body=orders_page,
+                status=200,
+            )
 
         # WHEN
-        amazon_session.login()
+        with self.assertRaises(AmazonOrdersAuthError):
+            self.amazon_session.login()
 
         # THEN
-        self.assertFalse(amazon_session.is_authenticated)
+        self.assertFalse(self.amazon_session.is_authenticated)
 
     def test_mfa(self):
         pass

@@ -25,7 +25,7 @@ class TestIntegration(unittest.TestCase):
 
         self.amazon_orders = AmazonOrders(self.amazon_session)
 
-    def test_get_orders(self):
+    def test_get_order_history(self):
         # GIVEN
         year = 2018
 

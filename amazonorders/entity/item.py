@@ -6,7 +6,7 @@ from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class Item:
                 if "Sold by:" in tag.text:
                     return Seller(tag, order=self)
         except (AttributeError, IndexError):
-            logger.warning("When building Order, `seller` could not be parsed.", exc_info=True)
+            logger.warning("When building Item, `seller` could not be parsed.", exc_info=True)
 
     def _parse_condition(self):
         try:
@@ -65,7 +65,7 @@ class Item:
                 if "Condition:" in tag.text:
                     return tag.text.split("Condition:")[1].strip()
         except (AttributeError, IndexError):
-            logger.warning("When building Order, `condition` could not be parsed.", exc_info=True)
+            logger.warning("When building Item, `condition` could not be parsed.", exc_info=True)
 
     def _parse_return_eligible_date(self):
         try:

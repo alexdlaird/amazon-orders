@@ -10,8 +10,8 @@
 be used to interact with Amazon.com's consumer-facing website.
 
 This package works by parsing website data from Amazon.com. A nightly build validates functionality to ensure its
-stability, but as Amazon provides no officially supported API, this package may break at any time. This package only
-supports the English version of the website.
+stability, but as Amazon provides no official API to use, this package may break at any time. This
+package only supports the English version of the website.
 
 ## Installation
 
@@ -46,11 +46,6 @@ orders = amazon_orders.get_order_history(year=2023)
 for order in orders:
     print("{} - {}".format(order.order_number, order.grand_total))
 ```
-
-`amazon-orders` is under active development and known to be unstable. We are currently building out core functionality,
-tests, and documentation. Our goal is to provide a library that fetches customer order data alongside payment
-information. From there, if we find this scraping route to be stable, we may build out the library further to support
-other functions of Amazon.com.
 
 ## Contributing
 

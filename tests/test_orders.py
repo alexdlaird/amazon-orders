@@ -11,7 +11,7 @@ from tests.testcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 
 class TestOrderHistory(UnitTestCase):
@@ -26,7 +26,7 @@ class TestOrderHistory(UnitTestCase):
             self.amazon_orders.get_order_history()
 
     @responses.activate
-    def test_get_orders(self):
+    def test_get_order_history(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         year = 2023
