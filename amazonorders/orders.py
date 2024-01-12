@@ -70,7 +70,7 @@ class AmazonOrders:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        self.amazon_session.get("{}/your-account/order-details?orderID={}".format(BASE_URL, order_id))
+        self.amazon_session.get("{}/gp/your-account/order-details?orderID={}".format(BASE_URL, order_id))
 
         if self.debug:
             page_name = self.amazon_session._get_page_from_url(self.amazon_session.last_response.url)
@@ -78,7 +78,6 @@ class AmazonOrders:
                 html_file.write(self.amazon_session.last_response.text)
 
         order_details_tag = self.amazon_session.last_response_parsed.find("div", id="orderDetails")
-        # TODO: add support here in the parsing for single order page
         order = Order(order_details_tag, full_details=True)
 
         if self.print_output:

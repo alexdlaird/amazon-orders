@@ -28,7 +28,7 @@ That's it! `amazon-orders` is now available as a Python package is available fro
 Execute `amazon-orders` from the command line with:
 
 ```sh
-amazon-orders --username <AMAZON_EMAIL> --password <AMAZON_PASSWORD>
+amazon-orders --username <AMAZON_EMAIL> --password <AMAZON_PASSWORD> history
 ```
 
 Or use `amazon-orders` programmatically:

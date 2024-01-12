@@ -26,7 +26,6 @@ class Order:
         self.parsed = parsed
         self.full_details = full_details
 
-        # TODO: add support for this to be parsed from the order-details page as well (not just through a clone)
         if clone:
             self.shipments = clone.shipments
             self.items = clone.items
@@ -72,44 +71,58 @@ class Order:
     def _parse_order_details_link(self):
         try:
             tag = self.parsed.find("a", {"class": "yohtmlc-order-details-link"})
-            return "{}{}".format(BASE_URL, tag.attrs["href"])
+            if tag:
+                return "{}{}".format(BASE_URL, tag.attrs["href"])
         except AttributeError:
             logger.warning("When building Order, `order_details_link` could not be parsed.", exc_info=True)
 
     def _parse_order_number(self):
-        if not self.order_details_link:
-            raise AmazonOrdersError("Order._parse_order_link() must be called first.")
-
         try:
-            parsed_url = urlparse(self.order_details_link)
-            return parse_qs(parsed_url.query)["orderID"][0]
+            if self.order_details_link:
+                parsed_url = urlparse(self.order_details_link)
+                return parse_qs(parsed_url.query)["orderID"][0]
+            else:
+                tag = self.parsed.find("bdi", dir="ltr")
+                return tag.text.strip()
         except (AttributeError, IndexError):
             # TODO: refactor entities to all extend a base entity, which has this base parse function with this except
             logger.warning("When building Order, `order_number` could not be parsed.", exc_info=True)
 
     def _parse_grand_total(self):
         try:
-            tag = self.parsed.find("div", {"class": "yohtmlc-order-total"}).find("span", {"class": "value"})
+            tag = self.parsed.find("div", {"class": "yohtmlc-order-total"})
+            if tag:
+                tag = tag.find("span", {"class": "value"})
+            else:
+                for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+                    if "grand total" in tag.text.lower():
+                        tag = tag.find("div", {"class": "a-span-last"})
             return tag.text.strip().replace("$", "")
         except AttributeError:
             logger.warning("When building Order, `grand_total` could not be parsed.", exc_info=True)
 
     def _parse_order_placed_date(self):
         try:
-            tag = self.parsed.find("div", {"class": "a-span3"}).find_all("span")
-            date_str = tag[1].text.strip()
+            tag = self.parsed.find("span", {"class": "order-date-invoice-item"})
+            if tag:
+                date_str = tag.text.split("Ordered on")[1].strip()
+            else:
+                tag = self.parsed.find("div", {"class": "a-span3"}).find_all("span")
+                date_str = tag[1].text.strip()
             return datetime.strptime(date_str, "%B %d, %Y").date()
         except (AttributeError, IndexError):
             logger.warning("When building Order, `order_placed_date` could not be parsed.", exc_info=True)
 
     def _parse_recipient(self):
         try:
-            script_id = self.parsed.find("div",
-                                         id=lambda value: value and value.startswith("shipToInsertionNode")).attrs["id"]
-            tag = self.parsed.find("script",
-                                   id="shipToData-shippingAddress-{}".format(script_id.split("-")[2]))
-            script_parsed = BeautifulSoup(str(tag.contents[0]).strip(), "html.parser")
-            return Recipient(script_parsed)
+            tag = self.parsed.find("div", {"class": "displayAddressDiv"})
+            if not tag:
+                script_id = self.parsed.find("div",
+                                             id=lambda value: value and value.startswith("shipToInsertionNode")).attrs["id"]
+                tag = self.parsed.find("script",
+                                       id="shipToData-shippingAddress-{}".format(script_id.split("-")[2]))
+                tag = BeautifulSoup(str(tag.contents[0]).strip(), "html.parser")
+            return Recipient(tag)
         except (AttributeError, IndexError):
             logger.warning("When building Order, `recipient` could not be parsed.", exc_info=True)
 

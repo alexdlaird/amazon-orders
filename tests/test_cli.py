@@ -1,6 +1,6 @@
 import unittest
 
-from amazonorders.cli import get_order_history
+from amazonorders.cli import amazon_orders
 from click.testing import CliRunner
 
 from tests.testcase import UnitTestCase
@@ -16,7 +16,7 @@ class TestCli(UnitTestCase):
 
     def test_missing_credentials(self):
         # WHEN
-        response = self.runner.invoke(get_order_history,
+        response = self.runner.invoke(amazon_orders,
                                       ["--username", "", "--password", ""])
 
         # THEN
@@ -26,9 +26,9 @@ class TestCli(UnitTestCase):
     @unittest.skip("This test needs to be mocked against the resource files to work")
     def test_get_orders(self):
         # WHEN
-        response = self.runner.invoke(get_order_history,
+        response = self.runner.invoke(amazon_orders,
                                       ["--username", "some-user", "--password",
-                                       "some-password"])
+                                       "some-password", "history"])
 
         # THEN
         # TODO: build this test out more

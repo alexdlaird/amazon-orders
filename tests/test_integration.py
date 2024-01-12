@@ -219,43 +219,50 @@ class TestIntegration(unittest.TestCase):
         order = self.amazon_orders.get_order(order_id)
 
         # THEN
-        self.assertEqual("34.01", order.grand_total)
+        self.assertEqual("46.61", order.grand_total)
         self.assertEqual(order_id, order.order_number)
-        self.assertIsNotNone(order.order_details_link)
-        self.assertEqual(date(2018, 12, 21), order.order_placed_date)
+        self.assertIsNone(order.order_details_link)
+        self.assertEqual(date(2023, 12, 7), order.order_placed_date)
         self.assertEqual("Alex Laird", order.recipient.name)
         self.assertIsNotNone(order.recipient.address)
         self.assertEqual(2, len(order.shipments))
         shipment = order.shipments[0]
-        self.assertEqual(str(order.items),
-                         str(shipment.items))
+        self.assertEqual(1, len(shipment.items))
+        self.assertEqual(str(order.items[0]),
+                         str(shipment.items[0]))
         self.assertEqual(str(order),
                          str(shipment.order))
         self.assertIsNotNone(shipment.tracking_link)
-        self.assertEqual("Delivered", shipment.delivery_status)
+        self.assertEqual("Delivered Dec 9, 2023", shipment.delivery_status)
         self.assertEqual(2, len(order.items))
         self.assertEqual(
-            "Taste Of The Wild Rocky Mountain Grain-Free Dry Cat Food With Roasted Venison & Smoked Salmon 15Lb",
+            "Cadeya Egg Cleaning Brush Silicone, Egg Scrubber for Fresh Eggs, Reusable Cleaning Tools for Egg Washer (Pink)",
             order.items[0].title)
         self.assertIsNotNone(order.items[0].link)
-        self.assertEqual(date(2019, 2, 2),
-                         order.items[0].return_eligible_date)
+        self.assertEqual(date(2024, 1, 31), order.items[0].return_eligible_date)
+        self.assertEqual(
+            "Swiffer WetJet Hardwood and Floor Spray Mop Cleaner Starter Kit, Includes: 1 Power Mop, 10 Pads, Cleaning Solution, Batteries",
+            order.items[1].title)
+        self.assertIsNotNone(order.items[1].link)
+        self.assertEqual(date(2024, 1, 31), order.items[1].return_eligible_date)
 
         self.assertTrue(order.full_details)
         self.assertEqual("American Express", order.payment_method)
-        self.assertEqual(4, order.payment_method_last_4.length)
-        self.assertEqual("30.99", order.subtotal)
+        self.assertEqual(4, len(order.payment_method_last_4))
+        self.assertEqual("43.23", order.subtotal)
         self.assertEqual("0.00", order.shipping_total)
         self.assertIsNone(order.subscription_discount)
-        self.assertEqual("30.99", order.total_before_tax)
-        self.assertEqual("3.02", order.estimated_tax)
-        self.assertEqual(date(2018, 12, 28), order.order_shipped_date)
+        self.assertEqual("43.23", order.total_before_tax)
+        self.assertEqual("3.38", order.estimated_tax)
+        self.assertEqual(date(2023, 12, 7), order.order_shipped_date)
         self.assertEqual("New", order.items[0].condition)
-        self.assertEqual("30.99", order.items[0].price)
+        self.assertEqual("14.99", order.items[0].price)
+        self.assertEqual("New", order.items[1].condition)
+        self.assertEqual("28.24", order.items[1].price)
         seller = order.items[0].seller
+        self.assertEqual("Cadeya", seller.name)
+        self.assertIsNotNone(seller.link)
+        seller = order.items[1].seller
         self.assertEqual("Amazon.com Services, Inc",
                          seller.name)
         self.assertIsNone(seller.link)
-        seller = order.items[2].seller
-        self.assertEqual("Cadeya", seller.name)
-        self.assertIsNotNone(seller.link)
