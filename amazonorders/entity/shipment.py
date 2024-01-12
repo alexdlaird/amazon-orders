@@ -42,7 +42,9 @@ class Shipment:
 
     def _parse_delivery_status(self):
         try:
-            tag = self.parsed.find("div", {"class": "js-shipment-info-container"}).find("div", {"class": "a-row"})
-            return tag.text.strip()
+            tag = self.parsed.find("div", {"class": "js-shipment-info-container"})
+            if tag:
+                tag = tag.find("div", {"class": "a-row"})
+                return tag.text.strip()
         except (AttributeError, IndexError):
             logger.warning("When building Shipment, `delivery_status` could not be parsed.", exc_info=True)

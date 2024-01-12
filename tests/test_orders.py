@@ -28,13 +28,19 @@ class TestOrderHistory(UnitTestCase):
     @responses.activate
     def test_get_orders(self):
         # GIVEN
-        with open(os.path.join("resources", "orders.html"), "r") as f:
+        self.amazon_session.is_authenticated = True
+        year = 2023
+        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r") as f:
             responses.add(
                 responses.GET,
-                "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL, 2023),
+                "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL,
+                                                                  year),
                 body=f.read(),
                 status=200,
             )
 
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year)
+
         # THEN
-        # TODO: write the rest of the test
+        self.assertEqual(3, len(orders))
