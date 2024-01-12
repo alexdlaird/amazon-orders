@@ -1,7 +1,11 @@
+import os
+
+import responses
+
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
 
-from amazonorders.session import AmazonSession
+from amazonorders.session import AmazonSession, BASE_URL
 
 from tests.testcase import UnitTestCase
 
@@ -20,3 +24,17 @@ class TestOrderHistory(UnitTestCase):
         # WHEN
         with self.assertRaises(AmazonOrdersError):
             self.amazon_orders.get_order_history()
+
+    @responses.activate
+    def test_get_orders(self):
+        # GIVEN
+        with open(os.path.join("resources", "orders.html"), "r") as f:
+            responses.add(
+                responses.GET,
+                "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL, 2023),
+                body=f.read(),
+                status=200,
+            )
+
+        # THEN
+        # TODO: write the rest of the test
