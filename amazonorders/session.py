@@ -134,8 +134,7 @@ class AmazonSession:
     def _mfa_device_select(self):
         form = self.last_response_parsed.find("form",
                                               {"id": MFA_DEVICE_SELECT_FORM_ID})
-        contexts = form.find_all("input",
-                                 name="otpDeviceContext")
+        contexts = form.find_all("input", {"name": "otpDeviceContext"})
         i = 1
         for field in contexts:
             print("{}: {}".format(i, field.attrs["value"].strip()))
