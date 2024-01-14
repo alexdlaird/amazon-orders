@@ -147,7 +147,7 @@ class AmazonSession:
                                           contexts[otp_device - 1].attrs[
                                               "value"]})
 
-        self.post(self._get_form_action(SIGN_IN_FORM_NAME),
+        self.post(self._get_form_action(MFA_DEVICE_SELECT_FORM_ID, attr_name="id"),
                   data=data)
 
         self._handle_errors()
@@ -159,7 +159,7 @@ class AmazonSession:
         data = self._build_from_form(MFA_FORM_ID,
                                      {"otpCode": otp, "rememberDevice": ""})
 
-        self.post(self._get_form_action(MFA_FORM_ID),
+        self.post(self._get_form_action(MFA_FORM_ID, attr_name="id"),
                   data=data)
 
         self._handle_errors()
@@ -198,7 +198,9 @@ class AmazonSession:
 
     def _get_form_action(self, form_name, attr_name="name", prefix=None):
         form = self.last_response_parsed.find("form", {attr_name: form_name})
-        action = form.attrs.get("action", self.last_response.url)
+        action = form.attrs.get("action")
+        if not action:
+            action = self.last_response.url
         if prefix and "/" not in action:
             action = prefix + action
         return action

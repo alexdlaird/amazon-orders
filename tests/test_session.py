@@ -1,5 +1,6 @@
 import os
 import unittest
+from unittest.mock import patch
 
 import responses
 
@@ -95,9 +96,9 @@ class TestSession(UnitTestCase):
         # THEN
         self.assertFalse(self.amazon_session.is_authenticated)
 
-    @unittest.skip("These tests require input, we need to mock that")
     @responses.activate
-    def test_mfa(self):
+    @patch('builtins.input')
+    def test_mfa(self, input_mock):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
             responses.add(
@@ -129,9 +130,10 @@ class TestSession(UnitTestCase):
         # THEN
         self.assertTrue(self.amazon_session.is_authenticated)
 
-    @unittest.skip("These tests require input, we need to mock that")
+
     @responses.activate
-    def test_new_otp(self):
+    @patch('builtins.input')
+    def test_new_otp(self, input_mock):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
             responses.add(
@@ -171,9 +173,9 @@ class TestSession(UnitTestCase):
         # THEN
         self.assertTrue(self.amazon_session.is_authenticated)
 
-    @unittest.skip("These tests require input, we need to mock that")
     @responses.activate
-    def test_captcha(self):
+    @patch('builtins.input')
+    def test_captcha(self, input_mock):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
             responses.add(
@@ -194,7 +196,7 @@ class TestSession(UnitTestCase):
             orders_page = f.read()
             responses.add(
                 responses.POST,
-                "{}/ap/verify".format(BASE_URL),
+                "{}/ap/cvf/verify".format(BASE_URL),
                 body=orders_page,
                 status=200,
             )
