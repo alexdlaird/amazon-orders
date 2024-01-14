@@ -1,4 +1,5 @@
 import os
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -130,7 +131,6 @@ class TestSession(UnitTestCase):
         # THEN
         self.assertTrue(self.amazon_session.is_authenticated)
 
-
     @responses.activate
     @patch('builtins.input')
     def test_new_otp(self, input_mock):
@@ -173,6 +173,7 @@ class TestSession(UnitTestCase):
         # THEN
         self.assertTrue(self.amazon_session.is_authenticated)
 
+    @unittest.skipIf(sys.platform == "win32", reason="Windows does not respect PIL's show() method in tests")
     @responses.activate
     @patch('builtins.input')
     def test_captcha(self, input_mock):
