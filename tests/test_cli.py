@@ -2,7 +2,7 @@ import os
 
 import responses
 
-from amazonorders.cli import amazon_orders
+from amazonorders.cli import amazon_orders_cli
 from click.testing import CliRunner
 
 from amazonorders.session import BASE_URL
@@ -10,7 +10,7 @@ from tests.testcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.3"
+__version__ = "0.0.5"
 
 
 class TestCli(UnitTestCase):
@@ -19,7 +19,7 @@ class TestCli(UnitTestCase):
 
     def test_missing_credentials(self):
         # WHEN
-        response = self.runner.invoke(amazon_orders,
+        response = self.runner.invoke(amazon_orders_cli,
                                       ["--username", "", "--password", ""])
 
         # THEN
@@ -54,7 +54,7 @@ class TestCli(UnitTestCase):
             )
 
         # WHEN
-        response = self.runner.invoke(amazon_orders,
+        response = self.runner.invoke(amazon_orders_cli,
                                       ["--username", "some-user", "--password",
                                        "some-password", "history", "--year",
                                        year])
@@ -95,7 +95,7 @@ Order #123-4567890-1234561: "[<Item: "The Emperor's New Groove [DVD] (2001) Davi
             )
 
         # WHEN
-        response = self.runner.invoke(amazon_orders,
+        response = self.runner.invoke(amazon_orders_cli,
                                       ["--username", "some-user", "--password",
                                        "some-password", "order", order_id])
 

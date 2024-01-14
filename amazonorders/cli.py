@@ -10,14 +10,14 @@ from amazonorders.session import AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 
 
 @click.group(invoke_without_command=True)
 @click.option('--username', default=os.environ.get("AMAZON_USERNAME"), help="An Amazon username.")
 @click.option('--password', default=os.environ.get("AMAZON_PASSWORD"), help="An Amazon password.")
 @click.pass_context
-def amazon_orders(ctx, **kwargs):
+def amazon_orders_cli(ctx, **kwargs):
     ctx.ensure_object(dict)
     for key, value in kwargs.items():
         if value:
@@ -29,7 +29,7 @@ def amazon_orders(ctx, **kwargs):
     ctx.obj["amazon_session"] = AmazonSession(kwargs["username"], kwargs["password"])
 
 
-@amazon_orders.command(help="Retrieve Amazon order history for a given year.")
+@amazon_orders_cli.command(help="Retrieve Amazon order history for a given year.")
 @click.pass_context
 @click.option('--year', default=datetime.date.today().year,
               help="The year for which to get order history, defaults to the current year.")
@@ -51,7 +51,7 @@ def history(ctx, **kwargs):
     amazon_session.close()
 
 
-@amazon_orders.command(help="Retrieve the full details for the given Amazon order ID.")
+@amazon_orders_cli.command(help="Retrieve the full details for the given Amazon order ID.")
 @click.pass_context
 @click.argument("order_id")
 def order(ctx, order_id):
@@ -70,4 +70,4 @@ def order(ctx, order_id):
 
 
 if __name__ == "__main__":
-    amazon_orders(obj={})
+    amazon_orders_cli(obj={})
