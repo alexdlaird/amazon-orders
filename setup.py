@@ -21,7 +21,7 @@ setup(
     ],
     entry_points="""
         [console_scripts]
-        amazon-orders=amazonorders.cli:amazon_orders
+        amazon-orders=amazonorders.cli:amazon_orders_cli
     """,
     include_package_data=True,
     description="A CLI and library for interacting with Amazon order history.",

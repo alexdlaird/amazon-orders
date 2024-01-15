@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 
 import click
@@ -11,6 +12,8 @@ from amazonorders.session import AmazonSession
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "0.0.5"
+
+logger = logging.getLogger("amazonorders")
 
 
 @click.group(invoke_without_command=True)
@@ -26,6 +29,10 @@ def amazon_orders_cli(ctx, **kwargs):
 
     if not kwargs["username"] or not kwargs["password"]:
         ctx.fail("Must provide --username and --password for Amazon.")
+
+    if kwargs["debug"]:
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(logging.StreamHandler())
 
     ctx.obj["amazon_session"] = AmazonSession(kwargs["username"],
                                               kwargs["password"],

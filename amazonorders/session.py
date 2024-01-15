@@ -1,4 +1,5 @@
 import logging
+import os
 from io import BytesIO
 
 from PIL import Image
@@ -7,7 +8,7 @@ from requests import Session
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 
 from amazonorders.exception import AmazonOrdersAuthError
 
@@ -50,6 +51,8 @@ class AmazonSession:
         self.password = password
 
         self.debug = debug
+        if self.debug:
+            logger.setLevel(logging.DEBUG)
         self.max_auth_attempts = max_auth_attempts
 
         self.session = Session()
@@ -74,6 +77,7 @@ class AmazonSession:
         if self.debug:
             page_name = self._get_page_from_url(self.last_response.url)
             with open(page_name, "w") as html_file:
+                logger.debug("Response written to file: {}".format(html_file.name))
                 html_file.write(self.last_response.text)
 
         return self.last_response
@@ -211,9 +215,11 @@ class AmazonSession:
 
     def _get_page_from_url(self, url):
         page_name = url.rsplit("/", 1)[-1].split("?")[0]
-        if not page_name.endswith(".html"):
-            page_name += ".html"
-        return page_name
+        page_name.strip(".html")
+        i = 0
+        while os.path.isfile("{}_{}".format(page_name, 0)):
+            i += 1
+        return "{}_{}.html".format(page_name, i)
 
     def _handle_errors(self, error_div="auth-error-message-box", attr_name="id",
                        critical=False):
