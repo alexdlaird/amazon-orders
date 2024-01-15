@@ -19,7 +19,7 @@ logger = logging.getLogger("amazonorders")
 @click.group(invoke_without_command=True)
 @click.option('--username', default=os.environ.get("AMAZON_USERNAME"), help="An Amazon username.")
 @click.option('--password', default=os.environ.get("AMAZON_PASSWORD"), help="An Amazon password.")
-@click.option('--debug', is_flag=True, default=False, help="An Amazon password.")
+@click.option('--debug', is_flag=True, default=False, help="Enable debugging and send output to command line.")
 @click.pass_context
 def amazon_orders_cli(ctx, **kwargs):
     ctx.ensure_object(dict)
