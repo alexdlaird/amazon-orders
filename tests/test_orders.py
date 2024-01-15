@@ -11,7 +11,7 @@ from tests.testcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 
 
 class TestOrderHistory(UnitTestCase):
@@ -51,7 +51,7 @@ class TestOrderHistory(UnitTestCase):
         # GIVEN
         self.amazon_session.is_authenticated = True
         year = 2023
-        with open(os.path.join(self.RESOURCES_DIR, "orders-pagination-1.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders-pagination-1.html"), "r", encoding="utf8") as f:
             responses.add(
                 responses.GET,
                 "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL,
@@ -59,7 +59,7 @@ class TestOrderHistory(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders-pagination-2.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders-pagination-2.html"), "r", encoding="utf8") as f:
             responses.add(
                 responses.GET,
                 "{}/your-orders/orders?_encoding=UTF8&timeFilter=year-{}&startIndex=3&ref_=ppx_yo2ov_dt_b_pagination_1_2".format(
