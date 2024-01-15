@@ -236,7 +236,7 @@ class TestSession(UnitTestCase):
             )
         with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r") as f:
             resp4 = responses.add(
-                responses.POST,
+                responses.GET,
                 "{}/errors/validateCaptcha".format(BASE_URL),
                 body=f.read(),
                 status=200,

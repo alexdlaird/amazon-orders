@@ -174,6 +174,7 @@ class AmazonSession:
 
         self._handle_errors()
 
+    # TODO: these captcha's should be refactored in to their own class. Or can we use https://github.com/a-maliarov/amazoncaptcha?
     def _captcha_1_submit(self):
         captcha = self.last_response_parsed.find("div", {"id": CAPTCHA_1_DIV_ID})
 
@@ -209,10 +210,10 @@ class AmazonSession:
                                      {"field-keywords": captcha_response},
                                      attr_name=None)
 
-        self.post(self._get_form_action(CAPTCHA_1_FORM_CLASS,
-                                        attr_name=None,
-                                        prefix=BASE_URL),
-                  data=data)
+        self.get(self._get_form_action(None,
+                                       attr_name=None,
+                                       prefix=BASE_URL),
+                 data=data)
 
         self._handle_errors("a-alert-info", "class")
 
@@ -230,10 +231,10 @@ class AmazonSession:
                                      {"field-keywords": captcha_response},
                                      attr_name=None)
 
-        self.post(self._get_form_action(CAPTCHA_1_FORM_CLASS,
-                                        attr_name=None,
-                                        prefix=BASE_URL),
-                  data=data)
+        self.get(self._get_form_action(None,
+                                       attr_name=None,
+                                       prefix=BASE_URL),
+                 data=data)
 
         self._handle_errors("m_a-alert-info", "class")
 
