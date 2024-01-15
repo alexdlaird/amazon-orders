@@ -16,6 +16,7 @@ __version__ = "0.0.5"
 @click.group(invoke_without_command=True)
 @click.option('--username', default=os.environ.get("AMAZON_USERNAME"), help="An Amazon username.")
 @click.option('--password', default=os.environ.get("AMAZON_PASSWORD"), help="An Amazon password.")
+@click.option('--debug', is_flag=True, default=False, help="An Amazon password.")
 @click.pass_context
 def amazon_orders_cli(ctx, **kwargs):
     ctx.ensure_object(dict)
@@ -26,14 +27,16 @@ def amazon_orders_cli(ctx, **kwargs):
     if not kwargs["username"] or not kwargs["password"]:
         ctx.fail("Must provide --username and --password for Amazon.")
 
-    ctx.obj["amazon_session"] = AmazonSession(kwargs["username"], kwargs["password"])
+    ctx.obj["amazon_session"] = AmazonSession(kwargs["username"],
+                                              kwargs["password"],
+                                              debug=kwargs["debug"])
 
 
 @amazon_orders_cli.command(help="Retrieve Amazon order history for a given year.")
 @click.pass_context
 @click.option('--year', default=datetime.date.today().year,
               help="The year for which to get order history, defaults to the current year.")
-@click.option('--start_index', help="Retrieve the single page of history at the given index.")
+@click.option('--start-index', help="Retrieve the single page of history at the given index.")
 @click.option('--full-details', is_flag=True, default=False,
               help="Retrieve the full details for each order in the history.")
 def history(ctx, **kwargs):
@@ -41,6 +44,7 @@ def history(ctx, **kwargs):
     amazon_session.login()
 
     amazon_orders = AmazonOrders(amazon_session,
+                                 debug=amazon_session.debug,
                                  print_output=True)
 
     try:
@@ -61,6 +65,7 @@ def order(ctx, order_id):
     amazon_session.login()
 
     amazon_orders = AmazonOrders(amazon_session,
+                                 debug=amazon_session.debug,
                                  print_output=True)
 
     try:
