@@ -33,6 +33,7 @@ def amazon_orders_cli(ctx, **kwargs):
 @click.pass_context
 @click.option('--year', default=datetime.date.today().year,
               help="The year for which to get order history, defaults to the current year.")
+@click.option('--start_index', help="Retrieve the single page of history at the given index.")
 @click.option('--full-details', is_flag=True, default=False,
               help="Retrieve the full details for each order in the history.")
 def history(ctx, **kwargs):
@@ -44,6 +45,7 @@ def history(ctx, **kwargs):
 
     try:
         amazon_orders.get_order_history(year=kwargs["year"],
+                                        start_index=kwargs["start_index"],
                                         full_details=kwargs["full_details"])
     except AmazonOrdersError as e:
         ctx.fail(str(e))
