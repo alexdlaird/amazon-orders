@@ -37,9 +37,10 @@ BASE_HEADERS = {
 SIGN_IN_FORM_NAME = "signIn"
 MFA_DEVICE_SELECT_FORM_ID = "auth-select-device-form"
 MFA_FORM_ID = "auth-mfa-form"
-CAPTCHA_DIV_ID = "cvf-page-content"
-CAPTCHA_FORM_CLASS = "cvf-widget-form"
-CAPTCHA_INPUT_ID = "captchacharacters"
+CAPTCHA_1_DIV_ID = "cvf-page-content"
+CAPTCHA_1_FORM_CLASS = "cvf-widget-form"
+CAPTCHA_2_INPUT_ID = "captchacharacters"
+CAPTCHA_3_INPUT_ID = "m_captchacharacters"
 
 
 class AmazonSession:
@@ -96,10 +97,12 @@ class AmazonSession:
         while not self.is_authenticated and attempts < self.max_auth_attempts:
             if self._is_field_found(SIGN_IN_FORM_NAME):
                 self._sign_in()
-            elif self._is_field_found(CAPTCHA_FORM_CLASS, field_key="class"):
+            elif self._is_field_found(CAPTCHA_1_FORM_CLASS, field_key="class"):
                 self._captcha_1_submit()
-            elif self._is_field_found(CAPTCHA_INPUT_ID, field_type="input", field_key="id"):
+            elif self._is_field_found(CAPTCHA_2_INPUT_ID, field_type="input", field_key="id"):
                 self._captcha_2_submit()
+            elif self._is_field_found(CAPTCHA_3_INPUT_ID, field_type="input", field_key="id"):
+                self._captcha_3_submit()
             elif self._is_field_found(MFA_DEVICE_SELECT_FORM_ID, field_key="id"):
                 self._mfa_device_select()
             elif self._is_field_found(MFA_FORM_ID, field_key="id"):
@@ -172,7 +175,7 @@ class AmazonSession:
         self._handle_errors()
 
     def _captcha_1_submit(self):
-        captcha = self.last_response_parsed.find("div", {"id": CAPTCHA_DIV_ID})
+        captcha = self.last_response_parsed.find("div", {"id": CAPTCHA_1_DIV_ID})
 
         img_src = captcha.find("img", {"alt": "captcha"}).attrs["src"]
         img_response = self.session.get(img_src)
@@ -181,11 +184,11 @@ class AmazonSession:
 
         captcha_response = input("Enter the Captcha seen on the opened image: ")
 
-        data = self._build_from_form(CAPTCHA_FORM_CLASS,
+        data = self._build_from_form(CAPTCHA_1_FORM_CLASS,
                                      {"cvf_captcha_input": captcha_response},
                                      attr_name="class")
 
-        self.post(self._get_form_action(CAPTCHA_FORM_CLASS,
+        self.post(self._get_form_action(CAPTCHA_1_FORM_CLASS,
                                         attr_name="class",
                                         prefix="{}/ap/cvf/".format(BASE_URL)),
                   data=data)
@@ -193,7 +196,7 @@ class AmazonSession:
         self._handle_errors("cvf-widget-alert", "class")
 
     def _captcha_2_submit(self):
-        captcha = self.last_response_parsed.find("input", {"id": CAPTCHA_INPUT_ID}).find_parent("form")
+        captcha = self.last_response_parsed.find("input", {"id": CAPTCHA_2_INPUT_ID}).find_parent("form")
 
         img_src = captcha.find("img").attrs["src"]
         img_response = self.session.get(img_src)
@@ -206,12 +209,33 @@ class AmazonSession:
                                      {"field-keywords": captcha_response},
                                      attr_name=None)
 
-        self.post(self._get_form_action(CAPTCHA_FORM_CLASS,
+        self.post(self._get_form_action(CAPTCHA_1_FORM_CLASS,
                                         attr_name=None,
                                         prefix=BASE_URL),
                   data=data)
 
         self._handle_errors("a-alert-info", "class")
+
+    def _captcha_3_submit(self):
+        captcha = self.last_response_parsed.find("input", {"id": CAPTCHA_3_INPUT_ID}).find_parent("form")
+
+        img_src = captcha.find("img").attrs["src"]
+        img_response = self.session.get(img_src)
+        img = Image.open(BytesIO(img_response.content))
+        img.show()
+
+        captcha_response = input("Enter the Captcha seen on the opened image: ")
+
+        data = self._build_from_form(None,
+                                     {"field-keywords": captcha_response},
+                                     attr_name=None)
+
+        self.post(self._get_form_action(CAPTCHA_1_FORM_CLASS,
+                                        attr_name=None,
+                                        prefix=BASE_URL),
+                  data=data)
+
+        self._handle_errors("m_a-alert-info", "class")
 
     def _build_from_form(self, form_name, additional_attrs, attr_name="id"):
         data = {}
