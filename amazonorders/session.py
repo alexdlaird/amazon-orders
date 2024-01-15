@@ -39,6 +39,7 @@ MFA_DEVICE_SELECT_FORM_ID = "auth-select-device-form"
 MFA_FORM_ID = "auth-mfa-form"
 CAPTCHA_DIV_ID = "cvf-page-content"
 CAPTCHA_FORM_CLASS = "cvf-widget-form"
+CAPTCHA_INPUT_ID = "captchacharacters"
 
 
 class AmazonSession:
@@ -93,17 +94,19 @@ class AmazonSession:
 
         attempts = 0
         while not self.is_authenticated and attempts < self.max_auth_attempts:
-            if self._is_form_found(SIGN_IN_FORM_NAME, attr_name="name"):
+            if self._is_field_found(SIGN_IN_FORM_NAME):
                 self._sign_in()
-            elif self._is_form_found(CAPTCHA_FORM_CLASS, attr_name="class"):
-                self._captcha_submit()
-            elif self._is_form_found(MFA_DEVICE_SELECT_FORM_ID):
+            elif self._is_field_found(CAPTCHA_FORM_CLASS, field_key="class"):
+                self._captcha_1_submit()
+            elif self._is_field_found(CAPTCHA_INPUT_ID, field_type="input", field_key="id"):
+                self._captcha_2_submit()
+            elif self._is_field_found(MFA_DEVICE_SELECT_FORM_ID, field_key="id"):
                 self._mfa_device_select()
-            elif self._is_form_found(MFA_FORM_ID):
+            elif self._is_field_found(MFA_FORM_ID, field_key="id"):
                 self._mfa_submit()
             else:
                 raise AmazonOrdersAuthError(
-                    "An error occurred, this is an unknown page: {}".format(
+                    "An error occurred, this is an unknown page: {}. To capture the page to a file, set the `debug` flag.".format(
                         self.last_response.url))
 
             if "Hello, sign in" not in self.last_response.text and "nav-item-signout" in self.last_response.text:
@@ -168,7 +171,7 @@ class AmazonSession:
 
         self._handle_errors()
 
-    def _captcha_submit(self):
+    def _captcha_1_submit(self):
         captcha = self.last_response_parsed.find("div", {"id": CAPTCHA_DIV_ID})
 
         img_src = captcha.find("img", {"alt": "captcha"}).attrs["src"]
@@ -189,9 +192,31 @@ class AmazonSession:
 
         self._handle_errors("cvf-widget-alert", "class")
 
+    def _captcha_2_submit(self):
+        captcha = self.last_response_parsed.find("input", {"id": CAPTCHA_INPUT_ID}).find_parent("form")
+
+        img_src = captcha.find("img").attrs["src"]
+        img_response = self.session.get(img_src)
+        img = Image.open(BytesIO(img_response.content))
+        img.show()
+
+        captcha_response = input("Enter the Captcha seen on the opened image: ")
+
+        data = self._build_from_form(None,
+                                     {"field-keywords": captcha_response},
+                                     attr_name=None)
+
+        self.post(self._get_form_action(CAPTCHA_FORM_CLASS,
+                                        attr_name=None,
+                                        prefix=BASE_URL),
+                  data=data)
+
+        self._handle_errors("a-alert-info", "class")
+
     def _build_from_form(self, form_name, additional_attrs, attr_name="id"):
         data = {}
-        form = self.last_response_parsed.find("form", {attr_name: form_name})
+        attrs = {attr_name: form_name} if attr_name else None
+        form = self.last_response_parsed.find("form", attrs)
         for field in form.find_all("input"):
             try:
                 data[field["name"]] = field["value"]
@@ -201,17 +226,18 @@ class AmazonSession:
         return data
 
     def _get_form_action(self, form_name, attr_name="name", prefix=None):
-        form = self.last_response_parsed.find("form", {attr_name: form_name})
+        attrs = {attr_name: form_name} if attr_name else None
+        form = self.last_response_parsed.find("form", attrs)
         action = form.attrs.get("action")
         if not action:
             action = self.last_response.url
-        if prefix and "/" not in action:
+        if prefix and not action.startswith("http"):
             action = prefix + action
         return action
 
-    def _is_form_found(self, form_name, attr_name="id"):
-        return self.last_response_parsed.find("form", {
-            attr_name: form_name}) is not None
+    def _is_field_found(self, field_value, field_type="form", field_key="name"):
+        return self.last_response_parsed.find(field_type, {
+            field_key: field_value}) is not None
 
     def _get_page_from_url(self, url):
         page_name = url.rsplit("/", 1)[-1].split("?")[0]
