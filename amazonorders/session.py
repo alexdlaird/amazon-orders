@@ -213,7 +213,7 @@ class AmazonSession:
         self.get(self._get_form_action(None,
                                        attr_name=None,
                                        prefix=BASE_URL),
-                 data=data)
+                 params=data)
 
         self._handle_errors("a-alert-info", "class")
 
@@ -234,7 +234,7 @@ class AmazonSession:
         self.get(self._get_form_action(None,
                                        attr_name=None,
                                        prefix=BASE_URL),
-                 data=data)
+                 params=data)
 
         self._handle_errors("m_a-alert-info", "class")
 
