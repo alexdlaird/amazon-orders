@@ -12,7 +12,7 @@ from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 
 
 class TestSession(UnitTestCase):
@@ -188,6 +188,7 @@ class TestSession(UnitTestCase):
                 responses.GET,
                 "https://opfcaptcha-prod.s3.amazonaws.com/d32ff4fa043d4f969a1693adfb5d663a.jpg",
                 body=f.read(),
+                headers={"Content-Type": "image/jpeg"},
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
@@ -232,6 +233,7 @@ class TestSession(UnitTestCase):
                 responses.GET,
                 "https://images-na.ssl-images-amazon.com/captcha/ddwwidnf/Captcha_gmwackhtzu.jpg",
                 body=f.read(),
+                headers={"Content-Type": "image/jpeg"},
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
