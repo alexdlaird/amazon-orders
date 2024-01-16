@@ -2,19 +2,20 @@ import json
 import logging
 import os
 from io import BytesIO
+from typing import Optional, Any, Dict
 from urllib.parse import urlparse
 
 import requests
 from PIL import Image
 from amazoncaptcha import AmazonCaptcha
-from bs4 import BeautifulSoup
-from requests import Session
+from bs4 import BeautifulSoup, Tag
+from requests import Session, Response
 
 from amazonorders.exception import AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.6"
+__version__ = "0.0.7"
 
 logger = logging.getLogger(__name__)
 
@@ -48,25 +49,25 @@ CAPTCHA_2_INPUT_ID = "captchacharacters"
 
 class AmazonSession:
     def __init__(self,
-        username,
-        password,
-        debug=False,
-        max_auth_attempts=10,
-        cookie_jar_path=os.path.join(os.path.expanduser("~"), ".config",
-                                     "amazon-orders", "cookies.json")) -> None:
-        self.username = username
-        self.password = password
+                 username: str,
+                 password: str,
+                 debug: bool = False,
+                 max_auth_attempts: int = 10,
+                 cookie_jar_path: str = os.path.join(os.path.expanduser("~"), ".config",
+                                                     "amazon-orders", "cookies.json")) -> None:
+        self.username: str = username
+        self.password: str = password
 
-        self.debug = debug
+        self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
-        self.max_auth_attempts = max_auth_attempts
-        self.cookie_jar_path = cookie_jar_path
+        self.max_auth_attempts: int = max_auth_attempts
+        self.cookie_jar_path: str = cookie_jar_path
 
-        self.session = Session()
-        self.last_response = None
-        self.last_response_parsed = None
-        self.is_authenticated = False
+        self.session: Session = Session()
+        self.last_response: Optional[Response] = None
+        self.last_response_parsed: Optional[Tag] = None
+        self.is_authenticated: bool = False
 
         cookie_dir = os.path.dirname(self.cookie_jar_path)
         if not os.path.exists(cookie_dir):
@@ -77,7 +78,10 @@ class AmazonSession:
                 cookies = requests.utils.cookiejar_from_dict(data)
                 self.session.cookies.update(cookies)
 
-    def request(self, method, url, **kwargs):
+    def request(self,
+                method: str,
+                url: str,
+                **kwargs: Any) -> Response:
         if "headers" not in kwargs:
             kwargs["headers"] = {}
         kwargs["headers"].update(BASE_HEADERS)
@@ -106,13 +110,17 @@ class AmazonSession:
 
         return self.last_response
 
-    def get(self, url, **kwargs):
+    def get(self,
+            url: str,
+            **kwargs: Any):
         return self.request("GET", url, **kwargs)
 
-    def post(self, url, **kwargs):
+    def post(self,
+             url,
+             **kwargs: Any) -> Response:
         return self.request("POST", url, **kwargs)
 
-    def login(self):
+    def login(self) -> None:
         self.get("{}/gp/sign-in.html".format(BASE_URL))
 
         attempts = 0
@@ -127,7 +135,7 @@ class AmazonSession:
                 self._captcha_1_submit()
             elif self.last_response_parsed.find("input",
                                                 id=lambda
-                                                    value: value and value.startswith(
+                                                        value: value and value.startswith(
                                                     CAPTCHA_2_INPUT_ID)):
                 self._captcha_2_submit()
             elif self._is_field_found(MFA_DEVICE_SELECT_FORM_ID,
@@ -146,15 +154,15 @@ class AmazonSession:
             raise AmazonOrdersAuthError(
                 "Max authentication flow attempts reached.")
 
-    def logout(self):
+    def logout(self) -> None:
         self.get("{}/gp/sign-out.html".format(BASE_URL))
 
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         self.session.close()
 
-    def _sign_in(self):
+    def _sign_in(self) -> None:
         form = self.last_response_parsed.find("form",
                                               {"name": SIGN_IN_FORM_NAME})
         data = self._build_from_form(form,
@@ -168,7 +176,7 @@ class AmazonSession:
 
         self._handle_errors(critical=True)
 
-    def _mfa_device_select(self):
+    def _mfa_device_select(self) -> None:
         form = self.last_response_parsed.find("form",
                                               {"id": MFA_DEVICE_SELECT_FORM_ID})
         contexts = form.find_all("input", {"name": "otpDeviceContext"})
@@ -193,7 +201,7 @@ class AmazonSession:
 
         self._handle_errors()
 
-    def _mfa_submit(self):
+    def _mfa_submit(self) -> None:
         otp = input("Enter the one-time passcode sent to your device: ")
 
         form = self.last_response_parsed.find("form", id=MFA_FORM_ID)
@@ -207,7 +215,7 @@ class AmazonSession:
 
         self._handle_errors()
 
-    def _captcha_1_submit(self):
+    def _captcha_1_submit(self) -> None:
         captcha_div = self.last_response_parsed.find("div",
                                                      {"id": CAPTCHA_1_DIV_ID})
 
@@ -228,7 +236,7 @@ class AmazonSession:
 
         self._handle_errors("cvf-widget-alert", "class")
 
-    def _captcha_2_submit(self):
+    def _captcha_2_submit(self) -> None:
         form = self.last_response_parsed.find("input",
                                               id=lambda
                                                   value: value and value.startswith(
@@ -248,7 +256,9 @@ class AmazonSession:
 
         self._handle_errors("a-alert-info", "class")
 
-    def _build_from_form(self, form, additional_attrs=None):
+    def _build_from_form(self,
+                         form: Tag,
+                         additional_attrs: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         data = {}
         for field in form.find_all("input"):
             try:
@@ -259,7 +269,9 @@ class AmazonSession:
             data.update(additional_attrs)
         return data
 
-    def _get_form_action(self, form, prefix=None):
+    def _get_form_action(self,
+                         form: Tag,
+                         prefix: Optional[str] = None) -> str:
         action = form.attrs.get("action")
         if not action:
             action = self.last_response.url
@@ -267,19 +279,25 @@ class AmazonSession:
             action = prefix + action
         return action
 
-    def _is_field_found(self, field_value, field_type="form", field_key="name"):
+    def _is_field_found(self,
+                        field_value: str,
+                        field_type: str = "form",
+                        field_key: str = "name") -> bool:
         return self.last_response_parsed.find(field_type, {
             field_key: field_value}) is not None
 
-    def _get_page_from_url(self, url):
+    def _get_page_from_url(self,
+                           url: str) -> str:
         page_name = os.path.basename(urlparse(url).path).strip(".html")
         i = 0
         while os.path.isfile("{}_{}".format(page_name, 0)):
             i += 1
         return "{}_{}.html".format(page_name, i)
 
-    def _handle_errors(self, error_div="auth-error-message-box", attr_name="id",
-        critical=False):
+    def _handle_errors(self,
+                       error_div: str = "auth-error-message-box",
+                       attr_name: str = "id",
+                       critical: bool = False) -> None:
         error_div = self.last_response_parsed.find("div",
                                                    {attr_name: error_div})
         if error_div:
@@ -290,7 +308,8 @@ class AmazonSession:
             else:
                 print(error_msg)
 
-    def _solve_captcha(self, url):
+    def _solve_captcha(self,
+                       url: str) -> str:
         captcha_response = AmazonCaptcha.fromlink(url).solve()
         if not captcha_response or captcha_response.lower() == "not solved":
             img_response = self.session.get(url)

@@ -24,7 +24,7 @@ class Parsable:
 
         try:
             return parse_function()
-        except (AttributeError, IndexError):
+        except (AttributeError, IndexError, ValueError):
             logger.warning("When building {}, `{}` could not be parsed.".format(self.__class__.__name__,
                                                                                 parse_function.__name__.split(
                                                                                     "_parse_")[1]),

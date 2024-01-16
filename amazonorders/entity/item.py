@@ -22,7 +22,7 @@ class Item(Parsable):
 
         self.title: str = self.safe_parse(self._parse_title)
         self.link: str = self.safe_parse(self._parse_link)
-        self.price: str = self.safe_parse(self._parse_price)
+        self.price: float = self.safe_parse(self._parse_price)
         self.seller: Seller = self.safe_parse(self._parse_seller)
         self.condition: Optional[str] = self.safe_parse(self._parse_condition)
         self.return_eligible_date: Optional[datetime.date] = self.safe_parse(self._parse_return_eligible_date)
@@ -41,10 +41,10 @@ class Item(Parsable):
         tag = self.parsed.find("a")
         return "{}{}".format(BASE_URL, tag.attrs["href"])
 
-    def _parse_price(self) -> str:
+    def _parse_price(self) -> float:
         for tag in self.parsed.find_all("div"):
             if tag.text.strip().startswith("$"):
-                return tag.text.strip().replace("$", "")
+                return float(tag.text.strip().replace("$", ""))
 
     def _parse_seller(self) -> Seller:
         for tag in self.parsed.find_all("div"):

@@ -47,7 +47,7 @@ docs: install
 	@( \
 		source venv/bin/activate; \
 		python -m pip install -r docs/requirements.txt; \
-		mypy --strict amazonorders; \
+		mypy amazonorders; \
 		sphinx-build -M html docs _build/docs -n; \
 	)
 

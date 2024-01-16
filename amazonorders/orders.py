@@ -1,33 +1,34 @@
 import datetime
 import logging
+from typing import List, Optional
 
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError
-from amazonorders.session import BASE_URL
+from amazonorders.session import BASE_URL, AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.5"
+__version__ = "0.0.7"
 
 logger = logging.getLogger(__name__)
 
 
 class AmazonOrders:
     def __init__(self,
-                 amazon_session,
-                 debug=False,
-                 print_output=False) -> None:
-        self.amazon_session = amazon_session
+                 amazon_session: AmazonSession,
+                 debug: bool = False,
+                 print_output: bool = False) -> None:
+        self.amazon_session: AmazonSession = amazon_session
 
-        self.debug = debug
+        self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
-        self.print_output = print_output
+        self.print_output: bool = print_output
 
     def get_order_history(self,
-                          year=datetime.date.today().year,
-                          start_index=None,
-                          full_details=False):
+                          year: int = datetime.date.today().year,
+                          start_index: Optional[int] = None,
+                          full_details: bool = False) -> List[Order]:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
@@ -67,7 +68,8 @@ class AmazonOrders:
 
         return orders
 
-    def get_order(self, order_id):
+    def get_order(self,
+                  order_id: str) -> Order:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 

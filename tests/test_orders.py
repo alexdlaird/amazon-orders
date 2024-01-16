@@ -5,9 +5,7 @@ import responses
 
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
-
 from amazonorders.session import AmazonSession, BASE_URL
-
 from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"

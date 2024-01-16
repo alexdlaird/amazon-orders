@@ -1,17 +1,18 @@
 import datetime
 import logging
 import os
+from typing import Any
 
 import click
+from click.core import Context
 
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
-
 from amazonorders.session import AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.6"
+__version__ = "0.0.7"
 
 logger = logging.getLogger("amazonorders")
 
@@ -21,7 +22,8 @@ logger = logging.getLogger("amazonorders")
 @click.option('--password', default=os.environ.get("AMAZON_PASSWORD"), help="An Amazon password.")
 @click.option('--debug', is_flag=True, default=False, help="Enable debugging and send output to command line.")
 @click.pass_context
-def amazon_orders_cli(ctx, **kwargs):
+def amazon_orders_cli(ctx,
+                      **kwargs: Any):
     ctx.ensure_object(dict)
     for key, value in kwargs.items():
         if value:
@@ -46,7 +48,8 @@ def amazon_orders_cli(ctx, **kwargs):
 @click.option('--start-index', help="Retrieve the single page of history at the given index.")
 @click.option('--full-details', is_flag=True, default=False,
               help="Retrieve the full details for each order in the history.")
-def history(ctx, **kwargs):
+def history(ctx: Context,
+            **kwargs: Any):
     amazon_session = ctx.obj["amazon_session"]
     amazon_session.login()
 
@@ -67,7 +70,8 @@ def history(ctx, **kwargs):
 @amazon_orders_cli.command(help="Retrieve the full details for the given Amazon order ID.")
 @click.pass_context
 @click.argument("order_id")
-def order(ctx, order_id):
+def order(ctx: Context,
+          order_id: str):
     amazon_session = ctx.obj["amazon_session"]
     amazon_session.login()
 

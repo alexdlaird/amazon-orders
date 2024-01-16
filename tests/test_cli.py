@@ -1,10 +1,9 @@
 import os
 
 import responses
-
-from amazonorders.cli import amazon_orders_cli
 from click.testing import CliRunner
 
+from amazonorders.cli import amazon_orders_cli
 from amazonorders.session import BASE_URL
 from tests.unittestcase import UnitTestCase
 

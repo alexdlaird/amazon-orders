@@ -1,10 +1,10 @@
 import os
 import unittest
-from tests.testcase import TestCase
 
 import responses
 
 from amazonorders.session import BASE_URL
+from tests.testcase import TestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"

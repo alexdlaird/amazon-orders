@@ -1,15 +1,15 @@
 import logging
 from datetime import datetime
 from typing import List, Optional, TypeVar
-from urllib.parse import urlparse
 from urllib.parse import parse_qs
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup, Tag
 
+from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
-from amazonorders.entity.item import Item
 from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
@@ -35,8 +35,7 @@ class Order(Parsable):
         self.order_details_link: str = clone.order_details_link if clone else self.safe_parse(
             self._parse_order_details_link)
         self.order_number: str = clone.order_number if clone else self.safe_parse(self._parse_order_number)
-        # TODO: parse currencies to a double
-        self.grand_total: str = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
+        self.grand_total: float = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
         self.order_placed_date: datetime.date = clone.order_placed_date if clone else self.safe_parse(
             self._parse_order_placed_date)
         self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient)
@@ -45,12 +44,12 @@ class Order(Parsable):
             self.items: List[Item] = self._parse_items()
             self.payment_method: Optional[str] = self._parse_payment_method()
             self.payment_method_last_4: Optional[str] = self._parse_payment_method_last_4()
-            self.subtotal: Optional[str] = self._parse_subtotal()
-            self.shipping_total: Optional[str] = self._parse_shipping_total()
-            self.subscription_discount: Optional[str] = self._parse_subscription_discount()
-            self.total_before_tax: Optional[str] = self._parse_total_before_tax()
-            self.estimated_tax: Optional[str] = self._parse_estimated_tax()
-            self.refund_total: Optional[str] = self._parse_refund_total()
+            self.subtotal: Optional[float] = self._parse_subtotal()
+            self.shipping_total: Optional[float] = self._parse_shipping_total()
+            self.subscription_discount: Optional[float] = self._parse_subscription_discount()
+            self.total_before_tax: Optional[float] = self._parse_total_before_tax()
+            self.estimated_tax: Optional[float] = self._parse_estimated_tax()
+            self.refund_total: Optional[float] = self._parse_refund_total()
             self.order_shipped_date: Optional[datetime.date] = self._parse_order_shipping_date()
             self.refund_completed_date: Optional[datetime.date] = self._parse_refund_completed_date()
 
@@ -79,7 +78,7 @@ class Order(Parsable):
             tag = self.parsed.find("bdi", dir="ltr")
             return tag.text.strip()
 
-    def _parse_grand_total(self) -> str:
+    def _parse_grand_total(self) -> float:
         tag = self.parsed.find("div", {"class": "yohtmlc-order-total"})
         if tag:
             tag = tag.find("span", {"class": "value"})
@@ -87,7 +86,8 @@ class Order(Parsable):
             for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
                 if "grand total" in tag.text.lower():
                     tag = tag.find("div", {"class": "a-span-last"})
-        return tag.text.strip().replace("$", "")
+                    break
+        return float(tag.text.strip().replace("$", ""))
 
     def _parse_order_placed_date(self) -> datetime.date:
         tag = self.parsed.find("span", {"class": "order-date-invoice-item"})
@@ -120,35 +120,35 @@ class Order(Parsable):
             ending_sibling = tag.find_next_siblings()[-1]
             return ending_sibling.text.split("ending in")[1].strip()
 
-    def _parse_subtotal(self) -> Optional[str]:
+    def _parse_subtotal(self) -> Optional[float]:
         for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
             if "subtotal" in tag.text.lower():
-                return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
+                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
 
-    def _parse_shipping_total(self) -> Optional[str]:
+    def _parse_shipping_total(self) -> Optional[float]:
         for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
             if "shipping" in tag.text.lower():
-                return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
+                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
 
-    def _parse_subscription_discount(self) -> Optional[str]:
+    def _parse_subscription_discount(self) -> Optional[float]:
         for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
             if "subscribe" in tag.text.lower():
-                return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
+                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
 
-    def _parse_total_before_tax(self) -> Optional[str]:
+    def _parse_total_before_tax(self) -> Optional[float]:
         for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
             if "before tax" in tag.text.lower():
-                return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
+                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
 
-    def _parse_estimated_tax(self) -> Optional[str]:
+    def _parse_estimated_tax(self) -> Optional[float]:
         for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
             if "estimated tax" in tag.text.lower():
-                return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
+                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
 
-    def _parse_refund_total(self) -> Optional[str]:
+    def _parse_refund_total(self) -> Optional[float]:
         for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
             if "refund total" in tag.text.lower() and "tax refund" not in tag.text.lower():
-                return tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", "")
+                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
 
     def _parse_order_shipping_date(self) -> Optional[datetime.date]:
         # TODO: find a better way to do this

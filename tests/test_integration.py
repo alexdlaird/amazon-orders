@@ -3,7 +3,6 @@ import unittest
 
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
-
 from tests.testcase import TestCase
 
 __author__ = "Alex Laird"

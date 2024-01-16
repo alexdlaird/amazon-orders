@@ -8,7 +8,7 @@ __version__ = "0.0.7"
 
 class TestCase(unittest.TestCase):
     def assert_order_112_0399923_3070642(self, order, full_details):
-        self.assertEqual("34.01", order.grand_total)
+        self.assertEqual(34.01, order.grand_total)
         self.assertEqual("112-0399923-3070642", order.order_number)
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2018, 12, 21), order.order_placed_date)
@@ -31,20 +31,20 @@ class TestCase(unittest.TestCase):
         if full_details:
             self.assertEqual("American Express", order.payment_method)
             self.assertEqual(4, len(order.payment_method_last_4))
-            self.assertEqual("30.99", order.subtotal)
-            self.assertEqual("0.00", order.shipping_total)
+            self.assertEqual(30.99, order.subtotal)
+            self.assertEqual(0.00, order.shipping_total)
             self.assertIsNone(order.subscription_discount)
-            self.assertEqual("30.99", order.total_before_tax)
-            self.assertEqual("3.02", order.estimated_tax)
+            self.assertEqual(30.99, order.total_before_tax)
+            self.assertEqual(3.02, order.estimated_tax)
             self.assertEqual(date(2018, 12, 28), order.order_shipped_date)
             self.assertEqual("New", order.items[0].condition)
-            self.assertEqual("30.99", order.items[0].price)
+            self.assertEqual(30.99, order.items[0].price)
             self.assertEqual("Amazon.com Services, Inc",
                              order.items[0].seller.name)
             self.assertIsNone(order.items[0].seller.link)
 
     def assert_order_114_9460922_7737063(self, order, full_details):
-        self.assertEqual("35.90", order.grand_total)
+        self.assertEqual(35.90, order.grand_total)
         self.assertEqual("114-9460922-7737063", order.order_number)
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2020, 10, 27), order.order_placed_date)
@@ -66,20 +66,20 @@ class TestCase(unittest.TestCase):
         if full_details:
             self.assertEqual("American Express", order.payment_method)
             self.assertEqual(4, len(order.payment_method_last_4))
-            self.assertEqual("38.84", order.subtotal)
-            self.assertEqual("0.00", order.shipping_total)
-            self.assertEqual("-5.83", order.subscription_discount)
-            self.assertEqual("33.01", order.total_before_tax)
-            self.assertEqual("2.89", order.estimated_tax)
+            self.assertEqual(38.84, order.subtotal)
+            self.assertEqual(0.00, order.shipping_total)
+            self.assertEqual(-5.83, order.subscription_discount)
+            self.assertEqual(33.01, order.total_before_tax)
+            self.assertEqual(2.89, order.estimated_tax)
             self.assertEqual(date(2020, 10, 28), order.order_shipped_date)
             self.assertEqual("New", order.items[0].condition)
-            self.assertEqual("38.84", order.items[0].price)
+            self.assertEqual(38.84, order.items[0].price)
             self.assertEqual("Amazon.com Services, Inc",
                              order.items[0].seller.name)
             self.assertIsNone(order.items[0].seller.link)
 
     def assert_order_112_2961628_4757846_return(self, order, full_details):
-        self.assertEqual("76.11", order.grand_total)
+        self.assertEqual(76.11, order.grand_total)
         self.assertEqual("112-2961628-4757846", order.order_number)
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2020, 10, 18), order.order_placed_date)
@@ -103,22 +103,22 @@ class TestCase(unittest.TestCase):
         if full_details:
             self.assertEqual("American Express", order.payment_method)
             self.assertEqual(4, len(order.payment_method_last_4))
-            self.assertEqual("69.99", order.subtotal)
-            self.assertEqual("0.00", order.shipping_total)
+            self.assertEqual(69.99, order.subtotal)
+            self.assertEqual(0.00, order.shipping_total)
             self.assertIsNone(order.subscription_discount)
-            self.assertEqual("69.99", order.total_before_tax)
-            self.assertEqual("6.12", order.estimated_tax)
-            self.assertEqual("76.11", order.refund_total)
+            self.assertEqual(69.99, order.total_before_tax)
+            self.assertEqual(6.12, order.estimated_tax)
+            self.assertEqual(76.11, order.refund_total)
             self.assertEqual(date(2020, 10, 19), order.order_shipped_date)
             self.assertTrue(date(2020, 11, 2), order.refund_completed_date)
             self.assertEqual("New", order.items[0].condition)
-            self.assertEqual("69.99", order.items[0].price)
+            self.assertEqual(69.99, order.items[0].price)
             self.assertEqual("Amazon.com Services, Inc",
                              order.items[0].seller.name)
             self.assertIsNone(order.items[0].seller.link)
 
     def assert_order_112_9685975_5907428_multiple_items_shipments_sellers(self, order, full_details, history_page):
-        self.assertEqual("46.61", order.grand_total)
+        self.assertEqual(46.61, order.grand_total)
         self.assertEqual("112-9685975-5907428", order.order_number)
         if history_page:
             self.assertIsNotNone(order.order_details_link)
@@ -175,16 +175,16 @@ class TestCase(unittest.TestCase):
         if full_details:
             self.assertEqual("American Express", order.payment_method)
             self.assertEqual(4, len(order.payment_method_last_4))
-            self.assertEqual("43.23", order.subtotal)
-            self.assertEqual("0.00", order.shipping_total)
+            self.assertEqual(43.23, order.subtotal)
+            self.assertEqual(0.00, order.shipping_total)
             self.assertIsNone(order.subscription_discount)
-            self.assertEqual("43.23", order.total_before_tax)
-            self.assertEqual("3.38", order.estimated_tax)
+            self.assertEqual(43.23, order.total_before_tax)
+            self.assertEqual(3.38, order.estimated_tax)
             self.assertEqual(date(2023, 12, 7), order.order_shipped_date)
             self.assertEqual("New", order.items[0].condition)
-            self.assertEqual("14.99", order.items[0].price)
+            self.assertEqual(14.99, order.items[0].price)
             self.assertEqual("New", order.items[1].condition)
-            self.assertEqual("28.24", order.items[1].price)
+            self.assertEqual(28.24, order.items[1].price)
             found_cadeya = False
             found_amazon = False
             for order_item in order.items:
@@ -203,7 +203,7 @@ class TestCase(unittest.TestCase):
 
     def assert_order_113_1625648_3437067_multiple_items(self, order, full_details):
         self.assertEqual("113-1625648-3437067", order.order_number)
-        self.assertEqual("28.80", order.grand_total)
+        self.assertEqual(28.80, order.grand_total)
         self.assertEqual(1, len(order.shipments))
         self.assertEqual(2, len(order.items))
         self.assertEqual(str(order.items),
@@ -237,11 +237,11 @@ class TestCase(unittest.TestCase):
         if full_details:
             self.assertEqual("American Express", order.payment_method)
             self.assertEqual(4, len(order.payment_method_last_4))
-            self.assertEqual("26.48", order.subtotal)
-            self.assertEqual("0.00", order.shipping_total)
+            self.assertEqual(26.48, order.subtotal)
+            self.assertEqual(0.00, order.shipping_total)
             self.assertIsNone(order.subscription_discount)
-            self.assertEqual("26.48", order.total_before_tax)
-            self.assertEqual("2.32", order.estimated_tax)
+            self.assertEqual(26.48, order.total_before_tax)
+            self.assertEqual(2.32, order.estimated_tax)
             self.assertEqual(date(2020, 10, 27), order.order_shipped_date)
             found_aa = False
             found_aaa = False
@@ -249,14 +249,14 @@ class TestCase(unittest.TestCase):
                 if "AAA" in item.title:
                     found_aa = True
                     self.assertEqual("New", item.condition)
-                    self.assertEqual("10.99", item.price)
+                    self.assertEqual(10.99, item.price)
                     self.assertEqual("Amazon.com Services, Inc",
                                      item.seller.name)
                     self.assertIsNone(item.seller.link)
                 else:
                     found_aaa = True
                     self.assertEqual("New", item.condition)
-                    self.assertEqual("15.49", item.price)
+                    self.assertEqual(15.49, item.price)
                     self.assertEqual("Amazon.com Services, Inc",
                                      item.seller.name)
                     self.assertIsNone(item.seller.link)
