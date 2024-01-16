@@ -51,7 +51,7 @@ class AmazonOrders:
                 orders.append(order)
 
             next_page = None
-            if not start_index:
+            if start_index is None:
                 try:
                     next_page = "{}{}".format(BASE_URL,
                                               response_parsed.find("ul", {"class", "a-pagination"}).find(

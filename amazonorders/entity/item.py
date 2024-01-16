@@ -17,12 +17,12 @@ class Item(Parsable):
                  parsed) -> None:
         super().__init__(parsed)
 
-        self.title = self._safe_parse(self._parse_title)
-        self.link = self._safe_parse(self._parse_link)
-        self.price = self._safe_parse(self._parse_price)
-        self.seller = self._safe_parse(self._parse_seller)
-        self.condition = self._safe_parse(self._parse_condition)
-        self.return_eligible_date = self._safe_parse(self._parse_return_eligible_date)
+        self.title = self.safe_parse(self._parse_title)
+        self.link = self.safe_parse(self._parse_link)
+        self.price = self.safe_parse(self._parse_price)
+        self.seller = self.safe_parse(self._parse_seller)
+        self.condition = self.safe_parse(self._parse_condition)
+        self.return_eligible_date = self.safe_parse(self._parse_return_eligible_date)
 
     def __repr__(self) -> str:
         return "<Item: \"{}\">".format(self.title)

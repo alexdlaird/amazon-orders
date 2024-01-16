@@ -38,11 +38,11 @@ class Order(Parsable):
         else:
             self.shipments = self._parse_shipments()
             self.items = self._parse_items()
-            self.order_details_link = self._safe_parse(self._parse_order_details_link)
-            self.order_number = self._safe_parse(self._parse_order_number)
-            self.grand_total = self._safe_parse(self._parse_grand_total)
-            self.order_placed_date = self._safe_parse(self._parse_order_placed_date)
-            self.recipient = self._safe_parse(self._parse_recipient)
+            self.order_details_link = self.safe_parse(self._parse_order_details_link)
+            self.order_number = self.safe_parse(self._parse_order_number)
+            self.grand_total = self.safe_parse(self._parse_grand_total)
+            self.order_placed_date = self.safe_parse(self._parse_order_placed_date)
+            self.recipient = self.safe_parse(self._parse_recipient)
 
         if self.full_details:
             self.items = self._parse_items()

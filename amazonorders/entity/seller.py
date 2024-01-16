@@ -20,8 +20,8 @@ class Seller(Parsable):
         self.item = item
         self.order = order
 
-        self.name = self._safe_parse(self._parse_name)
-        self.link = self._safe_parse(self._parse_link)
+        self.name = self.safe_parse(self._parse_name)
+        self.link = self.safe_parse(self._parse_link)
 
     def __repr__(self) -> str:
         return "<Seller: \"{}\">".format(self.name)

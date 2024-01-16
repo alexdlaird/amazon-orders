@@ -64,6 +64,7 @@ validate-release:
 	@if [[ "${VERSION}" == "" ]]; then echo "VERSION is not set" & exit 1 ; fi
 
 	@if [[ $$(grep "__version__ = \"${VERSION}\"" setup.py) == "" ]] ; then echo "Version not bumped in setup.py" & exit 1 ; fi
+	@if [[ $$(grep "__version__ = \"${VERSION}\"" amazonorders/cli.py) == "" ]] ; then echo "Version not bumped in amazonrders/cli.py" & exit 1 ; fi
 
 upload: local
 	@( \

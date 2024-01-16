@@ -25,19 +25,19 @@ def build_test_resources(args):
     and AMAZON_PASSWORD environment variables to be set.
     """
 
-    if not (os.environ.get("AMAZON_USERNAME") and os.environ.get(
-        "AMAZON_PASSWORD")):
+    if not (os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")):
         print(
             "AMAZON_USERNAME and AMAZON_PASSWORD environment variables not set")
 
         sys.exit(1)
 
     amazon_session = AmazonSession(os.environ["AMAZON_USERNAME"],
-                                   os.environ["AMAZON_USERNAME"])
-    # TODO: for some reason in this script only, we always get stuck on Captcha
+                                   os.environ["AMAZON_PASSWORD"])
     amazon_session.login()
 
     pages_to_download = [
+        {"type": "order-history", "year": "2010", "start-index": "0"},
+        {"type": "order-history", "year": "2010", "start-index": "10"},
         {"type": "order-history", "year": "2018", "start-index": "0"},
         {"type": "order-history", "year": "2020", "start-index": "40"},
         {"type": "order-history", "year": "2020", "start-index": "50"},

@@ -120,8 +120,6 @@ class AmazonSession:
             if "Hello, sign in" not in self.last_response.text and "nav-item-signout" in self.last_response.text:
                 self.is_authenticated = True
                 break
-            else:
-                attempts += 1
 
             if self._is_field_found(SIGN_IN_FORM_NAME):
                 self._sign_in()
@@ -141,6 +139,8 @@ class AmazonSession:
                 raise AmazonOrdersAuthError(
                     "An error occurred, this is an unknown page: {}. To capture the page to a file, set the `debug` flag.".format(
                         self.last_response.url))
+
+            attempts += 1
 
         if attempts == self.max_auth_attempts:
             raise AmazonOrdersAuthError(
@@ -297,6 +297,6 @@ class AmazonSession:
             img = Image.open(BytesIO(img_response.content))
             img.show()
             captcha_response = input(
-                "The Captcha couldn't be auto-solved, enter the characters shown in the image.")
+                "The Captcha couldn't be auto-solved, enter the characters shown in the image: ")
 
         return captcha_response

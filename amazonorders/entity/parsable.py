@@ -14,7 +14,7 @@ class Parsable:
                  parsed):
         self.parsed = parsed
 
-    def _safe_parse(self, parse_function):
+    def safe_parse(self, parse_function):
         if not parse_function.__name__.startswith("_parse_"):
             raise AmazonOrdersError("This name of the `parse_function` passed to this method must start with `_parse_`")
 

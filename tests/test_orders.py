@@ -1,4 +1,5 @@
 import os
+import re
 
 import responses
 
@@ -11,7 +12,7 @@ from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 
 
 class TestOrderHistory(UnitTestCase):
@@ -29,8 +30,10 @@ class TestOrderHistory(UnitTestCase):
     def test_get_order_history(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        year = 2023
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
+        year = 2018
+        start_index = 0
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, 0)), "r",
+                  encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL,
@@ -40,12 +43,13 @@ class TestOrderHistory(UnitTestCase):
             )
 
         # WHEN
-        orders = self.amazon_orders.get_order_history(year=year)
+        orders = self.amazon_orders.get_order_history(year=year, start_index=0)
 
         # THEN
-        self.assertEqual(3, len(orders))
+        # Giving start_index=0 means we only got the first page, so just 10 results
+        self.assertEqual(10, len(orders))
+        self.assert_order_112_0399923_3070642(orders[3], False)
         self.assertEqual(1, resp1.call_count)
-        # TODO: assert on this, but first get a better resource HTML file
 
     @responses.activate
     def test_get_order_history_paginated(self):
@@ -79,12 +83,12 @@ class TestOrderHistory(UnitTestCase):
         # TODO: assert on this, but first get a better resource HTML file
 
     @responses.activate
-    def test_get_order_history_page_full_details(self):
+    def test_get_order_history_full_details(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        year = 2023
-        start_index = 3
-        with open(os.path.join(self.RESOURCES_DIR, "orders-pagination-2.html"), "r", encoding="utf-8") as f:
+        year = 2020
+        start_index = 40
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 "{}/your-orders/orders?timeFilter=year-{}&startIndex={}".format(BASE_URL,
@@ -92,11 +96,11 @@ class TestOrderHistory(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "order-details.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "order-details-114-9460922-7737063.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.GET,
-                "{}/gp/your-account/order-details/ref=ppx_yo_dt_b_order_details_o02?ie=UTF8&orderID=123-4567890-1234561".format(
-                    BASE_URL),
+                re.compile("{}/gp/your-account/order-details/.*".format(
+                    BASE_URL)),
                 body=f.read(),
                 status=200,
             )
@@ -105,7 +109,7 @@ class TestOrderHistory(UnitTestCase):
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index, full_details=True)
 
         # THEN
-        self.assertEqual(1, len(orders))
+        self.assertEqual(10, len(orders))
+        self.assert_order_114_9460922_7737063(orders[3], True)
         self.assertEqual(1, resp1.call_count)
-        self.assertEqual(1, resp2.call_count)
-        # TODO: assert on this, but first get a better resource HTML file
+        self.assertEqual(10, resp2.call_count)

@@ -21,8 +21,8 @@ class Shipment(Parsable):
         self.order = order
 
         self.items = self._parse_items()
-        self.delivery_status = self._safe_parse(self._parse_delivery_status)
-        self.tracking_link = self._safe_parse(self._parse_tracking_link)
+        self.delivery_status = self.safe_parse(self._parse_delivery_status)
+        self.tracking_link = self.safe_parse(self._parse_tracking_link)
 
     def __repr__(self) -> str:
         return "<Shipment: \"{}\">".format(self.items)

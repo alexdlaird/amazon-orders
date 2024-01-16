@@ -13,8 +13,8 @@ class Recipient(Parsable):
                  parsed) -> None:
         super().__init__(parsed)
 
-        self.name = self._safe_parse(self._parse_name)
-        self.address = self._safe_parse(self._parse_address)
+        self.name = self.safe_parse(self._parse_name)
+        self.address = self.safe_parse(self._parse_address)
 
     def __repr__(self) -> str:
         return "<Recipient: \"{}\">".format(self.name)
