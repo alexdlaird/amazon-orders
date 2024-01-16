@@ -23,20 +23,36 @@ amazon_session.login()
 
 # TODO: list of all Amazon order history and order details pages we want to get
 pages_to_download = [
-    "https://www.amazon.com/gp/your-account/order-details?orderID=112-0399923-3070642",
-    "https://www.amazon.com/gp/your-account/order-details?orderID=114-9460922-7737063",
-    "https://www.amazon.com/gp/your-account/order-details?orderID=112-2961628-4757846",
-    "https://www.amazon.com/gp/your-account/order-details?orderID=112-9685975-5907428",
-    "https://www.amazon.com/gp/your-account/order-details?orderID=113-1625648-3437067",
+    {"type": "order-history", "year": "2018", "start-index": "0"},
+    {"type": "order-history", "year": "2020", "start-index": "40"},
+    {"type": "order-history", "year": "2020", "start-index": "50"},
+    {"type": "order-history", "year": "2023", "start-index": "10"},
+    {"type": "order-details", "order-id": "112-0399923-3070642"},
+    {"type": "order-details", "order-id": "114-9460922-7737063"},
+    {"type": "order-details", "order-id": "112-2961628-4757846"},
+    {"type": "order-details", "order-id": "112-9685975-5907428"},
+    {"type": "order-details", "order-id": "113-1625648-3437067"},
 ]
+
 for page in pages_to_download:
-    response = amazon_session.get(page)
-    response_parsed = BeautifulSoup(response.text, "html.parser")
+    if page["type"] == "order-details":
+        url = "https://www.amazon.com/gp/your-account/order-details?orderID={}".format(page["order-id"]),
+        response = amazon_session.get(url)
+        response_parsed = BeautifulSoup(response.text, "html.parser")
 
-    # TODO: obfuscate
+        # TODO: obfuscate
 
-    # TODO: the page name should include the order ID, or history page
-    page_name = amazon_session._get_page_from_url(amazon_session.last_response.url)
+        page_name = "order-details-{}.html".format(page["order-id"])
+    else:
+        url = "https://www.amazon.com/your-orders/orders?timeFilter=year-{}&startIndex={}".format(page["year"],
+                                                                                                  page["start-index"])
+        response = amazon_session.get(url)
+        response_parsed = BeautifulSoup(response.text, "html.parser")
+
+        # TODO: obfuscate
+
+        page_name = "order-history-{}-{}.html".format(page["year"], page["start-index"])
+
     with open(os.path.join("tests", "resources", page_name), "w", encoding="utf-8") as html_file:
         html_file.write(str(response_parsed))
 
