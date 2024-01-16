@@ -8,11 +8,11 @@ from amazoncaptcha import AmazonCaptcha
 from bs4 import BeautifulSoup
 from requests import Session
 
+from amazonorders.exception import AmazonOrdersAuthError
+
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "0.0.6"
-
-from amazonorders.exception import AmazonOrdersAuthError
 
 logger = logging.getLogger(__name__)
 
@@ -272,7 +272,7 @@ class AmazonSession:
 
     def _solve_captcha(self, url):
         captcha_response = AmazonCaptcha.fromlink(url).solve()
-        if captcha_response.lower() == "not solved":
+        if not captcha_response or captcha_response.lower() == "not solved":
             img_response = self.session.get(url)
             img = Image.open(BytesIO(img_response.content))
             img.show()
