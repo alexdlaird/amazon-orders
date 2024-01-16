@@ -104,7 +104,7 @@ class TestSession(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),
@@ -146,7 +146,7 @@ class TestSession(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),
@@ -189,7 +189,7 @@ class TestSession(UnitTestCase):
                 headers={"Content-Type": "image/jpeg"},
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.POST,
                 "{}/ap/cvf/verify".format(BASE_URL),
@@ -232,7 +232,7 @@ class TestSession(UnitTestCase):
                 headers={"Content-Type": "image/jpeg"},
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.GET,
                 "{}/errors/validateCaptcha".format(BASE_URL),
@@ -277,7 +277,7 @@ class TestSession(UnitTestCase):
                 headers={"Content-Type": "image/jpeg"},
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.POST,
                 "{}/ap/cvf/verify".format(BASE_URL),

@@ -8,7 +8,7 @@ from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 
 
 @unittest.skipIf(os.environ.get("INTEGRATION_TESTS", "False") == "True",
@@ -25,7 +25,7 @@ class UnitTestCase(TestCase):
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             self.authenticated_response = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),

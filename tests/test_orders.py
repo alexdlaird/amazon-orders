@@ -55,8 +55,8 @@ class TestOrderHistory(UnitTestCase):
     def test_get_order_history_paginated(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        year = 2023
-        with open(os.path.join(self.RESOURCES_DIR, "orders-pagination-1.html"), "r", encoding="utf-8") as f:
+        year = 2010
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-0.html".format(year)), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL,
@@ -64,10 +64,10 @@ class TestOrderHistory(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders-pagination-2.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-10.html".format(year)), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.GET,
-                "{}/your-orders/orders?_encoding=UTF8&timeFilter=year-{}&startIndex=3&ref_=ppx_yo2ov_dt_b_pagination_1_2".format(
+                "{}/your-orders/orders?timeFilter=year-2010&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2".format(
                     BASE_URL, year),
                 body=f.read(),
                 status=200,
@@ -77,10 +77,9 @@ class TestOrderHistory(UnitTestCase):
         orders = self.amazon_orders.get_order_history(year=year)
 
         # THEN
-        self.assertEqual(3, len(orders))
+        self.assertEqual(12, len(orders))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
-        # TODO: assert on this, but first get a better resource HTML file
 
     @responses.activate
     def test_get_order_history_full_details(self):
