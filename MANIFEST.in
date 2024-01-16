@@ -1,5 +1,5 @@
 # Including text resources
-include LICENSE README.rst CHANGELOG.md
+include LICENSE README.md CHANGELOG.md
 
 # Exclude junk
 global-exclude .DS_Store

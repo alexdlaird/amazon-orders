@@ -4,7 +4,7 @@ __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "0.0.5"
 
-with open("README.rst", "r") as f:
+with open("README.md", "r") as f:
     long_description = f.read()
 
 setup(
