@@ -128,14 +128,15 @@ class AmazonSession:
         self.session.close()
 
     def _sign_in(self):
-        data = self._build_from_form(SIGN_IN_FORM_NAME,
-                                     attr_name="name",
+        form = self.last_response_parsed.find("form", {"name": SIGN_IN_FORM_NAME})
+        data = self._build_from_form(form,
                                      additional_attrs={"email": self.username,
                                                        "password": self.password,
                                                        "rememberMe": "true"})
 
-        self.post(self._get_form_action(SIGN_IN_FORM_NAME),
-                  data=data)
+        self.request(form.attrs.get("method", "GET"),
+                     self._get_form_action(form),
+                     data=data)
 
         self._handle_errors(critical=True)
 
@@ -150,13 +151,15 @@ class AmazonSession:
         otp_device = int(
             input("Where would you like your one-time passcode sent? "))
 
-        data = self._build_from_form(MFA_DEVICE_SELECT_FORM_ID,
+        form = self.last_response_parsed.find("form", id=MFA_DEVICE_SELECT_FORM_ID)
+        data = self._build_from_form(form,
                                      additional_attrs={"otpDeviceContext":
                                                            contexts[otp_device - 1].attrs[
                                                                "value"]})
 
-        self.post(self._get_form_action(MFA_DEVICE_SELECT_FORM_ID, attr_name="id"),
-                  data=data)
+        self.request(form.attrs.get("method", "GET"),
+                     self._get_form_action(form),
+                     data=data)
 
         self._handle_errors()
 
@@ -164,15 +167,16 @@ class AmazonSession:
         otp = input("Enter the one-time passcode sent to your device: ")
 
         # TODO: figure out why Amazon doesn't respect rememberDevice
-        data = self._build_from_form(MFA_FORM_ID,
+        form = self.last_response_parsed.find("form", id=MFA_FORM_ID)
+        data = self._build_from_form(form,
                                      additional_attrs={"otpCode": otp, "rememberDevice": ""})
 
-        self.post(self._get_form_action(MFA_FORM_ID, attr_name="id"),
-                  data=data)
+        self.request(form.attrs.get("method", "GET"),
+                     self._get_form_action(form),
+                     data=data)
 
         self._handle_errors()
 
-    # TODO: these captcha's should be refactored in to their own class. Or can we use https://github.com/a-maliarov/amazoncaptcha?
     def _captcha_1_submit(self):
         captcha = self.last_response_parsed.find("div", {"id": CAPTCHA_1_DIV_ID})
 
@@ -183,65 +187,41 @@ class AmazonSession:
 
         captcha_response = input("Enter the Captcha seen on the opened image: ")
 
-        data = self._build_from_form(CAPTCHA_1_FORM_CLASS,
-                                     attr_name="class",
+        form = self.last_response_parsed.find("form", {"class": CAPTCHA_1_FORM_CLASS})
+        data = self._build_from_form(form,
                                      additional_attrs={"cvf_captcha_input": captcha_response})
 
-        self.post(self._get_form_action(CAPTCHA_1_FORM_CLASS,
-                                        attr_name="class",
-                                        prefix="{}/ap/cvf/".format(BASE_URL)),
-                  data=data)
+        self.request(form.attrs.get("method", "GET"),
+                     self._get_form_action(form,
+                                           prefix="{}/ap/cvf/".format(BASE_URL)),
+                     data=data)
 
         self._handle_errors("cvf-widget-alert", "class")
 
     def _captcha_2_submit(self):
-        captcha = self.last_response_parsed.find("input",
-                                                 id=lambda value: value and value.startswith(
-                                                     CAPTCHA_2_INPUT_ID)).find_parent("form")
+        form = self.last_response_parsed.find("input",
+                                              id=lambda value: value and value.startswith(
+                                                  CAPTCHA_2_INPUT_ID)).find_parent("form")
 
-        img_src = captcha.find("img").attrs["src"]
+        img_src = form.find("img").attrs["src"]
         img_response = self.session.get(img_src)
         img = Image.open(BytesIO(img_response.content))
         img.show()
 
         captcha_response = input("Enter the Captcha seen on the opened image: ")
 
-        data = self._build_from_form(None,
-                                     attr_name=None,
+        data = self._build_from_form(form,
                                      additional_attrs={"field-keywords": captcha_response})
 
-        self.get(self._get_form_action(None,
-                                       attr_name=None,
-                                       prefix=BASE_URL),
-                 params=data)
+        self.request(form.attrs.get("method", "GET"),
+                     self._get_form_action(form,
+                                           prefix=BASE_URL),
+                     params=data)
 
         self._handle_errors("a-alert-info", "class")
 
-    def _captcha_3_submit(self):
-        captcha = self.last_response_parsed.find("input", {"id": CAPTCHA_3_INPUT_ID}).find_parent("form")
-
-        img_src = captcha.find("img").attrs["src"]
-        img_response = self.session.get(img_src)
-        img = Image.open(BytesIO(img_response.content))
-        img.show()
-
-        captcha_response = input("Enter the Captcha seen on the opened image: ")
-
-        data = self._build_from_form(None,
-                                     attr_name=None,
-                                     additional_attrs={"field-keywords": captcha_response})
-
-        self.get(self._get_form_action(None,
-                                       attr_name=None,
-                                       prefix=BASE_URL),
-                 params=data)
-
-        self._handle_errors("m_a-alert-info", "class")
-
-    def _build_from_form(self, form_name, attr_name="id", additional_attrs=None):
+    def _build_from_form(self, form, additional_attrs=None):
         data = {}
-        attrs = {attr_name: form_name} if attr_name else None
-        form = self.last_response_parsed.find("form", attrs)
         for field in form.find_all("input"):
             try:
                 data[field["name"]] = field["value"]
@@ -251,9 +231,7 @@ class AmazonSession:
             data.update(additional_attrs)
         return data
 
-    def _get_form_action(self, form_name, attr_name="name", prefix=None):
-        attrs = {attr_name: form_name} if attr_name else None
-        form = self.last_response_parsed.find("form", attrs)
+    def _get_form_action(self, form, prefix=None):
         action = form.attrs.get("action")
         if not action:
             action = self.last_response.url
