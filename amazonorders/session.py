@@ -70,7 +70,7 @@ class AmazonSession:
 
         cookie_dir = os.path.dirname(self.cookie_jar_path)
         if not os.path.exists(cookie_dir):
-            os.mkdir(cookie_dir)
+            os.makedirs(cookie_dir)
         if os.path.exists(self.cookie_jar_path):
             with open(cookie_jar_path, "r", encoding="utf-8") as f:
                 data = json.loads(f.read())
