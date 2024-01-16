@@ -18,14 +18,14 @@ class UnitTestCase(TestCase):
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources"))
 
     def given_login_responses_success(self):
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             self.signin_response = responses.add(
                 responses.GET,
                 "{}/gp/sign-in.html".format(BASE_URL),
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
             self.authenticated_response = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),

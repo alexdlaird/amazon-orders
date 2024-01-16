@@ -31,7 +31,7 @@ class TestCli(UnitTestCase):
         # GIVEN
         year = 2023
         self.given_login_responses_success()
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL,
@@ -60,8 +60,7 @@ Order #123-4567890-1234561: "[<Item: "The Emperor's New Groove [DVD] (2001) Davi
         # GIVEN
         order_id = "123-4567890-1234563"
         self.given_login_responses_success()
-        with open(os.path.join(self.RESOURCES_DIR, "order-details.html"),
-                  "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "order-details.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 "{}/gp/your-account/order-details?orderID={}".format(BASE_URL,

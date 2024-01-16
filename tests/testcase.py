@@ -137,7 +137,7 @@ class TestCase(unittest.TestCase):
             self.assertEqual(1, len(shipment.items))
             self.assertEqual(str(order),
                              str(shipment.order))
-            order_item = filter(lambda i: i.title == shipment.items[0].title, order.items).next()
+            order_item = next(filter(lambda i: i.title == shipment.items[0].title, order.items))
             self.assertEqual(str(order_item),
                              str(shipment.items[0]))
             if "Cadeya" in shipment.items[0].title:
@@ -206,59 +206,60 @@ class TestCase(unittest.TestCase):
 
     def assert_order_113_1625648_3437067_multiple_items(self, order, full_details):
         self.assertEqual("113-1625648-3437067", order.order_number)
+        self.assertEqual("28.80", order.grand_total)
         self.assertEqual(1, len(order.shipments))
         self.assertEqual(2, len(order.items))
         self.assertEqual(str(order.items),
                          str(order.shipments[0].items))
         self.assertEqual(str(order),
                          str(order.shipments[0].order))
-        found_aa = False
         found_aaa = False
+        found_aa = False
         for item in order.items:
-            if "AA" in item.title:
-                found_aa = True
-                self.assertEqual(
-                    "AmazonBasics 48 Pack AA High-Performance Alkaline Batteries, 10-Year Shelf Life, Easy to Open Value Pack",
-                    item.title)
-                self.assertIsNotNone(item.link)
-                # TODO: this actually is shown on the page, it's just collapsed, should fix
-                self.assertIsNone(item.return_eligible_date)
-            else:
+            if "AAA" in item.title:
                 found_aaa = True
                 self.assertEqual(
                     "AmazonBasics 36 Pack AAA High-Performance Alkaline Batteries, 10-Year Shelf Life, Easy to Open Value Pack",
                     item.title)
                 self.assertIsNotNone(item.link)
-                # TODO: this actually is shown on the page, it's just collapsed, should fix
+                # TODO: this actually is shown on the page, it's just collapsed, parse it
                 self.assertIsNone(item.return_eligible_date)
-        self.assertTrue(found_aa)
+            else:
+                found_aa = True
+                self.assertEqual(
+                    "AmazonBasics 48 Pack AA High-Performance Alkaline Batteries, 10-Year Shelf Life, Easy to Open Value Pack",
+                    item.title)
+                self.assertIsNotNone(item.link)
+                # TODO: this actually is shown on the page, it's just collapsed, parse it
+                self.assertIsNone(item.return_eligible_date)
         self.assertTrue(found_aaa)
+        self.assertTrue(found_aa)
 
         self.assertEqual(order.full_details, full_details)
 
         if full_details:
             self.assertEqual("American Express", order.payment_method)
             self.assertEqual(4, len(order.payment_method_last_4))
-            self.assertEqual("28.80", order.subtotal)
+            self.assertEqual("26.48", order.subtotal)
             self.assertEqual("0.00", order.shipping_total)
             self.assertIsNone(order.subscription_discount)
-            self.assertEqual("28.80", order.total_before_tax)
+            self.assertEqual("26.48", order.total_before_tax)
             self.assertEqual("2.32", order.estimated_tax)
             self.assertEqual(date(2020, 10, 27), order.order_shipped_date)
             found_aa = False
             found_aaa = False
             for item in order.items:
-                if "AA" in item.title:
+                if "AAA" in item.title:
                     found_aa = True
                     self.assertEqual("New", item.condition)
-                    self.assertEqual("15.49", item.price)
+                    self.assertEqual("10.99", item.price)
                     self.assertEqual("Amazon.com Services, Inc",
                                      item.seller.name)
                     self.assertIsNone(item.seller.link)
                 else:
                     found_aaa = True
                     self.assertEqual("New", item.condition)
-                    self.assertEqual("10.99", item.price)
+                    self.assertEqual("15.49", item.price)
                     self.assertEqual("Amazon.com Services, Inc",
                                      item.seller.name)
                     self.assertIsNone(item.seller.link)

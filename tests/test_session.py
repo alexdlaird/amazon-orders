@@ -35,14 +35,14 @@ class TestSession(UnitTestCase):
     @responses.activate
     def test_login_invalid_username(self):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 "{}/gp/sign-in.html".format(BASE_URL),
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-invalid-email.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "post-signin-invalid-email.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),
@@ -62,14 +62,14 @@ class TestSession(UnitTestCase):
     @responses.activate
     def test_login_invalid_password(self):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 "{}/gp/sign-in.html".format(BASE_URL),
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-invalid-password.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "post-signin-invalid-password.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),
@@ -90,21 +90,21 @@ class TestSession(UnitTestCase):
     @patch('builtins.input')
     def test_mfa(self, input_mock):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 "{}/gp/sign-in.html".format(BASE_URL),
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-mfa.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "post-signin-mfa.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),
@@ -125,28 +125,28 @@ class TestSession(UnitTestCase):
     @patch('builtins.input')
     def test_new_otp(self, input_mock):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 "{}/gp/sign-in.html".format(BASE_URL),
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-new-otp.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "post-signin-new-otp.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-mfa.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "post-signin-mfa.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),
@@ -169,14 +169,14 @@ class TestSession(UnitTestCase):
     @patch('builtins.input')
     def test_captcha_1(self, input_mock):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 "{}/gp/sign-in.html".format(BASE_URL),
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-1.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-1.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),
@@ -190,7 +190,7 @@ class TestSession(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.POST,
                 "{}/ap/cvf/verify".format(BASE_URL),
@@ -213,14 +213,14 @@ class TestSession(UnitTestCase):
     @patch('builtins.input')
     def test_captcha_2(self, input_mock):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 "{}/gp/sign-in.html".format(BASE_URL),
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-2.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-2.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 "{}/ap/signin".format(BASE_URL),
@@ -234,7 +234,7 @@ class TestSession(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.GET,
                 "{}/errors/validateCaptcha".format(BASE_URL),

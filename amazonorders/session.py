@@ -78,7 +78,7 @@ class AmazonSession:
 
         if self.debug:
             page_name = self._get_page_from_url(self.last_response.url)
-            with open(page_name, "w") as html_file:
+            with open(page_name, "w", encoding="utf-8") as html_file:
                 logger.debug("Response written to file: {}".format(html_file.name))
                 html_file.write(self.last_response.text)
 

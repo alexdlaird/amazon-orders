@@ -37,7 +37,7 @@ for page in pages_to_download:
 
     # TODO: the page name should include the order ID, or history page
     page_name = amazon_session._get_page_from_url(amazon_session.last_response.url)
-    with open(os.path.join("tests", "resources", page_name), "w") as html_file:
+    with open(os.path.join("tests", "resources", page_name), "w", encoding="utf-8") as html_file:
         html_file.write(str(response_parsed))
 
 print("\nDONE: Test resources update from live data. Be sure to verify data was properly "
