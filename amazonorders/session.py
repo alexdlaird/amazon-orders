@@ -40,7 +40,6 @@ MFA_FORM_ID = "auth-mfa-form"
 CAPTCHA_1_DIV_ID = "cvf-page-content"
 CAPTCHA_1_FORM_CLASS = "cvf-widget-form"
 CAPTCHA_2_INPUT_ID = "captchacharacters"
-CAPTCHA_3_INPUT_ID = "m_captchacharacters"
 
 
 class AmazonSession:
@@ -99,10 +98,9 @@ class AmazonSession:
                 self._sign_in()
             elif self._is_field_found(CAPTCHA_1_FORM_CLASS, field_key="class"):
                 self._captcha_1_submit()
-            elif self._is_field_found(CAPTCHA_2_INPUT_ID, field_type="input", field_key="id"):
+            elif self.last_response_parsed.find("input",
+                                                id=lambda value: value and value.startswith(CAPTCHA_2_INPUT_ID)):
                 self._captcha_2_submit()
-            elif self._is_field_found(CAPTCHA_3_INPUT_ID, field_type="input", field_key="id"):
-                self._captcha_3_submit()
             elif self._is_field_found(MFA_DEVICE_SELECT_FORM_ID, field_key="id"):
                 self._mfa_device_select()
             elif self._is_field_found(MFA_FORM_ID, field_key="id"):
@@ -131,10 +129,10 @@ class AmazonSession:
 
     def _sign_in(self):
         data = self._build_from_form(SIGN_IN_FORM_NAME,
-                                     {"email": self.username,
-                                      "password": self.password,
-                                      "rememberMe": "true"},
-                                     attr_name="name")
+                                     attr_name="name",
+                                     additional_attrs={"email": self.username,
+                                                       "password": self.password,
+                                                       "rememberMe": "true"})
 
         self.post(self._get_form_action(SIGN_IN_FORM_NAME),
                   data=data)
@@ -153,9 +151,9 @@ class AmazonSession:
             input("Where would you like your one-time passcode sent? "))
 
         data = self._build_from_form(MFA_DEVICE_SELECT_FORM_ID,
-                                     {"otpDeviceContext":
-                                          contexts[otp_device - 1].attrs[
-                                              "value"]})
+                                     additional_attrs={"otpDeviceContext":
+                                                           contexts[otp_device - 1].attrs[
+                                                               "value"]})
 
         self.post(self._get_form_action(MFA_DEVICE_SELECT_FORM_ID, attr_name="id"),
                   data=data)
@@ -167,7 +165,7 @@ class AmazonSession:
 
         # TODO: figure out why Amazon doesn't respect rememberDevice
         data = self._build_from_form(MFA_FORM_ID,
-                                     {"otpCode": otp, "rememberDevice": ""})
+                                     additional_attrs={"otpCode": otp, "rememberDevice": ""})
 
         self.post(self._get_form_action(MFA_FORM_ID, attr_name="id"),
                   data=data)
@@ -186,8 +184,8 @@ class AmazonSession:
         captcha_response = input("Enter the Captcha seen on the opened image: ")
 
         data = self._build_from_form(CAPTCHA_1_FORM_CLASS,
-                                     {"cvf_captcha_input": captcha_response},
-                                     attr_name="class")
+                                     attr_name="class",
+                                     additional_attrs={"cvf_captcha_input": captcha_response})
 
         self.post(self._get_form_action(CAPTCHA_1_FORM_CLASS,
                                         attr_name="class",
@@ -197,7 +195,9 @@ class AmazonSession:
         self._handle_errors("cvf-widget-alert", "class")
 
     def _captcha_2_submit(self):
-        captcha = self.last_response_parsed.find("input", {"id": CAPTCHA_2_INPUT_ID}).find_parent("form")
+        captcha = self.last_response_parsed.find("input",
+                                                 id=lambda value: value and value.startswith(
+                                                     CAPTCHA_2_INPUT_ID)).find_parent("form")
 
         img_src = captcha.find("img").attrs["src"]
         img_response = self.session.get(img_src)
@@ -207,8 +207,8 @@ class AmazonSession:
         captcha_response = input("Enter the Captcha seen on the opened image: ")
 
         data = self._build_from_form(None,
-                                     {"field-keywords": captcha_response},
-                                     attr_name=None)
+                                     attr_name=None,
+                                     additional_attrs={"field-keywords": captcha_response})
 
         self.get(self._get_form_action(None,
                                        attr_name=None,
@@ -228,8 +228,8 @@ class AmazonSession:
         captcha_response = input("Enter the Captcha seen on the opened image: ")
 
         data = self._build_from_form(None,
-                                     {"field-keywords": captcha_response},
-                                     attr_name=None)
+                                     attr_name=None,
+                                     additional_attrs={"field-keywords": captcha_response})
 
         self.get(self._get_form_action(None,
                                        attr_name=None,
@@ -238,7 +238,7 @@ class AmazonSession:
 
         self._handle_errors("m_a-alert-info", "class")
 
-    def _build_from_form(self, form_name, additional_attrs, attr_name="id"):
+    def _build_from_form(self, form_name, attr_name="id", additional_attrs=None):
         data = {}
         attrs = {attr_name: form_name} if attr_name else None
         form = self.last_response_parsed.find("form", attrs)
@@ -247,7 +247,8 @@ class AmazonSession:
                 data[field["name"]] = field["value"]
             except:
                 pass
-        data.update(additional_attrs)
+        if additional_attrs:
+            data.update(additional_attrs)
         return data
 
     def _get_form_action(self, form_name, attr_name="name", prefix=None):
