@@ -16,7 +16,7 @@ setup(
     install_requires=[
         "click",
         "requests",
-        "Pillow",
+        "amazoncaptcha",
         "beautifulsoup4"
     ],
     entry_points="""
