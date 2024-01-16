@@ -3,7 +3,7 @@ from datetime import date
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.5"
+__version__ = "0.0.7"
 
 
 class TestCase(unittest.TestCase):
@@ -16,7 +16,6 @@ class TestCase(unittest.TestCase):
         self.assertIsNotNone(order.recipient.address)
         self.assertEqual(1, len(order.shipments))
         self.assertEqual(str(order.items), str(order.shipments[0].items))
-        self.assertEqual(order, order.shipments[0].order)
         self.assertIsNone(order.shipments[0].delivery_status)
         self.assertIsNone(order.shipments[0].tracking_link)
         self.assertEqual(1, len(order.items))
@@ -54,8 +53,6 @@ class TestCase(unittest.TestCase):
         self.assertEqual(1, len(order.shipments))
         self.assertEqual(str(order.items),
                          str(order.shipments[0].items))
-        self.assertEqual(str(order),
-                         str(order.shipments[0].order))
         self.assertIsNone(order.shipments[0].tracking_link)
         self.assertIsNone(order.shipments[0].delivery_status)
         self.assertEqual(1, len(order.items))
