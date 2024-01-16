@@ -25,7 +25,7 @@ class Item(Parsable):
         self.price: Optional[float] = self.safe_parse(self._parse_price)
         self.seller: Optional[Seller] = self.safe_parse(self._parse_seller)
         self.condition: Optional[str] = self.safe_parse(self._parse_condition)
-        self.return_eligible_date: Optional[datetime.date] = self.safe_parse(self._parse_return_eligible_date)
+        self.return_eligible_date: Optional[date] = self.safe_parse(self._parse_return_eligible_date)
 
     def __repr__(self) -> str:
         return "<Item: \"{}\">".format(self.title)

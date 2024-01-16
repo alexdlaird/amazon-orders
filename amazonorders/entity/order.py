@@ -36,7 +36,7 @@ class Order(Parsable):
             self._parse_order_details_link)
         self.order_number: str = clone.order_number if clone else self.safe_parse(self._parse_order_number)
         self.grand_total: float = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
-        self.order_placed_date: datetime.date = clone.order_placed_date if clone else self.safe_parse(
+        self.order_placed_date: date = clone.order_placed_date if clone else self.safe_parse(
             self._parse_order_placed_date)
         self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient)
 
@@ -50,8 +50,8 @@ class Order(Parsable):
             self.total_before_tax: Optional[float] = self._parse_total_before_tax()
             self.estimated_tax: Optional[float] = self._parse_estimated_tax()
             self.refund_total: Optional[float] = self._parse_refund_total()
-            self.order_shipped_date: Optional[datetime.date] = self._parse_order_shipping_date()
-            self.refund_completed_date: Optional[datetime.date] = self._parse_refund_completed_date()
+            self.order_shipped_date: Optional[date] = self._parse_order_shipping_date()
+            self.refund_completed_date: Optional[date] = self._parse_refund_completed_date()
 
     def __repr__(self) -> str:
         return "<Order #{}: \"{}\">".format(self.order_number, self.items)
