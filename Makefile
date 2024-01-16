@@ -1,4 +1,4 @@
-.PHONY: all virtualenv install nopyc clean test integration-test build-test-resources local validate-release upload
+.PHONY: all virtualenv install nopyc clean test integration-test build-test-resources docs local validate-release upload
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -41,6 +41,14 @@ build-test-resources: install
 		source venv/bin/activate; \
 		make local; \
 		python scripts/build-test-resources.py; \
+	)
+
+docs: install
+	@( \
+		source venv/bin/activate; \
+		python -m pip install -r docs/requirements.txt; \
+		mypy --strict amazonorders; \
+		sphinx-build -M html docs _build/docs -n; \
 	)
 
 local:

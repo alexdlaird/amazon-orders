@@ -1,0 +1,27 @@
+{% extends "!layout.html" %}
+
+{%- block extrahead %}
+    {{ super() }}
+
+    <meta name="description"
+          content="amazon-orders is an unofficial library that provides a command line interface alongside a programmatic API that can be used to interact with Amazon.com’s consumer-facing website."/>
+
+    <!-- Twitter Card data -->
+    <meta name="twitter:title" content="amazon-orders - A CLI and library for interacting with Amazon order history">
+    <meta name="twitter:card"
+          value="amazon-orders is an unofficial library that provides a command line interface alongside a programmatic API that can be used to interact with Amazon.com’s consumer-facing website.">
+
+    <!-- Open Graph data -->
+    <meta property="og:title" content="amazon-orders - A CLI and library for interacting with Amazon order history"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="https://amazon-orders.readthedocs.io/en/latest/{{ pagename }}.html"/>
+    <meta property="og:description"
+          content="amazon-orders is an unofficial library that provides a command line interface alongside a programmatic API that can be used to interact with Amazon.com’s consumer-facing website."/>
+{% endblock %}
+
+{% block footer %}
+    {{ super() }}
+    <a href="https://github.com/{{ theme_github_user }}/{{ theme_github_repo }}" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_darkblue_121621.png?resize=149%2C149" alt="Fork me on GitHub" alt="Fork me on GitHub" class="github">
+    </a>
+{% endblock %}

@@ -1,0 +1,11 @@
+User-agent: *
+
+Disallow: /
+
+Allow: /en/stable
+
+Allow: /en/latest
+
+Allow: /en/develop
+
+Sitemap: https://amazon-orders.readthedocs.io/en/latest/sitemap-index.xml
