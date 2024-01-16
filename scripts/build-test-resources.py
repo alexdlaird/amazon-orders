@@ -11,6 +11,9 @@ __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "0.0.6"
 
+ROOT_DIR = os.path.normpath(
+    os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
+
 
 def build_test_resources(args):
     """
@@ -22,12 +25,15 @@ def build_test_resources(args):
     and AMAZON_PASSWORD environment variables to be set.
     """
 
-    if not (os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")):
-        print("AMAZON_USERNAME and AMAZON_PASSWORD environment variables not set")
+    if not (os.environ.get("AMAZON_USERNAME") and os.environ.get(
+        "AMAZON_PASSWORD")):
+        print(
+            "AMAZON_USERNAME and AMAZON_PASSWORD environment variables not set")
 
         sys.exit(1)
 
-    amazon_session = AmazonSession(os.environ["AMAZON_USERNAME"], os.environ["AMAZON_USERNAME"])
+    amazon_session = AmazonSession(os.environ["AMAZON_USERNAME"],
+                                   os.environ["AMAZON_USERNAME"])
     # TODO: for some reason in this script only, we always get stuck on Captcha
     amazon_session.login()
 
@@ -45,7 +51,8 @@ def build_test_resources(args):
 
     for page in pages_to_download:
         if page["type"] == "order-details":
-            url = "https://www.amazon.com/gp/your-account/order-details?orderID={}".format(page["order-id"]),
+            url = "https://www.amazon.com/gp/your-account/order-details?orderID={}".format(
+                page["order-id"])
             response = amazon_session.get(url)
             response_parsed = BeautifulSoup(response.text, "html.parser")
 
@@ -53,21 +60,25 @@ def build_test_resources(args):
 
             page_name = "order-details-{}.html".format(page["order-id"])
         else:
-            url = "https://www.amazon.com/your-orders/orders?timeFilter=year-{}&startIndex={}".format(page["year"],
-                                                                                                      page[
-                                                                                                          "start-index"])
+            url = "https://www.amazon.com/your-orders/orders?timeFilter=year-{}&startIndex={}".format(
+                page["year"],
+                page[
+                    "start-index"])
             response = amazon_session.get(url)
             response_parsed = BeautifulSoup(response.text, "html.parser")
 
             # TODO: obfuscate
 
-            page_name = "order-history-{}-{}.html".format(page["year"], page["start-index"])
+            page_name = "order-history-{}-{}.html".format(page["year"],
+                                                          page["start-index"])
 
-        with open(os.path.join("tests", "resources", page_name), "w", encoding="utf-8") as html_file:
+        with open(os.path.join(ROOT_DIR, "tests", "resources", page_name), "w",
+                  encoding="utf-8") as html_file:
             html_file.write(str(response_parsed))
 
-    print("\nDONE: Test resources update from live data. Be sure to verify data was properly "
-          "obfuscated before committing any changes.")
+    print(
+        "\nDONE: Test resources update from live data. Be sure to verify data was properly "
+        "obfuscated before committing any changes.")
 
 
 if __name__ == "__main__":

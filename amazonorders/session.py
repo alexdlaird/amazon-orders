@@ -1,8 +1,10 @@
+import json
 import logging
 import os
 from io import BytesIO
 from urllib.parse import urlparse
 
+import requests
 from PIL import Image
 from amazoncaptcha import AmazonCaptcha
 from bs4 import BeautifulSoup
@@ -49,7 +51,9 @@ class AmazonSession:
         username,
         password,
         debug=False,
-        max_auth_attempts=10) -> None:
+        max_auth_attempts=10,
+        cookie_jar_path=os.path.join(os.path.expanduser("~"), ".config",
+                                     "amazon-orders", "cookies.json")) -> None:
         self.username = username
         self.password = password
 
@@ -57,11 +61,21 @@ class AmazonSession:
         if self.debug:
             logger.setLevel(logging.DEBUG)
         self.max_auth_attempts = max_auth_attempts
+        self.cookie_jar_path = cookie_jar_path
 
         self.session = Session()
         self.last_response = None
         self.last_response_parsed = None
         self.is_authenticated = False
+
+        cookie_dir = os.path.dirname(self.cookie_jar_path)
+        if not os.path.exists(cookie_dir):
+            os.mkdir(cookie_dir)
+        if os.path.exists(self.cookie_jar_path):
+            with open(cookie_jar_path, "r", encoding="utf-8") as f:
+                data = json.loads(f.read())
+                cookies = requests.utils.cookiejar_from_dict(data)
+                self.session.cookies.update(cookies)
 
     def request(self, method, url, **kwargs):
         if "headers" not in kwargs:
@@ -73,6 +87,12 @@ class AmazonSession:
         self.last_response = self.session.request(method, url, **kwargs)
         self.last_response_parsed = BeautifulSoup(self.last_response.text,
                                                   "html.parser")
+
+        cookies = requests.utils.dict_from_cookiejar(self.session.cookies)
+        if os.path.exists(self.cookie_jar_path):
+            os.remove(self.cookie_jar_path)
+        with open(self.cookie_jar_path, "w", encoding="utf-8") as f:
+            f.write(json.dumps(cookies))
 
         logger.debug("Response: {} - {}".format(self.last_response.url,
                                                 self.last_response.status_code))
@@ -97,6 +117,12 @@ class AmazonSession:
 
         attempts = 0
         while not self.is_authenticated and attempts < self.max_auth_attempts:
+            if "Hello, sign in" not in self.last_response.text and "nav-item-signout" in self.last_response.text:
+                self.is_authenticated = True
+                break
+            else:
+                attempts += 1
+
             if self._is_field_found(SIGN_IN_FORM_NAME):
                 self._sign_in()
             elif self._is_field_found(CAPTCHA_1_FORM_CLASS, field_key="class"):
@@ -115,11 +141,6 @@ class AmazonSession:
                 raise AmazonOrdersAuthError(
                     "An error occurred, this is an unknown page: {}. To capture the page to a file, set the `debug` flag.".format(
                         self.last_response.url))
-
-            if "Hello, sign in" not in self.last_response.text and "nav-item-signout" in self.last_response.text:
-                self.is_authenticated = True
-            else:
-                attempts += 1
 
         if attempts == self.max_auth_attempts:
             raise AmazonOrdersAuthError(
@@ -175,7 +196,6 @@ class AmazonSession:
     def _mfa_submit(self):
         otp = input("Enter the one-time passcode sent to your device: ")
 
-        # TODO: figure out why Amazon doesn't respect rememberDevice
         form = self.last_response_parsed.find("form", id=MFA_FORM_ID)
         data = self._build_from_form(form,
                                      additional_attrs={"otpCode": otp,
