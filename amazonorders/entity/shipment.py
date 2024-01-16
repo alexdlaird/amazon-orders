@@ -20,7 +20,7 @@ class Shipment(Parsable):
         super().__init__(parsed)
 
         self.items: List[Item] = self._parse_items()
-        self.delivery_status: str = self.safe_parse(self._parse_delivery_status)
+        self.delivery_status: Optional[str] = self.safe_parse(self._parse_delivery_status)
         self.tracking_link: Optional[str] = self.safe_parse(self._parse_tracking_link)
 
     def __repr__(self) -> str:
@@ -32,14 +32,18 @@ class Shipment(Parsable):
     def _parse_items(self) -> List[Item]:
         return [Item(x) for x in self.parsed.find_all("div", {"class": "yohtmlc-item"})]
 
-    def _parse_delivery_status(self) -> str:
+    def _parse_delivery_status(self) -> Optional[str]:
         tag = self.parsed.find("div", {"class": "js-shipment-info-container"})
         if tag:
             tag = tag.find("div", {"class": "a-row"})
             return tag.text.strip()
+        else:
+            return None
 
     def _parse_tracking_link(self) -> Optional[str]:
         tag = self.parsed.find("span", {"class": "track-package-button"})
         if tag:
             link_tag = tag.find("a")
             return "{}{}".format(BASE_URL, link_tag.attrs["href"])
+        else:
+            return None

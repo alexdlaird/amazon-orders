@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 
 from bs4 import Tag
@@ -22,8 +22,8 @@ class Item(Parsable):
 
         self.title: str = self.safe_parse(self._parse_title)
         self.link: str = self.safe_parse(self._parse_link)
-        self.price: float = self.safe_parse(self._parse_price)
-        self.seller: Seller = self.safe_parse(self._parse_seller)
+        self.price: Optional[float] = self.safe_parse(self._parse_price)
+        self.seller: Optional[Seller] = self.safe_parse(self._parse_seller)
         self.condition: Optional[str] = self.safe_parse(self._parse_condition)
         self.return_eligible_date: Optional[datetime.date] = self.safe_parse(self._parse_return_eligible_date)
 
@@ -41,22 +41,28 @@ class Item(Parsable):
         tag = self.parsed.find("a")
         return "{}{}".format(BASE_URL, tag.attrs["href"])
 
-    def _parse_price(self) -> float:
+    def _parse_price(self) -> Optional[float]:
         for tag in self.parsed.find_all("div"):
             if tag.text.strip().startswith("$"):
                 return float(tag.text.strip().replace("$", ""))
 
-    def _parse_seller(self) -> Seller:
+        return None
+
+    def _parse_seller(self) -> Optional[Seller]:
         for tag in self.parsed.find_all("div"):
             if "Sold by:" in tag.text:
                 return Seller(tag)
+
+        return None
 
     def _parse_condition(self) -> Optional[str]:
         for tag in self.parsed.find_all("div"):
             if "Condition:" in tag.text:
                 return tag.text.split("Condition:")[1].strip()
 
-    def _parse_return_eligible_date(self) -> Optional[datetime.date]:
+        return None
+
+    def _parse_return_eligible_date(self) -> Optional[date]:
         for tag in self.parsed.find_all("div"):
             if "Return" in tag.text:
                 split_str = "through "
@@ -66,3 +72,5 @@ class Item(Parsable):
                 if split_str in clean_str:
                     date_str = clean_str.split(split_str)[1]
                     return datetime.strptime(date_str, "%b %d, %Y").date()
+
+        return None

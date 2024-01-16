@@ -40,3 +40,5 @@ class Seller(Parsable):
         tag = self.parsed.find("a")
         if tag:
             return "{}{}".format(BASE_URL, tag.attrs["href"])
+        else:
+            return None

@@ -2,4 +2,6 @@ Sphinx
 sphinx-notfound-page
 sphinx-autodoc-typehints
 mypy
-types-PyYAML
+types-requests
+types-beautifulsoup4
+types-Pillow
