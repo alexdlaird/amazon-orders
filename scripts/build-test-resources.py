@@ -27,7 +27,7 @@ def build_test_resources(args):
 
         sys.exit(1)
 
-    amazon_session = AmazonSession(os.environ["AMAZON_USERNAME"], os.environ["AMAZON_USERNAME"], debug=True)
+    amazon_session = AmazonSession(os.environ["AMAZON_USERNAME"], os.environ["AMAZON_USERNAME"])
     amazon_session.login()
 
     # TODO: list of all Amazon order history and order details pages we want to get

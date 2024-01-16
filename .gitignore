@@ -12,3 +12,5 @@ MANIFEST
 _build
 
 .dmypy.json
+
+scripts/*.html
