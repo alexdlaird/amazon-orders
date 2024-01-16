@@ -28,9 +28,9 @@ def build_test_resources(args):
         sys.exit(1)
 
     amazon_session = AmazonSession(os.environ["AMAZON_USERNAME"], os.environ["AMAZON_USERNAME"])
+    # TODO: for some reason in this script only, we always get stuck on Captcha
     amazon_session.login()
 
-    # TODO: list of all Amazon order history and order details pages we want to get
     pages_to_download = [
         {"type": "order-history", "year": "2018", "start-index": "0"},
         {"type": "order-history", "year": "2020", "start-index": "40"},
