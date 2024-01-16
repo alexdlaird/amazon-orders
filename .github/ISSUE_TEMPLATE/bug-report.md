@@ -22,7 +22,7 @@ A brief description of what you expected to happen.
 
 **Environment**
 - OS: [e.g. OS X 10.14.5]
-- Python Version: [e.g. 3.7.2]
+- Python Version: [e.g. 3.8.2]
 
 **Additional Context**
 Add any other context about the problem here.
