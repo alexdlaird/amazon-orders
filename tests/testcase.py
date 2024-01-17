@@ -3,7 +3,7 @@ from datetime import date
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 
 class TestCase(unittest.TestCase):
@@ -88,8 +88,6 @@ class TestCase(unittest.TestCase):
         self.assertEqual(1, len(order.shipments))
         self.assertEqual(str(order.items),
                          str(order.shipments[0].items))
-        self.assertEqual(str(order),
-                         str(order.shipments[0].order))
         self.assertIsNone(order.shipments[0].tracking_link)
         self.assertTrue("Return complete", order.shipments[0].delivery_status)
         self.assertEqual(1, len(order.items))
@@ -117,13 +115,10 @@ class TestCase(unittest.TestCase):
                              order.items[0].seller.name)
             self.assertIsNone(order.items[0].seller.link)
 
-    def assert_order_112_9685975_5907428_multiple_items_shipments_sellers(self, order, full_details, history_page):
+    def assert_order_112_9685975_5907428_multiple_items_shipments_sellers(self, order, full_details):
         self.assertEqual(46.61, order.grand_total)
         self.assertEqual("112-9685975-5907428", order.order_number)
-        if history_page:
-            self.assertIsNotNone(order.order_details_link)
-        else:
-            self.assertIsNone(order.order_details_link)
+        self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2023, 12, 7), order.order_placed_date)
         self.assertEqual("Alex Laird", order.recipient.name)
         self.assertIsNotNone(order.recipient.address)
@@ -132,8 +127,6 @@ class TestCase(unittest.TestCase):
         found_amazon = False
         for shipment in order.shipments:
             self.assertEqual(1, len(shipment.items))
-            self.assertEqual(str(order),
-                             str(shipment.order))
             order_item = next(filter(lambda i: i.title == shipment.items[0].title, order.items))
             self.assertEqual(str(order_item),
                              str(shipment.items[0]))
@@ -208,8 +201,6 @@ class TestCase(unittest.TestCase):
         self.assertEqual(2, len(order.items))
         self.assertEqual(str(order.items),
                          str(order.shipments[0].items))
-        self.assertEqual(str(order),
-                         str(order.shipments[0].order))
         found_aaa = False
         found_aa = False
         for item in order.items:

@@ -19,7 +19,7 @@ class Parsable:
 
     def __init__(self,
                  parsed: Tag) -> None:
-        #:
+        #: Parsed HTML data that can be used to populate the fields of the entity.
         self.parsed: Tag = parsed
 
     def safe_parse(self,

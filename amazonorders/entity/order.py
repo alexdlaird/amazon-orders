@@ -14,7 +14,7 @@ from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +40,10 @@ class Order(Parsable):
         #:
         self.items: List[Item] = clone.items if clone else self._parse_items()
         #:
+        self.order_number: str = clone.order_number if clone else self.safe_parse(self._parse_order_number)
+        #:
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
             self._parse_order_details_link)
-        #:
-        self.order_number: str = clone.order_number if clone else self.safe_parse(self._parse_order_number)
         #:
         self.grand_total: float = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
         #:
@@ -91,12 +91,19 @@ class Order(Parsable):
         tag = self.parsed.find("a", {"class": "yohtmlc-order-details-link"})
         if tag:
             return "{}{}".format(BASE_URL, tag.attrs["href"])
+        elif self.order_number:
+            return "{}/gp/your-account/order-details?orderID={}".format(BASE_URL, self.order_number)
         else:
             return None
 
     def _parse_order_number(self) -> str:
-        if self.order_details_link:
-            parsed_url = urlparse(self.order_details_link)
+        try:
+            order_details_link = self._parse_order_details_link()
+        except:
+            # We're not using safe_parse here because it's fine if this fails, no need for noise
+            order_details_link = None
+        if order_details_link:
+            parsed_url = urlparse(order_details_link)
             return parse_qs(parsed_url.query)["orderID"][0]
         else:
             tag = self.parsed.find("bdi", dir="ltr")

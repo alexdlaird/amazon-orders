@@ -7,7 +7,7 @@ from tests.testcase import TestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.5"
+__version__ = "1.0.1"
 
 
 @unittest.skipIf(os.environ.get("INTEGRATION_TESTS", "False") != "True",
@@ -80,7 +80,7 @@ class TestIntegration(TestCase):
         # THEN
         self.assert_order_112_2961628_4757846_return(orders[1], True)
 
-    def test_get_order_history_multiple_shipments(self):
+    def test_get_order_history_multiple_items_shipments_sellers(self):
         # GIVEN
         year = 2023
         start_index = 10
@@ -91,7 +91,7 @@ class TestIntegration(TestCase):
                                                       full_details=True)
 
         # THEN
-        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(orders[3], True, True)
+        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(orders[3], True)
 
     def test_get_order(self):
         # GIVEN
@@ -101,4 +101,4 @@ class TestIntegration(TestCase):
         order = self.amazon_orders.get_order(order_id)
 
         # THEN
-        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True, False)
+        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
