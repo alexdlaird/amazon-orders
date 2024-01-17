@@ -13,4 +13,5 @@ _build
 
 .dmypy.json
 
+tests/.config/
 scripts/*.html

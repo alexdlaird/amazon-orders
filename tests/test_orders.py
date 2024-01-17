@@ -15,6 +15,8 @@ __version__ = "1.0.1"
 
 class TestOrderHistory(UnitTestCase):
     def setUp(self):
+        super().setUp()
+
         self.amazon_session = AmazonSession("some-username", "some-password")
 
         self.amazon_orders = AmazonOrders(self.amazon_session)

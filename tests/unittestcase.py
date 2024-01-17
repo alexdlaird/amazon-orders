@@ -2,13 +2,14 @@ import os
 import unittest
 
 import responses
+from amazonorders import session
 
 from amazonorders.session import BASE_URL
 from tests.testcase import TestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.6"
+__version__ = "1.0.1"
 
 
 @unittest.skipIf(os.environ.get("INTEGRATION_TESTS", "False") == "True",
@@ -16,6 +17,12 @@ __version__ = "0.0.6"
 class UnitTestCase(TestCase):
     RESOURCES_DIR = os.path.normpath(
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources"))
+
+    def setUp(self):
+        session.DEFAULT_COOKIE_JAR_PATH = os.path.normpath(
+            os.path.join(os.path.abspath(os.path.dirname(__file__)), ".config", "cookies.json"))
+        if os.path.exists(session.DEFAULT_COOKIE_JAR_PATH):
+            os.remove(session.DEFAULT_COOKIE_JAR_PATH)
 
     def given_login_responses_success(self):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:

@@ -11,11 +11,13 @@ from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.6"
+__version__ = "1.0.1"
 
 
 class TestSession(UnitTestCase):
     def setUp(self):
+        super().setUp()
+
         self.amazon_session = AmazonSession("some-username",
                                             "some-password")
 

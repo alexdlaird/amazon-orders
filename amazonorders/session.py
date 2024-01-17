@@ -167,7 +167,10 @@ class AmazonSession:
 
         attempts = 0
         while not self.is_authenticated and attempts < self.max_auth_attempts:
-            if "Hello, sign in" not in self.last_response.text and "nav-item-signout" in self.last_response.text:
+            cookies = requests.utils.dict_from_cookiejar(self.session.cookies)
+            if ((cookies.get("session-token") and cookies.get("x-main")) or
+                    ("Hello, sign in" not in self.last_response.text and
+                     "nav-item-signout" in self.last_response.text)):
                 self.is_authenticated = True
                 break
 
