@@ -15,7 +15,7 @@ from amazonorders.exception import AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.7"
+__version__ = "1.0.0"
 
 logger = logging.getLogger(__name__)
 
@@ -68,13 +68,13 @@ class AmazonSession:
         #:
         self.password: str = password
 
-        #:
+        #: Set logger ``DEBUG``, send output to ``stderr``, and write an HTML file for each request made on the session.
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
         #:
         self.max_auth_attempts: int = max_auth_attempts
-        #:
+        #: The path to persist session cookies, defaults to ``conf.DEFAULT_COOKIE_JAR_PATH``.
         self.cookie_jar_path: str = cookie_jar_path
 
         #:
@@ -83,7 +83,7 @@ class AmazonSession:
         self.last_response: Optional[Response] = None
         #:
         self.last_response_parsed: Optional[Tag] = None
-        #:
+        #: If :func:`login()` has been executed and successfully logged in the session.
         self.is_authenticated: bool = False
 
         cookie_dir = os.path.dirname(self.cookie_jar_path)
@@ -101,10 +101,10 @@ class AmazonSession:
                 **kwargs: Any) -> Response:
         """
 
-        :param method:
-        :param url:
-        :param kwargs:
-        :return:
+        :param method: The request method to execute.
+        :param url: The URL to execute ``method`` on.
+        :param kwargs: Remaining ``kwargs`` will be passed to :func:`requests.request`.
+        :return: The Response from the executed request.
         """
         if "headers" not in kwargs:
             kwargs["headers"] = {}
@@ -139,9 +139,9 @@ class AmazonSession:
             **kwargs: Any):
         """
 
-        :param url:
-        :param kwargs:
-        :return:
+        :param url: The URL to GET on.
+        :param kwargs: Remaining ``kwargs`` will be passed to :func:`AmazonSession.request`.
+        :return: The Response from the executed GET request.
         """
         return self.request("GET", url, **kwargs)
 
@@ -150,15 +150,18 @@ class AmazonSession:
              **kwargs: Any) -> Response:
         """
 
-        :param url:
-        :param kwargs:
-        :return:
+        :param url: The URL to POST on.
+        :param kwargs: Remaining ``kwargs`` will be passed to :func:`AmazonSession.request`.
+        :return: The Response from the executed POST request.
         """
         return self.request("POST", url, **kwargs)
 
     def login(self) -> None:
         """
+        Execute an Amazon login process. This will include the sign-in page, and may also include Captcha challenges
+        and OTP pages (of 2FA authentication is enabled on your account).
 
+        If successful, ``is_authenciated`` will be set to ``True``.
         """
         self.get("{}/gp/sign-in.html".format(BASE_URL))
 

@@ -12,7 +12,7 @@ from amazonorders.session import AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.7"
+__version__ = "1.0.0"
 
 logger = logging.getLogger("amazonorders")
 

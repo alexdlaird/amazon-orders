@@ -8,7 +8,7 @@ from amazonorders.session import BASE_URL, AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.7"
+__version__ = "1.0.0"
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class AmazonOrders:
         #:
         self.amazon_session: AmazonSession = amazon_session
 
-        #:
+        #: Set logger ``DEBUG`` and send output to ``stderr``.
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
@@ -38,10 +38,10 @@ class AmazonOrders:
                           full_details: bool = False) -> List[Order]:
         """
 
-        :param year:
-        :param start_index:
-        :param full_details:
-        :return:
+        :param year: The year for which to get history.
+        :param start_index: The index to start at within the history.
+        :param full_details: Will execute an additional request per Order in the retrieved history to fully populate it.
+        :return: A list of the requested Orders.
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
@@ -86,8 +86,8 @@ class AmazonOrders:
                   order_id: str) -> Order:
         """
 
-        :param order_id:
-        :return:
+        :param order_id: The Amazon Order ID to lookup.
+        :return: The requested Order.
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")

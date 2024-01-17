@@ -5,5 +5,5 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.0...HEAD)
 
-## [1.0.0](https://github.com/alexdlaird/amazon-orders-python/releases/tag/1.0.0) - TBD
+## [1.0.0](https://github.com/alexdlaird/amazon-orders-python/releases/tag/1.0.0) - 2024-01-16
 - First stable release of `amazon-orders`.
