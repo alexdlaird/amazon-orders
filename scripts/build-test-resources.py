@@ -1,18 +1,28 @@
 #!/usr/bin/env python
 
+import json
 import os
+import re
 import sys
-
-from amazonorders.session import AmazonSession
 
 from bs4 import BeautifulSoup
 
+from amazonorders.session import AmazonSession
+
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "0.0.6"
+__version__ = "1.0.1"
 
 ROOT_DIR = os.path.normpath(
     os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
+
+
+def _obfuscate(response_parsed, hide_data_rules):
+    cleaned = str(response_parsed)
+    for rule in hide_data_rules:
+        pattern = re.compile(rule["find_pattern"], re.IGNORECASE)
+        cleaned = pattern.sub(rule["replace"], cleaned)
+    return BeautifulSoup(cleaned, "html.parser")
 
 
 def build_test_resources(args):
@@ -49,6 +59,23 @@ def build_test_resources(args):
         {"type": "order-details", "order-id": "113-1625648-3437067"},
     ]
 
+    """
+    This variable should contain a JSON blob that matches this format:
+    
+    [
+        {"find_pattern": "Some Sensitive Data (case will be ignored)", "replace": "Obfuscated Replacement"},
+        {"find_pattern": "555 My Private Address (and regex pattern can be used)", "replace": "555 My Public Address"},
+        {"find_pattern": "Secret City, VT 22222", "replace": "San Francisco, CA 94016"},
+        {"find_pattern": "card ending in 1234", "replace": "card ending in 4321"}
+    ]
+    """
+    hide_data_rules = json.loads(os.environ["HIDE_DATA_RULES"])
+
+    if not hide_data_rules:
+        print("HIDE_DATA_RULES environment variables not set, see script for details")
+
+        sys.exit(1)
+
     for page in pages_to_download:
         if page["type"] == "order-details":
             url = "https://www.amazon.com/gp/your-account/order-details?orderID={}".format(
@@ -56,7 +83,7 @@ def build_test_resources(args):
             response = amazon_session.get(url)
             response_parsed = BeautifulSoup(response.text, "html.parser")
 
-            # TODO: obfuscate
+            cleaned_response = _obfuscate(response_parsed, hide_data_rules)
 
             page_name = "order-details-{}.html".format(page["order-id"])
         else:
@@ -67,14 +94,14 @@ def build_test_resources(args):
             response = amazon_session.get(url)
             response_parsed = BeautifulSoup(response.text, "html.parser")
 
-            # TODO: obfuscate
+            cleaned_response = _obfuscate(response_parsed, hide_data_rules)
 
             page_name = "order-history-{}-{}.html".format(page["year"],
                                                           page["start-index"])
 
         with open(os.path.join(ROOT_DIR, "tests", "resources", page_name), "w",
                   encoding="utf-8") as html_file:
-            html_file.write(str(response_parsed))
+            html_file.write(str(cleaned_response))
 
     print(
         "\nDONE: Test resources update from live data. Be sure to verify data was properly "
