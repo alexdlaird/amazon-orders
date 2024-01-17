@@ -210,7 +210,7 @@ class TestCase(unittest.TestCase):
                     "AmazonBasics 36 Pack AAA High-Performance Alkaline Batteries, 10-Year Shelf Life, Easy to Open Value Pack",
                     item.title)
                 self.assertIsNotNone(item.link)
-                # TODO: this actually is shown on the page, it's just collapsed, parse it
+                # TODO: this actually is shown on the page, it's just collapsed, find a way to parse it
                 self.assertIsNone(item.return_eligible_date)
             else:
                 found_aa = True
@@ -218,7 +218,7 @@ class TestCase(unittest.TestCase):
                     "AmazonBasics 48 Pack AA High-Performance Alkaline Batteries, 10-Year Shelf Life, Easy to Open Value Pack",
                     item.title)
                 self.assertIsNotNone(item.link)
-                # TODO: this actually is shown on the page, it's just collapsed, parse it
+                # TODO: this actually is shown on the page, it's just collapsed, find a way to parse it
                 self.assertIsNone(item.return_eligible_date)
         self.assertTrue(found_aaa)
         self.assertTrue(found_aa)

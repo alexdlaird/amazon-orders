@@ -10,12 +10,13 @@ from PIL import Image
 from amazoncaptcha import AmazonCaptcha
 from bs4 import BeautifulSoup, Tag
 from requests import Session, Response
+from requests.utils import dict_from_cookiejar
 
 from amazonorders.exception import AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ class AmazonSession:
         self.last_response_parsed = BeautifulSoup(self.last_response.text,
                                                   "html.parser")
 
-        cookies = requests.utils.dict_from_cookiejar(self.session.cookies)
+        cookies = dict_from_cookiejar(self.session.cookies)
         if os.path.exists(self.cookie_jar_path):
             os.remove(self.cookie_jar_path)
         with open(self.cookie_jar_path, "w", encoding="utf-8") as f:
@@ -156,21 +157,27 @@ class AmazonSession:
         """
         return self.request("POST", url, **kwargs)
 
+    def auth_cookies_stored(self):
+        cookies = dict_from_cookiejar(self.session.cookies)
+        return cookies.get("session-token") and cookies.get("x-main")
+
     def login(self) -> None:
         """
         Execute an Amazon login process. This will include the sign-in page, and may also include Captcha challenges
         and OTP pages (of 2FA authentication is enabled on your account).
 
-        If successful, ``is_authenciated`` will be set to ``True``.
+        If successful, ``is_authenticated`` will be set to ``True``.
+
+        Session cookies are persisted, and if existing session data is found during this auth flow, it will be
+        skipped entirely and flagged as authenticated.
         """
         self.get("{}/gp/sign-in.html".format(BASE_URL))
 
         attempts = 0
         while not self.is_authenticated and attempts < self.max_auth_attempts:
-            cookies = requests.utils.dict_from_cookiejar(self.session.cookies)
-            if ((cookies.get("session-token") and cookies.get("x-main")) or
+            if self.auth_cookies_stored() or \
                     ("Hello, sign in" not in self.last_response.text and
-                     "nav-item-signout" in self.last_response.text)):
+                     "nav-item-signout" in self.last_response.text):
                 self.is_authenticated = True
                 break
 
@@ -201,17 +208,17 @@ class AmazonSession:
 
     def logout(self) -> None:
         """
-
+        Logout of the existing Amazon session and clear cookies.
         """
         self.get("{}/gp/sign-out.html".format(BASE_URL))
 
-        self.close()
+        if os.path.exists(self.cookie_jar_path):
+            os.remove(self.cookie_jar_path)
 
-    def close(self) -> None:
-        """
-
-        """
         self.session.close()
+        self.session = Session()
+
+        self.is_authenticated = False
 
     def _sign_in(self) -> None:
         form = self.last_response_parsed.find("form",

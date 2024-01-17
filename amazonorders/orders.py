@@ -78,7 +78,7 @@ class AmazonOrders:
 
         if self.print_output:
             for order in orders:
-                print(order)
+                print("{}\n".format(order))
 
         return orders
 

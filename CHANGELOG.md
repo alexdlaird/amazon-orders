@@ -8,10 +8,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [1.0.1](https://github.com/alexdlaird/pyngrok/compare/1.0.0...1.0.1) - TBD
 ### Added
 - Auth flow now also checks session cookies in addition to parsing the page for signs of login.
+- `logout` command to CLI.
 - Documentation improvements.
 - Test improvements.
 
+### Changed
+- String representation of Order to now show full details, so they are not also output to the CLI.
+
 ### Fixed
+- Improvements to CLI, including error message cleanup on auth exceptions.
 - `Order.order_details_link` is now properly populated even on the details page.
 - `.gitattributes` to HTML files are now ignore by Linguist.
 

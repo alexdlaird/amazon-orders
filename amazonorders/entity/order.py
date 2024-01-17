@@ -54,32 +54,60 @@ class Order(Parsable):
 
         if self.full_details:
             self.items: List[Item] = self._parse_items()
-            #:
-            self.payment_method: Optional[str] = self._parse_payment_method()
-            #:
-            self.payment_method_last_4: Optional[str] = self._parse_payment_method_last_4()
-            #:
-            self.subtotal: Optional[float] = self._parse_subtotal()
-            #:
-            self.shipping_total: Optional[float] = self._parse_shipping_total()
-            #:
-            self.subscription_discount: Optional[float] = self._parse_subscription_discount()
-            #:
-            self.total_before_tax: Optional[float] = self._parse_total_before_tax()
-            #:
-            self.estimated_tax: Optional[float] = self._parse_estimated_tax()
-            #:
-            self.refund_total: Optional[float] = self._parse_refund_total()
-            #:
-            self.order_shipped_date: Optional[date] = self._parse_order_shipping_date()
-            #:
-            self.refund_completed_date: Optional[date] = self._parse_refund_completed_date()
+        #:
+        self.payment_method: Optional[str] = self._parse_payment_method() if self.full_details else None
+        #:
+        self.payment_method_last_4: Optional[str] = self._parse_payment_method_last_4() if self.full_details else None
+        #:
+        self.subtotal: Optional[float] = self._parse_subtotal() if self.full_details else None
+        #:
+        self.shipping_total: Optional[float] = self._parse_shipping_total() if self.full_details else None
+        #:
+        self.subscription_discount: Optional[float] = self._parse_subscription_discount() if self.full_details else None
+        #:
+        self.total_before_tax: Optional[float] = self._parse_total_before_tax() if self.full_details else None
+        #:
+        self.estimated_tax: Optional[float] = self._parse_estimated_tax() if self.full_details else None
+        #:
+        self.refund_total: Optional[float] = self._parse_refund_total() if self.full_details else None
+        #:
+        self.order_shipped_date: Optional[date] = self._parse_order_shipping_date() if self.full_details else None
+        #:
+        self.refund_completed_date: Optional[date] = self._parse_refund_completed_date() if self.full_details else None
 
     def __repr__(self) -> str:
         return "<Order #{}: \"{}\">".format(self.order_number, self.items)
 
     def __str__(self) -> str:  # pragma: no cover
-        return "Order #{}: \"{}\"".format(self.order_number, self.items)
+        order_str = "Order #{}".format(self.order_number)
+
+        order_str += "\n   Shipments: {}".format(self.shipments)
+        order_str += "\n   Order Details Link: {}".format(self.order_details_link)
+        order_str += "\n   Grand Total: {}".format(self.grand_total)
+        order_str += "\n   Order Placed Date: {}".format(self.order_placed_date)
+        order_str += "\n   Recipient: {}".format(self.recipient)
+        if self.payment_method:
+            order_str += "\n   Payment Method: {}".format(self.payment_method)
+        if self.payment_method_last_4:
+            order_str += "\n   Payment Method Last 4: {}".format(self.payment_method_last_4)
+        if self.subtotal:
+            order_str += "\n   Subtotal: {}".format(self.subtotal)
+        if self.shipping_total:
+            order_str += "\n   Shipping Total: {}".format(self.shipping_total)
+        if self.subscription_discount:
+            order_str += "\n   Subscription Discount: {}".format(self.subscription_discount)
+        if self.total_before_tax:
+            order_str += "\n   Total Before Tax: {}".format(self.total_before_tax)
+        if self.estimated_tax:
+            order_str += "\n   Estimated Tax: {}".format(self.estimated_tax)
+        if self.refund_total:
+            order_str += "\n   Refund Total: {}".format(self.refund_total)
+        if self.order_shipped_date:
+            order_str += "\n   Order Shipped Date: {}".format(self.order_shipped_date)
+        if self.refund_completed_date:
+            order_str += "\n   Refund Completed Date: {}".format(self.refund_completed_date)
+
+        return order_str
 
     def _parse_shipments(self) -> List[Shipment]:
         return [Shipment(x) for x in self.parsed.find_all("div", {"class": "shipment"})]
