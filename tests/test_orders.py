@@ -117,6 +117,42 @@ class TestOrderHistory(UnitTestCase):
         self.assertEqual(10, resp2.call_count)
 
     @responses.activate
+    def test_get_order_history_multiple_items(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2020
+        start_index = 40
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r",
+                  encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                "{}/your-orders/orders?timeFilter=year-{}&startIndex={}".format(BASE_URL,
+                                                                                year, start_index),
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "order-details-113-1625648-3437067.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.GET,
+                re.compile("{}/gp/your-account/order-details/.*".format(
+                    BASE_URL)),
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year,
+                                                      start_index=start_index,
+                                                      full_details=True)
+
+        # THEN
+        self.assertEqual(10, len(orders))
+        self.assert_order_113_1625648_3437067_multiple_items(orders[6], True)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(10, resp2.call_count)
+
+    @responses.activate
     def test_get_order_history_return(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
@@ -183,3 +219,24 @@ class TestOrderHistory(UnitTestCase):
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(orders[3], True)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(10, resp2.call_count)
+
+    @responses.activate
+    def test_get_order(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "112-9685975-5907428"
+        with open(os.path.join(self.RESOURCES_DIR, "order-details-{}.html".format(order_id)), "r",
+                  encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                "{}/gp/your-account/order-details?orderID={}".format(BASE_URL, order_id),
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
+        self.assertEqual(1, resp1.call_count)
