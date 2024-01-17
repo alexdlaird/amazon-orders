@@ -14,11 +14,17 @@ logger = logging.getLogger(__name__)
 
 
 class Seller(Parsable):
+    """
+
+    """
+
     def __init__(self,
                  parsed: Tag) -> None:
         super().__init__(parsed)
 
+        #:
         self.name: str = self.safe_parse(self._parse_name)
+        #:
         self.link: Optional[str] = self.safe_parse(self._parse_link)
 
     def __repr__(self) -> str:

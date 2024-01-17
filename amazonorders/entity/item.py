@@ -16,15 +16,25 @@ logger = logging.getLogger(__name__)
 
 
 class Item(Parsable):
+    """
+
+    """
+
     def __init__(self,
                  parsed: Tag) -> None:
         super().__init__(parsed)
 
+        #:
         self.title: str = self.safe_parse(self._parse_title)
+        #:
         self.link: str = self.safe_parse(self._parse_link)
+        #:
         self.price: Optional[float] = self.safe_parse(self._parse_price)
+        #:
         self.seller: Optional[Seller] = self.safe_parse(self._parse_seller)
+        #:
         self.condition: Optional[str] = self.safe_parse(self._parse_condition)
+        #:
         self.return_eligible_date: Optional[date] = self.safe_parse(self._parse_return_eligible_date)
 
     def __repr__(self) -> str:

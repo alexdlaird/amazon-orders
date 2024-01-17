@@ -13,12 +13,22 @@ logger = logging.getLogger(__name__)
 
 
 class Parsable:
+    """
+
+    """
+
     def __init__(self,
                  parsed: Tag) -> None:
+        #:
         self.parsed: Tag = parsed
 
     def safe_parse(self,
                    parse_function: Callable[[], Any]) -> Any:
+        """
+
+        :param parse_function:
+        :return:
+        """
         if not parse_function.__name__.startswith("_parse_"):
             raise AmazonOrdersError("This name of the `parse_function` passed to this method must start with `_parse_`")
 

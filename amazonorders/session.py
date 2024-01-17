@@ -46,27 +46,44 @@ CAPTCHA_1_DIV_ID = "cvf-page-content"
 CAPTCHA_1_FORM_CLASS = "cvf-widget-form"
 CAPTCHA_2_INPUT_ID = "captchacharacters"
 
+DEFAULT_COOKIE_JAR_PATH = os.path.join(os.path.expanduser("~"), ".config", "amazon-orders", "cookies.json")
+
 
 class AmazonSession:
+    """
+
+    """
+
     def __init__(self,
                  username: str,
                  password: str,
                  debug: bool = False,
                  max_auth_attempts: int = 10,
-                 cookie_jar_path: str = os.path.join(os.path.expanduser("~"), ".config",
-                                                     "amazon-orders", "cookies.json")) -> None:
+                 cookie_jar_path: str = None) -> None:
+        if not cookie_jar_path:
+            cookie_jar_path = DEFAULT_COOKIE_JAR_PATH
+
+        #:
         self.username: str = username
+        #:
         self.password: str = password
 
+        #:
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
+        #:
         self.max_auth_attempts: int = max_auth_attempts
+        #:
         self.cookie_jar_path: str = cookie_jar_path
 
+        #:
         self.session: Session = Session()
+        #:
         self.last_response: Optional[Response] = None
+        #:
         self.last_response_parsed: Optional[Tag] = None
+        #:
         self.is_authenticated: bool = False
 
         cookie_dir = os.path.dirname(self.cookie_jar_path)
@@ -82,6 +99,13 @@ class AmazonSession:
                 method: str,
                 url: str,
                 **kwargs: Any) -> Response:
+        """
+
+        :param method:
+        :param url:
+        :param kwargs:
+        :return:
+        """
         if "headers" not in kwargs:
             kwargs["headers"] = {}
         kwargs["headers"].update(BASE_HEADERS)
@@ -113,14 +137,29 @@ class AmazonSession:
     def get(self,
             url: str,
             **kwargs: Any):
+        """
+
+        :param url:
+        :param kwargs:
+        :return:
+        """
         return self.request("GET", url, **kwargs)
 
     def post(self,
              url,
              **kwargs: Any) -> Response:
+        """
+
+        :param url:
+        :param kwargs:
+        :return:
+        """
         return self.request("POST", url, **kwargs)
 
     def login(self) -> None:
+        """
+
+        """
         self.get("{}/gp/sign-in.html".format(BASE_URL))
 
         attempts = 0
@@ -155,11 +194,17 @@ class AmazonSession:
                 "Max authentication flow attempts reached.")
 
     def logout(self) -> None:
+        """
+
+        """
         self.get("{}/gp/sign-out.html".format(BASE_URL))
 
         self.close()
 
     def close(self) -> None:
+        """
+
+        """
         self.session.close()
 
     def _sign_in(self) -> None:

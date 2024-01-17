@@ -15,12 +15,19 @@ logger = logging.getLogger(__name__)
 
 
 class Shipment(Parsable):
+    """
+
+    """
+
     def __init__(self,
                  parsed: Tag) -> None:
         super().__init__(parsed)
 
+        #:
         self.items: List[Item] = self._parse_items()
+        #:
         self.delivery_status: Optional[str] = self.safe_parse(self._parse_delivery_status)
+        #:
         self.tracking_link: Optional[str] = self.safe_parse(self._parse_tracking_link)
 
     def __repr__(self) -> str:

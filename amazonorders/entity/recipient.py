@@ -13,11 +13,17 @@ logger = logging.getLogger(__name__)
 
 
 class Recipient(Parsable):
+    """
+
+    """
+
     def __init__(self,
                  parsed: Tag) -> None:
         super().__init__(parsed)
 
+        #:
         self.name: str = self.safe_parse(self._parse_name)
+        #:
         self.address: Optional[str] = self.safe_parse(self._parse_address)
 
     def __repr__(self) -> str:

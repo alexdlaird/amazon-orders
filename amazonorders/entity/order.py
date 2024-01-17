@@ -22,35 +22,57 @@ Entity = TypeVar('Entity', bound='Order')
 
 
 class Order(Parsable):
+    """
+
+    """
+
     def __init__(self,
                  parsed: Tag,
                  full_details: bool = False,
                  clone: Optional[Entity] = None) -> None:
         super().__init__(parsed)
 
+        #:
         self.full_details: bool = full_details
 
+        #:
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
+        #:
         self.items: List[Item] = clone.items if clone else self._parse_items()
+        #:
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
             self._parse_order_details_link)
+        #:
         self.order_number: str = clone.order_number if clone else self.safe_parse(self._parse_order_number)
+        #:
         self.grand_total: float = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
+        #:
         self.order_placed_date: date = clone.order_placed_date if clone else self.safe_parse(
             self._parse_order_placed_date)
+        #:
         self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient)
 
         if self.full_details:
             self.items: List[Item] = self._parse_items()
+            #:
             self.payment_method: Optional[str] = self._parse_payment_method()
+            #:
             self.payment_method_last_4: Optional[str] = self._parse_payment_method_last_4()
+            #:
             self.subtotal: Optional[float] = self._parse_subtotal()
+            #:
             self.shipping_total: Optional[float] = self._parse_shipping_total()
+            #:
             self.subscription_discount: Optional[float] = self._parse_subscription_discount()
+            #:
             self.total_before_tax: Optional[float] = self._parse_total_before_tax()
+            #:
             self.estimated_tax: Optional[float] = self._parse_estimated_tax()
+            #:
             self.refund_total: Optional[float] = self._parse_refund_total()
+            #:
             self.order_shipped_date: Optional[date] = self._parse_order_shipping_date()
+            #:
             self.refund_completed_date: Optional[date] = self._parse_refund_completed_date()
 
     def __repr__(self) -> str:

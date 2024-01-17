@@ -14,21 +14,35 @@ logger = logging.getLogger(__name__)
 
 
 class AmazonOrders:
+    """
+
+    """
+
     def __init__(self,
                  amazon_session: AmazonSession,
                  debug: bool = False,
                  print_output: bool = False) -> None:
+        #:
         self.amazon_session: AmazonSession = amazon_session
 
+        #:
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
+        #:
         self.print_output: bool = print_output
 
     def get_order_history(self,
                           year: int = datetime.date.today().year,
                           start_index: Optional[int] = None,
                           full_details: bool = False) -> List[Order]:
+        """
+
+        :param year:
+        :param start_index:
+        :param full_details:
+        :return:
+        """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
@@ -70,6 +84,11 @@ class AmazonOrders:
 
     def get_order(self,
                   order_id: str) -> Order:
+        """
+
+        :param order_id:
+        :return:
+        """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
