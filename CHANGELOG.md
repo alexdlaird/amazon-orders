@@ -8,16 +8,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [1.0.1](https://github.com/alexdlaird/pyngrok/compare/1.0.0...1.0.1) - TBD
 ### Added
 - Auth flow now also checks session cookies in addition to parsing the page for signs of login.
+- All fields to string representation of [`Order`](https://amazon-orders.readthedocs.io/en/1.0.1/api.html#amazonorders.entity.order.Order), so they are not output on the CLI.
 - `logout` command to CLI.
 - Documentation improvements.
 - Test improvements.
 
-### Changed
-- String representation of Order to now show full details, so they are not also output to the CLI.
-
 ### Fixed
 - Improvements to CLI, including error message cleanup on auth exceptions.
-- `Order.order_details_link` is now properly populated even on the details page.
+- [`Order.order_details_link`](https://amazon-orders.readthedocs.io/en/1.0.1/api.html#amazonorders.entity.order.Order.order_details_link) is now properly populated even on the details page.
 - `.gitattributes` to HTML files are now ignore by Linguist.
 
 ## [1.0.0](https://github.com/alexdlaird/amazon-orders-python/releases/tag/1.0.0) - 2024-01-16
