@@ -69,7 +69,7 @@ class IODefault:
         :param msg:
         :return:
         """
-        return input(": {}".format(msg))
+        return input("{}: ".format(msg))
 
 
 class AmazonSession:
