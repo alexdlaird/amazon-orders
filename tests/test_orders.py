@@ -10,10 +10,10 @@ from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 
-class TestOrderHistory(UnitTestCase):
+class TestOrders(UnitTestCase):
     def setUp(self):
         super().setUp()
 

@@ -57,17 +57,19 @@ class IODefault:
 
     def echo(self, msg):
         """
+        Echo a message to the console.
 
-        :param msg:
-        :return:
+        :param msg: The data to send to output.
         """
         print(msg)
 
-    def prompt(self, msg):
+    def prompt(self, msg, type=None):
         """
+        Prompt to the console for user input.
 
-        :param msg:
-        :return:
+        :param msg: The data to use as the input prompt.
+        :param type: Unused by the default implementation.
+        :return: The user input result.
         """
         return input("{}: ".format(msg))
 
@@ -263,12 +265,13 @@ class AmazonSession:
         form = self.last_response_parsed.find("form",
                                               {"id": MFA_DEVICE_SELECT_FORM_ID})
         contexts = form.find_all("input", {"name": "otpDeviceContext"})
+
         i = 1
         for field in contexts:
             self.io.echo("{}: {}".format(i, field.attrs["value"].strip()))
             i += 1
         otp_device = int(
-            self.io.prompt("Enter the number for the choice where you'd like your one-time passcode sent"))
+            self.io.prompt("Enter where you would like your one-time passcode sent", type=int))
 
         form = self.last_response_parsed.find("form",
                                               id=MFA_DEVICE_SELECT_FORM_ID)

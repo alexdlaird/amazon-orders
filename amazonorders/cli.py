@@ -17,15 +17,11 @@ logger = logging.getLogger("amazonorders")
 
 
 class IOClick(IODefault):
-    """
-
-    """
-
     def echo(self, msg):
         click.echo(msg)
 
-    def prompt(self, msg):
-        return click.prompt(msg)
+    def prompt(self, msg, type=None):
+        return click.prompt(msg, type=type)
 
 
 @click.group()
