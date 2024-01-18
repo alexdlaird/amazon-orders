@@ -11,7 +11,7 @@ from amazonorders.session import AmazonSession, IODefault
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 logger = logging.getLogger("amazonorders")
 
@@ -44,6 +44,8 @@ def amazon_orders_cli(ctx,
     Session data is persisted between requests and interactions with the CLI, minimizing the need to reauthenticate
     after a successful login attempt.
     """
+    _print_banner()
+
     ctx.ensure_object(dict)
     for key, value in kwargs.items():
         if value:
@@ -63,8 +65,8 @@ def amazon_orders_cli(ctx,
 
     if amazon_session.auth_cookies_stored():
         if username or password:
-            click.echo("Previous session persisted, ignoring the provided --username and --password. If you "
-                       "would like to reauthenticate, call the `logout` command first to reauthenticate.")
+            click.echo("INFO: You've provided --username and --password, but because a previous session still exists,"
+                       "that is being ignored. If you would like to reauthenticate, call the `logout` command first.\n")
     elif not username and not password:
         click.echo(ctx.get_help())
 
@@ -98,7 +100,7 @@ def history(ctx: Context,
                                                  full_details=kwargs["full_details"])
 
         for o in orders:
-            click.echo(o)
+            click.echo("{}\n".format(o))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -122,7 +124,7 @@ def order(ctx: Context,
 
         o = amazon_orders.get_order(order_id)
 
-        click.echo(o)
+        click.echo("{}\n".format(o))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -132,13 +134,13 @@ def order(ctx: Context,
 @click.pass_context
 def check_session(ctx: Context):
     """
-    Check if persisted session exists, meaning commands can be called without needing to provide credentials.
+    Check if a persisted session exists, meaning commands can be called without needing to provide credentials.
     """
     amazon_session = ctx.obj["amazon_session"]
     if amazon_session.auth_cookies_stored():
-        click.echo("A persisted session exists.")
+        click.echo("INFO: A persisted session exists.\n")
     else:
-        click.echo("No persisted session exists.")
+        click.echo("INFO: No persisted session exists.\n")
 
 
 @amazon_orders_cli.command()
@@ -150,7 +152,19 @@ def logout(ctx: Context):
     amazon_session = ctx.obj["amazon_session"]
     amazon_session.logout()
 
-    click.echo("Successfully logged out of the Amazon session.")
+    click.echo("INFO: Successfully logged out of the Amazon session.\n")
+
+
+def _print_banner():
+    click.echo("""
+=======================================================================
+  ___                                   _____         _               
+ / _ \                                 |  _  |       | |              
+/ /_\ \_ __ ___   __ _ _______  _ __   | | | |_ __ __| | ___ _ __ ___ 
+|  _  | '_ ` _ \ / _` |_  / _ \| '_ \  | | | | '__/ _` |/ _ \ '__/ __|
+| | | | | | | | | (_| |/ / (_) | | | | \ \_/ / | | (_| |  __/ |  \__ \\
+\_| |_/_| |_| |_|\__,_/___\___/|_| |_|  \___/|_|  \__,_|\___|_|  |___/                                                                   
+=======================================================================\n""")
 
 
 if __name__ == "__main__":
