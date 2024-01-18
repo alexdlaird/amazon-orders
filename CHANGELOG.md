@@ -3,9 +3,9 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.1...HEAD)
 
-## [1.0.1](https://github.com/alexdlaird/pyngrok/compare/1.0.0...1.0.1) - TBD
+## [1.0.1](https://github.com/alexdlaird/pyngrok/compare/1.0.0...1.0.1) - 2024-01-17
 ### Added
 - Auth flow now also checks session cookies in addition to parsing the page for signs of login.
 - All fields to string representation of [`Order`](https://amazon-orders.readthedocs.io/en/1.0.1/api.html#amazonorders.entity.order.Order), so they are not output on the CLI.
