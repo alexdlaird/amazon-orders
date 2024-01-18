@@ -57,20 +57,27 @@ class IODefault:
     if input/output should be handled another way.
     """
 
-    def echo(self, msg):
+    def echo(self,
+             msg,
+             **kwargs):
         """
         Echo a message to the console.
 
         :param msg: The data to send to output.
+        :param kwargs: Unused by the default implementation.
         """
         print(msg)
 
-    def prompt(self, msg, type=None):
+    def prompt(self,
+               msg,
+               type=None,
+               **kwargs):
         """
         Prompt to the console for user input.
 
         :param msg: The data to use as the input prompt.
         :param type: Unused by the default implementation.
+        :param kwargs: Unused by the default implementation.
         :return: The user input result.
         """
         return input("{}: ".format(msg))
@@ -281,7 +288,8 @@ class AmazonSession:
             self.io.echo("{}: {}".format(i, field.attrs["value"].strip()))
             i += 1
         otp_device = int(
-            self.io.prompt("Enter where you would like your one-time passcode sent", type=int))
+            self.io.prompt("--> Enter where you would like your one-time passcode sent", type=int))
+        self.io.echo("")
 
         form = self.last_response_parsed.find("form",
                                               id=MFA_DEVICE_SELECT_FORM_ID)
@@ -298,7 +306,8 @@ class AmazonSession:
         self._handle_errors()
 
     def _mfa_submit(self) -> None:
-        otp = self.io.prompt("Enter the one-time passcode sent to your device")
+        otp = self.io.prompt("--> Enter the one-time passcode sent to your device")
+        self.io.echo("")
 
         form = self.last_response_parsed.find("form", id=MFA_FORM_ID)
         data = self._build_from_form(form,
@@ -397,12 +406,12 @@ class AmazonSession:
         error_div = self.last_response_parsed.find("div",
                                                    {attr_name: error_div})
         if error_div:
-            error_msg = "An error occurred: {}".format(error_div.text.strip())
+            error_msg = "An error occurred: {}\n".format(error_div.text.strip())
 
             if critical:
                 raise AmazonOrdersAuthError(error_msg)
             else:
-                self.io.echo(error_msg)
+                self.io.echo(error_msg, fg="red")
 
     def _solve_captcha(self,
                        url: str) -> str:
@@ -411,7 +420,8 @@ class AmazonSession:
             img_response = self.session.get(url)
             img = Image.open(BytesIO(img_response.content))
             img.show()
-            self.io.echo("The Captcha couldn't be auto-solved.")
-            captcha_response = self.io.prompt("Enter the characters shown in the image")
+            self.io.echo("Info: The Captcha couldn't be auto-solved.")
+            captcha_response = self.io.prompt("--> Enter the characters shown in the image")
+            self.io.echo("")
 
         return captcha_response

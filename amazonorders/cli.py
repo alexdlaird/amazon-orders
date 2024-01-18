@@ -17,10 +17,16 @@ logger = logging.getLogger("amazonorders")
 
 
 class IOClick(IODefault):
-    def echo(self, msg):
-        click.echo(msg)
+    def echo(self,
+             msg,
+             fg=None,
+             **kwargs):
+        click.secho(msg, fg=fg)
 
-    def prompt(self, msg, type=None):
+    def prompt(self,
+               msg,
+               type=None,
+               **kwargs):
         return click.prompt(msg, type=type)
 
 
@@ -65,12 +71,12 @@ def amazon_orders_cli(ctx,
 
     if amazon_session.auth_cookies_stored():
         if username or password:
-            click.echo("INFO: You've provided --username and --password, but because a previous session still exists,"
+            click.echo("Info: You've provided --username and --password, but because a previous session still exists,"
                        "that is being ignored. If you would like to reauthenticate, call the `logout` command first.\n")
     elif not username and not password:
         click.echo(ctx.get_help())
 
-        ctx.fail("No previous sessions persisted, Amazon --username and --password must be provided.")
+        ctx.fail("Amazon --username and --password must be provided, since no previous session was found.")
 
     ctx.obj["amazon_session"] = amazon_session
 
@@ -88,6 +94,19 @@ def history(ctx: Context,
     Retrieve Amazon order history for a given year.
     """
     amazon_session = ctx.obj["amazon_session"]
+
+    year = kwargs["year"]
+    start_index = kwargs["start_index"]
+    full_details = kwargs["full_details"]
+
+    click.echo("""-----------------------------------------------------------------------
+Order History for {}{}{}
+-----------------------------------------------------------------------\n""".format(year,
+                                                                                    ", startIndex={}, one page".format(
+                                                                                        start_index) if start_index else ", all pages",
+                                                                                    ", with full details" if full_details else ""))
+
+    click.echo("Info: This might take a minute ...\n")
 
     try:
         amazon_session.login()
@@ -124,6 +143,10 @@ def order(ctx: Context,
 
         o = amazon_orders.get_order(order_id)
 
+        click.echo("""-----------------------------------------------------------------------
+Order #{}
+-----------------------------------------------------------------------\n""".format(o.order_number))
+
         click.echo("{}\n".format(o))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
@@ -138,9 +161,9 @@ def check_session(ctx: Context):
     """
     amazon_session = ctx.obj["amazon_session"]
     if amazon_session.auth_cookies_stored():
-        click.echo("INFO: A persisted session exists.\n")
+        click.echo("Info: A persisted session exists.\n")
     else:
-        click.echo("INFO: No persisted session exists.\n")
+        click.echo("Info: No persisted session exists.\n")
 
 
 @amazon_orders_cli.command()
@@ -152,7 +175,7 @@ def logout(ctx: Context):
     amazon_session = ctx.obj["amazon_session"]
     amazon_session.logout()
 
-    click.echo("INFO: Successfully logged out of the Amazon session.\n")
+    click.echo("Info: Successfully logged out of the Amazon session.\n")
 
 
 def _print_banner():
