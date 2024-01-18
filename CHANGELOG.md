@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.1...HEAD)
+### Added
+- `IODefault` for I/O operations, which can be extended to use something other than `print()` and `input()`.
+
+### Removed
+`Orders.print_output` variable, `cli.py` now handles output. 
 
 ## [1.0.1](https://github.com/alexdlaird/pyngrok/compare/1.0.0...1.0.1) - 2024-01-17
 ### Added

@@ -8,7 +8,7 @@ from amazonorders.session import BASE_URL, AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.0"
+__version__ = "1.0.2"
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +20,7 @@ class AmazonOrders:
 
     def __init__(self,
                  amazon_session: AmazonSession,
-                 debug: bool = False,
-                 print_output: bool = False) -> None:
+                 debug: bool = False) -> None:
         #:
         self.amazon_session: AmazonSession = amazon_session
 
@@ -29,8 +28,6 @@ class AmazonOrders:
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
-        #: In addition to return Order objects, print them to stdout.
-        self.print_output: bool = print_output
 
     def get_order_history(self,
                           year: int = datetime.date.today().year,
@@ -76,10 +73,6 @@ class AmazonOrders:
             else:
                 logger.debug("start_index is given, not paging")
 
-        if self.print_output:
-            for order in orders:
-                print("{}\n".format(order))
-
         return orders
 
     def get_order(self,
@@ -96,8 +89,5 @@ class AmazonOrders:
 
         order_details_tag = self.amazon_session.last_response_parsed.find("div", id="orderDetails")
         order = Order(order_details_tag, full_details=True)
-
-        if self.print_output:
-            print(order)
 
         return order

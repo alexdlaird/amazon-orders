@@ -1,6 +1,5 @@
 import datetime
 import logging
-import os
 from typing import Any
 
 import click
@@ -8,13 +7,25 @@ from click.core import Context
 
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
-from amazonorders.session import AmazonSession
+from amazonorders.session import AmazonSession, IODefault
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 logger = logging.getLogger("amazonorders")
+
+
+class IOClick(IODefault):
+    """
+
+    """
+
+    def echo(self, msg):
+        click.echo(msg)
+
+    def prompt(self, msg):
+        return click.prompt(msg)
 
 
 @click.group()
@@ -51,7 +62,8 @@ def amazon_orders_cli(ctx,
 
     amazon_session = AmazonSession(username,
                                    password,
-                                   debug=kwargs["debug"])
+                                   debug=kwargs["debug"],
+                                   io=IOClick())
 
     if amazon_session.auth_cookies_stored():
         if username or password:
@@ -83,12 +95,14 @@ def history(ctx: Context,
         amazon_session.login()
 
         amazon_orders = AmazonOrders(amazon_session,
-                                     debug=amazon_session.debug,
-                                     print_output=True)
+                                     debug=amazon_session.debug)
 
-        amazon_orders.get_order_history(year=kwargs["year"],
-                                        start_index=kwargs["start_index"],
-                                        full_details=kwargs["full_details"])
+        orders = amazon_orders.get_order_history(year=kwargs["year"],
+                                                 start_index=kwargs["start_index"],
+                                                 full_details=kwargs["full_details"])
+
+        for o in orders:
+            click.echo(o)
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -108,10 +122,11 @@ def order(ctx: Context,
         amazon_session.login()
 
         amazon_orders = AmazonOrders(amazon_session,
-                                     debug=amazon_session.debug,
-                                     print_output=True)
+                                     debug=amazon_session.debug)
 
-        amazon_orders.get_order(order_id)
+        o = amazon_orders.get_order(order_id)
+
+        click.echo(o)
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))

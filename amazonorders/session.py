@@ -16,7 +16,7 @@ from amazonorders.exception import AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,28 @@ CAPTCHA_2_INPUT_ID = "captchacharacters"
 DEFAULT_COOKIE_JAR_PATH = os.path.join(os.path.expanduser("~"), ".config", "amazon-orders", "cookies.json")
 
 
+class IODefault:
+    """
+
+    """
+
+    def echo(self, msg):
+        """
+
+        :param msg:
+        :return:
+        """
+        print(msg)
+
+    def prompt(self, msg):
+        """
+
+        :param msg:
+        :return:
+        """
+        return input(msg)
+
+
 class AmazonSession:
     """
 
@@ -60,7 +82,8 @@ class AmazonSession:
                  password: str,
                  debug: bool = False,
                  max_auth_attempts: int = 10,
-                 cookie_jar_path: str = None) -> None:
+                 cookie_jar_path: str = None,
+                 io: IODefault = IODefault()) -> None:
         if not cookie_jar_path:
             cookie_jar_path = DEFAULT_COOKIE_JAR_PATH
 
@@ -77,6 +100,8 @@ class AmazonSession:
         self.max_auth_attempts: int = max_auth_attempts
         #: The path to persist session cookies, defaults to ``conf.DEFAULT_COOKIE_JAR_PATH``.
         self.cookie_jar_path: str = cookie_jar_path
+        #:
+        self.io = io
 
         #:
         self.session: Session = Session()
@@ -240,10 +265,10 @@ class AmazonSession:
         contexts = form.find_all("input", {"name": "otpDeviceContext"})
         i = 1
         for field in contexts:
-            print("{}: {}".format(i, field.attrs["value"].strip()))
+            self.io.echo("{}: {}".format(i, field.attrs["value"].strip()))
             i += 1
         otp_device = int(
-            input("Where would you like your one-time passcode sent? "))
+            self.io.prompt("Where would you like your one-time passcode sent? "))
 
         form = self.last_response_parsed.find("form",
                                               id=MFA_DEVICE_SELECT_FORM_ID)
@@ -260,7 +285,7 @@ class AmazonSession:
         self._handle_errors()
 
     def _mfa_submit(self) -> None:
-        otp = input("Enter the one-time passcode sent to your device: ")
+        otp = self.io.prompt("Enter the one-time passcode sent to your device: ")
 
         form = self.last_response_parsed.find("form", id=MFA_FORM_ID)
         data = self._build_from_form(form,
@@ -364,7 +389,7 @@ class AmazonSession:
             if critical:
                 raise AmazonOrdersAuthError(error_msg)
             else:
-                print(error_msg)
+                self.io.echo(error_msg)
 
     def _solve_captcha(self,
                        url: str) -> str:

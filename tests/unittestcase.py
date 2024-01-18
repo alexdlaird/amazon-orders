@@ -2,8 +2,8 @@ import os
 import unittest
 
 import responses
-from amazonorders import session
 
+from amazonorders import session
 from amazonorders.session import BASE_URL
 from tests.testcase import TestCase
 
