@@ -7,14 +7,14 @@ from amazonorders.exception import AmazonOrdersError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.0"
+__version__ = "1.0.3"
 
 logger = logging.getLogger(__name__)
 
 
 class Parsable:
     """
-
+    A base class that contains a parsed representation of the entity in ``parsed``.
     """
 
     def __init__(self,

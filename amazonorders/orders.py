@@ -8,14 +8,15 @@ from amazonorders.session import BASE_URL, AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 logger = logging.getLogger(__name__)
 
 
 class AmazonOrders:
     """
-
+    Using an authenticated :class:`~amazonorders.session.AmazonSession`, can be used to query Amazon
+    for Order details and history.
     """
 
     def __init__(self,

@@ -16,7 +16,7 @@ from amazonorders.exception import AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,11 @@ class IODefault:
 
 class AmazonSession:
     """
+    An interface for interacting with Amazon and authenticating an underlying :class:`requests.Session`. Utilizing
+    this class means session data is maintained between requests. Session data is also persisted after each request,
+    meaning it will also be maintained between separate instantiations of the class or application.
 
+    To get started, call the :func:`login` function.
     """
 
     def __init__(self,
