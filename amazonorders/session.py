@@ -69,7 +69,7 @@ class IODefault:
         :param msg:
         :return:
         """
-        return input(msg)
+        return input(": {}".format(msg))
 
 
 class AmazonSession:
@@ -268,7 +268,7 @@ class AmazonSession:
             self.io.echo("{}: {}".format(i, field.attrs["value"].strip()))
             i += 1
         otp_device = int(
-            self.io.prompt("Where would you like your one-time passcode sent? "))
+            self.io.prompt("Enter the number for the choice where you'd like your one-time passcode sent"))
 
         form = self.last_response_parsed.find("form",
                                               id=MFA_DEVICE_SELECT_FORM_ID)
@@ -285,7 +285,7 @@ class AmazonSession:
         self._handle_errors()
 
     def _mfa_submit(self) -> None:
-        otp = self.io.prompt("Enter the one-time passcode sent to your device: ")
+        otp = self.io.prompt("Enter the one-time passcode sent to your device")
 
         form = self.last_response_parsed.find("form", id=MFA_FORM_ID)
         data = self._build_from_form(form,
@@ -398,7 +398,7 @@ class AmazonSession:
             img_response = self.session.get(url)
             img = Image.open(BytesIO(img_response.content))
             img.show()
-            captcha_response = input(
-                "The Captcha couldn't be auto-solved, enter the characters shown in the image: ")
+            self.io.echo("The Captcha couldn't be auto-solved.")
+            captcha_response = self.io.prompt("Enter the characters shown in the image")
 
         return captcha_response
