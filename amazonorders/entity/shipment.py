@@ -16,18 +16,18 @@ logger = logging.getLogger(__name__)
 
 class Shipment(Parsable):
     """
-
+    An Amazon Shipment, which should contain one or more :class:`~amazonorders.entity.item.Item`'s.
     """
 
     def __init__(self,
                  parsed: Tag) -> None:
         super().__init__(parsed)
 
-        #:
+        #: The Shipment Items.
         self.items: List[Item] = self._parse_items()
-        #:
+        #: The Shipment delivery status.
         self.delivery_status: Optional[str] = self.safe_parse(self._parse_delivery_status)
-        #:
+        #: The Shipment tracking link.
         self.tracking_link: Optional[str] = self.safe_parse(self._parse_tracking_link)
 
     def __repr__(self) -> str:

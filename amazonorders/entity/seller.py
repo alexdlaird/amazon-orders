@@ -15,16 +15,16 @@ logger = logging.getLogger(__name__)
 
 class Seller(Parsable):
     """
-
+    An Amazon Seller of an Amazon `~amazonorders.entity.item.Item`.
     """
 
     def __init__(self,
                  parsed: Tag) -> None:
         super().__init__(parsed)
 
-        #:
+        #: The Seller name.
         self.name: str = self.safe_parse(self._parse_name)
-        #:
+        #: The Seller link.
         self.link: Optional[str] = self.safe_parse(self._parse_link)
 
     def __repr__(self) -> str:

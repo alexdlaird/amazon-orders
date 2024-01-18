@@ -23,7 +23,7 @@ Entity = TypeVar('Entity', bound='Order')
 
 class Order(Parsable):
     """
-
+    An Amazon Order.
     """
 
     def __init__(self,
@@ -35,44 +35,44 @@ class Order(Parsable):
         #: If the Orders full details were populated from its details page.
         self.full_details: bool = full_details
 
-        #:
+        #: The Order Shipments.
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
-        #:
+        #: The Order Items.
         self.items: List[Item] = clone.items if clone and not full_details else self._parse_items()
-        #:
+        #: The Order number.
         self.order_number: str = clone.order_number if clone else self.safe_parse(self._parse_order_number)
-        #:
+        #: The Order details link.
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
             self._parse_order_details_link)
-        #:
+        #: The Order grand total.
         self.grand_total: float = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
-        #:
+        #: The Order placed date.
         self.order_placed_date: date = clone.order_placed_date if clone else self.safe_parse(
             self._parse_order_placed_date)
-        #:
+        #: The Order Recipients.
         self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient)
 
         # Fields below this point are only populated if `full_details` is True
 
-        #:
+        #: The Order payment method.
         self.payment_method: Optional[str] = self._parse_payment_method() if self.full_details else None
-        #:
+        #: The Order payment method's last 4 digits.
         self.payment_method_last_4: Optional[str] = self._parse_payment_method_last_4() if self.full_details else None
-        #:
+        #: The Order subtotal.
         self.subtotal: Optional[float] = self._parse_subtotal() if self.full_details else None
-        #:
+        #: The Order shipping total.
         self.shipping_total: Optional[float] = self._parse_shipping_total() if self.full_details else None
-        #:
+        #: The Order Subscribe & Save discount.
         self.subscription_discount: Optional[float] = self._parse_subscription_discount() if self.full_details else None
-        #:
+        #: The Order total before tax.
         self.total_before_tax: Optional[float] = self._parse_total_before_tax() if self.full_details else None
-        #:
+        #: The Order estimated tax.
         self.estimated_tax: Optional[float] = self._parse_estimated_tax() if self.full_details else None
-        #:
+        #: The Order refund total.
         self.refund_total: Optional[float] = self._parse_refund_total() if self.full_details else None
-        #:
+        #: The Order shipped date.
         self.order_shipped_date: Optional[date] = self._parse_order_shipping_date() if self.full_details else None
-        #:
+        #: The Order refund total.
         self.refund_completed_date: Optional[date] = self._parse_refund_completed_date() if self.full_details else None
 
     def __repr__(self) -> str:

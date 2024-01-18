@@ -25,6 +25,8 @@ class Parsable:
     def safe_parse(self,
                    parse_function: Callable[[], Any]) -> Any:
         """
+        Execute the given parse function, handling any common parse exceptions and passing them as
+        warnings to the logger, suppressing them as exceptions.
 
         :param parse_function: The parse function to attempt safe execution.
         :return: The return value from ``parse_function``.

@@ -21,7 +21,7 @@ class AmazonOrders:
     def __init__(self,
                  amazon_session: AmazonSession,
                  debug: bool = False) -> None:
-        #:
+        #: The AmazonSession to use for requests.
         self.amazon_session: AmazonSession = amazon_session
 
         #: Set logger ``DEBUG`` and send output to ``stderr``.
@@ -34,6 +34,7 @@ class AmazonOrders:
                           start_index: Optional[int] = None,
                           full_details: bool = False) -> List[Order]:
         """
+        Get the Amazon order history for the given year.
 
         :param year: The year for which to get history.
         :param start_index: The index to start at within the history.
@@ -78,6 +79,7 @@ class AmazonOrders:
     def get_order(self,
                   order_id: str) -> Order:
         """
+        Get the Amazon order represented by the ID.
 
         :param order_id: The Amazon Order ID to lookup.
         :return: The requested Order.

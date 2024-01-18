@@ -17,24 +17,24 @@ logger = logging.getLogger(__name__)
 
 class Item(Parsable):
     """
-
+    An Item in an Amazon `~amazonorders.entity.order.Order`.
     """
 
     def __init__(self,
                  parsed: Tag) -> None:
         super().__init__(parsed)
 
-        #:
+        #: The Item title.
         self.title: str = self.safe_parse(self._parse_title)
-        #:
+        #: The Item link.
         self.link: str = self.safe_parse(self._parse_link)
-        #:
+        #: The Item price.
         self.price: Optional[float] = self.safe_parse(self._parse_price)
-        #:
+        #: The Item Seller.
         self.seller: Optional[Seller] = self.safe_parse(self._parse_seller)
-        #:
+        #: The Item condition.
         self.condition: Optional[str] = self.safe_parse(self._parse_condition)
-        #:
+        #: The Item return eligible date.
         self.return_eligible_date: Optional[date] = self.safe_parse(self._parse_return_eligible_date)
 
     def __repr__(self) -> str:

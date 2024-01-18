@@ -52,7 +52,9 @@ DEFAULT_COOKIE_JAR_PATH = os.path.join(os.path.expanduser("~"), ".config", "amaz
 
 class IODefault:
     """
-
+    Handles input/output from the application. By default, this uses console commands, but
+    this class exists so that it can be overriden when constructing an :class:`AmazonSession`
+    if input/output should be handled another way.
     """
 
     def echo(self, msg):
@@ -102,14 +104,14 @@ class AmazonSession:
         self.max_auth_attempts: int = max_auth_attempts
         #: The path to persist session cookies, defaults to ``conf.DEFAULT_COOKIE_JAR_PATH``.
         self.cookie_jar_path: str = cookie_jar_path
-        #:
+        #: The I/O handler for echoes and prompts.
         self.io: IODefault = io
 
-        #:
+        #: The shared session to be used across all requests.
         self.session: Session = Session()
-        #:
+        #: The last response executed on the Session.
         self.last_response: Optional[Response] = None
-        #:
+        #: A parsed representation of the last response executed on the Session.
         self.last_response_parsed: Optional[Tag] = None
         #: If :func:`login()` has been executed and successfully logged in the session.
         self.is_authenticated: bool = False
@@ -128,6 +130,8 @@ class AmazonSession:
                 url: str,
                 **kwargs: Any) -> Response:
         """
+        Execute the request against Amazon with base headers, parsing and storing the response
+        and persisting response cookies.
 
         :param method: The request method to execute.
         :param url: The URL to execute ``method`` on.
@@ -166,6 +170,7 @@ class AmazonSession:
             url: str,
             **kwargs: Any):
         """
+        Perform a GET request.
 
         :param url: The URL to GET on.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`AmazonSession.request`.
@@ -177,6 +182,7 @@ class AmazonSession:
              url,
              **kwargs: Any) -> Response:
         """
+        Perform a POST request.
 
         :param url: The URL to POST on.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`AmazonSession.request`.
@@ -235,7 +241,7 @@ class AmazonSession:
 
     def logout(self) -> None:
         """
-        Logout of the existing Amazon session and clear cookies.
+        Logout and close the existing Amazon session and clear cookies.
         """
         self.get("{}/gp/sign-out.html".format(BASE_URL))
 

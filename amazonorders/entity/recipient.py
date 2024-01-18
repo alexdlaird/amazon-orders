@@ -14,16 +14,16 @@ logger = logging.getLogger(__name__)
 
 class Recipient(Parsable):
     """
-
+    The person receiving an Amazon `~amazonorders.entity.order.Order`.
     """
 
     def __init__(self,
                  parsed: Tag) -> None:
         super().__init__(parsed)
 
-        #:
+        #: The Recipient name.
         self.name: str = self.safe_parse(self._parse_name)
-        #:
+        #: The Recipient address.
         self.address: Optional[str] = self.safe_parse(self._parse_address)
 
     def __repr__(self) -> str:
