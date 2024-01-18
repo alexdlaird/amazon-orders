@@ -101,7 +101,7 @@ class AmazonSession:
         #: The path to persist session cookies, defaults to ``conf.DEFAULT_COOKIE_JAR_PATH``.
         self.cookie_jar_path: str = cookie_jar_path
         #:
-        self.io = io
+        self.io: IODefault = io
 
         #:
         self.session: Session = Session()
