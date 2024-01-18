@@ -29,7 +29,7 @@ class AmazonOrders:
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
-        #:
+        #: In addition to return Order objects, print them to stdout.
         self.print_output: bool = print_output
 
     def get_order_history(self,

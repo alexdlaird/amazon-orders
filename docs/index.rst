@@ -17,7 +17,7 @@ Amazon Orders
 interface alongside a programmatic API that can be used to interact with
 Amazon.com’s consumer-facing website.
 
-This package works by parsing website data from Amazon.com. A nightly
+This works by parsing website data from Amazon.com. A nightly
 build validates functionality to ensure its stability, but as Amazon
 provides no official API to use, this package may break at any time.
 This package only supports the English version of the website.

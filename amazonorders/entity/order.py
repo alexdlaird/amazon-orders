@@ -38,7 +38,7 @@ class Order(Parsable):
         #:
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
         #:
-        self.items: List[Item] = clone.items if clone else self._parse_items()
+        self.items: List[Item] = clone.items if clone and not full_details else self._parse_items()
         #:
         self.order_number: str = clone.order_number if clone else self.safe_parse(self._parse_order_number)
         #:
@@ -52,8 +52,8 @@ class Order(Parsable):
         #:
         self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient)
 
-        if self.full_details:
-            self.items: List[Item] = self._parse_items()
+        # Fields below this point are only populated if `full_details` is True
+
         #:
         self.payment_method: Optional[str] = self._parse_payment_method() if self.full_details else None
         #:

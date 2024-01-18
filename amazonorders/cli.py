@@ -28,11 +28,14 @@ def amazon_orders_cli(ctx,
     amazon-orders is an unofficial library that provides a command line interface alongside a programmatic API that
     can be used to interact with Amazon.com's consumer-facing website.
 
-    This package works by parsing website data from Amazon.com. A nightly build validates functionality to ensure its
+    This works by parsing website data from Amazon.com. A nightly build validates functionality to ensure its
     stability, but as Amazon provides no official API to use, this package may break at any time. This
     package only supports the English version of the website.
 
     Documentation can be found at https://amazon-orders.readthedocs.io.
+
+    Session data is persisted between requests and interactions with the CLI, minimizing the need to reauthenticate
+    after a successful login attempt.
     """
     ctx.ensure_object(dict)
     for key, value in kwargs.items():
@@ -87,6 +90,7 @@ def history(ctx: Context,
                                         start_index=kwargs["start_index"],
                                         full_details=kwargs["full_details"])
     except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
 
 
@@ -109,6 +113,7 @@ def order(ctx: Context,
 
         amazon_orders.get_order(order_id)
     except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
 
 

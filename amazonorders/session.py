@@ -64,16 +64,16 @@ class AmazonSession:
         if not cookie_jar_path:
             cookie_jar_path = DEFAULT_COOKIE_JAR_PATH
 
-        #:
+        #: An Amazon username.
         self.username: str = username
-        #:
+        #: An Amazon password.
         self.password: str = password
 
         #: Set logger ``DEBUG``, send output to ``stderr``, and write an HTML file for each request made on the session.
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
-        #:
+        #: Will continue in :func:`login()`'s auth flow this many times.
         self.max_auth_attempts: int = max_auth_attempts
         #: The path to persist session cookies, defaults to ``conf.DEFAULT_COOKIE_JAR_PATH``.
         self.cookie_jar_path: str = cookie_jar_path
