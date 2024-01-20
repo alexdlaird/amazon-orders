@@ -33,6 +33,9 @@ def build_test_resources(args):
 
     This script should be invoked using `make build-test-resources` and requires AMAZON_USERNAME
     and AMAZON_PASSWORD environment variables to be set.
+
+    To use this script to generate orders that correspond correctly to the unit tests, contact the
+    owner of the GitHub repo.
     """
 
     if not (os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")):

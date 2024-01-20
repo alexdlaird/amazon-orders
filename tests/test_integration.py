@@ -13,6 +13,9 @@ __version__ = "1.0.2"
 @unittest.skipIf(os.environ.get("INTEGRATION_TESTS", "False") != "True",
                  "Skipping, INTEGRATION_TESTS=True was not set in the environment")
 class TestIntegration(TestCase):
+    """
+    To run these tests against the correct account, contact the owner of the GitHub repo.
+    """
     amazon_session = None
 
     @classmethod
