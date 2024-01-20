@@ -253,3 +253,29 @@ class TestCase(unittest.TestCase):
                     self.assertIsNone(item.seller.link)
             self.assertTrue(found_aa)
             self.assertTrue(found_aaa)
+
+    def assert_populated_generic(self, order, full_details):
+        self.assertIsNotNone(order.grand_total)
+        self.assertIsNotNone(order.order_number)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertIsNotNone(order.order_placed_date)
+        self.assertIsNotNone(order.recipient.name)
+        self.assertIsNotNone(order.recipient.address)
+        self.assertGreaterEqual(len(order.shipments), 1)
+        self.assertEqual(str(order.items), str(order.shipments[0].items))
+        self.assertGreaterEqual(len(order.items), 1)
+        self.assertIsNotNone(order.items[0].title)
+        self.assertIsNotNone(order.items[0].link)
+
+        self.assertEqual(order.full_details, full_details)
+
+        if full_details:
+            self.assertIsNotNone(order.payment_method)
+            self.assertEqual(4, len(order.payment_method_last_4))
+            self.assertIsNotNone(order.subtotal)
+            self.assertIsNotNone(order.shipping_total)
+            self.assertIsNotNone(order.total_before_tax)
+            self.assertIsNotNone(order.estimated_tax)
+            self.assertIsNotNone(order.items[0].condition)
+            self.assertIsNotNone(order.items[0].price)
+            self.assertIsNotNone(order.items[0].seller.name)

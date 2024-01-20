@@ -16,6 +16,10 @@ jobs:
   build:
     name: Build
 
+    env:
+      AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
+      AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
+
     strategy:
       fail-fast: false
       max-parallel: 3
@@ -44,6 +48,8 @@ jobs:
         run: make install
       - name: Test
         run: make test
+      - name: Integration Test (Generic)
+              run: make integration-test-generic
       - name: Validate package
         run: make local
       - name: Upload coverage

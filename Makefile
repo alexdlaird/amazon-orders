@@ -1,4 +1,4 @@
-.PHONY: all virtualenv install nopyc clean test integration-test build-test-resources docs local validate-release upload
+.PHONY: all virtualenv install nopyc clean test integration-test integration-test-generic build-test-resources docs local validate-release upload
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -33,7 +33,13 @@ test: install
 integration-test: install
 	@( \
 		source venv/bin/activate; \
-		INTEGRATION_TESTS=True python -m unittest discover -v -b; \
+		INTEGRATION_TEST=True python -m unittest discover -v -b; \
+	)
+
+integration-test-generic: install
+	@( \
+		source venv/bin/activate; \
+		INTEGRATION_TEST_GENERIC=True python -m unittest discover -v -b; \
 	)
 
 build-test-resources: install

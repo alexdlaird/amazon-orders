@@ -7,14 +7,15 @@ from tests.testcase import TestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.2"
+__version__ = "1.0.4"
 
 
-@unittest.skipIf(os.environ.get("INTEGRATION_TESTS", "False") != "True",
-                 "Skipping, INTEGRATION_TESTS=True was not set in the environment")
+@unittest.skipIf(os.environ.get("INTEGRATION_TEST", "False") != "True",
+                 "Skipping, INTEGRATION_TEST=True was not set in the environment")
 class TestIntegration(TestCase):
     """
-    To run these tests against the correct account, contact the owner of the GitHub repo.
+    These integration tests look for and assert against specific orders. To run these tests and have them pass,
+    contact the owner of the GitHub repo.
     """
     amazon_session = None
 

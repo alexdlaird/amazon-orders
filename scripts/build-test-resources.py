@@ -11,7 +11,7 @@ from amazonorders.session import AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.1"
+__version__ = "1.0.4"
 
 ROOT_DIR = os.path.normpath(
     os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))

@@ -12,8 +12,8 @@ __copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "1.0.1"
 
 
-@unittest.skipIf(os.environ.get("INTEGRATION_TESTS", "False") == "True",
-                 "Skipping, INTEGRATION_TESTS=True was set in the environment")
+@unittest.skipIf(os.environ.get("INTEGRATION_TEST", "False") == "True",
+                 "Skipping, INTEGRATION_TEST=True was set in the environment")
 class UnitTestCase(TestCase):
     RESOURCES_DIR = os.path.normpath(
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources"))
