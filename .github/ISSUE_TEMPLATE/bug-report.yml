@@ -11,6 +11,18 @@ body:
 
       Also, consider [supporting the project](https://github.com/sponsors/alexdlaird) to have your request prioritized.
 
+- type: checkboxes
+  id: ack
+  attributes:
+    label: Acknowledgements
+    options:
+    - label: |
+        I have searched [Issues](issues) to see if the bug has already been reported.
+      required: true
+    - label: |
+        I have searched [Stack Overflow](https://stackoverflow.com/questions/) to ensure the issue I'm experiencing has not already been discussed.
+      required: true
+
 - type: input
   id: os-version
   attributes:
