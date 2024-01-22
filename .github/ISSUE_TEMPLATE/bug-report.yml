@@ -68,5 +68,3 @@ body:
   attributes:
     label: Expected Behavior
     description: A brief description of what you expected to happen.
-  validations:
-    required: true
