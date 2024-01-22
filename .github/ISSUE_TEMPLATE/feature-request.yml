@@ -16,9 +16,9 @@ body:
   attributes:
     label: Acknowledgements
     options:
-    - label: I have written a descriptive issue title.
+    - label: I have written a descriptive issue title
       required: true
-    - label: I have searched [Issues](issues?q=is%3Aissue) to see if the feature has already been requested.
+    - label: I have searched [Issues](issues?q=is%3Aissue) to see if the feature has already been requested
       required: true
 
 - type: textarea
