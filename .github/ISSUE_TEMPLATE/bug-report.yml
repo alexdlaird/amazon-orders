@@ -7,9 +7,9 @@ body:
 - type: markdown
   attributes:
     value: |
-    While we'd love to be able to support every person on their projects, that would simply be infeasible. Luckily, that's what the helpful developer community over at Stack Overflow is for! Please [create a question there](https://stackoverflow.com/questions/ask?tags=python) if what you're looking for is a programming question or you need help with an integration.
+      While we'd love to be able to support every person on their projects, that would simply be infeasible. Luckily, that's what the helpful developer community over at Stack Overflow is for! Please [create a question there](https://stackoverflow.com/questions/ask?tags=python) if what you're looking for is a programming question or you need help with an integration.
 
-    Also, consider [supporting the project](https://github.com/sponsors/alexdlaird) to have your request prioritized.
+      Also, consider [supporting the project](https://github.com/sponsors/alexdlaird) to have your request prioritized.
 
 - type: input
   id: os-version
@@ -30,7 +30,7 @@ body:
 - type: input
   id: library-version
   attributes:
-    label: `amazon-orders` Version
+    label: "`amazon-orders` Version"
     placeholder: 1.0.3
   validations:
     required: true
