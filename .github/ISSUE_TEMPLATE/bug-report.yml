@@ -30,7 +30,7 @@ body:
 - type: input
   id: library-version
   attributes:
-    label: "`amazon-orders` Version"
+    label: amazon-orders Version
     placeholder: 1.0.3
   validations:
     required: true
