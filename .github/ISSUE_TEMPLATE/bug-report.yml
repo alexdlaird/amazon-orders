@@ -1,5 +1,5 @@
 name: 🐛 Bug Report
-about: Found a bug? Help us squash it.
+description: Found a bug? Help us squash it.
 labels: ["bug"]
 
 body:
