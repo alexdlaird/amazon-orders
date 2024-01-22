@@ -17,7 +17,7 @@ body:
     label: Acknowledgements
     options:
     - label: |
-        I have searched [Issues](issues) to see if the bug has already been reported.
+        I have searched [Issues](issues?q=is%3Aissue) to see if the bug has already been reported.
       required: true
     - label: |
         I have searched [Stack Overflow](https://stackoverflow.com/questions/) to ensure the issue I'm experiencing has not already been discussed.
