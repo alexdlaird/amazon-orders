@@ -79,7 +79,7 @@ class Order(Parsable):
         return "<Order #{}: \"{}\">".format(self.order_number, self.items)
 
     def __str__(self) -> str:  # pragma: no cover
-        return "Order #{}: \"{}\"".format(self.order_number, self.items)
+        return "Order #{}: {}".format(self.order_number, self.items)
 
     def _parse_shipments(self) -> List[Shipment]:
         return [Shipment(x) for x in self.parsed.find_all("div", {"class": "shipment"})]

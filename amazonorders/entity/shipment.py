@@ -34,7 +34,7 @@ class Shipment(Parsable):
         return "<Shipment: \"{}\">".format(self.items)
 
     def __str__(self) -> str:  # pragma: no cover
-        return "Shipment: \"{}\"".format(self.items)
+        return "Shipment: {}".format(self.items)
 
     def _parse_items(self) -> List[Item]:
         return [Item(x) for x in self.parsed.find_all("div", {"class": "yohtmlc-item"})]

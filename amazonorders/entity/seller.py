@@ -31,7 +31,7 @@ class Seller(Parsable):
         return "<Seller: \"{}\">".format(self.name)
 
     def __str__(self) -> str:  # pragma: no cover
-        return "Seller: \"{}\"".format(self.name)
+        return "Seller: {}".format(self.name)
 
     def _parse_name(self) -> str:
         tag = self.parsed.find("a")

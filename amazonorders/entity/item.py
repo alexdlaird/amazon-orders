@@ -41,7 +41,7 @@ class Item(Parsable):
         return "<Item: \"{}\">".format(self.title)
 
     def __str__(self) -> str:  # pragma: no cover
-        return "Item: \"{}\"".format(self.title)
+        return "Item: {}".format(self.title)
 
     def _parse_title(self) -> str:
         tag = self.parsed.find("a")

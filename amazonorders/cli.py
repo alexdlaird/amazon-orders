@@ -195,7 +195,7 @@ Order #{}
     order_str += "\n  Order Details Link: {}".format(order.order_details_link)
     order_str += "\n  Grand Total: ${:,.2f}".format(order.grand_total)
     order_str += "\n  Order Placed Date: {}".format(order.order_placed_date)
-    order_str += "\n  Recipient: {}".format(order.recipient)
+    order_str += "\n  {}".format(order.recipient)
     if order.payment_method:
         order_str += "\n  Payment Method: {}".format(order.payment_method)
     if order.payment_method_last_4:

@@ -30,7 +30,7 @@ class Recipient(Parsable):
         return "<Recipient: \"{}\">".format(self.name)
 
     def __str__(self) -> str:  # pragma: no cover
-        return "Recipient: \"{}\"".format(self.name)
+        return "Recipient: {}".format(self.name)
 
     def _parse_name(self) -> str:
         tag = self.parsed.find("li", {"class": "displayAddressFullName"})

@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Test improvements.
 
 ### Changed
-- [`Order`](https://amazon-orders.readthedocs.io/en/1.0.1/api.html#amazonorders.entity.order.Order) fields in string representation now just output "Order: #some-order-number", and handling of parsing all Order field output on the CLI is handled in `cli.py`.
+- Improved string representations of entities, including [`Order`](https://amazon-orders.readthedocs.io/en/1.0.1/api.html#amazonorders.entity.order.Order), moved string representation of all fields back to `cli.py` out of the `__str__` method.
 
 ## [1.0.3](https://github.com/alexdlaird/pyngrok/compare/1.0.2...1.0.3) - 2024-01-18
 ### Added
