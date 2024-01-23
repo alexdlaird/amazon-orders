@@ -11,7 +11,7 @@ from amazonorders.session import AmazonSession, IODefault
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 logger = logging.getLogger("amazonorders")
 
@@ -118,8 +118,8 @@ Order History for {}{}{}
                                                  start_index=kwargs["start_index"],
                                                  full_details=kwargs["full_details"])
 
-        for o in orders:
-            click.echo("{}\n".format(o))
+        for order in orders:
+            click.echo("{}\n".format(_order_output(order)))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -141,13 +141,9 @@ def order(ctx: Context,
         amazon_orders = AmazonOrders(amazon_session,
                                      debug=amazon_session.debug)
 
-        o = amazon_orders.get_order(order_id)
+        order = amazon_orders.get_order(order_id)
 
-        click.echo("""-----------------------------------------------------------------------
-Order #{}
------------------------------------------------------------------------\n""".format(o.order_number))
-
-        click.echo("{}\n".format(o))
+        click.echo("{}\n".format(_order_output(order)))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -188,6 +184,42 @@ def _print_banner():
 | | | | | | | | | (_| |/ / (_) | | | | \ \_/ / | | (_| |  __/ |  \__ \\
 \_| |_/_| |_| |_|\__,_/___\___/|_| |_|  \___/|_|  \__,_|\___|_|  |___/                                                                   
 =======================================================================\n""")
+
+
+def _order_output(order):
+    order_str = """-----------------------------------------------------------------------
+Order #{}
+-----------------------------------------------------------------------""".format(order.order_number)
+
+    order_str += "\n  Shipments: {}".format(order.shipments)
+    order_str += "\n  Order Details Link: {}".format(order.order_details_link)
+    order_str += "\n  Grand Total: ${:,.2f}".format(order.grand_total)
+    order_str += "\n  Order Placed Date: {}".format(order.order_placed_date)
+    order_str += "\n  Recipient: {}".format(order.recipient)
+    if order.payment_method:
+        order_str += "\n  Payment Method: {}".format(order.payment_method)
+    if order.payment_method_last_4:
+        order_str += "\n  Payment Method Last 4: {}".format(order.payment_method_last_4)
+    if order.subtotal:
+        order_str += "\n  Subtotal: ${:,.2f}".format(order.subtotal)
+    if order.shipping_total:
+        order_str += "\n  Shipping Total: ${:,.2f}".format(order.shipping_total)
+    if order.subscription_discount:
+        order_str += "\n  Subscription Discount: ${:,.2f}".format(order.subscription_discount)
+    if order.total_before_tax:
+        order_str += "\n  Total Before Tax: ${:,.2f}".format(order.total_before_tax)
+    if order.estimated_tax:
+        order_str += "\n  Estimated Tax: ${:,.2f}".format(order.estimated_tax)
+    if order.refund_total:
+        order_str += "\n  Refund Total: ${:,.2f}".format(order.refund_total)
+    if order.order_shipped_date:
+        order_str += "\n  Order Shipped Date: {}".format(order.order_shipped_date)
+    if order.refund_completed_date:
+        order_str += "\n  Refund Completed Date: {}".format(order.refund_completed_date)
+
+    order_str += "\n-----------------------------------------------------------------------"
+
+    return order_str
 
 
 if __name__ == "__main__":

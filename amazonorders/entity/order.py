@@ -14,7 +14,7 @@ from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.1"
+__version__ = "1.0.4"
 
 logger = logging.getLogger(__name__)
 
@@ -79,35 +79,7 @@ class Order(Parsable):
         return "<Order #{}: \"{}\">".format(self.order_number, self.items)
 
     def __str__(self) -> str:  # pragma: no cover
-        order_str = "Order #{}".format(self.order_number)
-
-        order_str += "\n   Shipments: {}".format(self.shipments)
-        order_str += "\n   Order Details Link: {}".format(self.order_details_link)
-        order_str += "\n   Grand Total: {}".format(self.grand_total)
-        order_str += "\n   Order Placed Date: {}".format(self.order_placed_date)
-        order_str += "\n   Recipient: {}".format(self.recipient)
-        if self.payment_method:
-            order_str += "\n   Payment Method: {}".format(self.payment_method)
-        if self.payment_method_last_4:
-            order_str += "\n   Payment Method Last 4: {}".format(self.payment_method_last_4)
-        if self.subtotal:
-            order_str += "\n   Subtotal: {}".format(self.subtotal)
-        if self.shipping_total:
-            order_str += "\n   Shipping Total: {}".format(self.shipping_total)
-        if self.subscription_discount:
-            order_str += "\n   Subscription Discount: {}".format(self.subscription_discount)
-        if self.total_before_tax:
-            order_str += "\n   Total Before Tax: {}".format(self.total_before_tax)
-        if self.estimated_tax:
-            order_str += "\n   Estimated Tax: {}".format(self.estimated_tax)
-        if self.refund_total:
-            order_str += "\n   Refund Total: {}".format(self.refund_total)
-        if self.order_shipped_date:
-            order_str += "\n   Order Shipped Date: {}".format(self.order_shipped_date)
-        if self.refund_completed_date:
-            order_str += "\n   Refund Completed Date: {}".format(self.refund_completed_date)
-
-        return order_str
+        return "Order #{}: \"{}\"".format(self.order_number, self.items)
 
     def _parse_shipments(self) -> List[Shipment]:
         return [Shipment(x) for x in self.parsed.find_all("div", {"class": "shipment"})]
