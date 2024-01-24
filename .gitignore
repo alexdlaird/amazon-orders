@@ -14,5 +14,4 @@ _build
 .dmypy.json
 
 tests/.config/
-tests/private-resources
 scripts/*.html
