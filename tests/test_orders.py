@@ -10,7 +10,7 @@ from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.2"
+__version__ = "1.0.4"
 
 
 class TestOrders(UnitTestCase):
@@ -32,7 +32,7 @@ class TestOrders(UnitTestCase):
         self.amazon_session.is_authenticated = True
         year = 2018
         start_index = 0
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, 0)), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r",
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -43,7 +43,7 @@ class TestOrders(UnitTestCase):
             )
 
         # WHEN
-        orders = self.amazon_orders.get_order_history(year=year, start_index=0)
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
 
         # THEN
         # Giving start_index=0 means we only got the first page, so just 10 results

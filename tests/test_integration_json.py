@@ -20,13 +20,14 @@ PRIVATE_RESOURCES_DIR = os.path.normpath(
                  "Skipping, INTEGRATION_TEST_JSON=True was not set in the environment")
 class TestIntegrationJSON(TestCase):
     """
-    Document here what the JSON needs to look like for it to be loaded properly in to this test class.
+    TODO: Document here what the JSON needs to look like for it to be loaded properly in to this test class.
     """
     amazon_session = None
 
-    def __init__(self, method_name, data=None):
+    def __init__(self, method_name, filename=None, data=None):
         super(TestIntegrationJSON, self).__init__(method_name)
 
+        self.filename = filename
         self.data = data
 
     @classmethod
@@ -47,25 +48,46 @@ class TestIntegrationJSON(TestCase):
 
         self.assertTrue(self.amazon_session.is_authenticated)
 
-    def run_test(self):
+    def run_json_test(self):
+        print("Info: Dynamic test is running from JSON file {}".format(self.filename))
+
         # GIVEN
-        year = self.data["year"]
-        start_index = self.data["start_index"]
-        index_on_page = self.data["index_on_page"]
-        order_json = self.data["order"]
+        func = self.data.pop("func")
 
-        # WHEN
-        orders = self.amazon_orders.get_order_history(year=year,
-                                                      start_index=start_index)
+        if func == "get_order_history":
+            order_len = self.data.pop("orders_len")
+            orders_json = self.data.pop("orders")
+            full_details = self.data.get("full_details")
 
-        # THEN
-        order = orders[index_on_page]
-        self.assert_json_items(order, order_json)
+            # WHEN
+            orders = self.amazon_orders.get_order_history(**self.data)
+
+            # THEN
+            self.assertEqual(order_len, len(orders))
+            for index, order_json in orders_json.items():
+                order = orders[int(index)]
+                self.assertEqual(order.full_details, full_details)
+                self.assert_json_items(order, order_json)
+        elif func == "get_order":
+            order_json = self.data
+            order_id = order_json["order_number"]
+
+            # WHEN
+            order = self.amazon_orders.get_order(order_id)
+
+            # THEN
+            self.assertEqual(order.full_details, True)
+            self.assert_json_items(order, order_json)
+        else:
+            self.fail(
+                "Unknown function AmazonOrders.{}, check JSON in test file {}".format(
+                    func, self.filename))
 
     def assert_json_items(self, entity, json_dict):
         for key, value in json_dict.items():
+            # TODO: add support for unordered lists (Shipments and Items use this)
             attr = getattr(entity, key)
-            if value == "None":
+            if value == "isNone":
                 self.assertIsNone(attr)
             elif value == "isNotNone":
                 self.assertIsNotNone(attr)
@@ -86,5 +108,6 @@ def load_tests(loader, tests, pattern):
             with open(os.path.join(PRIVATE_RESOURCES_DIR, filename), "r",
                       encoding="utf-8") as f:
                 data = json.loads(f.read())
-                test_cases.addTest(TestIntegrationJSON('run_test', data))
+                test_cases.addTest(
+                    TestIntegrationJSON("run_json_test", filename, data))
     return test_cases
