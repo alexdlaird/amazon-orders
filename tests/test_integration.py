@@ -21,7 +21,8 @@ class TestIntegration(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.credentials_found = os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")
+        cls.credentials_found = os.environ.get(
+            "AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")
 
         cls.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
                                            os.environ.get("AMAZON_PASSWORD"))
@@ -31,7 +32,8 @@ class TestIntegration(TestCase):
 
     def setUp(self):
         if not self.credentials_found:
-            self.fail("AMAZON_USERNAME and AMAZON_PASSWORD environment variables not set")
+            self.fail(
+                "AMAZON_USERNAME and AMAZON_PASSWORD environment variables not set")
 
         self.assertTrue(self.amazon_session.is_authenticated)
 
@@ -85,6 +87,17 @@ class TestIntegration(TestCase):
 
         # THEN
         self.assert_order_112_2961628_4757846_return(orders[1], True)
+
+    def test_get_order_history_quantity(self):
+        # GIVEN
+        year = 2020
+        start_index = 50
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year,
+                                                      start_index=start_index)
+
+        # THEN
         self.assert_order_112_8888666_5244209_quantity(orders[7])
 
     def test_get_order_history_multiple_items_shipments_sellers(self):
@@ -98,7 +111,8 @@ class TestIntegration(TestCase):
                                                       full_details=True)
 
         # THEN
-        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(orders[3], True)
+        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(
+            orders[3], True)
 
     def test_get_order(self):
         # GIVEN
@@ -108,4 +122,5 @@ class TestIntegration(TestCase):
         order = self.amazon_orders.get_order(order_id)
 
         # THEN
-        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
+        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(
+            order, True)
