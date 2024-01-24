@@ -5,6 +5,7 @@ from typing import Any
 import click
 from click.core import Context
 
+from amazonorders.conf import DEFAULT_OUTPUT_DIR
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
@@ -34,6 +35,8 @@ class IOClick(IODefault):
 @click.option('--username', help="An Amazon username.")
 @click.option('--password', help="An Amazon password.")
 @click.option('--debug', is_flag=True, default=False, help="Enable debugging and send output to command line.")
+@click.option('--max-auth-attempts', default=10, help="Will continue in the login auth loop this many times (successes and failures).")
+@click.option('--output-dir', default=DEFAULT_OUTPUT_DIR, help="The directory where any output files should be produced.")
 @click.pass_context
 def amazon_orders_cli(ctx,
                       **kwargs: Any):
@@ -67,7 +70,9 @@ def amazon_orders_cli(ctx,
     amazon_session = AmazonSession(username,
                                    password,
                                    debug=kwargs["debug"],
-                                   io=IOClick())
+                                   io=IOClick(),
+                                   max_auth_attempts=kwargs["max_auth_attempts"],
+                                   output_dir=kwargs["output_dir"])
 
     if amazon_session.auth_cookies_stored():
         if username or password:
@@ -112,11 +117,12 @@ Order History for {}{}{}
         amazon_session.login()
 
         amazon_orders = AmazonOrders(amazon_session,
-                                     debug=amazon_session.debug)
+                                     debug=amazon_session.debug,
+                                     output_dir=ctx.obj["output_dir"])
 
         orders = amazon_orders.get_order_history(year=kwargs["year"],
                                                  start_index=kwargs["start_index"],
-                                                 full_details=kwargs["full_details"])
+                                                 full_details=kwargs["full_details"],)
 
         for order in orders:
             click.echo("{}\n".format(_order_output(order)))
@@ -139,7 +145,8 @@ def order(ctx: Context,
         amazon_session.login()
 
         amazon_orders = AmazonOrders(amazon_session,
-                                     debug=amazon_session.debug)
+                                     debug=amazon_session.debug,
+                                     output_dir=ctx.obj["output_dir"])
 
         order = amazon_orders.get_order(order_id)
 

@@ -5,10 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.3...HEAD)
 ### Added
-- Test improvements.
+- Parameters `--max-auth-attempts` and `--output-dir` to CLI.
+- `DEFAULT_OUTPUT_DIR`, which defaults to `os.getcwd()`, but allows users to change where output files are written.
+- [`Troubleshooting`](https://amazon-orders.readthedocs.io/en/latest/troubleshooting.html) section to the docs.
+- Test improvements, including the ability to run dynamic tests using private order data from JSON files.
 
 ### Changed
 - Improved string representations of entities, including [`Order`](https://amazon-orders.readthedocs.io/en/1.0.1/api.html#amazonorders.entity.order.Order), moved string representation of all fields back to `cli.py` out of the `__str__` method.
+- Moved `DEFAULT_COOKIE_JAR_PATH` to `conf.py`.
 
 ## [1.0.3](https://github.com/alexdlaird/pyngrok/compare/1.0.2...1.0.3) - 2024-01-18
 ### Added

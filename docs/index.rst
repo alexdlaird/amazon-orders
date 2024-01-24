@@ -52,7 +52,8 @@ Or use ``amazon-orders`` programmatically:
     from amazonorders.session import AmazonSession
     from amazonorders.orders import AmazonOrders
 
-    amazon_session = AmazonSession("<AMAZON_EMAIL>", "<AMAZON_PASSWORD>")
+    amazon_session = AmazonSession("<AMAZON_EMAIL>",
+                                   "<AMAZON_PASSWORD>")
     amazon_session.login()
 
     amazon_orders = AmazonOrders(amazon_session)
@@ -70,5 +71,6 @@ For more advanced usage, dive deeper in to the rest of the documentation.
    :maxdepth: 2
 
    api
+   troubleshooting
 
 .. include:: ../CONTRIBUTING.rst

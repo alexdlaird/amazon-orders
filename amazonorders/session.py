@@ -12,11 +12,12 @@ from bs4 import BeautifulSoup, Tag
 from requests import Session, Response
 from requests.utils import dict_from_cookiejar
 
+from amazonorders.conf import DEFAULT_COOKIE_JAR_PATH, DEFAULT_OUTPUT_DIR
 from amazonorders.exception import AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +47,6 @@ MFA_FORM_ID = "auth-mfa-form"
 CAPTCHA_1_DIV_ID = "cvf-page-content"
 CAPTCHA_1_FORM_CLASS = "cvf-widget-form"
 CAPTCHA_2_INPUT_ID = "captchacharacters"
-
-DEFAULT_COOKIE_JAR_PATH = os.path.join(os.path.expanduser("~"), ".config", "amazon-orders", "cookies.json")
 
 
 class IODefault:
@@ -98,9 +97,12 @@ class AmazonSession:
                  debug: bool = False,
                  max_auth_attempts: int = 10,
                  cookie_jar_path: str = None,
-                 io: IODefault = IODefault()) -> None:
+                 io: IODefault = IODefault(),
+                 output_dir: str = None) -> None:
         if not cookie_jar_path:
             cookie_jar_path = DEFAULT_COOKIE_JAR_PATH
+        if not output_dir:
+            output_dir = DEFAULT_OUTPUT_DIR
 
         #: An Amazon username.
         self.username: str = username
@@ -111,12 +113,14 @@ class AmazonSession:
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
-        #: Will continue in :func:`login()`'s auth flow this many times.
+        #: Will continue in :func:`login()`'s auth flow this many times (successes and failures).
         self.max_auth_attempts: int = max_auth_attempts
         #: The path to persist session cookies, defaults to ``conf.DEFAULT_COOKIE_JAR_PATH``.
         self.cookie_jar_path: str = cookie_jar_path
         #: The I/O handler for echoes and prompts.
         self.io: IODefault = io
+        #: The directory where any output files will be produced, defaults to ``conf.DEFAULT_OUTPUT_DIR``.
+        self.output_dir = output_dir
 
         #: The shared session to be used across all requests.
         self.session: Session = Session()
@@ -131,7 +135,7 @@ class AmazonSession:
         if not os.path.exists(cookie_dir):
             os.makedirs(cookie_dir)
         if os.path.exists(self.cookie_jar_path):
-            with open(cookie_jar_path, "r", encoding="utf-8") as f:
+            with open(self.cookie_jar_path, "r", encoding="utf-8") as f:
                 data = json.loads(f.read())
                 cookies = requests.utils.cookiejar_from_dict(data)
                 self.session.cookies.update(cookies)
@@ -170,7 +174,7 @@ class AmazonSession:
 
         if self.debug:
             page_name = self._get_page_from_url(self.last_response.url)
-            with open(page_name, "w", encoding="utf-8") as html_file:
+            with open(os.path.join(self.output_dir, page_name), "w", encoding="utf-8") as html_file:
                 logger.debug(
                     "Response written to file: {}".format(html_file.name))
                 html_file.write(self.last_response.text)
