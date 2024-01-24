@@ -244,6 +244,8 @@ class AmazonSession:
                 self._mfa_device_select()
             elif self._is_field_found(MFA_FORM_ID, field_key="id"):
                 self._mfa_submit()
+            elif self._is_field_found(CAPTCHA_OTP_FORM_ID, field_key="id"):
+                self._captcha_otp_submit()
             else:
                 raise AmazonOrdersAuthError(
                     "An error occurred, this is an unknown page, or its parsed contents don't match a known auth flow: {}. To capture the page to a file, set the `debug` flag.".format(
@@ -366,6 +368,21 @@ class AmazonSession:
 
         self._handle_errors("a-alert-info", "class")
 
+    def _captcha_otp_submit(self) -> None:
+        otp = self.io.prompt("--> Enter the one-time passcode sent to your device")
+        self.io.echo("")
+
+        form = self.last_response_parsed.find("form", id=CAPTCHA_OTP_FORM_ID)
+        data = self._build_from_form(form,
+                                     additional_attrs={"otpCode": otp})
+
+        self.request(form.attrs.get("method", "GET"),
+                     self._get_form_action(form,
+                                           prefix=BASE_URL),
+                     data=data)
+
+        self._handle_errors()
+
     def _build_from_form(self,
                          form: Tag,
                          additional_attrs: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -385,6 +402,7 @@ class AmazonSession:
         action = form.attrs.get("action")
         if not action:
             action = self.last_response.url
+        # TODO: we should be able to clean this up, and even get it from the current URL (same as a browser does)
         if prefix and not action.startswith("http"):
             action = prefix + action
         return action

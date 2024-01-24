@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.3...HEAD)
 ### Added
+- A new OTP auth flow from Amazon that can occur after Captcha.
 - Parameters `--max-auth-attempts` and `--output-dir` to CLI.
 - `DEFAULT_OUTPUT_DIR`, which defaults to `os.getcwd()`, but allows users to change where output files are written.
 - [`Troubleshooting`](https://amazon-orders.readthedocs.io/en/latest/troubleshooting.html) section to the docs.
