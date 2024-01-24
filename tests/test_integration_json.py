@@ -91,10 +91,7 @@ class TestIntegrationJSON(TestCase):
             elif value == "isNotNone":
                 self.assertIsNotNone(attr)
             elif isinstance(value, list):
-                for element in value:
-                    # order_item = next(filter(lambda i: i.title == shipment.items[0].title, order.items))
-                    print(element)
-                    # TODO: add support for asserting on unordered lists (Shipments and Items use this)
+                self.fail("list items are not yet supported to be asserted against")
             elif isinstance(value, dict):
                 self.assert_json_items(attr, value)
             else:
