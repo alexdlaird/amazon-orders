@@ -7,7 +7,7 @@ from tests.testcase import TestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 
 
 @unittest.skipIf(os.environ.get("INTEGRATION_TEST", "False") != "True",
@@ -85,6 +85,7 @@ class TestIntegration(TestCase):
 
         # THEN
         self.assert_order_112_2961628_4757846_return(orders[1], True)
+        self.assert_order_112_8888666_5244209_quantity(orders[7])
 
     def test_get_order_history_multiple_items_shipments_sellers(self):
         # GIVEN

@@ -10,7 +10,7 @@ from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 
 
 class TestOrders(UnitTestCase):
@@ -185,6 +185,31 @@ class TestOrders(UnitTestCase):
         self.assert_order_112_2961628_4757846_return(orders[1], True)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(10, resp2.call_count)
+
+
+    @responses.activate
+    def test_get_order_history_quantity(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2020
+        start_index = 50
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r",
+                  encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                "{}/your-orders/orders?timeFilter=year-{}&startIndex={}".format(BASE_URL,
+                                                                                year, start_index),
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+        # THEN
+        self.assertEqual(10, len(orders))
+        self.assert_order_112_8888666_5244209_quantity(orders[7])
+        self.assertEqual(1, resp1.call_count)
 
     @responses.activate
     def test_get_order_history_multiple_items_shipments_sellers(self):

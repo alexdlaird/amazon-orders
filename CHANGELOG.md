@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.4...HEAD)
+### Added
+- [Item.image_link](https://amazon-orders.readthedocs.io/en/latest/api.html#amazonorders.entity.item.Item.image_link).
+- [Item.quantity](https://amazon-orders.readthedocs.io/en/latest/api.html#amazonorders.entity.item.Item.quantity).
+- `version` command to CLI.
+- Test improvements.
 
 ## [1.0.4](https://github.com/alexdlaird/pyngrok/compare/1.0.3...1.0.4) - 2024-01-24
 ### Added

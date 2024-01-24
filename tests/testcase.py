@@ -3,7 +3,7 @@ from datetime import date
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.1"
+__version__ = "1.0.5"
 
 
 class TestCase(unittest.TestCase):
@@ -25,6 +25,7 @@ class TestCase(unittest.TestCase):
         self.assertIsNotNone(order.items[0].link)
         self.assertEqual(date(2019, 2, 2),
                          order.items[0].return_eligible_date)
+        self.assertIsNotNone(order.items[0].image_link)
 
         self.assertEqual(order.full_details, full_details)
 
@@ -59,6 +60,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual("Bounty Quick-Size Paper Towels, White, 16 Family Rolls = 40 Regular Rolls",
                          order.items[0].title)
         self.assertIsNotNone(order.items[0].link)
+        self.assertIsNotNone(order.items[0].image_link)
         self.assertIsNone(order.items[0].return_eligible_date)
 
         self.assertEqual(order.full_details, full_details)
@@ -94,6 +96,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual("Nintendo Switch Pro Controller",
                          order.items[0].title)
         self.assertIsNotNone(order.items[0].link)
+        self.assertIsNotNone(order.items[0].image_link)
         self.assertIsNone(order.items[0].return_eligible_date)
 
         self.assertEqual(order.full_details, full_details)
@@ -114,6 +117,10 @@ class TestCase(unittest.TestCase):
             self.assertEqual("Amazon.com Services, Inc",
                              order.items[0].seller.name)
             self.assertIsNone(order.items[0].seller.link)
+
+    def assert_order_112_8888666_5244209_quantity(self, order):
+        self.assertEqual("112-8888666-5244209", order.order_number)
+        self.assertEqual(2, order.items[0].quantity)
 
     def assert_order_112_9685975_5907428_multiple_items_shipments_sellers(self, order, full_details):
         self.assertEqual(46.61, order.grand_total)
@@ -141,7 +148,7 @@ class TestCase(unittest.TestCase):
         self.assertTrue(found_cadeya)
         self.assertTrue(found_amazon)
         self.assertEqual(str(order.items),
-                         str(order.shipments[0].items + order.shipments[1].items))
+                         str(order.shipments[1].items + order.shipments[0].items))
         self.assertEqual(2, len(order.items))
         found_cadeya = False
         found_amazon = False

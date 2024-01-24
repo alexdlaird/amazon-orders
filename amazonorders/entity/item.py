@@ -10,7 +10,7 @@ from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.0"
+__version__ = "1.0.5"
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class Item(Parsable):
     """
 
     def __init__(self,
-                 parsed: Tag) -> None:
+        parsed: Tag) -> None:
         super().__init__(parsed)
 
         #: The Item title.
@@ -35,13 +35,21 @@ class Item(Parsable):
         #: The Item condition.
         self.condition: Optional[str] = self.safe_parse(self._parse_condition)
         #: The Item return eligible date.
-        self.return_eligible_date: Optional[date] = self.safe_parse(self._parse_return_eligible_date)
+        self.return_eligible_date: Optional[date] = self.safe_parse(
+            self._parse_return_eligible_date)
+        #: The Item image URL.
+        self.image_link = self.safe_parse(self._parse_image_link)
+        #: The Item quantity.
+        self.quantity = self.safe_parse(self._parse_quantity)
 
     def __repr__(self) -> str:
         return "<Item: \"{}\">".format(self.title)
 
     def __str__(self) -> str:  # pragma: no cover
         return "Item: {}".format(self.title)
+
+    def __lt__(self, other):
+        return self.title < other.title
 
     def _parse_title(self) -> str:
         tag = self.parsed.find("a")
@@ -84,3 +92,17 @@ class Item(Parsable):
                     return datetime.strptime(date_str, "%b %d, %Y").date()
 
         return None
+
+    def _parse_image_link(self) -> Optional[str]:
+        img = self.parsed.find_previous_sibling().find("img")
+        if img:
+            return img.attrs["src"]
+        else:
+            return None
+
+    def _parse_quantity(self) -> Optional[int]:
+        tag = self.parsed.find_previous_sibling().find("span", {"class": "item-view-qty"})
+        if tag:
+            return int(tag.text.strip())
+        else:
+            return None

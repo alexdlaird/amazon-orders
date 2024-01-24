@@ -14,7 +14,7 @@ from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 
 logger = logging.getLogger(__name__)
 
@@ -82,10 +82,14 @@ class Order(Parsable):
         return "Order #{}: {}".format(self.order_number, self.items)
 
     def _parse_shipments(self) -> List[Shipment]:
-        return [Shipment(x) for x in self.parsed.find_all("div", {"class": "shipment"})]
+        shipments = [Shipment(x) for x in self.parsed.find_all("div", {"class": "shipment"})]
+        shipments.sort()
+        return shipments
 
     def _parse_items(self) -> List[Item]:
-        return [Item(x) for x in self.parsed.find_all("div", {"class": "yohtmlc-item"})]
+        items = [Item(x) for x in self.parsed.find_all("div", {"class": "yohtmlc-item"})]
+        items.sort()
+        return items
 
     def _parse_order_details_link(self) -> Optional[str]:
         tag = self.parsed.find("a", {"class": "yohtmlc-order-details-link"})

@@ -12,7 +12,7 @@ from amazonorders.session import AmazonSession, IODefault
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 
 logger = logging.getLogger("amazonorders")
 
@@ -182,6 +182,14 @@ def logout(ctx: Context):
 
     click.echo("Info: Successfully logged out of the Amazon session.\n")
 
+
+@amazon_orders_cli.command()
+@click.pass_context
+def version(ctx: Context):
+    """
+    Get the package version.
+    """
+    click.echo("Version: {}\n".format(__version__))
 
 def _print_banner():
     click.echo("""

@@ -9,7 +9,7 @@ from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.0"
+__version__ = "1.0.5"
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,16 @@ class Shipment(Parsable):
     def __str__(self) -> str:  # pragma: no cover
         return "Shipment: {}".format(self.items)
 
+    def __lt__(self, other):
+        if self.delivery_status:
+            return self.delivery_status < other.delivery_status
+        else:
+            return str(self.items) < str(other.items)
+
     def _parse_items(self) -> List[Item]:
-        return [Item(x) for x in self.parsed.find_all("div", {"class": "yohtmlc-item"})]
+        items = [Item(x) for x in self.parsed.find_all("div", {"class": "yohtmlc-item"})]
+        items.sort()
+        return items
 
     def _parse_delivery_status(self) -> Optional[str]:
         tag = self.parsed.find("div", {"class": "js-shipment-info-container"})
