@@ -295,3 +295,38 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
         self.assertEqual(2, resp3.call_count)
         self.assertEqual(1, resp4.call_count)
+
+    @responses.activate
+    @patch('builtins.input')
+    def test_captcha_otp(self, input_mock):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                "{}/gp/sign-in.html".format(BASE_URL),
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-otp.html"), "r", encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                "{}/ap/signin".format(BASE_URL),
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+            resp3 = responses.add(
+                responses.POST,
+                "{}/ap/cvf/approval/verifyOtp".format(BASE_URL),
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        self.amazon_session.login()
+
+        # THEN
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(1, resp3.call_count)

@@ -45,8 +45,9 @@ SIGN_IN_FORM_NAME = "signIn"
 MFA_DEVICE_SELECT_FORM_ID = "auth-select-device-form"
 MFA_FORM_ID = "auth-mfa-form"
 CAPTCHA_1_DIV_ID = "cvf-page-content"
-CAPTCHA_1_FORM_CLASS = "cvf-widget-form"
+CAPTCHA_1_FORM_CLASS = "cvf-widget-form-captcha"
 CAPTCHA_2_INPUT_ID = "captchacharacters"
+CAPTCHA_OTP_FORM_ID = "verification-code-form"
 
 
 class IODefault:
@@ -245,7 +246,7 @@ class AmazonSession:
                 self._mfa_submit()
             else:
                 raise AmazonOrdersAuthError(
-                    "An error occurred, this is an unknown page: {}. To capture the page to a file, set the `debug` flag.".format(
+                    "An error occurred, this is an unknown page, or its parsed contents don't match a known auth flow: {}. To capture the page to a file, set the `debug` flag.".format(
                         self.last_response.url))
 
             attempts += 1

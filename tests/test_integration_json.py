@@ -81,9 +81,10 @@ class TestIntegrationJSON(TestCase):
 
 def load_tests(loader, tests, pattern):
     test_cases = unittest.TestSuite()
-    for filename in os.listdir(PRIVATE_RESOURCES_DIR):
-        with open(os.path.join(PRIVATE_RESOURCES_DIR, filename), "r",
-                  encoding="utf-8") as f:
-            data = json.loads(f.read())
-            test_cases.addTest(TestIntegrationJSON('run_test', data))
+    if os.path.exists(PRIVATE_RESOURCES_DIR):
+        for filename in os.listdir(PRIVATE_RESOURCES_DIR):
+            with open(os.path.join(PRIVATE_RESOURCES_DIR, filename), "r",
+                      encoding="utf-8") as f:
+                data = json.loads(f.read())
+                test_cases.addTest(TestIntegrationJSON('run_test', data))
     return test_cases
