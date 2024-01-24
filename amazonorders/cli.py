@@ -35,8 +35,10 @@ class IOClick(IODefault):
 @click.option('--username', help="An Amazon username.")
 @click.option('--password', help="An Amazon password.")
 @click.option('--debug', is_flag=True, default=False, help="Enable debugging and send output to command line.")
-@click.option('--max-auth-attempts', default=10, help="Will continue in the login auth loop this many times (successes and failures).")
-@click.option('--output-dir', default=DEFAULT_OUTPUT_DIR, help="The directory where any output files should be produced.")
+@click.option('--max-auth-attempts', default=10,
+              help="Will continue in the login auth loop this many times (successes and failures).")
+@click.option('--output-dir', default=DEFAULT_OUTPUT_DIR,
+              help="The directory where any output files should be produced.")
 @click.pass_context
 def amazon_orders_cli(ctx,
                       **kwargs: Any):
@@ -122,7 +124,7 @@ Order History for {}{}{}
 
         orders = amazon_orders.get_order_history(year=kwargs["year"],
                                                  start_index=kwargs["start_index"],
-                                                 full_details=kwargs["full_details"],)
+                                                 full_details=kwargs["full_details"], )
 
         for order in orders:
             click.echo("{}\n".format(_order_output(order)))
