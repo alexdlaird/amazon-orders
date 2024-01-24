@@ -8,7 +8,7 @@ Enabling Debug and Outputting HTML Files
 ``debug`` mode does a main things:
 
 1. Sets ``logger`` levels to ``DEBUG``
-2. Sends ``logger`` output to ``stderr`, so you'll see it on the console when using the CLI
+2. Sends ``logger`` output to ``stderr``, so you'll see it on the console when using the CLI
 3. Any HTML page parsed will also be output as a file
 
 That last one is especially important for debugging issues.
