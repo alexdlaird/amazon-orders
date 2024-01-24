@@ -85,12 +85,16 @@ class TestIntegrationJSON(TestCase):
 
     def assert_json_items(self, entity, json_dict):
         for key, value in json_dict.items():
-            # TODO: add support for unordered lists (Shipments and Items use this)
             attr = getattr(entity, key)
             if value == "isNone":
                 self.assertIsNone(attr)
             elif value == "isNotNone":
                 self.assertIsNotNone(attr)
+            elif isinstance(value, list):
+                for element in value:
+                    # order_item = next(filter(lambda i: i.title == shipment.items[0].title, order.items))
+                    print(element)
+                    # TODO: add support for asserting on unordered lists (Shipments and Items use this)
             elif isinstance(value, dict):
                 self.assert_json_items(attr, value)
             else:
