@@ -106,6 +106,9 @@ def load_tests(loader, tests, pattern):
     test_cases = unittest.TestSuite()
     if os.path.exists(PRIVATE_RESOURCES_DIR):
         for filename in os.listdir(PRIVATE_RESOURCES_DIR):
+            if filename == ".gitignore":
+                continue
+            
             with open(os.path.join(PRIVATE_RESOURCES_DIR, filename), "r",
                       encoding="utf-8") as f:
                 data = json.loads(f.read())
