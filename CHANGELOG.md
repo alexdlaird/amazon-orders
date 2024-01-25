@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.6...HEAD)
+### Added
+- Test improvements.
 
 ## [1.0.6](https://github.com/alexdlaird/pyngrok/compare/1.0.5...1.0.6) - 2024-01-25
 ### Added
