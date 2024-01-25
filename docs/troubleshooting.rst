@@ -2,10 +2,10 @@
 Troubleshooting
 ===============
 
-Enabling Debug and Outputting HTML Files
-----------------------------------------
+Enable Debug Mode
+-----------------
 
-``debug`` mode does a main things:
+``debug`` mode does a few main things:
 
 1. Sets ``logger`` levels to ``DEBUG``
 2. Sends ``logger`` output to ``stderr``, so you'll see it on the console when using the CLI
