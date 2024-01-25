@@ -9,7 +9,7 @@ from tests.testcase import TestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 
 PRIVATE_RESOURCES_DIR = os.path.normpath(
     os.path.join(os.path.abspath(os.path.dirname(__file__)),
@@ -20,6 +20,9 @@ PRIVATE_RESOURCES_DIR = os.path.normpath(
                  "Skipping, INTEGRATION_TEST_JSON=True was not set in the environment")
 class TestIntegrationJSON(TestCase):
     """
+    The two JSON files committed to "private-resources" can be used as examples for the required syntax.
+    Beyond that, any other files added to "private-resources" will be ignore by `.gitignore`.
+
     TODO: Document here what the JSON needs to look like for it to be loaded properly in to this test class.
     """
     amazon_session = None
@@ -84,22 +87,25 @@ class TestIntegrationJSON(TestCase):
                     func, self.filename))
 
     def assert_json_items(self, entity, json_dict):
-        for key, value in json_dict.items():
-            attr = getattr(entity, key)
-            if value == "isNone":
-                self.assertIsNone(attr)
-            elif value == "isNotNone":
-                self.assertIsNotNone(attr)
-            elif isinstance(value, list):
-                self.fail("list items are not yet supported to be asserted against")
-            elif isinstance(value, dict):
-                self.assert_json_items(attr, value)
+        for json_key, json_value in json_dict.items():
+            entity_attr = getattr(entity, json_key)
+            if json_value == "isNone":
+                self.assertIsNone(entity_attr)
+            elif json_value == "isNotNone":
+                self.assertIsNotNone(entity_attr)
+            elif isinstance(json_value, list):
+                i = 0
+                for element in json_value:
+                    self.assert_json_items(entity_attr[i], element)
+                    i += 1
+            elif isinstance(json_value, dict):
+                self.assert_json_items(entity_attr, json_value)
             else:
                 try:
                     self.assertEqual(
-                        datetime.strptime(value, "%Y-%m-%d").date(), attr)
+                        datetime.strptime(json_value, "%Y-%m-%d").date(), entity_attr)
                 except (TypeError, ValueError):
-                    self.assertEqual(value, attr)
+                    self.assertEqual(json_value, entity_attr)
 
 
 def load_tests(loader, tests, pattern):

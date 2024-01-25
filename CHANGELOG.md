@@ -5,17 +5,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.4...HEAD)
 ### Added
-- [Item.image_link](https://amazon-orders.readthedocs.io/en/latest/api.html#amazonorders.entity.item.Item.image_link).
-- [Item.quantity](https://amazon-orders.readthedocs.io/en/latest/api.html#amazonorders.entity.item.Item.quantity).
+- [Item.image_link](https://amazon-orders.readthedocs.io/en/1.0.5/api.html#amazonorders.entity.item.Item.image_link).
+- [Item.quantity](https://amazon-orders.readthedocs.io/en/1.0.5/api.html#amazonorders.entity.item.Item.quantity).
 - `version` command to CLI.
 - Test improvements.
+
+### Changed
+- Migrated to using CSS selectors in [`AmazonSession`](https://amazon-orders.readthedocs.io/en/1.0.5/api.html#amazonorders.session.AmazonSession)
 
 ## [1.0.4](https://github.com/alexdlaird/pyngrok/compare/1.0.3...1.0.4) - 2024-01-24
 ### Added
 - A new OTP auth flow from Amazon that can occur after Captcha.
 - Parameters `--max-auth-attempts` and `--output-dir` to CLI.
 - `DEFAULT_OUTPUT_DIR`, which defaults to `os.getcwd()`, but allows users to change where output files are written.
-- [`Troubleshooting`](https://amazon-orders.readthedocs.io/en/latest/troubleshooting.html) section to the docs.
+- [`Troubleshooting`](https://amazon-orders.readthedocs.io/en/1.0.4/troubleshooting.html) section to the docs.
 - Test improvements, including the ability to run dynamic tests using private order data from JSON files.
 
 ### Changed
