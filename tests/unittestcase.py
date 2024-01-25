@@ -4,7 +4,7 @@ import unittest
 import responses
 
 from amazonorders import session
-from amazonorders.session import BASE_URL
+from amazonorders.constants import SIGN_IN_URL, SIGN_IN_REDIRECT_URL
 from tests.testcase import TestCase
 
 __author__ = "Alex Laird"
@@ -28,14 +28,14 @@ class UnitTestCase(TestCase):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             self.signin_response = responses.add(
                 responses.GET,
-                "{}/gp/sign-in.html".format(BASE_URL),
+                SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             self.authenticated_response = responses.add(
                 responses.POST,
-                "{}/ap/signin".format(BASE_URL),
+                SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )

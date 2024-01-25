@@ -4,9 +4,9 @@ from typing import Optional
 
 from bs4 import Tag
 
+from amazonorders.constants import BASE_URL
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.seller import Seller
-from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"

@@ -7,6 +7,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 - Test improvements.
 
+### Changed
+- Moved all constant variables (URLs, CSS selectors, etc.) to `constants.py`
+- `constants.SIGN_IN_URL` is now the landing page for login, the old value has been moved to `constants.SIGN_IN_REDIRECT_URL`.
+
 ## [1.0.6](https://github.com/alexdlaird/pyngrok/compare/1.0.5...1.0.6) - 2024-01-25
 ### Added
 - Support for when local session data is stale (Amazon prompts us to login again).

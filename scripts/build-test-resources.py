@@ -7,11 +7,12 @@ import sys
 
 from bs4 import BeautifulSoup
 
+from amazonorders.constants import ORDER_HISTORY_URL, ORDER_DETAILS_URL
 from amazonorders.session import AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.4"
+__version__ = "1.0.7"
 
 ROOT_DIR = os.path.normpath(
     os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
@@ -81,8 +82,7 @@ def build_test_resources(args):
 
     for page in pages_to_download:
         if page["type"] == "order-details":
-            url = "https://www.amazon.com/gp/your-account/order-details?orderID={}".format(
-                page["order-id"])
+            url = "{}?orderID={}".format(ORDER_DETAILS_URL, page["order-id"])
             response = amazon_session.get(url)
             response_parsed = BeautifulSoup(response.text, "html.parser")
 
@@ -90,10 +90,9 @@ def build_test_resources(args):
 
             page_name = "order-details-{}.html".format(page["order-id"])
         else:
-            url = "https://www.amazon.com/your-orders/orders?timeFilter=year-{}&startIndex={}".format(
-                page["year"],
-                page[
-                    "start-index"])
+            url = "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
+                                                               page["year"],
+                                                               page["start-index"])
             response = amazon_session.get(url)
             response_parsed = BeautifulSoup(response.text, "html.parser")
 

@@ -13,41 +13,16 @@ from requests import Session, Response
 from requests.utils import dict_from_cookiejar
 
 from amazonorders.conf import DEFAULT_COOKIE_JAR_PATH, DEFAULT_OUTPUT_DIR
+from amazonorders.constants import SIGN_IN_URL, SIGN_IN_REDIRECT_URL, SIGN_OUT_URL, BASE_HEADERS, SIGN_IN_FORM_SELECTOR, \
+    MFA_DEVICE_SELECT_FORM_SELECTOR, MFA_FORM_SELECTOR, CAPTCHA_1_FORM_SELECTOR, CAPTCHA_2_FORM_SELECTOR, \
+    CAPTCHA_OTP_FORM_SELECTOR
 from amazonorders.exception import AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 
 logger = logging.getLogger(__name__)
-
-BASE_URL = "https://www.amazon.com"
-SIGN_IN_URL = "{}/ap/signin".format(BASE_URL)
-BASE_HEADERS = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Cache-Control": "max-age=0",
-    "Content-Type": "application/x-www-form-urlencoded",
-    "Origin": BASE_URL,
-    "Referer": SIGN_IN_URL,
-    "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-    "Sec-Ch-Ua-Mobile": "?0",
-    "Sec-Ch-Ua-Platform": "macOS",
-    "Sec-Ch-Viewport-Width": "1393",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "same-origin",
-    "Sec-Fetch-User": "?1",
-    "Viewport-Width": "1393",
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-}
-SIGN_IN_FORM_SELECTOR = "form[name='signIn']"
-MFA_DEVICE_SELECT_FORM_SELECTOR = "form[id='auth-select-device-form']"
-MFA_FORM_SELECTOR = "form[id='auth-mfa-form']"
-CAPTCHA_1_FORM_SELECTOR = "form[class*='cvf-widget-form-captcha']"
-CAPTCHA_2_FORM_SELECTOR = "form:has(input[id^='captchacharacters'])"
-CAPTCHA_OTP_FORM_SELECTOR = "form[id='verification-code-form']"
 
 
 class IODefault:
@@ -221,12 +196,12 @@ class AmazonSession:
         Session cookies are persisted, and if existing session data is found during this auth flow, it will be
         skipped entirely and flagged as authenticated.
         """
-        self.get("{}/gp/sign-in.html".format(BASE_URL))
+        self.get(SIGN_IN_URL)
 
         # If our local session data is stale, Amazon will redirect us to the sign in page
-        if self.auth_cookies_stored() and self.last_response.url.split("?")[0] == SIGN_IN_URL:
+        if self.auth_cookies_stored() and self.last_response.url.split("?")[0] == SIGN_IN_REDIRECT_URL:
             self.logout()
-            self.get("{}/gp/sign-in.html".format(BASE_URL))
+            self.get(SIGN_IN_URL)
 
         attempts = 0
         while not self.is_authenticated and attempts < self.max_auth_attempts:
@@ -269,7 +244,7 @@ class AmazonSession:
         """
         Logout and close the existing Amazon session and clear cookies.
         """
-        self.get("{}/gp/sign-out.html".format(BASE_URL))
+        self.get(SIGN_OUT_URL)
 
         if os.path.exists(self.cookie_jar_path):
             os.remove(self.cookie_jar_path)

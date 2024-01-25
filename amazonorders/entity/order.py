@@ -5,11 +5,11 @@ from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup, Tag
 
+from amazonorders.constants import BASE_URL, ORDER_DETAILS_URL
 from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
-from amazonorders.session import BASE_URL
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
@@ -93,9 +93,10 @@ class Order(Parsable):
     def _parse_order_details_link(self) -> Optional[str]:
         tag = self.parsed.find("a", {"class": "yohtmlc-order-details-link"})
         if tag:
+            # TODO: add support in case this changes and becomes an full URI with BASE_URL
             return "{}{}".format(BASE_URL, tag.attrs["href"])
         elif self.order_number:
-            return "{}/gp/your-account/order-details?orderID={}".format(BASE_URL, self.order_number)
+            return "{}?orderID={}".format(ORDER_DETAILS_URL, self.order_number)
         else:
             return None
 

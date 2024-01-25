@@ -3,14 +3,15 @@ import re
 
 import responses
 
+from amazonorders.constants import ORDER_HISTORY_URL, ORDER_DETAILS_URL
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
-from amazonorders.session import AmazonSession, BASE_URL
+from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.5"
+__version__ = "1.0.7"
 
 
 class TestOrders(UnitTestCase):
@@ -36,8 +37,8 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL,
-                                                                  year),
+                "{}?timeFilter=year-{}".format(ORDER_HISTORY_URL,
+                                               year),
                 body=f.read(),
                 status=200,
             )
@@ -59,8 +60,8 @@ class TestOrders(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-0.html".format(year)), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/your-orders/orders?timeFilter=year-{}".format(BASE_URL,
-                                                                  year),
+                "{}?timeFilter=year-{}".format(ORDER_HISTORY_URL,
+                                               year),
                 body=f.read(),
                 status=200,
             )
@@ -68,8 +69,8 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.GET,
-                "{}/your-orders/orders?timeFilter=year-2010&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2".format(
-                    BASE_URL, year),
+                "{}?timeFilter=year-2010&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2".format(
+                    ORDER_HISTORY_URL, year),
                 body=f.read(),
                 status=200,
             )
@@ -92,8 +93,8 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/your-orders/orders?timeFilter=year-{}&startIndex={}".format(BASE_URL,
-                                                                                year, start_index),
+                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
+                                                             year, start_index),
                 body=f.read(),
                 status=200,
             )
@@ -101,8 +102,7 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.GET,
-                re.compile("{}/gp/your-account/order-details/.*".format(
-                    BASE_URL)),
+                re.compile("{}?.*".format(ORDER_DETAILS_URL)),
                 body=f.read(),
                 status=200,
             )
@@ -126,8 +126,8 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/your-orders/orders?timeFilter=year-{}&startIndex={}".format(BASE_URL,
-                                                                                year, start_index),
+                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
+                                                             year, start_index),
                 body=f.read(),
                 status=200,
             )
@@ -135,8 +135,7 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.GET,
-                re.compile("{}/gp/your-account/order-details/.*".format(
-                    BASE_URL)),
+                re.compile("{}.*".format(ORDER_DETAILS_URL)),
                 body=f.read(),
                 status=200,
             )
@@ -162,8 +161,8 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/your-orders/orders?timeFilter=year-{}&startIndex={}".format(BASE_URL,
-                                                                                year, start_index),
+                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
+                                                             year, start_index),
                 body=f.read(),
                 status=200,
             )
@@ -171,8 +170,7 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.GET,
-                re.compile("{}/gp/your-account/order-details/.*".format(
-                    BASE_URL)),
+                re.compile("{}.*".format(ORDER_DETAILS_URL)),
                 body=f.read(),
                 status=200,
             )
@@ -196,8 +194,8 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/your-orders/orders?timeFilter=year-{}&startIndex={}".format(BASE_URL,
-                                                                                year, start_index),
+                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
+                                                             year, start_index),
                 body=f.read(),
                 status=200,
             )
@@ -220,8 +218,8 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/your-orders/orders?timeFilter=year-{}&startIndex={}".format(BASE_URL,
-                                                                                year, start_index),
+                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
+                                                             year, start_index),
                 body=f.read(),
                 status=200,
             )
@@ -229,8 +227,7 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.GET,
-                re.compile("{}/gp/your-account/order-details/.*".format(
-                    BASE_URL)),
+                re.compile("{}.*".format(ORDER_DETAILS_URL)),
                 body=f.read(),
                 status=200,
             )
@@ -253,7 +250,7 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/gp/your-account/order-details?orderID={}".format(BASE_URL, order_id),
+                "{}?orderID={}".format(ORDER_DETAILS_URL, order_id),
                 body=f.read(),
                 status=200,
             )

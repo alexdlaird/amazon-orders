@@ -3,19 +3,17 @@ import logging
 from typing import List, Optional
 
 from amazonorders.conf import DEFAULT_OUTPUT_DIR
+from amazonorders.constants import BASE_URL, ORDER_HISTORY_URL, ORDER_DETAILS_URL, ORDER_HISTORY_CARD_SELECTOR, \
+    ORDER_DETAILS_DIV_SELECTOR, NEXT_PAGE_LINK_SELECTOR
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError
-from amazonorders.session import BASE_URL, AmazonSession
+from amazonorders.session import AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 
 logger = logging.getLogger(__name__)
-
-ORDER_HISTORY_CARD_SELECTOR = "div[class*='order-card']:has(script)"
-ORDER_DETAILS_DIV_SELECTOR = "div[id='orderDetails']"
-NEXT_PAGE_LINK_SELECTOR = "ul[class*='a-pagination'] li[class*='a-last'] a"
 
 
 class AmazonOrders:
@@ -57,10 +55,9 @@ class AmazonOrders:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         orders = []
-        next_page = "{}/your-orders/orders?timeFilter=year-{}{}".format(BASE_URL,
-                                                                        year,
-                                                                        "&startIndex={}".format(
-                                                                            start_index) if start_index else "")
+        next_page = "{}?timeFilter=year-{}{}".format(ORDER_HISTORY_URL,
+                                                     year,
+                                                     "&startIndex={}".format(start_index) if start_index else "")
         while next_page:
             self.amazon_session.get(next_page)
             response_parsed = self.amazon_session.last_response_parsed
@@ -98,7 +95,7 @@ class AmazonOrders:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        self.amazon_session.get("{}/gp/your-account/order-details?orderID={}".format(BASE_URL, order_id))
+        self.amazon_session.get("{}?orderID={}".format(ORDER_DETAILS_URL, order_id))
 
         order_details_tag = self.amazon_session.last_response_parsed.select_one(ORDER_DETAILS_DIV_SELECTOR)
         order = Order(order_details_tag, full_details=True)

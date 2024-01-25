@@ -6,13 +6,14 @@ from unittest.mock import patch
 import responses
 from responses.matchers import query_string_matcher, urlencoded_params_matcher
 
+from amazonorders.constants import BASE_URL, SIGN_IN_REDIRECT_URL
 from amazonorders.exception import AmazonOrdersAuthError
-from amazonorders.session import AmazonSession, BASE_URL, SIGN_IN_URL
+from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 
 
 class TestSession(UnitTestCase):
@@ -47,7 +48,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "post-signin-invalid-email.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                SIGN_IN_URL,
+                SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
@@ -74,7 +75,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "post-signin-invalid-password.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                SIGN_IN_URL,
+                SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
@@ -102,14 +103,14 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "post-signin-mfa.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                SIGN_IN_URL,
+                SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.POST,
-                SIGN_IN_URL,
+                SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
@@ -138,21 +139,21 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "post-signin-new-otp.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                SIGN_IN_URL,
+                SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "post-signin-mfa.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.POST,
-                SIGN_IN_URL,
+                SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.POST,
-                SIGN_IN_URL,
+                SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
@@ -180,7 +181,7 @@ class TestSession(UnitTestCase):
             )
         resp2 = responses.add(
             responses.POST,
-            SIGN_IN_URL,
+            SIGN_IN_REDIRECT_URL,
             status=302,
             headers={"Location": "{}/ap/cvf/request".format(BASE_URL)}
         )
@@ -247,7 +248,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-2.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                SIGN_IN_URL,
+                SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
@@ -293,7 +294,7 @@ class TestSession(UnitTestCase):
             )
         resp2 = responses.add(
             responses.POST,
-            SIGN_IN_URL,
+            SIGN_IN_REDIRECT_URL,
             status=302,
             headers={"Location": "{}/ap/cvf/request".format(BASE_URL)}
         )
@@ -346,7 +347,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-otp.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                SIGN_IN_URL,
+                SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )

@@ -4,12 +4,12 @@ import responses
 from click.testing import CliRunner
 
 from amazonorders.cli import amazon_orders_cli
-from amazonorders.session import BASE_URL
+from amazonorders.constants import ORDER_HISTORY_URL, ORDER_DETAILS_URL
 from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.1"
+__version__ = "1.0.7"
 
 
 class TestCli(UnitTestCase):
@@ -37,8 +37,8 @@ class TestCli(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/your-orders/orders?timeFilter=year-{}&startIndex={}".format(BASE_URL,
-                                                                                year, start_index),
+                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
+                                                             year, start_index),
                 body=f.read(),
                 status=200,
             )
@@ -73,8 +73,8 @@ class TestCli(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/gp/your-account/order-details?orderID={}".format(BASE_URL,
-                                                                     order_id),
+                "{}?orderID={}".format(ORDER_DETAILS_URL,
+                                       order_id),
                 body=f.read(),
                 status=200,
             )
