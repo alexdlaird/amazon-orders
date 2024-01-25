@@ -41,13 +41,12 @@ BASE_HEADERS = {
     "Viewport-Width": "1393",
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 }
-SIGN_IN_FORM_NAME = "signIn"
-MFA_DEVICE_SELECT_FORM_ID = "auth-select-device-form"
-MFA_FORM_ID = "auth-mfa-form"
-CAPTCHA_1_DIV_ID = "cvf-page-content"
-CAPTCHA_1_FORM_CLASS = "cvf-widget-form-captcha"
-CAPTCHA_2_INPUT_ID = "captchacharacters"
-CAPTCHA_OTP_FORM_ID = "verification-code-form"
+SIGN_IN_FORM_SELECTOR = "form[name='signIn']"
+MFA_DEVICE_SELECT_FORM_SELECTOR = "form[id='auth-select-device-form']"
+MFA_FORM_SELECTOR = "form[id='auth-mfa-form']"
+CAPTCHA_1_FORM_SELECTOR = "form[class*='cvf-widget-form-captcha']"
+CAPTCHA_2_FORM_SELECTOR = "form:has(input[id^='captchacharacters'])"
+CAPTCHA_OTP_FORM_SELECTOR = "form[id='verification-code-form']"
 
 
 class IODefault:
@@ -231,18 +230,23 @@ class AmazonSession:
                 self.is_authenticated = True
                 break
 
-            if self._is_field_found(SIGN_IN_FORM_NAME):
+            if self.last_response_parsed.select_one(SIGN_IN_FORM_SELECTOR):
                 self._sign_in()
-            elif self._is_field_found(CAPTCHA_1_FORM_CLASS, field_key="class"):
-                self._captcha_1_submit()
-            elif self.last_response_parsed.select_one("input[id^='{}']".format(CAPTCHA_2_INPUT_ID)):
-                self._captcha_2_submit()
-            elif self._is_field_found(MFA_DEVICE_SELECT_FORM_ID,
-                                      field_key="id"):
+            elif self.last_response_parsed.select_one(CAPTCHA_1_FORM_SELECTOR):
+                self._captcha_submit(CAPTCHA_1_FORM_SELECTOR,
+                                     "cvf_captcha_input",
+                                     "cvf-widget-alert")
+            elif self.last_response_parsed.select_one(CAPTCHA_2_FORM_SELECTOR):
+                self._captcha_submit(CAPTCHA_2_FORM_SELECTOR,
+                                     "field-keywords",
+                                     "a-alert-info")
+            elif self.last_response_parsed.select_one(
+                MFA_DEVICE_SELECT_FORM_SELECTOR):
                 self._mfa_device_select()
-            elif self._is_field_found(MFA_FORM_ID, field_key="id"):
+            elif self.last_response_parsed.select_one(MFA_FORM_SELECTOR):
                 self._mfa_submit()
-            elif self._is_field_found(CAPTCHA_OTP_FORM_ID, field_key="id"):
+            elif self.last_response_parsed.select_one(
+                CAPTCHA_OTP_FORM_SELECTOR):
                 self._captcha_otp_submit()
             else:
                 raise AmazonOrdersAuthError(
@@ -270,8 +274,7 @@ class AmazonSession:
         self.is_authenticated = False
 
     def _sign_in(self) -> None:
-        form = self.last_response_parsed.select_one(
-            "form[name='{}']".format(SIGN_IN_FORM_NAME))
+        form = self.last_response_parsed.select_one(SIGN_IN_FORM_SELECTOR)
         data = self._build_from_form(form,
                                      additional_attrs={"email": self.username,
                                                        "password": self.password,
@@ -285,12 +288,12 @@ class AmazonSession:
 
     def _mfa_device_select(self) -> None:
         form = self.last_response_parsed.select_one(
-            "form[id='{}']".format(MFA_DEVICE_SELECT_FORM_ID))
+            MFA_DEVICE_SELECT_FORM_SELECTOR)
         contexts = form.select("input[name='otpDeviceContext']")
 
         i = 1
         for field in contexts:
-            self.io.echo("{}: {}".format(i, field.attrs["value"].strip()))
+            self.io.echo("{}: {}".format(i, field["value"].strip()))
             i += 1
         otp_device = int(
             self.io.prompt(
@@ -299,12 +302,11 @@ class AmazonSession:
         self.io.echo("")
 
         form = self.last_response_parsed.select_one(
-            "form[id='{}']".format(MFA_DEVICE_SELECT_FORM_ID))
+            MFA_DEVICE_SELECT_FORM_SELECTOR)
         data = self._build_from_form(form,
                                      additional_attrs={"otpDeviceContext":
                                                            contexts[
-                                                               otp_device - 1].attrs[
-                                                               "value"]})
+                                                               otp_device - 1]["value"]})
 
         self.request(form.get("method", "GET"),
                      self._get_form_action(form),
@@ -317,8 +319,7 @@ class AmazonSession:
             "--> Enter the one-time passcode sent to your device")
         self.io.echo("")
 
-        form = self.last_response_parsed.select_one(
-            "form[id='{}']".format(MFA_FORM_ID))
+        form = self.last_response_parsed.select_one(MFA_FORM_SELECTOR)
         data = self._build_from_form(form,
                                      additional_attrs={"otpCode": otp,
                                                        "rememberDevice": ""})
@@ -329,53 +330,34 @@ class AmazonSession:
 
         self._handle_errors()
 
-    def _captcha_1_submit(self) -> None:
-        captcha_div = self.last_response_parsed.select_one("div[id='{}']".format(CAPTCHA_1_DIV_ID))
+    def _captcha_submit(self, form_selector, solution_attr_key,
+        error_div_class) -> None:
+        form = self.last_response_parsed.select_one(form_selector)
 
         solution = self._solve_captcha(
-            captcha_div.select_one("img[alt='captcha']")["src"])
+            form.find_parent().select_one("img")["src"])
 
-        form = self.last_response_parsed.select_one("form[class*='{}']".format(CAPTCHA_1_FORM_CLASS))
         data = self._build_from_form(form,
                                      additional_attrs={
-                                         "cvf_captcha_input": solution})
+                                         solution_attr_key: solution})
 
         self.request(form.get("method", "GET"),
-                     self._get_form_action(form,
-                                           prefix="{}/ap/cvf/".format(
-                                               BASE_URL)),
+                     self._get_form_action(form),
                      data=data)
 
-        self._handle_errors("cvf-widget-alert", "class")
-
-    def _captcha_2_submit(self) -> None:
-        form = self.last_response_parsed.select_one("form:has(input[id^='{}'])".format(CAPTCHA_2_INPUT_ID))
-
-        solution = self._solve_captcha(form.select_one("img")["src"])
-
-        data = self._build_from_form(form,
-                                     additional_attrs={
-                                         "field-keywords": solution})
-
-        self.request(form.get("method", "GET"),
-                     self._get_form_action(form,
-                                           prefix=BASE_URL),
-                     params=data)
-
-        self._handle_errors("a-alert-info", "class")
+        self._handle_errors(error_div_class, "class")
 
     def _captcha_otp_submit(self) -> None:
         otp = self.io.prompt(
             "--> Enter the one-time passcode sent to your device")
         self.io.echo("")
 
-        form = self.last_response_parsed.select_one("form[id='{}']".format(CAPTCHA_OTP_FORM_ID))
+        form = self.last_response_parsed.select_one(CAPTCHA_OTP_FORM_SELECTOR)
         data = self._build_from_form(form,
                                      additional_attrs={"otpCode": otp})
 
         self.request(form.get("method", "GET"),
-                     self._get_form_action(form,
-                                           prefix=BASE_URL),
+                     self._get_form_action(form),
                      data=data)
 
         self._handle_errors()
@@ -394,26 +376,20 @@ class AmazonSession:
         return data
 
     def _get_form_action(self,
-        form: Tag,
-        prefix: Optional[str] = None) -> str:
+        form: Tag) -> str:
         action = form.get("action")
         if not action:
-            action = self.last_response.url
-        # TODO: we should be able to clean this up, and even get it from the current URL (same as a browser does)
-        if prefix and not action.startswith("http"):
-            action = prefix + action
-        return action
-
-    def _is_field_found(self,
-        field_value: str,
-        field_type: str = "form",
-        field_key: str = "name") -> bool:
-        if field_key == "class":
-            operator = "*="
+            return self.last_response.url
+        elif not action.startswith("http"):
+            if action.startswith("/"):
+                parsed_url = urlparse(self.last_response.url)
+                return "{}://{}{}".format(parsed_url.scheme, parsed_url.netloc,
+                                          action)
+            else:
+                return "{}/{}".format(
+                    "/".join(self.last_response.url.split("/")[:-1]), action)
         else:
-            operator = "="
-        # TODO: This is obviously gross, it will be refactored when we move auth forms in to their own class
-        return self.last_response_parsed.select_one("{}[{}{}'{}']".format(field_type, field_key, operator, field_value)) is not None
+            return action
 
     def _get_page_from_url(self,
         url: str) -> str:
@@ -427,7 +403,8 @@ class AmazonSession:
         error_div: str = "auth-error-message-box",
         attr_name: str = "id",
         critical: bool = False) -> None:
-        error_div = self.last_response_parsed.select_one("div[{}='{}']".format(attr_name, error_div))
+        error_div = self.last_response_parsed.select_one(
+            "div[{}='{}']".format(attr_name, error_div))
         if error_div:
             error_msg = "An error occurred: {}\n".format(error_div.text.strip())
 

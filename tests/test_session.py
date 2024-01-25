@@ -11,7 +11,7 @@ from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.1"
+__version__ = "1.0.5"
 
 
 class TestSession(UnitTestCase):
@@ -175,15 +175,21 @@ class TestSession(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
+        resp2 = responses.add(
+            responses.POST,
+            "{}/ap/signin".format(BASE_URL),
+            status=302,
+            headers={"Location": "{}/ap/cvf/request".format(BASE_URL)}
+        )
         with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-1.html"), "r", encoding="utf-8") as f:
-            resp2 = responses.add(
-                responses.POST,
-                "{}/ap/signin".format(BASE_URL),
+            resp3 = responses.add(
+                responses.GET,
+                "{}/ap/cvf/request".format(BASE_URL),
                 body=f.read(),
-                status=200,
+                status=200
             )
         with open(os.path.join(self.RESOURCES_DIR, "captcha_easy.jpg"), "rb") as f:
-            resp3 = responses.add(
+            resp4 = responses.add(
                 responses.GET,
                 "https://opfcaptcha-prod.s3.amazonaws.com/d32ff4fa043d4f969a1693adfb5d663a.jpg",
                 body=f.read(),
@@ -191,7 +197,7 @@ class TestSession(UnitTestCase):
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
-            resp4 = responses.add(
+            resp5 = responses.add(
                 responses.POST,
                 "{}/ap/cvf/verify".format(BASE_URL),
                 body=f.read(),
@@ -207,6 +213,7 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
         self.assertEqual(1, resp3.call_count)
         self.assertEqual(1, resp4.call_count)
+        self.assertEqual(1, resp5.call_count)
 
     @responses.activate
     def test_captcha_2(self):
@@ -263,15 +270,21 @@ class TestSession(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
+        resp2 = responses.add(
+            responses.POST,
+            "{}/ap/signin".format(BASE_URL),
+            status=302,
+            headers={"Location": "{}/ap/cvf/request".format(BASE_URL)}
+        )
         with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-1.html"), "r", encoding="utf-8") as f:
-            resp2 = responses.add(
-                responses.POST,
-                "{}/ap/signin".format(BASE_URL),
+            resp3 = responses.add(
+                responses.GET,
+                "{}/ap/cvf/request".format(BASE_URL),
                 body=f.read(),
-                status=200,
+                status=200
             )
         with open(os.path.join(self.RESOURCES_DIR, "captcha_hard.jpg"), "rb") as f:
-            resp3 = responses.add(
+            resp4 = responses.add(
                 responses.GET,
                 "https://opfcaptcha-prod.s3.amazonaws.com/d32ff4fa043d4f969a1693adfb5d663a.jpg",
                 body=f.read(),
@@ -279,7 +292,7 @@ class TestSession(UnitTestCase):
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
-            resp4 = responses.add(
+            resp5 = responses.add(
                 responses.POST,
                 "{}/ap/cvf/verify".format(BASE_URL),
                 body=f.read(),
@@ -293,8 +306,9 @@ class TestSession(UnitTestCase):
         self.assertTrue(self.amazon_session.is_authenticated)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
-        self.assertEqual(2, resp3.call_count)
-        self.assertEqual(1, resp4.call_count)
+        self.assertEqual(1, resp3.call_count)
+        self.assertEqual(2, resp4.call_count)
+        self.assertEqual(1, resp5.call_count)
 
     @responses.activate
     @patch('builtins.input')

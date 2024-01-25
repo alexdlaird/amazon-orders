@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 - Migrated to using CSS selectors in [`AmazonSession`](https://amazon-orders.readthedocs.io/en/1.0.5/api.html#amazonorders.session.AmazonSession)
+- Migrated to using CSS selectors in [`AmazonOrders`](https://amazon-orders.readthedocs.io/en/1.0.5/api.html#amazonorders.orders.AmazonOrders)
 
 ## [1.0.4](https://github.com/alexdlaird/pyngrok/compare/1.0.3...1.0.4) - 2024-01-24
 ### Added
