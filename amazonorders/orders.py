@@ -9,7 +9,7 @@ from amazonorders.session import BASE_URL, AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 
 logger = logging.getLogger(__name__)
 

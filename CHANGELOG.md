@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.5...HEAD)
+### Added
+- Support for when local session data is stale (Amazon prompts us to login again).
+- Documentation improvements.
+
+### Fixed
+- Regression in the Captcha flow introduced in `1.0.5`.
 
 ## [1.0.5](https://github.com/alexdlaird/pyngrok/compare/1.0.4...1.0.5) - 2024-01-25
 ### Added

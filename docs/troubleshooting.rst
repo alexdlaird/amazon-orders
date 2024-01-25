@@ -11,8 +11,6 @@ Enable Debug Mode
 2. Sends ``logger`` output to ``stderr``, so you'll see it on the console when using the CLI
 3. Any HTML page parsed will also be output as a file
 
-That last one is especially important for debugging issues.
-
 To enable ``debug`` mode when using the CLI, simply pass the ``--debug`` flag, it works with any
 command:
 
@@ -38,6 +36,15 @@ To enable ``debug`` mode through a Python script, you need to pass ``debug=True`
     orders = amazon_orders.get_order_history()
 
 Integrating with Amazon.com via scraping is complicated and requires ``form`` data from the
-website. Before submitting a bug report or requesting a new feature, you'll need to run
-``amazon-orders`` one of the ways described above, and provide all console output along with any
-relevant generated HTML files, otherwise it is not possible for us to work on your request.
+website. Before submitting a bug report or requesting a new feature, try running
+``amazon-orders`` one of the ways described above, and if any console output or generated HTML
+files are relevant to the issue, attach them to your request.
+
+Broken After Previously Working
+-------------------------------
+
+
+
+Contributing a New Auth Flow or Entity
+--------------------------------------
+

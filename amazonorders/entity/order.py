@@ -1,8 +1,7 @@
 import logging
 from datetime import datetime, date
 from typing import List, Optional, TypeVar
-from urllib.parse import parse_qs
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup, Tag
 

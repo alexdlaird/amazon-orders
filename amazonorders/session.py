@@ -17,11 +17,12 @@ from amazonorders.exception import AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://www.amazon.com"
+SIGN_IN_URL = "{}/ap/signin".format(BASE_URL)
 BASE_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
     "Accept-Encoding": "gzip, deflate, br",
@@ -29,7 +30,7 @@ BASE_HEADERS = {
     "Cache-Control": "max-age=0",
     "Content-Type": "application/x-www-form-urlencoded",
     "Origin": BASE_URL,
-    "Referer": "{}/ap/signin".format(BASE_URL),
+    "Referer": SIGN_IN_URL,
     "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
     "Sec-Ch-Ua-Mobile": "?0",
     "Sec-Ch-Ua-Platform": "macOS",
@@ -222,6 +223,11 @@ class AmazonSession:
         """
         self.get("{}/gp/sign-in.html".format(BASE_URL))
 
+        # If our local session data is stale, Amazon will redirect us to the sign in page
+        if self.auth_cookies_stored() and self.last_response.url.split("?")[0] == SIGN_IN_URL:
+            self.logout()
+            self.get("{}/gp/sign-in.html".format(BASE_URL))
+
         attempts = 0
         while not self.is_authenticated and attempts < self.max_auth_attempts:
             if self.auth_cookies_stored() or \
@@ -280,9 +286,7 @@ class AmazonSession:
                                                        "password": self.password,
                                                        "rememberMe": "true"})
 
-        self.request(form.get("method", "GET"),
-                     self._get_form_action(form),
-                     data=data)
+        self._submit_form(form, data)
 
         self._handle_errors(critical=True)
 
@@ -308,9 +312,7 @@ class AmazonSession:
                                                            contexts[
                                                                otp_device - 1]["value"]})
 
-        self.request(form.get("method", "GET"),
-                     self._get_form_action(form),
-                     data=data)
+        self._submit_form(form, data)
 
         self._handle_errors()
 
@@ -324,9 +326,7 @@ class AmazonSession:
                                      additional_attrs={"otpCode": otp,
                                                        "rememberDevice": ""})
 
-        self.request(form.get("method", "GET"),
-                     self._get_form_action(form),
-                     data=data)
+        self._submit_form(form, data)
 
         self._handle_errors()
 
@@ -341,9 +341,7 @@ class AmazonSession:
                                      additional_attrs={
                                          solution_attr_key: solution})
 
-        self.request(form.get("method", "GET"),
-                     self._get_form_action(form),
-                     data=data)
+        self._submit_form(form, data)
 
         self._handle_errors(error_div_class, "class")
 
@@ -356,9 +354,7 @@ class AmazonSession:
         data = self._build_from_form(form,
                                      additional_attrs={"otpCode": otp})
 
-        self.request(form.get("method", "GET"),
-                     self._get_form_action(form),
-                     data=data)
+        self._submit_form(form, data)
 
         self._handle_errors()
 
@@ -426,3 +422,11 @@ class AmazonSession:
             self.io.echo("")
 
         return captcha_response
+
+    def _submit_form(self, form, data):
+        method = form.get("method", "GET").upper()
+        action = self._get_form_action(form)
+        request_data = {"params" if method == "GET" else "data": data}
+        self.request(method,
+                     action,
+                     **request_data)
