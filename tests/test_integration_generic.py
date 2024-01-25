@@ -15,8 +15,8 @@ __version__ = "1.0.4"
 class TestIntegrationGeneric(TestCase):
     """
     These integration tests run generically against any Amazon account. The only requirement is that the
-    account in question has at least one order in the year INTEGRATION_TEST_YEAR (defaults to the current
-    year). The only assertions done on the fields populated are not None.
+    account in question has at least one order in the year ``INTEGRATION_TEST_YEAR`` (defaults to the
+    current year). The only assertions done on the fields populated are ``isNotNoneNone``.
     """
     amazon_session = None
 

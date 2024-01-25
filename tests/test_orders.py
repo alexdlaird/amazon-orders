@@ -186,7 +186,6 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(10, resp2.call_count)
 
-
     @responses.activate
     def test_get_order_history_quantity(self):
         # GIVEN

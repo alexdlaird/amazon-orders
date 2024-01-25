@@ -21,7 +21,7 @@ class Item(Parsable):
     """
 
     def __init__(self,
-        parsed: Tag) -> None:
+                 parsed: Tag) -> None:
         super().__init__(parsed)
 
         #: The Item title.

@@ -17,6 +17,7 @@ ORDER_HISTORY_CARD_SELECTOR = "div[class*='order-card']:has(script)"
 ORDER_DETAILS_DIV_SELECTOR = "div[id='orderDetails']"
 NEXT_PAGE_LINK_SELECTOR = "ul[class*='a-pagination'] li[class*='a-last'] a"
 
+
 class AmazonOrders:
     """
     Using an authenticated :class:`~amazonorders.session.AmazonSession`, can be used to query Amazon

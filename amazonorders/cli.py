@@ -191,6 +191,7 @@ def version(ctx: Context):
     """
     click.echo("Version: {}\n".format(__version__))
 
+
 def _print_banner():
     click.echo("""
 =======================================================================

@@ -57,8 +57,8 @@ class IODefault:
     """
 
     def echo(self,
-        msg,
-        **kwargs):
+             msg,
+             **kwargs):
         """
         Echo a message to the console.
 
@@ -68,9 +68,9 @@ class IODefault:
         print(msg)
 
     def prompt(self,
-        msg,
-        type=None,
-        **kwargs):
+               msg,
+               type=None,
+               **kwargs):
         """
         Prompt to the console for user input.
 
@@ -92,13 +92,13 @@ class AmazonSession:
     """
 
     def __init__(self,
-        username: str,
-        password: str,
-        debug: bool = False,
-        max_auth_attempts: int = 10,
-        cookie_jar_path: str = None,
-        io: IODefault = IODefault(),
-        output_dir: str = None) -> None:
+                 username: str,
+                 password: str,
+                 debug: bool = False,
+                 max_auth_attempts: int = 10,
+                 cookie_jar_path: str = None,
+                 io: IODefault = IODefault(),
+                 output_dir: str = None) -> None:
         if not cookie_jar_path:
             cookie_jar_path = DEFAULT_COOKIE_JAR_PATH
         if not output_dir:
@@ -141,9 +141,9 @@ class AmazonSession:
                 self.session.cookies.update(cookies)
 
     def request(self,
-        method: str,
-        url: str,
-        **kwargs: Any) -> Response:
+                method: str,
+                url: str,
+                **kwargs: Any) -> Response:
         """
         Execute the request against Amazon with base headers, parsing and storing the response
         and persisting response cookies.
@@ -183,8 +183,8 @@ class AmazonSession:
         return self.last_response
 
     def get(self,
-        url: str,
-        **kwargs: Any):
+            url: str,
+            **kwargs: Any):
         """
         Perform a GET request.
 
@@ -195,8 +195,8 @@ class AmazonSession:
         return self.request("GET", url, **kwargs)
 
     def post(self,
-        url,
-        **kwargs: Any) -> Response:
+             url,
+             **kwargs: Any) -> Response:
         """
         Perform a POST request.
 
@@ -225,8 +225,8 @@ class AmazonSession:
         attempts = 0
         while not self.is_authenticated and attempts < self.max_auth_attempts:
             if self.auth_cookies_stored() or \
-                ("Hello, sign in" not in self.last_response.text and
-                 "nav-item-signout" in self.last_response.text):
+                    ("Hello, sign in" not in self.last_response.text and
+                     "nav-item-signout" in self.last_response.text):
                 self.is_authenticated = True
                 break
 
@@ -241,12 +241,12 @@ class AmazonSession:
                                      "field-keywords",
                                      "a-alert-info")
             elif self.last_response_parsed.select_one(
-                MFA_DEVICE_SELECT_FORM_SELECTOR):
+                    MFA_DEVICE_SELECT_FORM_SELECTOR):
                 self._mfa_device_select()
             elif self.last_response_parsed.select_one(MFA_FORM_SELECTOR):
                 self._mfa_submit()
             elif self.last_response_parsed.select_one(
-                CAPTCHA_OTP_FORM_SELECTOR):
+                    CAPTCHA_OTP_FORM_SELECTOR):
                 self._captcha_otp_submit()
             else:
                 raise AmazonOrdersAuthError(
@@ -331,7 +331,7 @@ class AmazonSession:
         self._handle_errors()
 
     def _captcha_submit(self, form_selector, solution_attr_key,
-        error_div_class) -> None:
+                        error_div_class) -> None:
         form = self.last_response_parsed.select_one(form_selector)
 
         solution = self._solve_captcha(
@@ -363,8 +363,8 @@ class AmazonSession:
         self._handle_errors()
 
     def _build_from_form(self,
-        form: Tag,
-        additional_attrs: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+                         form: Tag,
+                         additional_attrs: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         data = {}
         for field in form.select("input"):
             try:
@@ -376,7 +376,7 @@ class AmazonSession:
         return data
 
     def _get_form_action(self,
-        form: Tag) -> str:
+                         form: Tag) -> str:
         action = form.get("action")
         if not action:
             return self.last_response.url
@@ -392,7 +392,7 @@ class AmazonSession:
             return action
 
     def _get_page_from_url(self,
-        url: str) -> str:
+                           url: str) -> str:
         page_name = os.path.basename(urlparse(url).path).strip(".html")
         i = 0
         while os.path.isfile("{}_{}".format(page_name, 0)):
@@ -400,9 +400,9 @@ class AmazonSession:
         return "{}_{}.html".format(page_name, i)
 
     def _handle_errors(self,
-        error_div: str = "auth-error-message-box",
-        attr_name: str = "id",
-        critical: bool = False) -> None:
+                       error_div: str = "auth-error-message-box",
+                       attr_name: str = "id",
+                       critical: bool = False) -> None:
         error_div = self.last_response_parsed.select_one(
             "div[{}='{}']".format(attr_name, error_div))
         if error_div:
@@ -414,7 +414,7 @@ class AmazonSession:
                 self.io.echo(error_msg, fg="red")
 
     def _solve_captcha(self,
-        url: str) -> str:
+                       url: str) -> str:
         captcha_response = AmazonCaptcha.fromlink(url).solve()
         if not captcha_response or captcha_response.lower() == "not solved":
             img_response = self.session.get(url)

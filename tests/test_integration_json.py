@@ -20,10 +20,67 @@ PRIVATE_RESOURCES_DIR = os.path.normpath(
                  "Skipping, INTEGRATION_TEST_JSON=True was not set in the environment")
 class TestIntegrationJSON(TestCase):
     """
-    The two JSON files committed to "private-resources" can be used as examples for the required syntax.
-    Beyond that, any other files added to "private-resources" will be ignore by `.gitignore`.
+    The two JSON files committed to "private-resources" are provided as examples of the syntax. Any other
+    files created in "private-resources" will be ignored by ``.gitignore``.
 
-    TODO: Document here what the JSON needs to look like for it to be loaded properly in to this test class.
+    The starting JSON of a test description is:
+
+    .. code:: json
+
+        {
+            "func": "<some_AmazonOrders_function>"
+        }
+
+    Field assertion values can be as follows:
+
+    * Primitives and literals (ex. 23.43, "some string")
+    * Dates formatted YYYY-MM-DD (ex. 2023-12-15)
+    * isNone
+    * isNotNone
+    * Nested values (ex. a list / dict, if a corresponding list / object exists in the entity
+
+    Details
+    =======
+    In a ``get_order`` test, any top-level field (other than ``func``) in the JSON will be asserted on
+    the ``Order`` (including nested fields). So, for example, if we want to assert the ``Order`` was
+    placed on 2023-12-15 by "John Doe", the minimal test would be:
+
+    .. code:: json
+
+        {
+            "func": "get_order",
+            "order_placed_date": "2023-12-15",
+            "recipient": {
+                "name": "John Doe"
+            }
+        }
+
+    History
+    =======
+    In a ``get_order_history`` test, additional top-level fields are needed to define the test, and they are:
+
+    .. code:: json
+
+        {
+            "year": <map to AmazonOrders.get_order_history(year)>,
+            "start_index": <map to AmazonOrders.get_order_history(start_index)>,
+            "full_details": <map to AmazonOrders.get_order_history(full_details)>,
+            "orders_len": <the expected response list length>,
+            "orders": {
+                "3": {
+                    # ... The Order at index 3
+                },
+                "7": {
+                    # ... The Order at index 7
+                }
+            }
+        }
+
+    With this syntax, multiple ``Orders`` from the response can be asserted against. The indexed dictionaries under
+    the ``orders`` key then match the assertion functionality when testing against a single order, meaning you
+    define here the fields and values under the ``Order`` that you want to assert on.
+
+
     """
     amazon_session = None
 
@@ -114,7 +171,7 @@ def load_tests(loader, tests, pattern):
         for filename in os.listdir(PRIVATE_RESOURCES_DIR):
             if filename == ".gitignore":
                 continue
-            
+
             with open(os.path.join(PRIVATE_RESOURCES_DIR, filename), "r",
                       encoding="utf-8") as f:
                 data = json.loads(f.read())
