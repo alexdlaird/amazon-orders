@@ -109,17 +109,17 @@ class Order(Parsable):
             parsed_url = urlparse(order_details_link)
             return parse_qs(parsed_url.query)["orderID"][0]
         else:
-            tag = self.parsed.find("bdi", dir="ltr")
+            tag = self.parsed.select_one("bdi[dir='ltr']")
             return tag.text.strip()
 
     def _parse_grand_total(self) -> float:
         tag = self.parsed.select_one("div.yohtmlc-order-total")
         if tag:
-            tag = tag.find("span", {"class": "value"})
+            tag = tag.select_one("span.value")
         else:
-            for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+            for tag in self.parsed.select("div#od-subtotals div.a-row"):
                 if "grand total" in tag.text.lower():
-                    tag = tag.find("div", {"class": "a-span-last"})
+                    tag = tag.select_one("div.a-span-last")
                     break
         return float(tag.text.strip().replace("$", ""))
 
@@ -128,7 +128,8 @@ class Order(Parsable):
         if tag:
             date_str = tag.text.split("Ordered on")[1].strip()
         else:
-            tag = self.parsed.find("div", {"class": "a-span3"}).find_all("span")
+            tag = self.parsed.select("div.a-span3 span")
+            # TODO: using nth-child here isn't working, investigate
             date_str = tag[1].text.strip()
         return datetime.strptime(date_str, "%B %d, %Y").date()
 
@@ -163,45 +164,44 @@ class Order(Parsable):
             return None
 
     def _parse_subtotal(self) -> Optional[float]:
-        for tag in self.parsed.select("div#od-subtotals > div.a-row"):
+        for tag in self.parsed.select("div#od-subtotals div.a-row"):
             if "subtotal" in tag.text.lower():
-                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
+                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_shipping_total(self) -> Optional[float]:
-        for tag in self.parsed.select("div#od-subtotals > div.a-row"):
+        for tag in self.parsed.select("div#od-subtotals div.a-row"):
             if "shipping" in tag.text.lower():
-                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
+                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_subscription_discount(self) -> Optional[float]:
-        for tag in self.parsed.select("div#od-subtotals > div.a-row"):
+        for tag in self.parsed.select("div#od-subtotals div.a-row"):
             if "subscribe" in tag.text.lower():
-                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
+                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_total_before_tax(self) -> Optional[float]:
-        for tag in self.parsed.select("div#od-subtotals > div.a-row"):
+        for tag in self.parsed.select("div#od-subtotals div.a-row"):
             if "before tax" in tag.text.lower():
-                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
+                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_estimated_tax(self) -> Optional[float]:
-        for tag in self.parsed.select("div#od-subtotals > div.a-row"):
+        for tag in self.parsed.select("div#od-subtotals div.a-row"):
             if "estimated tax" in tag.text.lower():
-                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
+                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_refund_total(self) -> Optional[float]:
-        # TODO: if we change this one to CSS selector, unit tests fail
-        for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+        for tag in self.parsed.select("div#od-subtotals div.a-row"):
             if "refund total" in tag.text.lower() and "tax refund" not in tag.text.lower():
-                return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
+                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 

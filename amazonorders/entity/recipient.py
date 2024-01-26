@@ -35,22 +35,22 @@ class Recipient(Parsable):
     def _parse_name(self) -> str:
         tag = self.parsed.select_one("li.displayAddressFullName")
         if not tag:
-            tag = self.parsed.find_all("div")[1]
+            tag = self.parsed.select_one("div:nth-child(1)")
         return tag.text.strip()
 
     def _parse_address(self) -> Optional[str]:
         tag = self.parsed.select_one("li.displayAddressAddressLine1")
         if tag:
             value = tag.text.strip()
-            next_tag = self.parsed.find("li", {"class": "displayAddressAddressLine2"})
+            next_tag = self.parsed.select_one("li.displayAddressAddressLine2")
             if next_tag:
                 value += "{}\n{}".format(tag.text.strip(), next_tag)
-            next_tag = self.parsed.find("li", {"class": "displayAddressCityStateOrRegionPostalCode"})
+            next_tag = self.parsed.select_one("li.displayAddressCityStateOrRegionPostalCode")
             if next_tag:
                 value += "\n{}".format(next_tag.text.strip())
-            next_tag = self.parsed.find("li", {"class": "displayAddressCountryName"})
+            next_tag = self.parsed.select_one("li.displayAddressCountryName")
             if next_tag:
                 value += "\n{}".format(next_tag.text.strip())
         else:
-            value = self.parsed.find_all("div")[2].text
+            value = self.parsed.select_one("div:nth-child(2)").text
         return value.strip()

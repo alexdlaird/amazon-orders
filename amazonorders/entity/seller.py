@@ -33,16 +33,16 @@ class Seller(Parsable):
         return "Seller: {}".format(self.name)
 
     def _parse_name(self) -> str:
-        tag = self.parsed.find("a")
+        tag = self.parsed.select_one("a")
         if not tag:
-            tag = self.parsed.find("span")
+            tag = self.parsed.select_one("span")
         value = tag.text
         if "Sold by:" in value:
             value = value.split("Sold by:")[1]
         return value.strip()
 
     def _parse_link(self) -> Optional[str]:
-        tag = self.parsed.find("a")
+        tag = self.parsed.select_one("a")
         if tag:
             return self.with_base_url(tag["href"])
         else:

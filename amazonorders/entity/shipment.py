@@ -47,17 +47,15 @@ class Shipment(Parsable):
         return items
 
     def _parse_delivery_status(self) -> Optional[str]:
-        tag = self.parsed.select_one("div.js-shipment-info-container")
+        tag = self.parsed.select_one("div.js-shipment-info-container div.a-row")
         if tag:
-            tag = tag.find("div", {"class": "a-row"})
             return tag.text.strip()
         else:
             return None
 
     def _parse_tracking_link(self) -> Optional[str]:
-        tag = self.parsed.select_one("span.track-package-button")
+        tag = self.parsed.select_one("span.track-package-button a")
         if tag:
-            link_tag = tag.find("a")
-            return self.with_base_url(link_tag["href"])
+            return self.with_base_url(tag["href"])
         else:
             return None
