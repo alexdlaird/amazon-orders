@@ -40,6 +40,9 @@ MFA_FORM_SELECTOR = "form[id='auth-mfa-form']"
 CAPTCHA_1_FORM_SELECTOR = "form[class*='cvf-widget-form-captcha']"
 CAPTCHA_2_FORM_SELECTOR = "form:has(input[id^='captchacharacters'])"
 CAPTCHA_OTP_FORM_SELECTOR = "form[id='verification-code-form']"
+DEFAULT_ERROR_SELECTOR = "div[id='auth-error-message-box']"
+CAPTCHA_1_ERROR_SELECTOR = "div[class*='cvf-widget-alert']"
+CAPTCHA_2_ERROR_SELECTOR = "div[class*='a-alert-info']"
 
 ### CSS selectors for Orders
 ORDER_HISTORY_CARD_SELECTOR = "div.order"

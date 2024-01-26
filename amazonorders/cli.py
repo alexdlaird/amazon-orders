@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import click
 from click.core import Context
@@ -12,22 +12,22 @@ from amazonorders.session import AmazonSession, IODefault
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 
 logger = logging.getLogger("amazonorders")
 
 
 class IOClick(IODefault):
     def echo(self,
-             msg,
-             fg=None,
-             **kwargs):
+             msg: str,
+             fg: Optional[str] = None,
+             **kwargs: Any):
         click.secho(msg, fg=fg)
 
     def prompt(self,
-               msg,
-               type=None,
-               **kwargs):
+               msg: str,
+               type: str = None,
+               **kwargs: Any):
         return click.prompt(msg, type=type)
 
 
@@ -40,7 +40,7 @@ class IOClick(IODefault):
 @click.option('--output-dir', default=DEFAULT_OUTPUT_DIR,
               help="The directory where any output files should be produced.")
 @click.pass_context
-def amazon_orders_cli(ctx,
+def amazon_orders_cli(ctx: Context,
                       **kwargs: Any):
     """
     amazon-orders is an unofficial library that provides a command line interface alongside a programmatic API that
@@ -76,15 +76,6 @@ def amazon_orders_cli(ctx,
                                    max_auth_attempts=kwargs["max_auth_attempts"],
                                    output_dir=kwargs["output_dir"])
 
-    if amazon_session.auth_cookies_stored():
-        if username or password:
-            click.echo("Info: You've provided --username and --password, but because a previous session still exists,"
-                       "that is being ignored. If you would like to reauthenticate, call the `logout` command first.\n")
-    elif not username and not password:
-        click.echo(ctx.get_help())
-
-        ctx.fail("Amazon --username and --password must be provided, since no previous session was found.")
-
     ctx.obj["amazon_session"] = amazon_session
 
 
@@ -116,7 +107,7 @@ Order History for {}{}{}
     click.echo("Info: This might take a minute ...\n")
 
     try:
-        amazon_session.login()
+        _authenticate(ctx, amazon_session)
 
         amazon_orders = AmazonOrders(amazon_session,
                                      debug=amazon_session.debug,
@@ -144,7 +135,7 @@ def order(ctx: Context,
     amazon_session = ctx.obj["amazon_session"]
 
     try:
-        amazon_session.login()
+        _authenticate(ctx, amazon_session)
 
         amazon_orders = AmazonOrders(amazon_session,
                                      debug=amazon_session.debug,
@@ -184,8 +175,7 @@ def logout(ctx: Context):
 
 
 @amazon_orders_cli.command()
-@click.pass_context
-def version(ctx: Context):
+def version():
     """
     Get the package version.
     """
@@ -202,6 +192,20 @@ def _print_banner():
 | | | | | | | | | (_| |/ / (_) | | | | \ \_/ / | | (_| |  __/ |  \__ \\
 \_| |_/_| |_| |_|\__,_/___\___/|_| |_|  \___/|_|  \__,_|\___|_|  |___/                                                                   
 =======================================================================\n""")
+
+
+def _authenticate(ctx: Context,
+                  amazon_session: AmazonSession):
+    if amazon_session.auth_cookies_stored():
+        if amazon_session.username or amazon_session.password:
+            click.echo("Info: You've provided --username and --password, but because a previous session still exists,"
+                       "that is being ignored. If you would like to reauthenticate, call the `logout` command first.\n")
+    elif not amazon_session.username and not amazon_session.password:
+        click.echo(ctx.get_help())
+
+        ctx.fail("Amazon --username and --password must be provided, since no previous session was found.")
+    else:
+        amazon_session.login()
 
 
 def _order_output(order):

@@ -137,13 +137,15 @@ class TestCase(unittest.TestCase):
             order_item = next(filter(lambda i: i.title == shipment.items[0].title, order.items))
             self.assertEqual(str(order_item),
                              str(shipment.items[0]))
+            if "TestIntegration" in self.__class__.__name__:
+                self.assertIsNone(shipment.tracking_link)
+            else:
+                self.assertIsNotNone(shipment.tracking_link)
             if "Cadeya" in shipment.items[0].title:
                 found_cadeya = True
-                self.assertIsNotNone(shipment.tracking_link)
                 self.assertEqual("Delivered Dec 9, 2023", shipment.delivery_status)
             else:
                 found_amazon = True
-                self.assertIsNotNone(shipment.tracking_link)
                 self.assertEqual("Delivered Dec 8, 2023", shipment.delivery_status)
         self.assertTrue(found_cadeya)
         self.assertTrue(found_amazon)
