@@ -3,13 +3,12 @@ from typing import List, Optional
 
 from bs4 import Tag
 
-from amazonorders.constants import BASE_URL
 from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.5"
+__version__ = "1.0.7"
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +58,6 @@ class Shipment(Parsable):
         tag = self.parsed.find("span", {"class": "track-package-button"})
         if tag:
             link_tag = tag.find("a")
-            return self.with_base_url(link_tag.attrs["href"])
+            return self.with_base_url(link_tag["href"])
         else:
             return None

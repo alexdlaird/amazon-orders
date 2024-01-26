@@ -5,7 +5,7 @@ from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup, Tag
 
-from amazonorders.constants import BASE_URL, ORDER_DETAILS_URL
+from amazonorders.constants import ORDER_DETAILS_URL
 from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
@@ -13,7 +13,7 @@ from amazonorders.entity.shipment import Shipment
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.5"
+__version__ = "1.0.7"
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ class Order(Parsable):
     def _parse_order_details_link(self) -> Optional[str]:
         tag = self.parsed.find("a", {"class": "yohtmlc-order-details-link"})
         if tag:
-            return self.with_base_url(tag.attrs["href"])
+            return self.with_base_url(tag["href"])
         elif self.order_number:
             return "{}?orderID={}".format(ORDER_DETAILS_URL, self.order_number)
         else:
@@ -135,18 +135,14 @@ class Order(Parsable):
     def _parse_recipient(self) -> Recipient:
         tag = self.parsed.find("div", {"class": "displayAddressDiv"})
         if not tag:
-            script_id = self.parsed.find("div",
-                                         id=lambda value: value and value.startswith("shipToInsertionNode")).attrs[
-                "id"]
-            tag = self.parsed.find("script",
-                                   id="shipToData-shippingAddress-{}".format(script_id.split("-")[2]))
+            tag = self.parsed.find_parent().select_one("script[id^='shipToData']")
             tag = BeautifulSoup(str(tag.contents[0]).strip(), "html.parser")
         return Recipient(tag)
 
     def _parse_payment_method(self) -> Optional[str]:
         tag = self.parsed.find("img", {"class": "pmts-payment-credit-card-instrument-logo"})
         if tag:
-            return tag.attrs["alt"]
+            return tag["alt"]
         else:
             return None
 

@@ -42,6 +42,6 @@ CAPTCHA_2_FORM_SELECTOR = "form:has(input[id^='captchacharacters'])"
 CAPTCHA_OTP_FORM_SELECTOR = "form[id='verification-code-form']"
 
 ### CSS selectors for Orders
-ORDER_HISTORY_CARD_SELECTOR = "div[class*='order-card']:has(script)"
+ORDER_HISTORY_CARD_SELECTOR = "div.order"
 ORDER_DETAILS_DIV_SELECTOR = "div[id='orderDetails']"
 NEXT_PAGE_LINK_SELECTOR = "ul[class*='a-pagination'] li[class*='a-last'] a"

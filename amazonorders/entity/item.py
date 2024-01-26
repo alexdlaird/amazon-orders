@@ -4,13 +4,12 @@ from typing import Optional
 
 from bs4 import Tag
 
-from amazonorders.constants import BASE_URL
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.seller import Seller
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.5"
+__version__ = "1.0.7"
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ class Item(Parsable):
 
     def _parse_link(self) -> str:
         tag = self.parsed.find("a")
-        return self.with_base_url(tag.attrs["href"])
+        return self.with_base_url(tag["href"])
 
     def _parse_price(self) -> Optional[float]:
         for tag in self.parsed.find_all("div"):
@@ -96,7 +95,7 @@ class Item(Parsable):
     def _parse_image_link(self) -> Optional[str]:
         img = self.parsed.find_previous_sibling().find("img")
         if img:
-            return self.with_base_url(img.attrs["src"])
+            return self.with_base_url(img["src"])
         else:
             return None
 

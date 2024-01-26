@@ -3,12 +3,11 @@ from typing import Optional
 
 from bs4 import Tag
 
-from amazonorders.constants import BASE_URL
 from amazonorders.entity.parsable import Parsable
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.0"
+__version__ = "1.0.7"
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +44,6 @@ class Seller(Parsable):
     def _parse_link(self) -> Optional[str]:
         tag = self.parsed.find("a")
         if tag:
-            return self.with_base_url(tag.attrs["href"])
+            return self.with_base_url(tag["href"])
         else:
             return None
