@@ -51,36 +51,36 @@ class Item(Parsable):
         return self.title < other.title
 
     def _parse_title(self) -> str:
-        tag = self.parsed.select_one("a")
+        tag = self.parsed.select_one(".yohtmlc-item a")
         return tag.text.strip()
 
     def _parse_link(self) -> str:
-        tag = self.parsed.select_one("a")
+        tag = self.parsed.select_one(".yohtmlc-item a")
         return self.with_base_url(tag["href"])
 
     def _parse_price(self) -> Optional[float]:
-        for tag in self.parsed.select("div"):
+        for tag in self.parsed.select(".yohtmlc-item div"):
             if tag.text.strip().startswith("$"):
                 return float(tag.text.strip().replace("$", ""))
 
         return None
 
     def _parse_seller(self) -> Optional[Seller]:
-        for tag in self.parsed.select("div"):
+        for tag in self.parsed.select(".yohtmlc-item div"):
             if "Sold by:" in tag.text:
                 return Seller(tag)
 
         return None
 
     def _parse_condition(self) -> Optional[str]:
-        for tag in self.parsed.select("div"):
+        for tag in self.parsed.select(".yohtmlc-item div"):
             if "Condition:" in tag.text:
                 return tag.text.split("Condition:")[1].strip()
 
         return None
 
     def _parse_return_eligible_date(self) -> Optional[date]:
-        for tag in self.parsed.select("div"):
+        for tag in self.parsed.select(".yohtmlc-item div"):
             if "Return" in tag.text:
                 split_str = "through "
                 if "closed on " in tag.text:
@@ -93,14 +93,14 @@ class Item(Parsable):
         return None
 
     def _parse_image_link(self) -> Optional[str]:
-        img = self.parsed.find_previous_sibling().select_one("img")
+        img = self.parsed.select_one("a img")
         if img:
             return self.with_base_url(img["src"])
         else:
             return None
 
     def _parse_quantity(self) -> Optional[int]:
-        tag = self.parsed.find_previous_sibling().select_one("span.item-view-qty")
+        tag = self.parsed.select_one("span.item-view-qty")
         if tag:
             return int(tag.text.strip())
         else:

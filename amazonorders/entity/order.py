@@ -86,7 +86,7 @@ class Order(Parsable):
         return shipments
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x) for x in self.parsed.select("div.yohtmlc-item")]
+        items = [Item(x) for x in self.parsed.select("div:has(> div.yohtmlc-item)")]
         items.sort()
         return items
 
@@ -136,6 +136,7 @@ class Order(Parsable):
     def _parse_recipient(self) -> Recipient:
         tag = self.parsed.select_one("div.displayAddressDiv")
         if not tag:
+            # TODO: eliminate the use of find_parent() here
             tag = self.parsed.find_parent().select_one("script[id^='shipToData']")
             if tag:
                 tag = BeautifulSoup(str(tag.contents[0]).strip(), "html.parser")
@@ -143,7 +144,7 @@ class Order(Parsable):
                 try:
                     # TODO: this is for testing, but obviously it's incredibly ugly
                     import json
-                    tag = BeautifulSoup(json.loads(self.parsed.select_one("div[class*='recipient'] span.a-declarative")["data-a-popover"])["inlineContent"], "html.parser")
+                    tag = BeautifulSoup(json.loads(self.parsed.select_one("div.recipient span.a-declarative")["data-a-popover"])["inlineContent"], "html.parser")
                 except TypeError:
                     pass
         return Recipient(tag)

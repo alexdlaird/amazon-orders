@@ -42,7 +42,7 @@ class Shipment(Parsable):
             return str(self.items) < str(other.items)
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x) for x in self.parsed.select("div.yohtmlc-item")]
+        items = [Item(x) for x in self.parsed.select("div:has(> div.yohtmlc-item)")]
         items.sort()
         return items
 

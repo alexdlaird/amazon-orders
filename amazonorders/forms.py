@@ -189,6 +189,7 @@ class CaptchaForm(AuthForm):
             additional_attrs = {}
         super().fill_form(additional_attrs)
 
+        # TODO: eliminate the use of find_parent() here
         img_url = self.form.find_parent().select_one("img")["src"]
         if not img_url.startswith("http"):
             img_url = "{}{}".format(BASE_URL, img_url)
