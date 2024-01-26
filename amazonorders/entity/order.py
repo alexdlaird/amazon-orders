@@ -35,7 +35,7 @@ class Order(Parsable):
         self.full_details: bool = full_details
 
         #: The Order Shipments.
-        self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
+        self.shipments: Optional[List[Shipment]] = clone.shipments if clone else self._parse_shipments()
         #: The Order Items.
         self.items: List[Item] = clone.items if clone and not full_details else self._parse_items()
         #: The Order number.
