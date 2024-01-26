@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 ORDER_HISTORY_CARD_SELECTOR = "div[class*='js-order-card']"
 ORDER_DETAILS_DIV_SELECTOR = "div[id='orderDetails']"
+NEXT_PAGE_LINK = "{}/gp/your-account/order-history?opt=ab&digitalOrders=1&unifiedOrders=1&returnTo=&orderFilter=year-{}{}"
 NEXT_PAGE_LINK_SELECTOR = "ul[class*='a-pagination'] li[class*='a-last'] a"
 
 
@@ -57,7 +58,7 @@ class AmazonOrders:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         orders = []
-        next_page = "{}/gp/your-account/order-history?opt=ab&digitalOrders=1&unifiedOrders=1&returnTo=&orderFilter=year-{}{}".format(BASE_URL,
+        next_page = NEXT_PAGE_LINK.format(BASE_URL,
                                                                         year,
                                                                         "&startIndex={}".format(
                                                                             start_index) if start_index else "")
