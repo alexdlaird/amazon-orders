@@ -7,8 +7,7 @@ all: virtualenv install
 
 virtualenv:
 	@if [ ! -d "venv" ]; then \
-		$(PYTHON_BIN) -m pip install virtualenv --user; \
-		$(PYTHON_BIN) -m virtualenv venv; \
+		$(PYTHON_BIN) -m venv venv; \
 	fi
 
 install: virtualenv
