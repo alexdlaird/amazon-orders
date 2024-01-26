@@ -38,7 +38,7 @@ class Shipment(Parsable):
 
     def __lt__(self, other):
         if self.delivery_status:
-            return self.delivery_status < other.delivery_status
+            return self.delivery_status < str(other.delivery_status or "")
         else:
             return str(self.items) < str(other.items)
 
