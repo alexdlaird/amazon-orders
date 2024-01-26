@@ -11,6 +11,7 @@ SIGN_OUT_URL = "{}/gp/sign-out.html".format(BASE_URL)
 ### URLs for Orders
 ORDER_HISTORY_URL = "{}/your-orders/orders".format(BASE_URL)
 ORDER_DETAILS_URL = "{}/gp/your-account/order-details".format(BASE_URL)
+TIME_FILTER_QUERY_PARAM = "timeFilter"
 
 ### Headers for authentication
 BASE_HEADERS = {

@@ -196,16 +196,17 @@ def _print_banner():
 
 def _authenticate(ctx: Context,
                   amazon_session: AmazonSession):
+    if not amazon_session.username and not amazon_session.password:
+        click.echo(ctx.get_help())
+
+        ctx.fail("Amazon --username and --password must be provided, since no previous session was found.")
+
     if amazon_session.auth_cookies_stored():
         if amazon_session.username or amazon_session.password:
             click.echo("Info: You've provided --username and --password, but because a previous session still exists,"
                        "that is being ignored. If you would like to reauthenticate, call the `logout` command first.\n")
-    elif not amazon_session.username and not amazon_session.password:
-        click.echo(ctx.get_help())
 
-        ctx.fail("Amazon --username and --password must be provided, since no previous session was found.")
-    else:
-        amazon_session.login()
+    amazon_session.login()
 
 
 def _order_output(order):

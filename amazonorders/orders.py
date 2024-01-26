@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from amazonorders.conf import DEFAULT_OUTPUT_DIR
 from amazonorders.constants import BASE_URL, ORDER_HISTORY_URL, ORDER_DETAILS_URL, ORDER_HISTORY_CARD_SELECTOR, \
-    ORDER_DETAILS_DIV_SELECTOR, NEXT_PAGE_LINK_SELECTOR
+    ORDER_DETAILS_DIV_SELECTOR, NEXT_PAGE_LINK_SELECTOR, TIME_FILTER_QUERY_PARAM
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import AmazonSession
@@ -55,9 +55,10 @@ class AmazonOrders:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         orders = []
-        next_page = "{}?timeFilter=year-{}{}".format(ORDER_HISTORY_URL,
-                                                     year,
-                                                     "&startIndex={}".format(start_index) if start_index else "")
+        next_page = "{}?{}=year-{}{}".format(ORDER_HISTORY_URL,
+                                             TIME_FILTER_QUERY_PARAM,
+                                             year,
+                                             "&startIndex={}".format(start_index) if start_index else "")
         while next_page:
             self.amazon_session.get(next_page)
             response_parsed = self.amazon_session.last_response_parsed
