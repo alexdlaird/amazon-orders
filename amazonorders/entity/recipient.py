@@ -7,7 +7,7 @@ from amazonorders.entity.parsable import Parsable
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.0"
+__version__ = "1.0.7"
 
 logger = logging.getLogger(__name__)
 
@@ -33,13 +33,13 @@ class Recipient(Parsable):
         return "Recipient: {}".format(self.name)
 
     def _parse_name(self) -> str:
-        tag = self.parsed.find("li", {"class": "displayAddressFullName"})
+        tag = self.parsed.select_one("li.displayAddressFullName")
         if not tag:
             tag = self.parsed.find_all("div")[1]
         return tag.text.strip()
 
     def _parse_address(self) -> Optional[str]:
-        tag = self.parsed.find("li", {"class": "displayAddressAddressLine1"})
+        tag = self.parsed.select_one("li.displayAddressAddressLine1")
         if tag:
             value = tag.text.strip()
             next_tag = self.parsed.find("li", {"class": "displayAddressAddressLine2"})

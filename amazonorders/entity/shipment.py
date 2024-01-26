@@ -42,12 +42,12 @@ class Shipment(Parsable):
             return str(self.items) < str(other.items)
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x) for x in self.parsed.find_all("div", {"class": "yohtmlc-item"})]
+        items = [Item(x) for x in self.parsed.select("div.yohtmlc-item")]
         items.sort()
         return items
 
     def _parse_delivery_status(self) -> Optional[str]:
-        tag = self.parsed.find("div", {"class": "js-shipment-info-container"})
+        tag = self.parsed.select_one("div.js-shipment-info-container")
         if tag:
             tag = tag.find("div", {"class": "a-row"})
             return tag.text.strip()
@@ -55,7 +55,7 @@ class Shipment(Parsable):
             return None
 
     def _parse_tracking_link(self) -> Optional[str]:
-        tag = self.parsed.find("span", {"class": "track-package-button"})
+        tag = self.parsed.select_one("span.track-package-button")
         if tag:
             link_tag = tag.find("a")
             return self.with_base_url(link_tag["href"])

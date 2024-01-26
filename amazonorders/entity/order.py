@@ -81,17 +81,17 @@ class Order(Parsable):
         return "Order #{}: {}".format(self.order_number, self.items)
 
     def _parse_shipments(self) -> List[Shipment]:
-        shipments = [Shipment(x) for x in self.parsed.find_all("div", {"class": "shipment"})]
+        shipments = [Shipment(x) for x in self.parsed.select("div.shipment")]
         shipments.sort()
         return shipments
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x) for x in self.parsed.find_all("div", {"class": "yohtmlc-item"})]
+        items = [Item(x) for x in self.parsed.select("div.yohtmlc-item")]
         items.sort()
         return items
 
     def _parse_order_details_link(self) -> Optional[str]:
-        tag = self.parsed.find("a", {"class": "yohtmlc-order-details-link"})
+        tag = self.parsed.select_one("a.yohtmlc-order-details-link")
         if tag:
             return self.with_base_url(tag["href"])
         elif self.order_number:
@@ -113,7 +113,7 @@ class Order(Parsable):
             return tag.text.strip()
 
     def _parse_grand_total(self) -> float:
-        tag = self.parsed.find("div", {"class": "yohtmlc-order-total"})
+        tag = self.parsed.select_one("div.yohtmlc-order-total")
         if tag:
             tag = tag.find("span", {"class": "value"})
         else:
@@ -124,7 +124,7 @@ class Order(Parsable):
         return float(tag.text.strip().replace("$", ""))
 
     def _parse_order_placed_date(self) -> date:
-        tag = self.parsed.find("span", {"class": "order-date-invoice-item"})
+        tag = self.parsed.select_one("span.order-date-invoice-item")
         if tag:
             date_str = tag.text.split("Ordered on")[1].strip()
         else:
@@ -133,7 +133,7 @@ class Order(Parsable):
         return datetime.strptime(date_str, "%B %d, %Y").date()
 
     def _parse_recipient(self) -> Recipient:
-        tag = self.parsed.find("div", {"class": "displayAddressDiv"})
+        tag = self.parsed.select_one("div.displayAddressDiv")
         if not tag:
             tag = self.parsed.find_parent().select_one("script[id^='shipToData']")
             if tag:
@@ -148,14 +148,14 @@ class Order(Parsable):
         return Recipient(tag)
 
     def _parse_payment_method(self) -> Optional[str]:
-        tag = self.parsed.find("img", {"class": "pmts-payment-credit-card-instrument-logo"})
+        tag = self.parsed.select_one("img.pmts-payment-credit-card-instrument-logo")
         if tag:
             return tag["alt"]
         else:
             return None
 
     def _parse_payment_method_last_4(self) -> Optional[str]:
-        tag = self.parsed.find("img", {"class": "pmts-payment-credit-card-instrument-logo"})
+        tag = self.parsed.select_one("img.pmts-payment-credit-card-instrument-logo")
         if tag:
             ending_sibling = tag.find_next_siblings()[-1]
             return ending_sibling.text.split("ending in")[1].strip()
@@ -163,41 +163,42 @@ class Order(Parsable):
             return None
 
     def _parse_subtotal(self) -> Optional[float]:
-        for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+        for tag in self.parsed.select("div#od-subtotals > div.a-row"):
             if "subtotal" in tag.text.lower():
                 return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
 
         return None
 
     def _parse_shipping_total(self) -> Optional[float]:
-        for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+        for tag in self.parsed.select("div#od-subtotals > div.a-row"):
             if "shipping" in tag.text.lower():
                 return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
 
         return None
 
     def _parse_subscription_discount(self) -> Optional[float]:
-        for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+        for tag in self.parsed.select("div#od-subtotals > div.a-row"):
             if "subscribe" in tag.text.lower():
                 return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
 
         return None
 
     def _parse_total_before_tax(self) -> Optional[float]:
-        for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+        for tag in self.parsed.select("div#od-subtotals > div.a-row"):
             if "before tax" in tag.text.lower():
                 return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
 
         return None
 
     def _parse_estimated_tax(self) -> Optional[float]:
-        for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
+        for tag in self.parsed.select("div#od-subtotals > div.a-row"):
             if "estimated tax" in tag.text.lower():
                 return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
 
         return None
 
     def _parse_refund_total(self) -> Optional[float]:
+        # TODO: if we change this one to CSS selector, unit tests fail
         for tag in self.parsed.find("div", id="od-subtotals").find_all("div", {"class": "a-row"}):
             if "refund total" in tag.text.lower() and "tax refund" not in tag.text.lower():
                 return float(tag.find("div", {"class": "a-span-last"}).text.strip().replace("$", ""))
