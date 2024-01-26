@@ -59,6 +59,6 @@ class Shipment(Parsable):
         tag = self.parsed.find("span", {"class": "track-package-button"})
         if tag:
             link_tag = tag.find("a")
-            return "{}{}".format(BASE_URL, link_tag.attrs["href"])
+            return self.with_base_url(link_tag.attrs["href"])
         else:
             return None

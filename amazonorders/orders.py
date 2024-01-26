@@ -76,7 +76,9 @@ class AmazonOrders:
             if start_index is None:
                 next_page_tag = response_parsed.select_one(NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
-                    next_page = "{}{}".format(BASE_URL, next_page_tag["href"])
+                    next_page = next_page_tag["href"]
+                    if not next_page.startswith("http"):
+                        next_page = "{}{}".format(BASE_URL, next_page)
                 else:
                     logger.debug("No next page")
             else:

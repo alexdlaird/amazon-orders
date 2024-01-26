@@ -45,6 +45,6 @@ class Seller(Parsable):
     def _parse_link(self) -> Optional[str]:
         tag = self.parsed.find("a")
         if tag:
-            return "{}{}".format(BASE_URL, tag.attrs["href"])
+            return self.with_base_url(tag.attrs["href"])
         else:
             return None

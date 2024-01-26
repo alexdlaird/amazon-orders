@@ -15,7 +15,7 @@ from requests.utils import dict_from_cookiejar
 from amazonorders.conf import DEFAULT_COOKIE_JAR_PATH, DEFAULT_OUTPUT_DIR
 from amazonorders.constants import SIGN_IN_URL, SIGN_IN_REDIRECT_URL, SIGN_OUT_URL, BASE_HEADERS, SIGN_IN_FORM_SELECTOR, \
     MFA_DEVICE_SELECT_FORM_SELECTOR, MFA_FORM_SELECTOR, CAPTCHA_1_FORM_SELECTOR, CAPTCHA_2_FORM_SELECTOR, \
-    CAPTCHA_OTP_FORM_SELECTOR
+    CAPTCHA_OTP_FORM_SELECTOR, BASE_URL
 from amazonorders.exception import AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
@@ -309,8 +309,10 @@ class AmazonSession:
                         error_div_class) -> None:
         form = self.last_response_parsed.select_one(form_selector)
 
-        solution = self._solve_captcha(
-            form.find_parent().select_one("img")["src"])
+        img_url = form.find_parent().select_one("img")["src"]
+        if not img_url.startswith("http"):
+            img_url = "{}{}".format(BASE_URL, img_url)
+        solution = self._solve_captcha(img_url)
 
         data = self._build_from_form(form,
                                      additional_attrs={

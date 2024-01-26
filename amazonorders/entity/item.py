@@ -57,7 +57,7 @@ class Item(Parsable):
 
     def _parse_link(self) -> str:
         tag = self.parsed.find("a")
-        return "{}{}".format(BASE_URL, tag.attrs["href"])
+        return self.with_base_url(tag.attrs["href"])
 
     def _parse_price(self) -> Optional[float]:
         for tag in self.parsed.find_all("div"):
@@ -96,7 +96,7 @@ class Item(Parsable):
     def _parse_image_link(self) -> Optional[str]:
         img = self.parsed.find_previous_sibling().find("img")
         if img:
-            return img.attrs["src"]
+            return self.with_base_url(img.attrs["src"])
         else:
             return None
 

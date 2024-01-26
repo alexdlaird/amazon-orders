@@ -3,6 +3,7 @@ from typing import Callable, Any
 
 from bs4 import Tag
 
+from amazonorders.constants import BASE_URL
 from amazonorders.exception import AmazonOrdersError
 
 __author__ = "Alex Laird"
@@ -41,3 +42,8 @@ class Parsable:
                                                                                 parse_function.__name__.split(
                                                                                     "_parse_")[1]),
                            exc_info=True)
+
+    def with_base_url(self, url):
+        if not url.startswith("http"):
+            url = "{}{}".format(BASE_URL, url)
+        return url

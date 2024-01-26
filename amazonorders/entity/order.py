@@ -93,8 +93,7 @@ class Order(Parsable):
     def _parse_order_details_link(self) -> Optional[str]:
         tag = self.parsed.find("a", {"class": "yohtmlc-order-details-link"})
         if tag:
-            # TODO: add support in case this changes and becomes an full URI with BASE_URL
-            return "{}{}".format(BASE_URL, tag.attrs["href"])
+            return self.with_base_url(tag.attrs["href"])
         elif self.order_number:
             return "{}?orderID={}".format(ORDER_DETAILS_URL, self.order_number)
         else:
