@@ -136,7 +136,15 @@ class Order(Parsable):
         tag = self.parsed.find("div", {"class": "displayAddressDiv"})
         if not tag:
             tag = self.parsed.find_parent().select_one("script[id^='shipToData']")
-            tag = BeautifulSoup(str(tag.contents[0]).strip(), "html.parser")
+            if tag:
+                tag = BeautifulSoup(str(tag.contents[0]).strip(), "html.parser")
+            else:
+                try:
+                    # TODO: this is for testing, but obviously it's incredibly ugly
+                    import json
+                    tag = BeautifulSoup(json.loads(self.parsed.select_one("div[class*='recipient'] span.a-declarative")["data-a-popover"])["inlineContent"], "html.parser")
+                except TypeError:
+                    pass
         return Recipient(tag)
 
     def _parse_payment_method(self) -> Optional[str]:
