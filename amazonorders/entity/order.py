@@ -144,7 +144,9 @@ class Order(Parsable):
                 try:
                     # TODO: this is for testing, but obviously it's incredibly ugly
                     import json
-                    tag = BeautifulSoup(json.loads(self.parsed.select_one("div.recipient span.a-declarative")["data-a-popover"])["inlineContent"], "html.parser")
+                    tag = BeautifulSoup(
+                        json.loads(self.parsed.select_one("div.recipient span.a-declarative")["data-a-popover"])[
+                            "inlineContent"], "html.parser")
                 except TypeError:
                     pass
         return Recipient(tag)
