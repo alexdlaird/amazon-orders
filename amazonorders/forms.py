@@ -55,7 +55,7 @@ class AuthForm(ABC):
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
         """
-        Populate the ``data`` field will values from the ``<form>``, including any additional attributes passed.
+        Populate the ``data`` field with values from the ``<form>``, including any additional attributes passed.
 
         :param additional_attrs: Additional attributes to add to the ``<form>`` data for submission.
         """
@@ -141,8 +141,12 @@ class AuthForm(ABC):
 
 
 class SignInForm(AuthForm):
-    def __init__(self) -> None:
-        super().__init__(constants.SIGN_IN_FORM_SELECTOR, critical=True)
+    def __init__(self,
+                 selector: str = constants.SIGN_IN_FORM_SELECTOR,
+                 solution_attr_key: str = "username") -> None:
+        super().__init__(selector, critical=True)
+
+        self.solution_attr_key = solution_attr_key
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
@@ -150,15 +154,19 @@ class SignInForm(AuthForm):
             additional_attrs = {}
         super().fill_form()
 
-        additional_attrs.update({"email": self.amazon_session.username,
+        additional_attrs.update({self.solution_attr_key: self.amazon_session.username,
                                  "password": self.amazon_session.password,
                                  "rememberMe": "true"})
         self.data.update(additional_attrs)
 
 
 class MfaDeviceSelectForm(AuthForm):
-    def __init__(self) -> None:
-        super().__init__(constants.MFA_DEVICE_SELECT_FORM_SELECTOR)
+    def __init__(self,
+                 selector: str = constants.MFA_DEVICE_SELECT_FORM_SELECTOR,
+                 solution_attr_key: str = "otpDeviceContext") -> None:
+        super().__init__(selector)
+
+        self.solution_attr_key = solution_attr_key
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
@@ -166,7 +174,7 @@ class MfaDeviceSelectForm(AuthForm):
             additional_attrs = {}
         super().fill_form()
 
-        contexts = self.form.select("input[name='otpDeviceContext']")
+        contexts = self.form.select(constants.MFA_DEVICE_SELECT_INPUT_SELECTOR)
         i = 1
         for field in contexts:
             self.amazon_session.io.echo("{}: {}".format(i, field["value"].strip()))
@@ -178,14 +186,17 @@ class MfaDeviceSelectForm(AuthForm):
         )
         self.amazon_session.io.echo("")
 
-        additional_attrs.update({"otpDeviceContext": contexts[otp_device - 1]["value"]})
+        additional_attrs.update({self.solution_attr_key: contexts[otp_device - 1]["value"]})
         self.data.update(additional_attrs)
 
 
 class MfaForm(AuthForm):
     def __init__(self,
-                 selector: str = constants.MFA_FORM_SELECTOR) -> None:
+                 selector: str = constants.MFA_FORM_SELECTOR,
+                 solution_attr_key: str = "otpCode") -> None:
         super().__init__(selector)
+
+        self.solution_attr_key = solution_attr_key
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
@@ -196,7 +207,7 @@ class MfaForm(AuthForm):
         otp = self.amazon_session.io.prompt("--> Enter the one-time passcode sent to your device")
         self.amazon_session.io.echo("")
 
-        additional_attrs.update({"otpCode": otp,
+        additional_attrs.update({self.solution_attr_key: otp,
                                  "rememberDevice": ""})
         self.data.update(additional_attrs)
 

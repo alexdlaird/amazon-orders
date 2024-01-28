@@ -84,8 +84,11 @@ Found a Missing / Broken Field on an Entity
 
 If you find that a useful field on an entity (for instance, an :class:`~amazonorders.entity.order.Order` or an
 :class:`~amazonorders.entity.item.Item`) is missing (or one that exists isn't being populated for you), consider
-contributing it! Fields are represented by a simple ``_parse()`` method on the entity. All you need to implement this
-method is to identify in the HTML page a CSS selector that would parse the data out of the page. Have a look at `how other fields are parsed on entities <https://github.com/alexdlaird/amazon-orders-python/blob/a4b404a6d9534b453826a68866e0333461c35d57/amazonorders/entity/item.py#L43>`_
-for examples.
+contributing it! Fields are populated by simple ``_parse()`` methods on the entity, and many fields are simple
+enough to be able to utilize :class:`~amazonorders.entity.parsable.Parsable`'s
+:func:`~amazonorders.entity.parsable.Parsable.basic_parse` function, which simply needs a CSS selector.
+
+If you can't fetch the field's value with just a CSS selector, implementing a new ``_parse()`` function on the
+entity will give you a lot more flexibility.
 
 Once you've implemented and tested the new field, `submit a PR <https://github.com/alexdlaird/amazon-orders-python/compare>`_!

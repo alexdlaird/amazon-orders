@@ -38,6 +38,7 @@ BASE_HEADERS = {
 ### CSS selectors for authentication
 SIGN_IN_FORM_SELECTOR = "form[name='signIn']"
 MFA_DEVICE_SELECT_FORM_SELECTOR = "form#auth-select-device-form"
+MFA_DEVICE_SELECT_INPUT_SELECTOR = "input[name='otpDeviceContext']"
 MFA_FORM_SELECTOR = "form#auth-mfa-form"
 CAPTCHA_1_FORM_SELECTOR = "form.cvf-widget-form-captcha"
 CAPTCHA_2_FORM_SELECTOR = "form:has(input[id^='captchacharacters'])"
@@ -46,9 +47,16 @@ DEFAULT_ERROR_SELECTOR = "div#auth-error-message-box"
 CAPTCHA_1_ERROR_SELECTOR = "div.cvf-widget-alert"
 CAPTCHA_2_ERROR_SELECTOR = "div.a-alert-info"
 
-### CSS selectors for Orders
+### CSS selectors for Orders pages
 ORDER_HISTORY_CARD_SELECTOR = "div.order"
 ORDER_DETAILS_DIV_SELECTOR = "div#orderDetails"
 NEXT_PAGE_LINK_SELECTOR = "ul.a-pagination li.a-last a"
 
+### CSS selectors for Entities
 ITEM_SELECTOR = "div:has(> div.yohtmlc-item)"
+
+### Item
+ENTITY_ITEM_IMG_LINK_SELECTOR = "a img"
+ENTITY_ITEM_QUANTITY_SELECTOR = "span.item-view-qty"
+ENTITY_ITEM_LINK_SELECTOR = ".yohtmlc-item a"
+ENTITY_ITEM_DIV_ITERATOR_SELECTOR = ".yohtmlc-item div"
