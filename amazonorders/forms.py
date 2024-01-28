@@ -16,20 +16,37 @@ __version__ = "1.0.7"
 
 
 class AuthForm(ABC):
+    """
+    The base class of an authentication ``<form>`` that can be submitted.
+    """
+
     def __init__(self,
                  selector: str,
                  error_selector: str = constants.DEFAULT_ERROR_SELECTOR,
                  critical: bool = False) -> None:
-        self.selector = selector
-        self.error_selector = error_selector
-        self.critical = critical
+        #: The CSS selector for the ``<form>``.
+        self.selector: str = selector
+        #: The CSS selector for the error div when form submission fails.
+        self.error_selector: str = error_selector
+        #: If ``critical``, form submission failures will raise :class:`~amazonorders.exception.AmazonOrdersAuthError`.
+        self.critical: bool = critical
+        #: The :class:`~amazonorders.session.AmazonSession` on which to submit the form.
         self.amazon_session = None
-        self.form = None
-        self.data = None
+        #: The selected ``<form>``.
+        self.form: Optional[Tag] = None
+        #: The ``<form>`` data that will be submitted.
+        self.data: Optional[Dict[Any]] = None
 
     def select_form(self,
                     amazon_session,
                     parsed: Tag) -> bool:
+        """
+        Using the ``selector`` defined on this instance, select the ``<form>`` for the given :class:`~bs4.Tag`.
+
+        :param amazon_session: The ``AmazonSession`` on which to submit the form.
+        :param parsed: The ``Tag`` from which to select the ``<form>``.
+        :return: Whether the ``<form>`` selection was successful.
+        """
         self.amazon_session = amazon_session
         self.form = parsed.select_one(self.selector)
 
@@ -37,6 +54,11 @@ class AuthForm(ABC):
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
+        """
+        Populate the ``data`` field will values from the ``<form>``, including any additional attributes passed.
+
+        :param additional_attrs: Additional attributes to add to the ``<form>`` data for submission.
+        """
         if not self.form:
             raise AmazonOrdersError("Call AuthForm.select_form() first.")
 
@@ -50,6 +72,9 @@ class AuthForm(ABC):
             self.data.update(additional_attrs)
 
     def submit(self) -> None:
+        """
+        Submit the populated ``<form>``.
+        """
         if not self.form:
             raise AmazonOrdersError("Call AuthForm.select_form() first.")
         elif not self.data:
@@ -66,7 +91,10 @@ class AuthForm(ABC):
 
         self.clear_form()
 
-    def clear_form(self):
+    def clear_form(self) -> None:
+        """
+        Clear the populated ``<form>`` so this class can be reused.
+        """
         self.amazon_session = None
         self.form = None
         self.data = None

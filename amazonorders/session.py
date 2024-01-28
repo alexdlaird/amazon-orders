@@ -92,7 +92,7 @@ class AmazonSession:
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
-        #: Will continue in :func:`login()`'s auth flow this many times (successes and failures).
+        #: Will continue in :func:`login`'s auth flow this many times (successes and failures).
         self.max_auth_attempts: int = max_auth_attempts
         #: The path to persist session cookies, defaults to ``conf.DEFAULT_COOKIE_JAR_PATH``.
         self.cookie_jar_path: str = cookie_jar_path
@@ -107,7 +107,7 @@ class AmazonSession:
         self.last_response: Optional[Response] = None
         #: A parsed representation of the last response executed on the Session.
         self.last_response_parsed: Optional[Tag] = None
-        #: If :func:`login()` has been executed and successfully logged in the session.
+        #: If :func:`login` has been executed and successfully logged in the session.
         self.is_authenticated: bool = False
 
         cookie_dir = os.path.dirname(self.cookie_jar_path)

@@ -20,6 +20,11 @@ Session Management
     :private-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.forms
+    :members:
+    :private-members:
+    :show-inheritance:
+
 Entities
 --------
 
