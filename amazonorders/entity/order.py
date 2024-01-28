@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime, date
 from typing import List, Optional, TypeVar
@@ -136,19 +137,16 @@ class Order(Parsable):
     def _parse_recipient(self) -> Recipient:
         tag = self.parsed.select_one("div.displayAddressDiv")
         if not tag:
-            # TODO: eliminate the use of find_parent() here
-            tag = self.parsed.find_parent().select_one("script[id^='shipToData']")
+            tag = self.parsed.select_one("div.recipient span.a-declarative")
             if tag:
-                tag = BeautifulSoup(str(tag.contents[0]).strip(), "html.parser")
-            else:
-                try:
-                    # TODO: this is for testing, but obviously it's incredibly ugly
-                    import json
-                    tag = BeautifulSoup(
-                        json.loads(self.parsed.select_one("div.recipient span.a-declarative")["data-a-popover"])[
-                            "inlineContent"], "html.parser")
-                except TypeError:
-                    pass
+                inline_content = tag.get("data-a-popover", {}).get("inlineContent")
+                if inline_content:
+                    tag = BeautifulSoup(json.loads(inline_content), "html.parser")
+
+            if not tag:
+                # TODO: there are multiple shipToData tags, we should double check we're picking the right one associated with the order
+                parent_tag = self.parsed.find_parent().select_one("script[id^='shipToData']")
+                tag = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
         return Recipient(tag)
 
     def _parse_payment_method(self) -> Optional[str]:
