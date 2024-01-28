@@ -1,5 +1,4 @@
 import os
-import re
 
 import responses
 
@@ -33,15 +32,8 @@ class TestOrders(UnitTestCase):
         self.amazon_session.is_authenticated = True
         year = 2018
         start_index = 0
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r",
-                  encoding="utf-8") as f:
-            resp1 = responses.add(
-                responses.GET,
-                "{}?timeFilter=year-{}".format(ORDER_HISTORY_URL,
-                                               year),
-                body=f.read(),
-                status=200,
-            )
+        resp1 = self.given_order_history_landing_exists()
+        resp2 = self.given_order_history_exists(year, start_index)
 
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
@@ -51,23 +43,18 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assert_order_112_0399923_3070642(orders[3], False)
         self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
 
     @responses.activate
     def test_get_order_history_paginated(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         year = 2010
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-0.html".format(year)), "r", encoding="utf-8") as f:
-            resp1 = responses.add(
-                responses.GET,
-                "{}?timeFilter=year-{}".format(ORDER_HISTORY_URL,
-                                               year),
-                body=f.read(),
-                status=200,
-            )
+        resp1 = self.given_order_history_landing_exists()
+        resp2 = self.given_order_history_exists(year, 0)
         with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-10.html".format(year)), "r",
                   encoding="utf-8") as f:
-            resp2 = responses.add(
+            resp3 = responses.add(
                 responses.GET,
                 "{}?timeFilter=year-2010&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2".format(
                     ORDER_HISTORY_URL, year),
@@ -82,6 +69,7 @@ class TestOrders(UnitTestCase):
         self.assertEqual(12, len(orders))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
+        self.assertEqual(1, resp3.call_count)
 
     @responses.activate
     def test_get_order_history_full_details(self):
@@ -89,23 +77,9 @@ class TestOrders(UnitTestCase):
         self.amazon_session.is_authenticated = True
         year = 2020
         start_index = 40
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r",
-                  encoding="utf-8") as f:
-            resp1 = responses.add(
-                responses.GET,
-                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
-                                                             year, start_index),
-                body=f.read(),
-                status=200,
-            )
-        with open(os.path.join(self.RESOURCES_DIR, "order-details-114-9460922-7737063.html"), "r",
-                  encoding="utf-8") as f:
-            resp2 = responses.add(
-                responses.GET,
-                re.compile("{}?.*".format(ORDER_DETAILS_URL)),
-                body=f.read(),
-                status=200,
-            )
+        resp1 = self.given_order_history_landing_exists()
+        resp2 = self.given_order_history_exists(year, start_index)
+        resp3 = self.given_any_order_details_exists("order-details-114-9460922-7737063.html")
 
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index, full_details=True)
@@ -114,7 +88,8 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assert_order_114_9460922_7737063(orders[3], True)
         self.assertEqual(1, resp1.call_count)
-        self.assertEqual(10, resp2.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(10, resp3.call_count)
 
     @responses.activate
     def test_get_order_history_multiple_items(self):
@@ -122,23 +97,9 @@ class TestOrders(UnitTestCase):
         self.amazon_session.is_authenticated = True
         year = 2020
         start_index = 40
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r",
-                  encoding="utf-8") as f:
-            resp1 = responses.add(
-                responses.GET,
-                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
-                                                             year, start_index),
-                body=f.read(),
-                status=200,
-            )
-        with open(os.path.join(self.RESOURCES_DIR, "order-details-113-1625648-3437067.html"), "r",
-                  encoding="utf-8") as f:
-            resp2 = responses.add(
-                responses.GET,
-                re.compile("{}.*".format(ORDER_DETAILS_URL)),
-                body=f.read(),
-                status=200,
-            )
+        resp1 = self.given_order_history_landing_exists()
+        resp2 = self.given_order_history_exists(year, start_index)
+        resp3 = self.given_any_order_details_exists("order-details-113-1625648-3437067.html")
 
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year,
@@ -149,7 +110,8 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assert_order_113_1625648_3437067_multiple_items(orders[6], True)
         self.assertEqual(1, resp1.call_count)
-        self.assertEqual(10, resp2.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(10, resp3.call_count)
 
     @responses.activate
     def test_get_order_history_return(self):
@@ -157,23 +119,9 @@ class TestOrders(UnitTestCase):
         self.amazon_session.is_authenticated = True
         year = 2020
         start_index = 50
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r",
-                  encoding="utf-8") as f:
-            resp1 = responses.add(
-                responses.GET,
-                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
-                                                             year, start_index),
-                body=f.read(),
-                status=200,
-            )
-        with open(os.path.join(self.RESOURCES_DIR, "order-details-112-2961628-4757846.html"), "r",
-                  encoding="utf-8") as f:
-            resp2 = responses.add(
-                responses.GET,
-                re.compile("{}.*".format(ORDER_DETAILS_URL)),
-                body=f.read(),
-                status=200,
-            )
+        resp1 = self.given_order_history_landing_exists()
+        resp2 = self.given_order_history_exists(year, start_index)
+        resp3 = self.given_any_order_details_exists("order-details-112-2961628-4757846.html")
 
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index, full_details=True)
@@ -182,7 +130,8 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assert_order_112_2961628_4757846_return(orders[1], True)
         self.assertEqual(1, resp1.call_count)
-        self.assertEqual(10, resp2.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(10, resp3.call_count)
 
     @responses.activate
     def test_get_order_history_quantity(self):
@@ -190,15 +139,8 @@ class TestOrders(UnitTestCase):
         self.amazon_session.is_authenticated = True
         year = 2020
         start_index = 50
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r",
-                  encoding="utf-8") as f:
-            resp1 = responses.add(
-                responses.GET,
-                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
-                                                             year, start_index),
-                body=f.read(),
-                status=200,
-            )
+        resp1 = self.given_order_history_landing_exists()
+        resp2 = self.given_order_history_exists(year, start_index)
 
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
@@ -207,6 +149,7 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assert_order_112_8888666_5244209_quantity(orders[7])
         self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
 
     @responses.activate
     def test_get_order_history_multiple_items_shipments_sellers(self):
@@ -214,23 +157,9 @@ class TestOrders(UnitTestCase):
         self.amazon_session.is_authenticated = True
         year = 2023
         start_index = 10
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r",
-                  encoding="utf-8") as f:
-            resp1 = responses.add(
-                responses.GET,
-                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
-                                                             year, start_index),
-                body=f.read(),
-                status=200,
-            )
-        with open(os.path.join(self.RESOURCES_DIR, "order-details-112-9685975-5907428.html"), "r",
-                  encoding="utf-8") as f:
-            resp2 = responses.add(
-                responses.GET,
-                re.compile("{}.*".format(ORDER_DETAILS_URL)),
-                body=f.read(),
-                status=200,
-            )
+        resp1 = self.given_order_history_landing_exists()
+        resp2 = self.given_order_history_exists(year, start_index)
+        resp3 = self.given_any_order_details_exists("order-details-112-9685975-5907428.html")
 
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index, full_details=True)
@@ -239,7 +168,8 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(orders[3], True)
         self.assertEqual(1, resp1.call_count)
-        self.assertEqual(10, resp2.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(10, resp3.call_count)
 
     @responses.activate
     def test_get_order(self):

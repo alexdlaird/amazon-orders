@@ -4,7 +4,7 @@ import responses
 from click.testing import CliRunner
 
 from amazonorders.cli import amazon_orders_cli
-from amazonorders.constants import ORDER_HISTORY_URL, ORDER_DETAILS_URL
+from amazonorders.constants import ORDER_DETAILS_URL
 from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
@@ -33,15 +33,8 @@ class TestCli(UnitTestCase):
         year = 2023
         start_index = 10
         self.given_login_responses_success()
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r",
-                  encoding="utf-8") as f:
-            resp1 = responses.add(
-                responses.GET,
-                "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
-                                                             year, start_index),
-                body=f.read(),
-                status=200,
-            )
+        resp1 = self.given_order_history_landing_exists()
+        resp2 = self.given_order_history_exists(year, start_index)
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
@@ -53,6 +46,7 @@ class TestCli(UnitTestCase):
         self.assertEqual(0, response.exit_code)
         self.assert_login_responses_success()
         self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
         self.assertIn("Order #112-0069846-3887437", response.output)
         self.assertIn("Order #113-1909885-6198667", response.output)
         self.assertIn("Order #112-4188066-0547448", response.output)

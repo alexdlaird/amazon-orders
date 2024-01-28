@@ -7,8 +7,7 @@ from PIL import Image
 from amazoncaptcha import AmazonCaptcha
 from bs4 import Tag
 
-from amazonorders.constants import SIGN_IN_FORM_SELECTOR, DEFAULT_ERROR_SELECTOR, MFA_DEVICE_SELECT_FORM_SELECTOR, \
-    MFA_FORM_SELECTOR, BASE_URL, CAPTCHA_1_FORM_SELECTOR, CAPTCHA_1_ERROR_SELECTOR
+from amazonorders import constants
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
@@ -19,7 +18,7 @@ __version__ = "1.0.7"
 class AuthForm(ABC):
     def __init__(self,
                  selector: str,
-                 error_selector: str = DEFAULT_ERROR_SELECTOR,
+                 error_selector: str = constants.DEFAULT_ERROR_SELECTOR,
                  critical: bool = False) -> None:
         self.selector = selector
         self.error_selector = error_selector
@@ -115,7 +114,7 @@ class AuthForm(ABC):
 
 class SignInForm(AuthForm):
     def __init__(self) -> None:
-        super().__init__(SIGN_IN_FORM_SELECTOR, critical=True)
+        super().__init__(constants.SIGN_IN_FORM_SELECTOR, critical=True)
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
@@ -131,7 +130,7 @@ class SignInForm(AuthForm):
 
 class MfaDeviceSelectForm(AuthForm):
     def __init__(self) -> None:
-        super().__init__(MFA_DEVICE_SELECT_FORM_SELECTOR)
+        super().__init__(constants.MFA_DEVICE_SELECT_FORM_SELECTOR)
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
@@ -157,7 +156,7 @@ class MfaDeviceSelectForm(AuthForm):
 
 class MfaForm(AuthForm):
     def __init__(self,
-                 selector: str = MFA_FORM_SELECTOR) -> None:
+                 selector: str = constants.MFA_FORM_SELECTOR) -> None:
         super().__init__(selector)
 
     def fill_form(self,
@@ -176,8 +175,8 @@ class MfaForm(AuthForm):
 
 class CaptchaForm(AuthForm):
     def __init__(self,
-                 selector: str = CAPTCHA_1_FORM_SELECTOR,
-                 error_selector: str = CAPTCHA_1_ERROR_SELECTOR,
+                 selector: str = constants.CAPTCHA_1_FORM_SELECTOR,
+                 error_selector: str = constants.CAPTCHA_1_ERROR_SELECTOR,
                  solution_attr_key: str = "cvf_captcha_input") -> None:
         super().__init__(selector, error_selector)
 
@@ -192,7 +191,7 @@ class CaptchaForm(AuthForm):
         # TODO: eliminate the use of find_parent() here
         img_url = self.form.find_parent().select_one("img")["src"]
         if not img_url.startswith("http"):
-            img_url = "{}{}".format(BASE_URL, img_url)
+            img_url = "{}{}".format(constants.BASE_URL, img_url)
         solution = self._solve_captcha(img_url)
 
         additional_attrs.update({self.solution_attr_key: solution})

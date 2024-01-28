@@ -2,9 +2,8 @@ import datetime
 import logging
 from typing import List, Optional
 
+from amazonorders import constants
 from amazonorders.conf import DEFAULT_OUTPUT_DIR
-from amazonorders.constants import BASE_URL, ORDER_HISTORY_URL, ORDER_DETAILS_URL, ORDER_HISTORY_CARD_SELECTOR, \
-    ORDER_DETAILS_DIV_SELECTOR, NEXT_PAGE_LINK_SELECTOR, HISTORY_FILTER_QUERY_PARAM
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import AmazonSession
@@ -54,32 +53,37 @@ class AmazonOrders:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
+        self.amazon_session.get(constants.ORDER_HISTORY_LANDING_URL)
+        if not self.amazon_session.last_response_parsed.select_one("select[name='timeFilter']"):
+            constants.HISTORY_FILTER_QUERY_PARAM = "orderFilter"
+
         orders = []
-        next_page = "{}?{}=year-{}{}".format(ORDER_HISTORY_URL,
-                                             HISTORY_FILTER_QUERY_PARAM,
+        next_page = "{}?{}=year-{}{}".format(constants.ORDER_HISTORY_URL,
+                                             constants.HISTORY_FILTER_QUERY_PARAM,
                                              year,
                                              "&startIndex={}".format(start_index) if start_index else "")
         while next_page:
             self.amazon_session.get(next_page)
             response_parsed = self.amazon_session.last_response_parsed
 
-            for order_tag in response_parsed.select(ORDER_HISTORY_CARD_SELECTOR):
+            for order_tag in response_parsed.select(constants.ORDER_HISTORY_CARD_SELECTOR):
                 order = Order(order_tag)
 
                 if full_details:
                     self.amazon_session.get(order.order_details_link)
-                    order_details_tag = self.amazon_session.last_response_parsed.select_one(ORDER_DETAILS_DIV_SELECTOR)
+                    order_details_tag = self.amazon_session.last_response_parsed.select_one(
+                        constants.ORDER_DETAILS_DIV_SELECTOR)
                     order = Order(order_details_tag, full_details=True, clone=order)
 
                 orders.append(order)
 
             next_page = None
             if start_index is None:
-                next_page_tag = response_parsed.select_one(NEXT_PAGE_LINK_SELECTOR)
+                next_page_tag = response_parsed.select_one(constants.NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
                     next_page = next_page_tag["href"]
                     if not next_page.startswith("http"):
-                        next_page = "{}{}".format(BASE_URL, next_page)
+                        next_page = "{}{}".format(constants.BASE_URL, next_page)
                 else:
                     logger.debug("No next page")
             else:
@@ -98,9 +102,9 @@ class AmazonOrders:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        self.amazon_session.get("{}?orderID={}".format(ORDER_DETAILS_URL, order_id))
+        self.amazon_session.get("{}?orderID={}".format(constants.ORDER_DETAILS_URL, order_id))
 
-        order_details_tag = self.amazon_session.last_response_parsed.select_one(ORDER_DETAILS_DIV_SELECTOR)
+        order_details_tag = self.amazon_session.last_response_parsed.select_one(constants.ORDER_DETAILS_DIV_SELECTOR)
         order = Order(order_details_tag, full_details=True)
 
         return order

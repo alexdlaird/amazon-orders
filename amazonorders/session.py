@@ -9,10 +9,8 @@ from bs4 import BeautifulSoup, Tag
 from requests import Session, Response
 from requests.utils import dict_from_cookiejar
 
+from amazonorders import constants
 from amazonorders.conf import DEFAULT_COOKIE_JAR_PATH, DEFAULT_OUTPUT_DIR
-from amazonorders.constants import SIGN_IN_URL, SIGN_IN_REDIRECT_URL, SIGN_OUT_URL, BASE_HEADERS, \
-    CAPTCHA_2_FORM_SELECTOR, \
-    CAPTCHA_OTP_FORM_SELECTOR, CAPTCHA_2_ERROR_SELECTOR
 from amazonorders.exception import AmazonOrdersAuthError
 from amazonorders.forms import SignInForm, MfaDeviceSelectForm, MfaForm, CaptchaForm
 
@@ -26,8 +24,8 @@ AUTH_FORMS = [SignInForm(),
               MfaDeviceSelectForm(),
               MfaForm(),
               CaptchaForm(),
-              CaptchaForm(CAPTCHA_2_FORM_SELECTOR, CAPTCHA_2_ERROR_SELECTOR, "field-keywords"),
-              MfaForm(CAPTCHA_OTP_FORM_SELECTOR)]
+              CaptchaForm(constants.CAPTCHA_2_FORM_SELECTOR, constants.CAPTCHA_2_ERROR_SELECTOR, "field-keywords"),
+              MfaForm(constants.CAPTCHA_OTP_FORM_SELECTOR)]
 
 
 class IODefault:
@@ -136,7 +134,7 @@ class AmazonSession:
         """
         if "headers" not in kwargs:
             kwargs["headers"] = {}
-        kwargs["headers"].update(BASE_HEADERS)
+        kwargs["headers"].update(constants.BASE_HEADERS)
 
         logger.debug("{} request to {}".format(method, url))
 
@@ -201,12 +199,12 @@ class AmazonSession:
         Session cookies are persisted, and if existing session data is found during this auth flow, it will be
         skipped entirely and flagged as authenticated.
         """
-        self.get(SIGN_IN_URL)
+        self.get(constants.SIGN_IN_URL)
 
-        # If our local session data is stale, Amazon will redirect us to the sign in page
-        if self.auth_cookies_stored() and self.last_response.url.split("?")[0] == SIGN_IN_REDIRECT_URL:
+        # If our local session data is stale, Amazon will redirect us to the signin page
+        if self.auth_cookies_stored() and self.last_response.url.split("?")[0] == constants.SIGN_IN_REDIRECT_URL:
             self.logout()
-            self.get(SIGN_IN_URL)
+            self.get(constants.SIGN_IN_URL)
 
         attempts = 0
         while not self.is_authenticated and attempts < self.max_auth_attempts:
@@ -242,7 +240,7 @@ class AmazonSession:
         """
         Logout and close the existing Amazon session and clear cookies.
         """
-        self.get(SIGN_OUT_URL)
+        self.get(constants.SIGN_OUT_URL)
 
         if os.path.exists(self.cookie_jar_path):
             os.remove(self.cookie_jar_path)
