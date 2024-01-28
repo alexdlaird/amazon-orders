@@ -11,6 +11,8 @@ __version__ = "1.0.7"
 
 logger = logging.getLogger(__name__)
 
+NAME_SELECTOR = "li.displayAddressFullName"
+
 
 class Recipient(Parsable):
     """
@@ -33,7 +35,7 @@ class Recipient(Parsable):
         return "Recipient: {}".format(self.name)
 
     def _parse_name(self) -> str:
-        tag = self.parsed.select_one("li.displayAddressFullName")
+        tag = self.parsed.select_one(NAME_SELECTOR)
         if not tag:
             tag = self.parsed.select_one("div:nth-child(1)")
         return tag.text.strip()

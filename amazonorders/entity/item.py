@@ -13,6 +13,11 @@ __version__ = "1.0.7"
 
 logger = logging.getLogger(__name__)
 
+ITEM_LINK_SELECTOR = ".yohtmlc-item a"
+ITEM_DIV_ITERATOR_SELECTOR = ".yohtmlc-item div"
+IMG_LINK_SELECTOR = "a img"
+QUANTITY_SELECTOR = "span.item-view-qty"
+
 
 class Item(Parsable):
     """
@@ -51,36 +56,36 @@ class Item(Parsable):
         return self.title < other.title
 
     def _parse_title(self) -> str:
-        tag = self.parsed.select_one(".yohtmlc-item a")
+        tag = self.parsed.select_one(ITEM_LINK_SELECTOR)
         return tag.text.strip()
 
     def _parse_link(self) -> str:
-        tag = self.parsed.select_one(".yohtmlc-item a")
+        tag = self.parsed.select_one(ITEM_LINK_SELECTOR)
         return self.with_base_url(tag["href"])
 
     def _parse_price(self) -> Optional[float]:
-        for tag in self.parsed.select(".yohtmlc-item div"):
+        for tag in self.parsed.select(ITEM_DIV_ITERATOR_SELECTOR):
             if tag.text.strip().startswith("$"):
                 return float(tag.text.strip().replace("$", ""))
 
         return None
 
     def _parse_seller(self) -> Optional[Seller]:
-        for tag in self.parsed.select(".yohtmlc-item div"):
+        for tag in self.parsed.select(ITEM_DIV_ITERATOR_SELECTOR):
             if "Sold by:" in tag.text:
                 return Seller(tag)
 
         return None
 
     def _parse_condition(self) -> Optional[str]:
-        for tag in self.parsed.select(".yohtmlc-item div"):
+        for tag in self.parsed.select(ITEM_DIV_ITERATOR_SELECTOR):
             if "Condition:" in tag.text:
                 return tag.text.split("Condition:")[1].strip()
 
         return None
 
     def _parse_return_eligible_date(self) -> Optional[date]:
-        for tag in self.parsed.select(".yohtmlc-item div"):
+        for tag in self.parsed.select(ITEM_DIV_ITERATOR_SELECTOR):
             if "Return" in tag.text:
                 split_str = "through "
                 if "closed on " in tag.text:
@@ -93,14 +98,14 @@ class Item(Parsable):
         return None
 
     def _parse_image_link(self) -> Optional[str]:
-        img = self.parsed.select_one("a img")
+        img = self.parsed.select_one(IMG_LINK_SELECTOR)
         if img:
             return self.with_base_url(img["src"])
         else:
             return None
 
     def _parse_quantity(self) -> Optional[int]:
-        tag = self.parsed.select_one("span.item-view-qty")
+        tag = self.parsed.select_one(QUANTITY_SELECTOR)
         if tag:
             return int(tag.text.strip())
         else:

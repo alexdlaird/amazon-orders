@@ -50,3 +50,5 @@ CAPTCHA_2_ERROR_SELECTOR = "div.a-alert-info"
 ORDER_HISTORY_CARD_SELECTOR = "div.order"
 ORDER_DETAILS_DIV_SELECTOR = "div#orderDetails"
 NEXT_PAGE_LINK_SELECTOR = "ul.a-pagination li.a-last a"
+
+ITEM_SELECTOR = "div:has(> div.yohtmlc-item)"

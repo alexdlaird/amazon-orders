@@ -13,6 +13,11 @@ A list of GitHub issues related to this PR.
 **Testing Done**
 A clear and concise description of the new tests added to validate the change as well as any manual testing done.
 
+Note that for the PR to be considered for merging, if you are adding a new page to the auth flow or a new field to an
+entity, there _must_ be a test, and that test _must_ reference an HTML file in ``tests/resources``. All changes must
+be _additive_, meaning your change can't cause regressions in previous parsing code (as another user might still be
+seeing that page in their account).
+
 **Checklist**
 - [ ] My code follows the PEP 8 style guidelines for Python
 - [ ] I have performed a self-review of my own code

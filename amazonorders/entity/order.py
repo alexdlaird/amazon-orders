@@ -6,7 +6,7 @@ from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup, Tag
 
-from amazonorders.constants import ORDER_DETAILS_URL
+from amazonorders.constants import ORDER_DETAILS_URL, ITEM_SELECTOR
 from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
@@ -19,6 +19,13 @@ __version__ = "1.0.7"
 logger = logging.getLogger(__name__)
 
 Entity = TypeVar('Entity', bound='Order')
+
+SHIPMENT_SELECTOR = "div.shipment"
+ORDER_DETAILS_LINK_SELECTOR = "a.yohtmlc-order-details-link"
+ORDER_TOTAL_SELECTOR = "div.yohtmlc-order-total"
+ORDER_PLACED_DATE_SELECTOR = "span.order-date-invoice-item"
+PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
+SUBTOTALS_DIV_ITERATOR_SELECTOR = "div#od-subtotals div.a-row"
 
 
 class Order(Parsable):
@@ -82,17 +89,17 @@ class Order(Parsable):
         return "Order #{}: {}".format(self.order_number, self.items)
 
     def _parse_shipments(self) -> List[Shipment]:
-        shipments = [Shipment(x) for x in self.parsed.select("div.shipment")]
+        shipments = [Shipment(x) for x in self.parsed.select(SHIPMENT_SELECTOR)]
         shipments.sort()
         return shipments
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x) for x in self.parsed.select("div:has(> div.yohtmlc-item)")]
+        items = [Item(x) for x in self.parsed.select(ITEM_SELECTOR)]
         items.sort()
         return items
 
     def _parse_order_details_link(self) -> Optional[str]:
-        tag = self.parsed.select_one("a.yohtmlc-order-details-link")
+        tag = self.parsed.select_one(ORDER_DETAILS_LINK_SELECTOR)
         if tag:
             return self.with_base_url(tag["href"])
         elif self.order_number:
@@ -114,18 +121,18 @@ class Order(Parsable):
             return tag.text.strip()
 
     def _parse_grand_total(self) -> float:
-        tag = self.parsed.select_one("div.yohtmlc-order-total")
+        tag = self.parsed.select_one(ORDER_TOTAL_SELECTOR)
         if tag:
             tag = tag.select_one("span.value")
         else:
-            for tag in self.parsed.select("div#od-subtotals div.a-row"):
+            for tag in self.parsed.select(SUBTOTALS_DIV_ITERATOR_SELECTOR):
                 if "grand total" in tag.text.lower():
                     tag = tag.select_one("div.a-span-last")
                     break
         return float(tag.text.strip().replace("$", ""))
 
     def _parse_order_placed_date(self) -> date:
-        tag = self.parsed.select_one("span.order-date-invoice-item")
+        tag = self.parsed.select_one(ORDER_PLACED_DATE_SELECTOR)
         if tag:
             date_str = tag.text.split("Ordered on")[1].strip()
         else:
@@ -150,14 +157,14 @@ class Order(Parsable):
         return Recipient(tag)
 
     def _parse_payment_method(self) -> Optional[str]:
-        tag = self.parsed.select_one("img.pmts-payment-credit-card-instrument-logo")
+        tag = self.parsed.select_one(PAYMENT_METHOD_SELECTOR)
         if tag:
             return tag["alt"]
         else:
             return None
 
     def _parse_payment_method_last_4(self) -> Optional[str]:
-        tag = self.parsed.select_one("img.pmts-payment-credit-card-instrument-logo")
+        tag = self.parsed.select_one(PAYMENT_METHOD_SELECTOR)
         if tag:
             ending_sibling = tag.find_next_siblings()[-1]
             return ending_sibling.text.split("ending in")[1].strip()
@@ -165,42 +172,42 @@ class Order(Parsable):
             return None
 
     def _parse_subtotal(self) -> Optional[float]:
-        for tag in self.parsed.select("div#od-subtotals div.a-row"):
+        for tag in self.parsed.select(SUBTOTALS_DIV_ITERATOR_SELECTOR):
             if "subtotal" in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_shipping_total(self) -> Optional[float]:
-        for tag in self.parsed.select("div#od-subtotals div.a-row"):
+        for tag in self.parsed.select(SUBTOTALS_DIV_ITERATOR_SELECTOR):
             if "shipping" in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_subscription_discount(self) -> Optional[float]:
-        for tag in self.parsed.select("div#od-subtotals div.a-row"):
+        for tag in self.parsed.select(SUBTOTALS_DIV_ITERATOR_SELECTOR):
             if "subscribe" in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_total_before_tax(self) -> Optional[float]:
-        for tag in self.parsed.select("div#od-subtotals div.a-row"):
+        for tag in self.parsed.select(SUBTOTALS_DIV_ITERATOR_SELECTOR):
             if "before tax" in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_estimated_tax(self) -> Optional[float]:
-        for tag in self.parsed.select("div#od-subtotals div.a-row"):
+        for tag in self.parsed.select(SUBTOTALS_DIV_ITERATOR_SELECTOR):
             if "estimated tax" in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_refund_total(self) -> Optional[float]:
-        for tag in self.parsed.select("div#od-subtotals div.a-row"):
+        for tag in self.parsed.select(SUBTOTALS_DIV_ITERATOR_SELECTOR):
             if "refund total" in tag.text.lower() and "tax refund" not in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 

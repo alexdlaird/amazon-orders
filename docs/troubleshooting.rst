@@ -43,75 +43,49 @@ files are relevant to the issue, attach them to your request.
 Broken After Previously Working
 -------------------------------
 
-If you have successfully integrated with ``amazon-orders`` and an existing script, app, or CLI
+If you have successfully integrated with ``amazon-orders``, and an existing script or CLI
 command stops working, a likely cause is that something changed on an associated Amazon.com page.
 This could be that Amazon changed the layout of a page, renamed or refactored a field, or
 something else.
 
 To see what the effected page looks like, `enable debug mode`_, then rerun your code. Opening the
-various HTML pages debug mode generates to inspect fields and compare that to the parsing code within
-``amazon-orders`` may give you some insight in to what changed—in ``amazon-orders``, look for code
-that uses `BeautifulSoup's CSS select() methods <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_.
-Many selector strings used by ``amazon-orders`` are defined in variables in ``constants.py`` and can be
+the HTML pages ``debug`` mode will generate for you to inspect the DOM and compare that to the
+parsing code within ``amazon-orders`` may give you some insight in to what changed. In ``amazon-orders``,
+look for code that uses `BeautifulSoup's CSS select() methods <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_.
+Many CSS selector strings used by ``amazon-orders`` are defined in variables in ``constants.py`` and can be
 easily overriden.
 
 If you identify the issue, please `submit a bug report <https://github.com/alexdlaird/amazon-orders-python/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_.
 If you're able to resolve the issue, please `also submit a PR <https://github.com/alexdlaird/amazon-orders-python/compare>`_
 so others can benefit.
 
-Found a New Auth Flow
----------------------
-
-If you find an auth flow that isn't yet implemented, it's because we haven't encountered it. Amazon has many different
-routes through authentication, and is always adding more, so we hope you'll consider implementing the new page you
-found and contributing it back to the repo. Auth forms are actually relatively simple to implement.
-
-1. `Enable debug mode`_. Then rerun your code so you encounter the new auth page again.
-   Since ``debug`` mode is enabled, the page will be output locally as an HTML file for you. Open the source of the
-   page, and find the ``<form>``.
-2. Have a look at the other forms in ``forms.py``. Create a new class that inherits from :class:`~amazonorders.forms.AuthForm`.
-   Most likely you'll only need to override the :func:`~amazonorders.forms.AuthForm.fill_form` in your new class.
-3. Add your newly implemented form to the ``AUTH_FORMS`` list in ``session.py``.
-4. Put the HTML for your new auth page in ``tests/resources`` (generify sensitive data, if any, first), then in
-   ``test_session.py`` implement a test that covers your new auth flow.
-
-With all of the above complete, fork the repo and commit your changes, then `submit a PR <https://github.com/alexdlaird/amazon-orders-python/compare>`_
-for maximum karma!
-
-Found a Missing Field on an Entity
+Found an Unknown Page in Auth Flow
 ----------------------------------
 
-If you find a field on an entity has not yet been implemented, please contribute it! Entity fields are represented
-pretty simply, just by a ``_parse()`` method on the entity. For example, let's say the ``quantity`` field on an :class:`~amazonorders.entity.item.Item`
-was missing.
+If you get an error during :func:`~amazonorders.session.AmazonSession.login()` saying you've encountered an unknown
+page, you've found a page in the login flow that we haven't. Amazon has many different routes through
+authentication, and is always adding more, so this is bound to happen. Hopefully you'll consider implementing the
+solution to this auth flow and contributing it back to the repo.
 
-Identify the best DOM selector for fecthing this field, then implement that in a new ``_parse()`` method:
+Auth forms are actually relatively simple to implement. To get started investigating, `enable debug mode`_, then try
+to login again. With ``debug`` mode enabled, the new page will be saved locally as an HTML file that you can open
+and inspect.
 
-.. code-block:: python
+Have a look at the HTML source of the new page, specifically the ``<form>`` tag, and look in ``forms.py`` to see how
+other auth forms are implemented. You'll need to create a new class that inherits from
+:class:`~amazonorders.forms.AuthForm`, override :func:`~amazonorders.forms.AuthForm.fill_form`, and add your new form's
+class to the ``list`` ``session.AUTH_FORMS``.
 
-    def _parse_quantity(self) -> Optional[int]:
-        tag = self.parsed.select_one("span.item-view-qty")
-        if tag:
-            return int(tag.text.strip())
-        else:
-            return None
-
-Then in ``Item.__init__()`` you would need to populate the new field with its parse method:
-
-.. code-block:: python
-
-    def __init__(self,
-                 parsed: Tag) -> None:
-        # Previous code ...
-        self.quantity = self.safe_parse(self._parse_quantity)
-
-Note that :func:`~amazonorders.entity.parsable.Parsable.safe_parse` is helper method that makes sure we don't break anything, so if perhaps the field is not
-always present, a ``logger`` warning would be thrown when the parsing fails, but the newly added field wouldn't break
-anyone's existing code.
-
-Put a HTML that has this field in ``tests/resources`` (generify sensitive data, if any, first) and write a test that
-populates it (see ``test_orders.py`` for similar examples). Note that ``make test`` must still pass, all changes
-must be `additive`, because any previous iteration of page parsing may still be live for someone else's account.
-
-With all of the above complete, fork the repo and commit your changes, then `submit a PR <https://github.com/alexdlaird/amazon-orders-python/compare>`_
+Once you've implemented and tested the new form, `submit a PR <https://github.com/alexdlaird/amazon-orders-python/compare>`_
 for maximum karma!
+
+Found a Missing / Broken Field on an Entity
+-------------------------------------------
+
+If you find that a useful field on an entity (for instance, an :class:`~amazonorders.entity.order.Order` or an
+:class:`~amazonorders.entity.item.Item`) is missing (or one that exists isn't being populated for you), consider
+contributing it! Fields are represented by a simple ``_parse()`` method on the entity. All you need to implement this
+method is to identify in the HTML page a CSS selector that would parse the data out of the page. Have a look at [how other fields are parsed on entities](https://github.com/alexdlaird/amazon-orders-python/blob/a4b404a6d9534b453826a68866e0333461c35d57/amazonorders/entity/item.py#L43)
+for examples.
+
+Once you've implemented and tested the new field, `submit a PR <https://github.com/alexdlaird/amazon-orders-python/compare>`_!
