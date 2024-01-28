@@ -27,7 +27,8 @@ class Item(Parsable):
         #: The Item title.
         self.title: str = self.safe_basic_parse(selector=constants.ENTITY_ITEM_LINK_SELECTOR, none_allowed=False)
         #: The Item link.
-        self.link: str = self.safe_basic_parse(selector=constants.ENTITY_ITEM_LINK_SELECTOR, link=True, none_allowed=False)
+        self.link: str = self.safe_basic_parse(selector=constants.ENTITY_ITEM_LINK_SELECTOR, link=True,
+                                               none_allowed=False)
         #: The Item price.
         self.price: Optional[float] = self.safe_parse(self._parse_price)
         #: The Item Seller.
@@ -38,9 +39,11 @@ class Item(Parsable):
         self.return_eligible_date: Optional[date] = self.safe_parse(
             self._parse_return_eligible_date)
         #: The Item image URL.
-        self.image_link = self.safe_basic_parse(selector=constants.ENTITY_ITEM_IMG_LINK_SELECTOR, link=True)
+        self.image_link: Optional[str] = self.safe_basic_parse(selector=constants.ENTITY_ITEM_IMG_LINK_SELECTOR,
+                                                               link=True)
         #: The Item quantity.
-        self.quantity = self.safe_basic_parse(selector=constants.ENTITY_ITEM_QUANTITY_SELECTOR, return_type=int)
+        self.quantity: Optional[int] = self.safe_basic_parse(selector=constants.ENTITY_ITEM_QUANTITY_SELECTOR,
+                                                             return_type=int)
 
     def __repr__(self) -> str:
         return "<Item: \"{}\">".format(self.title)
