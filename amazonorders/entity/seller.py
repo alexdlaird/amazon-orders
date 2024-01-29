@@ -25,7 +25,7 @@ class Seller(Parsable):
         #: The Seller name.
         self.name: str = self.safe_parse(self._parse_name)
         #: The Seller link.
-        self.link: Optional[str] = self.safe_basic_parse(selector=constants.ENTITY_SELLER_LINK_SELECTOR, link=True)
+        self.link: Optional[str] = self.safe_basic_parse(selector=constants.FIELD_SELLER_LINK_SELECTOR, link=True)
 
     def __repr__(self) -> str:
         return "<Seller: \"{}\">".format(self.name)
@@ -34,7 +34,7 @@ class Seller(Parsable):
         return "Seller: {}".format(self.name)
 
     def _parse_name(self) -> str:
-        value = self.basic_parse(constants.ENTITY_SELLER_NAME_SELECTOR)
+        value = self.basic_parse(constants.FIELD_SELLER_NAME_SELECTOR)
 
         if "Sold by:" in value:
             value = value.split("Sold by:")[1]

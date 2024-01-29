@@ -25,9 +25,9 @@ class Item(Parsable):
         super().__init__(parsed)
 
         #: The Item title.
-        self.title: str = self.safe_basic_parse(selector=constants.ENTITY_ITEM_LINK_SELECTOR, required=True)
+        self.title: str = self.safe_basic_parse(selector=constants.FIELD_ITEM_TITLE_SELECTOR, required=True)
         #: The Item link.
-        self.link: str = self.safe_basic_parse(selector=constants.ENTITY_ITEM_LINK_SELECTOR, link=True, required=True)
+        self.link: str = self.safe_basic_parse(selector=constants.FIELD_ITEM_LINK_SELECTOR, link=True, required=True)
         #: The Item price.
         self.price: Optional[float] = self.safe_parse(self._parse_price)
         #: The Item Seller.
@@ -35,13 +35,12 @@ class Item(Parsable):
         #: The Item condition.
         self.condition: Optional[str] = self.safe_parse(self._parse_condition)
         #: The Item return eligible date.
-        self.return_eligible_date: Optional[date] = self.safe_parse(
-            self._parse_return_eligible_date)
+        self.return_eligible_date: Optional[date] = self.safe_parse(self._parse_return_eligible_date)
         #: The Item image URL.
-        self.image_link: Optional[str] = self.safe_basic_parse(selector=constants.ENTITY_ITEM_IMG_LINK_SELECTOR,
+        self.image_link: Optional[str] = self.safe_basic_parse(selector=constants.FIELD_ITEM_IMG_LINK_SELECTOR,
                                                                link=True)
         #: The Item quantity.
-        self.quantity: Optional[int] = self.safe_basic_parse(selector=constants.ENTITY_ITEM_QUANTITY_SELECTOR,
+        self.quantity: Optional[int] = self.safe_basic_parse(selector=constants.FIELD_ITEM_QUANTITY_SELECTOR,
                                                              return_type=int)
 
     def __repr__(self) -> str:
@@ -54,35 +53,35 @@ class Item(Parsable):
         return self.title < other.title
 
     def _parse_price(self) -> Optional[float]:
-        for tag in self.parsed.select(constants.ENTITY_ITEM_DIV_ITERATOR_SELECTOR):
+        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             if tag.text.strip().startswith("$"):
                 return float(tag.text.strip().replace("$", ""))
 
         return None
 
     def _parse_seller(self) -> Optional[Seller]:
-        for tag in self.parsed.select(constants.ENTITY_ITEM_DIV_ITERATOR_SELECTOR):
+        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             if "Sold by:" in tag.text:
                 return Seller(tag)
 
         return None
 
     def _parse_condition(self) -> Optional[str]:
-        for tag in self.parsed.select(constants.ENTITY_ITEM_DIV_ITERATOR_SELECTOR):
+        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             if "Condition:" in tag.text:
                 return tag.text.split("Condition:")[1].strip()
 
         return None
 
     def _parse_return_eligible_date(self) -> Optional[date]:
-        for tag in self.parsed.select(constants.ENTITY_ITEM_DIV_ITERATOR_SELECTOR):
+        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             if "Return" in tag.text:
                 split_str = "through "
                 if "closed on " in tag.text:
                     split_str = "closed on "
-                clean_str = tag.text.strip()
-                if split_str in clean_str:
-                    date_str = clean_str.split(split_str)[1]
+                value = tag.text.strip()
+                if split_str in value:
+                    date_str = value.split(split_str)[1]
                     return datetime.strptime(date_str, "%b %d, %Y").date()
 
         return None

@@ -22,7 +22,7 @@ class AuthForm(ABC):
 
     def __init__(self,
                  selector: str,
-                 error_selector: str = constants.DEFAULT_ERROR_SELECTOR,
+                 error_selector: str = constants.DEFAULT_ERROR_TAG_SELECTOR,
                  critical: bool = False) -> None:
         #: The CSS selector for the ``<form>``.
         self.selector: str = selector

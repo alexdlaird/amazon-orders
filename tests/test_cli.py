@@ -38,7 +38,7 @@ class TestCli(UnitTestCase):
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
-                                      ["--username", "some-user", "--password",
+                                      ["--username", "some-username", "--password",
                                        "some-password", "history", "--year",
                                        year, "--start-index", start_index])
 
@@ -75,7 +75,7 @@ class TestCli(UnitTestCase):
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
-                                      ["--username", "some-user", "--password",
+                                      ["--username", "some-username", "--password",
                                        "some-password", "order", order_id])
 
         # THEN

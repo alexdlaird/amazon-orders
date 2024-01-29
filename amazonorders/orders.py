@@ -66,13 +66,13 @@ class AmazonOrders:
             self.amazon_session.get(next_page)
             response_parsed = self.amazon_session.last_response_parsed
 
-            for order_tag in response_parsed.select(constants.ORDER_HISTORY_CARD_SELECTOR):
+            for order_tag in response_parsed.select(constants.ORDER_HISTORY_ENTITY_SELECTOR):
                 order = Order(order_tag)
 
                 if full_details:
                     self.amazon_session.get(order.order_details_link)
                     order_details_tag = self.amazon_session.last_response_parsed.select_one(
-                        constants.ORDER_DETAILS_DIV_SELECTOR)
+                        constants.ORDER_DETAILS_ENTITY_SELECTOR)
                     order = Order(order_details_tag, full_details=True, clone=order)
 
                 orders.append(order)
@@ -104,7 +104,7 @@ class AmazonOrders:
 
         self.amazon_session.get("{}?orderID={}".format(constants.ORDER_DETAILS_URL, order_id))
 
-        order_details_tag = self.amazon_session.last_response_parsed.select_one(constants.ORDER_DETAILS_DIV_SELECTOR)
+        order_details_tag = self.amazon_session.last_response_parsed.select_one(constants.ORDER_DETAILS_ENTITY_SELECTOR)
         order = Order(order_details_tag, full_details=True)
 
         return order

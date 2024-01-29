@@ -3,6 +3,7 @@ import re
 import unittest
 
 import responses
+from responses.matchers import urlencoded_params_matcher
 
 from amazonorders import session
 from amazonorders.constants import SIGN_IN_URL, SIGN_IN_REDIRECT_URL, ORDER_HISTORY_LANDING_URL, ORDER_HISTORY_URL, \
@@ -34,12 +35,25 @@ class UnitTestCase(TestCase):
                 body=f.read(),
                 status=200,
             )
+        request_data = {
+            "appAction": "SIGNIN_PWD_COLLECT",
+            "appActionToken": "fefqbHYLHjhaxHj2B4HElW4j2F3UIwoj3D",
+            "create": "0",
+            "openid.return_to": "ape:aHR0cHM6Ly93d3cuYW1hem9uLmNvbT8=",
+            "prevRID": "ape:SFJBTkVINFBKNkdaU0M2M0dCU00=",
+            "subPageType": "SignInClaimCollect",
+            "workflowState": "eyJ6aXAiOiJERUYiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiQTI1NktXIn0.Fhepst_Il21IpAOIEkjtrH9SBeoOApEaG8sCosdpXrbypsISYkeDTw.J5kd8Up08rEVyLYz.TomGGK9BH7ZmR-rz-ZWg7lzmi9rDVcoR_zEZopGMVbOKZhS_wbIx9gFQDdLvCGl8Hc17HJM32_Y2uPj1wEO9ADAYSetlkLDVWuz8xXF0ihtc9Y_UNqDPv1JH_u6LxEOOdKkPIjDhH5yeZ_1OO0K_4Im2AUX6mYpNIu-hIio7WGMmMgANT98nQY8uNuRyPSQQx-TsboMC7T6ogs0xV-6aDyPDzlkCaOp-ZgDSwgrsy-1vxs_Ec0LTdMFSmL2E7zw.ZH7JT2vSuhaN7AGthFkRXg",
+            "email": "some-username",
+            "password": "some-password",
+            "rememberMe": "true"
+        }
         with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             self.authenticated_response = responses.add(
                 responses.POST,
                 SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
+                match=[urlencoded_params_matcher(request_data)],
             )
 
     def given_order_history_landing_exists(self):

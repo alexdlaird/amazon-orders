@@ -82,17 +82,17 @@ class Order(Parsable):
         return "Order #{}: {}".format(self.order_number, self.items)
 
     def _parse_shipments(self) -> List[Shipment]:
-        shipments = [Shipment(x) for x in self.parsed.select(constants.ENTITY_ORDER_SHIPMENT_SELECTOR)]
+        shipments = [Shipment(x) for x in self.parsed.select(constants.SHIPMENT_ENTITY_SELECTOR)]
         shipments.sort()
         return shipments
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x) for x in self.parsed.select(constants.ITEM_SELECTOR)]
+        items = [Item(x) for x in self.parsed.select(constants.ITEM_ENTITY_SELECTOR)]
         items.sort()
         return items
 
     def _parse_order_details_link(self) -> Optional[str]:
-        value = self.basic_parse(constants.ENTITY_ORDER_DETAILS_LINK_SELECTOR, link=True)
+        value = self.basic_parse(constants.FIELD_ORDER_DETAILS_LINK_SELECTOR, link=True)
 
         if not value and self.order_number:
             value = "{}?orderID={}".format(constants.ORDER_DETAILS_URL, self.order_number)
@@ -109,13 +109,13 @@ class Order(Parsable):
             parsed_url = urlparse(order_details_link)
             return parse_qs(parsed_url.query)["orderID"][0]
         else:
-            return self.basic_parse(constants.ENTITY_ORDER_NUMBER_SELECTOR, required=True)
+            return self.basic_parse(constants.FIELD_ORDER_NUMBER_SELECTOR, required=True)
 
     def _parse_grand_total(self) -> float:
-        value = self.basic_parse(constants.ENTITY_ORDER_TOTAL_SELECTOR)
+        value = self.basic_parse(constants.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
 
         if not value:
-            for tag in self.parsed.select(constants.ENTITY_ORDER_SUBTOTALS_DIV_ITERATOR_SELECTOR):
+            for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
                 if "grand total" in tag.text.lower():
                     value = tag.select_one("div.a-span-last").text.strip()
                     break
@@ -123,39 +123,42 @@ class Order(Parsable):
         return float(value.replace("$", ""))
 
     def _parse_order_placed_date(self) -> date:
-        tag = self.parsed.select_one(constants.ENTITY_ORDER_PLACED_DATE_SELECTOR)
-        if tag:
-            date_str = tag.text.split("Ordered on")[1].strip()
+        value = self.basic_parse(constants.FIELD_ORDER_PLACED_DATE_SELECTOR)
+        if "Ordered on" in value:
+            split_str = "Ordered on"
         else:
-            tag = self.parsed.select("div.a-span3 span")
-            # TODO: using nth-child here isn't working, investigate
-            date_str = tag[1].text.strip()
-        return datetime.strptime(date_str, "%B %d, %Y").date()
+            split_str = "Order placed"
+
+        value = value.split(split_str)[1].strip()
+
+        return datetime.strptime(value, "%B %d, %Y").date()
 
     def _parse_recipient(self) -> Recipient:
-        tag = self.parsed.select_one("div.displayAddressDiv")
-        if not tag:
-            tag = self.parsed.select_one("div.recipient span.a-declarative")
-            if tag:
-                inline_content = tag.get("data-a-popover", {}).get("inlineContent")
-                if inline_content:
-                    tag = BeautifulSoup(json.loads(inline_content), "html.parser")
+        value = self.parsed.select_one(constants.FIELD_ORDER_ADDRESS_SELECTOR)
+        if not value:
+            value = self.parsed.select_one(constants.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
-            if not tag:
-                # TODO: there are multiple shipToData tags, we should double check we're picking the right one associated with the order
-                parent_tag = self.parsed.find_parent().select_one("script[id^='shipToData']")
-                tag = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
-        return Recipient(tag)
+            if value:
+                inline_content = value.get("data-a-popover", {}).get("inlineContent")
+                if inline_content:
+                    value = BeautifulSoup(json.loads(inline_content), "html.parser")
+
+        if not value:
+            # TODO: there are multiple shipToData tags, we should double check we're picking the right one associated with the order
+            parent_tag = self.parsed.find_parent().select_one(constants.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
+            value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
+
+        return Recipient(value)
 
     def _parse_payment_method(self) -> Optional[str]:
-        tag = self.parsed.select_one(constants.ENTITY_ORDER_PAYMENT_METHOD_SELECTOR)
+        tag = self.parsed.select_one(constants.FIELD_ORDER_PAYMENT_METHOD_SELECTOR)
         if tag:
             return tag["alt"]
         else:
             return None
 
     def _parse_payment_method_last_4(self) -> Optional[str]:
-        tag = self.parsed.select_one(constants.ENTITY_ORDER_PAYMENT_METHOD_SELECTOR)
+        tag = self.parsed.select_one(constants.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR)
         if tag:
             ending_sibling = tag.find_next_siblings()[-1]
             return ending_sibling.text.split("ending in")[1].strip()
@@ -163,42 +166,42 @@ class Order(Parsable):
             return None
 
     def _parse_subtotal(self) -> Optional[float]:
-        for tag in self.parsed.select(constants.ENTITY_ORDER_SUBTOTALS_DIV_ITERATOR_SELECTOR):
+        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "subtotal" in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_shipping_total(self) -> Optional[float]:
-        for tag in self.parsed.select(constants.ENTITY_ORDER_SUBTOTALS_DIV_ITERATOR_SELECTOR):
+        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "shipping" in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_subscription_discount(self) -> Optional[float]:
-        for tag in self.parsed.select(constants.ENTITY_ORDER_SUBTOTALS_DIV_ITERATOR_SELECTOR):
+        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "subscribe" in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_total_before_tax(self) -> Optional[float]:
-        for tag in self.parsed.select(constants.ENTITY_ORDER_SUBTOTALS_DIV_ITERATOR_SELECTOR):
+        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "before tax" in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_estimated_tax(self) -> Optional[float]:
-        for tag in self.parsed.select(constants.ENTITY_ORDER_SUBTOTALS_DIV_ITERATOR_SELECTOR):
+        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "estimated tax" in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
         return None
 
     def _parse_refund_total(self) -> Optional[float]:
-        for tag in self.parsed.select(constants.ENTITY_ORDER_SUBTOTALS_DIV_ITERATOR_SELECTOR):
+        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "refund total" in tag.text.lower() and "tax refund" not in tag.text.lower():
                 return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
 
