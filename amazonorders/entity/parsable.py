@@ -81,11 +81,11 @@ class Parsable:
 
         # None of the selectors were found
         if required:
-            return None
-        else:
             raise AmazonOrderEntityError(
                 "When building {}, field for selector `{}` was None, but this is not allowed.".format(
                     self.__class__.__name__, selector))
+        else:
+            return None
 
     def safe_basic_parse(self,
                          selector: str | list,
