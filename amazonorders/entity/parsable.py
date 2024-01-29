@@ -51,8 +51,10 @@ class Parsable:
                     return_type: Optional[Type] = None,
                     required: bool = False) -> Any:
         """
+        This function will attempt to extract the text value of the given CSS selector(s), and is suitable
+        for most basic functionality on a well formed page.
 
-        :param selector: The CSS selector of the element.
+        :param selector: The CSS selector of the element (``str`` to try a single element, or ``list`` to try a series of selectors).
         :param link: If a link, the value of ``src`` or ``href`` will be returned.
         :param return_type: Specify ``int`` or ``float`` to return a value other than ``str``.
         :param required: If required, an exception will be thrown instead of returning ``None``.

@@ -6,12 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.6...HEAD)
 ### Added
 - [AuthForm](https://amazon-orders.readthedocs.io/en/1.0.7/api.html#amazonorders.forms.AuthForm) abstract class, and migrated all auth flow items to subclasses of this class.
+- [Parsable.basic_parse()](https://amazon-orders.readthedocs.io/en/1.0.7/api.html#amazonorders.entities.parsable.Parsable.basic_parse), which can handle most basic fields when parised with CSS selectors.
 - Stability improvements.
 - Test improvements.
 
 ### Changed
 - Moved all constant variables (URLs, CSS selectors, etc.) to `constants.py`.
-- Migrated entities to use CSS selectors where possible.
+- Migrated entities to use CSS selector constants.
 - `constants.SIGN_IN_URL` is now the landing page for login, the old value has been moved to `constants.SIGN_IN_REDIRECT_URL`.
 
 ## [1.0.6](https://github.com/alexdlaird/pyngrok/compare/1.0.5...1.0.6) - 2024-01-25
