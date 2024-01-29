@@ -25,9 +25,9 @@ class Item(Parsable):
         super().__init__(parsed)
 
         #: The Item title.
-        self.title: str = self.safe_basic_parse(selector=constants.FIELD_ITEM_TITLE_SELECTOR, required=True)
+        self.title: str = self.safe_simple_parse(selector=constants.FIELD_ITEM_TITLE_SELECTOR, required=True)
         #: The Item link.
-        self.link: str = self.safe_basic_parse(selector=constants.FIELD_ITEM_LINK_SELECTOR, link=True, required=True)
+        self.link: str = self.safe_simple_parse(selector=constants.FIELD_ITEM_LINK_SELECTOR, link=True, required=True)
         #: The Item price.
         self.price: Optional[float] = self.safe_parse(self._parse_price)
         #: The Item Seller.
@@ -37,11 +37,11 @@ class Item(Parsable):
         #: The Item return eligible date.
         self.return_eligible_date: Optional[date] = self.safe_parse(self._parse_return_eligible_date)
         #: The Item image URL.
-        self.image_link: Optional[str] = self.safe_basic_parse(selector=constants.FIELD_ITEM_IMG_LINK_SELECTOR,
-                                                               link=True)
+        self.image_link: Optional[str] = self.safe_simple_parse(selector=constants.FIELD_ITEM_IMG_LINK_SELECTOR,
+                                                                link=True)
         #: The Item quantity.
-        self.quantity: Optional[int] = self.safe_basic_parse(selector=constants.FIELD_ITEM_QUANTITY_SELECTOR,
-                                                             return_type=int)
+        self.quantity: Optional[int] = self.safe_simple_parse(selector=constants.FIELD_ITEM_QUANTITY_SELECTOR,
+                                                              return_type=int)
 
     def __repr__(self) -> str:
         return "<Item: \"{}\">".format(self.title)
@@ -53,35 +53,45 @@ class Item(Parsable):
         return self.title < other.title
 
     def _parse_price(self) -> Optional[float]:
-        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
-            if tag.text.strip().startswith("$"):
-                return float(tag.text.strip().replace("$", ""))
+        value = None
 
-        return None
+        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
+            price = tag.text.strip()
+            if price.startswith("$"):
+                value = float(price.replace("$", ""))
+
+        return value
 
     def _parse_seller(self) -> Optional[Seller]:
+        value = None
+
         for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             if "Sold by:" in tag.text:
-                return Seller(tag)
+                value = Seller(tag)
 
-        return None
+        return value
 
     def _parse_condition(self) -> Optional[str]:
-        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
-            if "Condition:" in tag.text:
-                return tag.text.split("Condition:")[1].strip()
+        value = None
 
-        return None
+        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
+            split_str = "Condition:"
+            if split_str in tag.text:
+                value = tag.text.split(split_str)[1].strip()
+
+        return value
 
     def _parse_return_eligible_date(self) -> Optional[date]:
+        value = None
+
         for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             if "Return" in tag.text:
+                tag_str = tag.text.strip()
                 split_str = "through "
                 if "closed on " in tag.text:
                     split_str = "closed on "
-                value = tag.text.strip()
-                if split_str in value:
-                    date_str = value.split(split_str)[1]
-                    return datetime.strptime(date_str, "%b %d, %Y").date()
+                if split_str in tag_str:
+                    date_str = tag_str.split(split_str)[1]
+                    value = datetime.strptime(date_str, "%b %d, %Y").date()
 
-        return None
+        return value

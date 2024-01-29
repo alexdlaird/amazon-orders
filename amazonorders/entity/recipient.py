@@ -23,7 +23,7 @@ class Recipient(Parsable):
         super().__init__(parsed)
 
         #: The Recipient name.
-        self.name: str = self.safe_basic_parse(selector=constants.FIELD_RECIPIENT_NAME_SELECTOR, required=True)
+        self.name: str = self.safe_simple_parse(selector=constants.FIELD_RECIPIENT_NAME_SELECTOR, required=True)
         #: The Recipient address.
         self.address: Optional[str] = self.safe_parse(self._parse_address)
 
@@ -34,17 +34,17 @@ class Recipient(Parsable):
         return "Recipient: {}".format(self.name)
 
     def _parse_address(self) -> Optional[str]:
-        value = self.basic_parse(constants.FIELD_RECIPIENT_ADDRESS1_SELECTOR)
+        value = self.simple_parse(constants.FIELD_RECIPIENT_ADDRESS1_SELECTOR)
 
         if value:
             values = [
                 value,
-                self.basic_parse(constants.FIELD_RECIPIENT_ADDRESS2_SELECTOR),
-                self.basic_parse(constants.FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR),
-                self.basic_parse(constants.FIELD_RECIPIENT_ADDRESS_COUNTRY_SELECTOR),
+                self.simple_parse(constants.FIELD_RECIPIENT_ADDRESS2_SELECTOR),
+                self.simple_parse(constants.FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR),
+                self.simple_parse(constants.FIELD_RECIPIENT_ADDRESS_COUNTRY_SELECTOR),
             ]
             value = "\n".join(filter(None, values))
         else:
-            value = self.basic_parse(constants.FIELD_RECIPIENT_ADDRESS_FALLBACK_SELECTOR)
+            value = self.simple_parse(constants.FIELD_RECIPIENT_ADDRESS_FALLBACK_SELECTOR)
 
         return value

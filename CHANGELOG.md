@@ -3,10 +3,12 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.6...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.7...HEAD)
+
+## [1.0.7](https://github.com/alexdlaird/pyngrok/compare/1.0.6...1.0.7) - 2024-01-29
 ### Added
 - [AuthForm](https://amazon-orders.readthedocs.io/en/1.0.7/api.html#amazonorders.forms.AuthForm) abstract class, and migrated all auth flow items to subclasses of this class.
-- [Parsable.basic_parse()](https://amazon-orders.readthedocs.io/en/1.0.7/api.html#amazonorders.entities.parsable.Parsable.basic_parse), which can handle most basic fields when parised with CSS selectors.
+- [Parsable.simple_parse()](https://amazon-orders.readthedocs.io/en/1.0.7/api.html#amazonorders.entities.parsable.Parsable.simple_parse), which can handle most basic fields when parised with CSS selectors.
 - Stability improvements.
 - Test improvements.
 

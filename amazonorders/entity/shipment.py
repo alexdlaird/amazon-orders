@@ -27,10 +27,10 @@ class Shipment(Parsable):
         #: The Shipment Items.
         self.items: List[Item] = self._parse_items()
         #: The Shipment delivery status.
-        self.delivery_status: Optional[str] = self.safe_basic_parse(
+        self.delivery_status: Optional[str] = self.safe_simple_parse(
             selector=constants.FIELD_SHIPMENT_DELIVERY_STATUS_SELECTOR)
         #: The Shipment tracking link.
-        self.tracking_link: Optional[str] = self.safe_basic_parse(
+        self.tracking_link: Optional[str] = self.safe_simple_parse(
             selector=constants.FIELD_SHIPMENT_TRACKING_LINK_SELECTOR,
             link=True)
 

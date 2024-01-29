@@ -92,7 +92,7 @@ class Order(Parsable):
         return items
 
     def _parse_order_details_link(self) -> Optional[str]:
-        value = self.basic_parse(constants.FIELD_ORDER_DETAILS_LINK_SELECTOR, link=True)
+        value = self.simple_parse(constants.FIELD_ORDER_DETAILS_LINK_SELECTOR, link=True)
 
         if not value and self.order_number:
             value = "{}?orderID={}".format(constants.ORDER_DETAILS_URL, self.order_number)
@@ -105,36 +105,46 @@ class Order(Parsable):
         except:
             # We're not using safe_parse here because it's fine if this fails, no need for noise
             order_details_link = None
+
         if order_details_link:
             parsed_url = urlparse(order_details_link)
-            return parse_qs(parsed_url.query)["orderID"][0]
+            value = parse_qs(parsed_url.query)["orderID"][0]
         else:
-            return self.basic_parse(constants.FIELD_ORDER_NUMBER_SELECTOR, required=True)
+            value = self.simple_parse(constants.FIELD_ORDER_NUMBER_SELECTOR, required=True)
+
+        return value
 
     def _parse_grand_total(self) -> float:
-        value = self.basic_parse(constants.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
+        value = self.simple_parse(constants.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
 
         if not value:
             for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
                 if "grand total" in tag.text.lower():
-                    value = tag.select_one("div.a-span-last").text.strip()
-                    break
+                    inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                    if inner_tag:
+                        value = inner_tag.text.strip()
+                        break
 
-        return float(value.replace("$", ""))
+        value = float(value.replace("$", ""))
+
+        return value
 
     def _parse_order_placed_date(self) -> date:
-        value = self.basic_parse(constants.FIELD_ORDER_PLACED_DATE_SELECTOR)
+        value = self.simple_parse(constants.FIELD_ORDER_PLACED_DATE_SELECTOR)
+
         if "Ordered on" in value:
             split_str = "Ordered on"
         else:
             split_str = "Order placed"
 
         value = value.split(split_str)[1].strip()
+        value = datetime.strptime(value, "%B %d, %Y").date()
 
-        return datetime.strptime(value, "%B %d, %Y").date()
+        return value
 
     def _parse_recipient(self) -> Recipient:
         value = self.parsed.select_one(constants.FIELD_ORDER_ADDRESS_SELECTOR)
+
         if not value:
             value = self.parsed.select_one(constants.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
@@ -151,74 +161,114 @@ class Order(Parsable):
         return Recipient(value)
 
     def _parse_payment_method(self) -> Optional[str]:
+        value = None
+
         tag = self.parsed.select_one(constants.FIELD_ORDER_PAYMENT_METHOD_SELECTOR)
         if tag:
-            return tag["alt"]
-        else:
-            return None
+            value = tag["alt"]
+
+        return value
 
     def _parse_payment_method_last_4(self) -> Optional[str]:
+        value = None
+
         tag = self.parsed.select_one(constants.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR)
         if tag:
             ending_sibling = tag.find_next_siblings()[-1]
-            return ending_sibling.text.split("ending in")[1].strip()
-        else:
-            return None
+            split_str = "ending in"
+            if split_str in ending_sibling.text:
+                value = ending_sibling.text.split(split_str)[1].strip()
+
+        return value
 
     def _parse_subtotal(self) -> Optional[float]:
+        value = None
+
         for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "subtotal" in tag.text.lower():
-                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
+                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                if inner_tag:
+                    value = float(inner_tag.text.strip().replace("$", ""))
+                    break
 
-        return None
+        return value
 
     def _parse_shipping_total(self) -> Optional[float]:
+        value = None
+
         for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "shipping" in tag.text.lower():
-                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
+                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                if inner_tag:
+                    value = float(inner_tag.text.strip().replace("$", ""))
+                    break
 
-        return None
+        return value
 
     def _parse_subscription_discount(self) -> Optional[float]:
+        value = None
+
         for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "subscribe" in tag.text.lower():
-                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
+                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                if inner_tag:
+                    value = float(inner_tag.text.strip().replace("$", ""))
+                    break
 
-        return None
+        return value
 
     def _parse_total_before_tax(self) -> Optional[float]:
+        value = None
+
         for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "before tax" in tag.text.lower():
-                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
+                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                if inner_tag:
+                    value = float(inner_tag.text.strip().replace("$", ""))
+                    break
 
-        return None
+        return value
 
     def _parse_estimated_tax(self) -> Optional[float]:
+        value = None
+
         for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "estimated tax" in tag.text.lower():
-                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
+                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                if inner_tag:
+                    value = float(inner_tag.text.strip().replace("$", ""))
+                    break
 
-        return None
+        return value
 
     def _parse_refund_total(self) -> Optional[float]:
+        value = None
+
         for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "refund total" in tag.text.lower() and "tax refund" not in tag.text.lower():
-                return float(tag.select_one("div.a-span-last").text.strip().replace("$", ""))
+                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                if inner_tag:
+                    value = float(inner_tag.text.strip().replace("$", ""))
+                    break
 
-        return None
+        return value
 
     def _parse_order_shipping_date(self) -> Optional[date]:
-        # TODO: find a better way to do this
-        if "Items shipped:" in self.parsed.text:
-            date_str = self.parsed.text.split("Items shipped:")[1].strip().split("-")[0].strip()
-            return datetime.strptime(date_str, "%B %d, %Y").date()
-        else:
-            return None
+        match_text = "Items shipped:"
+        value = self.simple_parse(constants.FIELD_ORDER_SHIPPED_DATE_SELECTOR, text_contains=match_text)
+
+        if value:
+            date_str = value.split(match_text)[1].strip().split("-")[0].strip()
+            value = datetime.strptime(date_str, "%B %d, %Y").date()
+
+        return value
 
     def _parse_refund_completed_date(self) -> Optional[date]:
-        # TODO: find a better way to do this
-        if "Refund: Completed" in self.parsed.text:
-            date_str = self.parsed.text.split("Refund: Completed")[1].strip().split("-")[0].strip()
-            return datetime.strptime(date_str, "%B %d, %Y").date()
-        else:
-            return None
+        match_text = "Refund: Completed"
+        value = self.simple_parse(constants.FIELD_ORDER_REFUND_COMPLETED_DATE, text_contains=match_text)
+
+        if value:
+            date_str = value.split(match_text)[1].strip().split("-")[0].strip()
+            value = datetime.strptime(date_str, "%B %d, %Y").date()
+
+        return value

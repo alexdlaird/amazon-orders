@@ -86,7 +86,7 @@ If you find that a useful field on an entity (for instance, an :class:`~amazonor
 :class:`~amazonorders.entity.item.Item`) is missing (or one that exists isn't being populated for you), consider
 contributing it! Fields are populated by simple ``_parse()`` methods on the entity, and many fields are simple
 enough to be able to utilize :class:`~amazonorders.entity.parsable.Parsable`'s
-:func:`~amazonorders.entity.parsable.Parsable.basic_parse` function, which simply needs a CSS selector.
+:func:`~amazonorders.entity.parsable.Parsable.simple_parse` function, which simply needs a CSS selector.
 
 If you can't fetch the field's value with just a CSS selector, implementing a new ``_parse()`` function on the
 entity will give you a lot more flexibility.

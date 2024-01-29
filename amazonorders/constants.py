@@ -71,7 +71,13 @@ CAPTCHA_2_ERROR_SELECTOR = "div.a-alert-info"
 NEXT_PAGE_LINK_SELECTOR = "ul.a-pagination li.a-last a"
 
 ##########################################################################
-# CSS selectors for Entities
+# CSS selectors for Entities and Fields
+#
+# A ``FIELD_`` selector can be either a ``str`` or a ``list``. If a
+# ``list`` is given, each selector in the list will be tried. The
+# ``Parsable`` contains helper functions for parsing fields, including
+# ``simple_parse()``, which is suitable for most fields when a ``FIELD_``
+# is passed.
 ##########################################################################
 
 ORDER_HISTORY_ENTITY_SELECTOR = "div.order"
@@ -100,9 +106,12 @@ FIELD_ORDER_PLACED_DATE_SELECTOR = ["span.order-date-invoice-item", "div.a-span3
 FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
 FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
 FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = "div#od-subtotals div.a-row"
+FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR = "div.a-span-last"
 FIELD_ORDER_ADDRESS_SELECTOR = "div.displayAddressDiv"
 FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR = "div.recipient span.a-declarative"
 FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR = "script[id^='shipToData']"
+FIELD_ORDER_SHIPPED_DATE_SELECTOR = "#orderDetails div.a-box.a-last div div div.a-row:not(.a-color-success)"
+FIELD_ORDER_REFUND_COMPLETED_DATE = "#orderDetails div.a-box.a-last div div div.a-row.a-color-success"
 
 #####################################
 # CSS selectors for Shipment fields
