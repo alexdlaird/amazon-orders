@@ -1,5 +1,4 @@
 import logging
-from types import EllipsisType
 from typing import Callable, Any, Optional, Type
 
 from bs4 import Tag
@@ -25,7 +24,7 @@ class Parsable:
         self.parsed: Tag = parsed
 
     def safe_parse(self,
-                   parse_function: Callable[[EllipsisType], Any],
+                   parse_function: Callable[[Ellipsis], Any],
                    **kwargs: Any) -> Any:
         """
         Execute the given parse function, handling any common parse exceptions and passing them as
@@ -66,10 +65,10 @@ class Parsable:
             tag = self.parsed.select_one(s)
             if tag:
                 if link:
+                    key = "href"
                     if "src" in tag.attrs:
-                        value = tag.attrs["src"]
-                    else:
-                        value = tag.attrs["href"]
+                        key = "src"
+                    value = self.with_base_url(tag.attrs[key])
                 else:
                     value = tag.text.strip()
                     # TODO: is there a dynamic way to accomplish this?

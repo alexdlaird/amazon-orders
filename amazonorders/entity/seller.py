@@ -3,6 +3,7 @@ from typing import Optional
 
 from bs4 import Tag
 
+from amazonorders import constants
 from amazonorders.entity.parsable import Parsable
 
 __author__ = "Alex Laird"
@@ -24,7 +25,7 @@ class Seller(Parsable):
         #: The Seller name.
         self.name: str = self.safe_parse(self._parse_name)
         #: The Seller link.
-        self.link: Optional[str] = self.safe_parse(self._parse_link)
+        self.link: Optional[str] = self.safe_basic_parse(selector=constants.ENTITY_SELLER_LINK_SELECTOR, link=True)
 
     def __repr__(self) -> str:
         return "<Seller: \"{}\">".format(self.name)
@@ -33,17 +34,8 @@ class Seller(Parsable):
         return "Seller: {}".format(self.name)
 
     def _parse_name(self) -> str:
-        tag = self.parsed.select_one("a")
-        if not tag:
-            tag = self.parsed.select_one("span")
-        value = tag.text
+        value = self.basic_parse(constants.ENTITY_SELLER_NAME_SELECTOR)
+
         if "Sold by:" in value:
             value = value.split("Sold by:")[1]
         return value.strip()
-
-    def _parse_link(self) -> Optional[str]:
-        tag = self.parsed.select_one("a")
-        if tag:
-            return self.with_base_url(tag["href"])
-        else:
-            return None

@@ -3,6 +3,7 @@ from typing import Optional
 
 from bs4 import Tag
 
+from amazonorders import constants
 from amazonorders.entity.parsable import Parsable
 
 __author__ = "Alex Laird"
@@ -10,8 +11,6 @@ __copyright__ = "Copyright 2024, Alex Laird"
 __version__ = "1.0.7"
 
 logger = logging.getLogger(__name__)
-
-NAME_SELECTOR = "li.displayAddressFullName"
 
 
 class Recipient(Parsable):
@@ -24,7 +23,7 @@ class Recipient(Parsable):
         super().__init__(parsed)
 
         #: The Recipient name.
-        self.name: str = self.safe_parse(self._parse_name)
+        self.name: str = self.safe_basic_parse(selector=constants.ENTITY_RECIPIENT_NAME_SELECTOR, required=True)
         #: The Recipient address.
         self.address: Optional[str] = self.safe_parse(self._parse_address)
 
@@ -33,12 +32,6 @@ class Recipient(Parsable):
 
     def __str__(self) -> str:  # pragma: no cover
         return "Recipient: {}".format(self.name)
-
-    def _parse_name(self) -> str:
-        tag = self.parsed.select_one(NAME_SELECTOR)
-        if not tag:
-            tag = self.parsed.select_one("div:nth-child(1)")
-        return tag.text.strip()
 
     def _parse_address(self) -> Optional[str]:
         tag = self.parsed.select_one("li.displayAddressAddressLine1")
