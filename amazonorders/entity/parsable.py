@@ -89,7 +89,7 @@ class Parsable:
             return None
 
     def safe_basic_parse(self,
-                         selector: str | list,
+                         selector: Union[str, list],
                          **kwargs) -> Any:
         """
         A helper function that uses :func:`basic_parse` as the ``parse_function()`` passed to :func:`safe_parse`.
