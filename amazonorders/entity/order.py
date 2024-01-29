@@ -112,15 +112,15 @@ class Order(Parsable):
             return self.basic_parse(constants.ENTITY_ORDER_NUMBER_SELECTOR, required=True)
 
     def _parse_grand_total(self) -> float:
-        tag = self.parsed.select_one(constants.ENTITY_ORDER_TOTAL_SELECTOR)
-        if tag:
-            tag = tag.select_one("span.value")
-        else:
+        value = self.basic_parse(constants.ENTITY_ORDER_TOTAL_SELECTOR)
+
+        if not value:
             for tag in self.parsed.select(constants.ENTITY_ORDER_SUBTOTALS_DIV_ITERATOR_SELECTOR):
                 if "grand total" in tag.text.lower():
-                    tag = tag.select_one("div.a-span-last")
+                    value = tag.select_one("div.a-span-last").text.strip()
                     break
-        return float(tag.text.strip().replace("$", ""))
+
+        return float(value.replace("$", ""))
 
     def _parse_order_placed_date(self) -> date:
         tag = self.parsed.select_one(constants.ENTITY_ORDER_PLACED_DATE_SELECTOR)

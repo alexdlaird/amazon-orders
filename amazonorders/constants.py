@@ -65,7 +65,7 @@ ENTITY_ITEM_DIV_ITERATOR_SELECTOR = ".yohtmlc-item div"
 ENTITY_ORDER_SHIPMENT_SELECTOR = "div.shipment"
 ENTITY_ORDER_DETAILS_LINK_SELECTOR = "a.yohtmlc-order-details-link"
 ENTITY_ORDER_NUMBER_SELECTOR = "bdi[dir='ltr']"
-ENTITY_ORDER_TOTAL_SELECTOR = "div.yohtmlc-order-total"
+ENTITY_ORDER_TOTAL_SELECTOR = "div.yohtmlc-order-total span.value"
 ENTITY_ORDER_PLACED_DATE_SELECTOR = "span.order-date-invoice-item"
 ENTITY_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
 ENTITY_ORDER_SUBTOTALS_DIV_ITERATOR_SELECTOR = "div#od-subtotals div.a-row"
@@ -76,6 +76,11 @@ ENTITY_SHIPMENT_DELIVERY_STATUS_SELECTOR = "div.js-shipment-info-container div.a
 
 ### Recipient
 ENTITY_RECIPIENT_NAME_SELECTOR = ["li.displayAddressFullName", "div:nth-child(1)"]
+ENTITY_RECIPIENT_ADDRESS1_SELECTOR = "li.displayAddressAddressLine1"
+ENTITY_RECIPIENT_ADDRESS2_SELECTOR = "li.displayAddressAddressLine2"
+ENTITY_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR = "li.displayAddressCityStateOrRegionPostalCode"
+ENTITY_RECIPIENT_ADDRESS_COUNTRY_SELECTOR = "li.displayAddressCountryName"
+ENTITY_RECIPIENT_ADDRESS_FALLBACK_SELECTOR = "div:nth-child(2)"
 
 ### Seller
 ENTITY_SELLER_NAME_SELECTOR = ["a", "span"]

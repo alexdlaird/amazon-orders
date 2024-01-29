@@ -34,18 +34,17 @@ class Recipient(Parsable):
         return "Recipient: {}".format(self.name)
 
     def _parse_address(self) -> Optional[str]:
-        tag = self.parsed.select_one("li.displayAddressAddressLine1")
-        if tag:
-            value = tag.text.strip()
-            next_tag = self.parsed.select_one("li.displayAddressAddressLine2")
-            if next_tag:
-                value += "{}\n{}".format(tag.text.strip(), next_tag)
-            next_tag = self.parsed.select_one("li.displayAddressCityStateOrRegionPostalCode")
-            if next_tag:
-                value += "\n{}".format(next_tag.text.strip())
-            next_tag = self.parsed.select_one("li.displayAddressCountryName")
-            if next_tag:
-                value += "\n{}".format(next_tag.text.strip())
+        value = self.basic_parse(constants.ENTITY_RECIPIENT_ADDRESS1_SELECTOR)
+
+        if value:
+            values = [
+                value,
+                self.basic_parse(constants.ENTITY_RECIPIENT_ADDRESS2_SELECTOR),
+                self.basic_parse(constants.ENTITY_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR),
+                self.basic_parse(constants.ENTITY_RECIPIENT_ADDRESS_COUNTRY_SELECTOR),
+            ]
+            value = "\n".join(filter(None, values))
         else:
-            value = self.parsed.select_one("div:nth-child(2)").text
-        return value.strip()
+            value = self.basic_parse(constants.ENTITY_RECIPIENT_ADDRESS_FALLBACK_SELECTOR)
+
+        return value
