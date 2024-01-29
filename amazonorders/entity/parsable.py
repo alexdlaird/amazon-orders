@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Any, Optional, Type
+from typing import Callable, Any, Optional, Type, Union
 
 from bs4 import Tag
 
@@ -46,7 +46,7 @@ class Parsable:
                            exc_info=True)
 
     def basic_parse(self,
-                    selector: str | list,
+                    selector: Union[str, list],
                     link: bool = False,
                     return_type: Optional[Type] = None,
                     required: bool = False) -> Any:
