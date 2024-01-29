@@ -24,7 +24,7 @@ class Parsable:
         self.parsed: Tag = parsed
 
     def safe_parse(self,
-                   parse_function: Callable[[Ellipsis], Any],
+                   parse_function: Callable[..., Any],
                    **kwargs: Any) -> Any:
         """
         Execute the given parse function, handling any common parse exceptions and passing them as
@@ -52,7 +52,7 @@ class Parsable:
                     required: bool = False) -> Any:
         """
         This function will attempt to extract the text value of the given CSS selector(s), and is suitable
-        for most basic functionality on a well formed page.
+        for most basic functionality on a well-formed page.
 
         :param selector: The CSS selector of the element (``str`` to try a single element, or ``list`` to try a series of selectors).
         :param link: If a link, the value of ``src`` or ``href`` will be returned.
