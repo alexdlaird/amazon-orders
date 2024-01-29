@@ -143,7 +143,7 @@ class AuthForm(ABC):
 class SignInForm(AuthForm):
     def __init__(self,
                  selector: str = constants.SIGN_IN_FORM_SELECTOR,
-                 solution_attr_key: str = "username") -> None:
+                 solution_attr_key: str = "email") -> None:
         super().__init__(selector, critical=True)
 
         self.solution_attr_key = solution_attr_key
