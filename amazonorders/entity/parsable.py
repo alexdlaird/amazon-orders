@@ -1,4 +1,5 @@
 import logging
+from types import EllipsisType
 from typing import Callable, Any, Optional, Type
 
 from bs4 import Tag
@@ -12,6 +13,7 @@ __version__ = "1.0.7"
 
 logger = logging.getLogger(__name__)
 
+
 class Parsable:
     """
     A base class that contains a parsed representation of the entity in ``parsed``.
@@ -23,7 +25,7 @@ class Parsable:
         self.parsed: Tag = parsed
 
     def safe_parse(self,
-                   parse_function: Callable[[...], Any],
+                   parse_function: Callable[[EllipsisType], Any],
                    **kwargs: Any) -> Any:
         """
         Execute the given parse function, handling any common parse exceptions and passing them as
@@ -48,13 +50,13 @@ class Parsable:
                     selector: str | list,
                     link: bool = False,
                     return_type: Optional[Type] = None,
-                    none_allowed: bool = True) -> Any:
+                    required: bool = False) -> Any:
         """
 
         :param selector: The CSS selector of the element.
         :param link: If a link, the value of ``src`` or ``href`` will be returned.
         :param return_type: Specify ``int`` or ``float`` to return a value other than ``str``.
-        :param none_allowed: If ``False``, an exception will be thrown instead of returning ``None``.
+        :param required: If required, an exception will be thrown instead of returning ``None``.
         :return: The cleaned up return value from the parsed ``selector``.
         """
         if isinstance(selector, str):
@@ -78,7 +80,7 @@ class Parsable:
                 return value
 
         # None of the selectors were found
-        if none_allowed:
+        if required:
             return None
         else:
             raise AmazonOrderEntityError(

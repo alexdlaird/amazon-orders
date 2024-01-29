@@ -25,10 +25,9 @@ class Item(Parsable):
         super().__init__(parsed)
 
         #: The Item title.
-        self.title: str = self.safe_basic_parse(selector=constants.ENTITY_ITEM_LINK_SELECTOR, none_allowed=False)
+        self.title: str = self.safe_basic_parse(selector=constants.ENTITY_ITEM_LINK_SELECTOR, required=True)
         #: The Item link.
-        self.link: str = self.safe_basic_parse(selector=constants.ENTITY_ITEM_LINK_SELECTOR, link=True,
-                                               none_allowed=False)
+        self.link: str = self.safe_basic_parse(selector=constants.ENTITY_ITEM_LINK_SELECTOR, link=True, required=True)
         #: The Item price.
         self.price: Optional[float] = self.safe_parse(self._parse_price)
         #: The Item Seller.
