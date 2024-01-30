@@ -226,18 +226,7 @@ class AmazonSession:
                     break
 
             if not form_found:
-                debug_str = " To capture the page to a file, set the `debug` flag." if not self.debug else ""
-                if self.last_response.ok:
-                    raise AmazonOrdersAuthError(
-                        "An error occurred, this is an unknown page, or its parsed contents don't match a known auth flow: {}.{}".format(
-                            self.last_response.url, debug_str))
-                elif 400 <= self.last_response.status_code < 500:
-                    raise AmazonOrdersAuthError(
-                        "An error occurred, the page {} returned {}.{}".format(self.last_response.url, debug_str))
-                elif 500 <= self.last_response.status_code < 600:
-                    raise AmazonOrdersAuthError(
-                        "An error occurred, the page {} returned {}, which Amazon had an error (or may be temporarily blocking your requests). Wait a bit before trying again.{}".format(
-                            self.last_response.url, debug_str))
+                self._raise_auth_error()
 
             attempts += 1
 
@@ -266,3 +255,20 @@ class AmazonSession:
         while os.path.isfile("{}_{}.html".format(page_name, i)):
             i += 1
         return "{}_{}.html".format(page_name, i)
+
+    def _raise_auth_error(self):
+        debug_str = " To capture the page to a file, set the `debug` flag." if not self.debug else ""
+        if self.last_response.ok:
+            error_msg = ("An error occurred, this is an unknown page, or its parsed contents don't match a "
+                         "known auth flow: {}.{}").format(self.last_response.url, debug_str)
+        else:
+            error_msg = "An error occurred, the page {} returned {}.".format(self.last_response.url,
+                                                                             self.last_response.status_code)
+            if 500 <= self.last_response.status_code < 600:
+                error_msg += ("Amazon likely had an error (or may be temporarily blocking your requests). "
+                              "Wait a bit before trying again.").format(self.last_response.url,
+                                                                        self.last_response.status_code)
+
+            error_msg += debug_str
+
+        raise AmazonOrdersAuthError(error_msg)
