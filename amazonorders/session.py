@@ -16,7 +16,7 @@ from amazonorders.forms import SignInForm, MfaDeviceSelectForm, MfaForm, Captcha
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 
 logger = logging.getLogger(__name__)
 
@@ -226,9 +226,18 @@ class AmazonSession:
                     break
 
             if not form_found:
-                raise AmazonOrdersAuthError(
-                    "An error occurred, this is an unknown page, or its parsed contents don't match a known auth flow: {}. To capture the page to a file, set the `debug` flag.".format(
-                        self.last_response.url))
+                debug_str = " To capture the page to a file, set the `debug` flag." if not self.debug else ""
+                if self.last_response.ok:
+                    raise AmazonOrdersAuthError(
+                        "An error occurred, this is an unknown page, or its parsed contents don't match a known auth flow: {}.{}".format(
+                            self.last_response.url, debug_str))
+                elif 400 <= self.last_response.status_code < 500:
+                    raise AmazonOrdersAuthError(
+                        "An error occurred, the page {} returned {}.{}".format(self.last_response.url, debug_str))
+                elif 500 <= self.last_response.status_code < 600:
+                    raise AmazonOrdersAuthError(
+                        "An error occurred, the page {} returned {}, which Amazon had an error (or may be temporarily blocking your requests). Wait a bit before trying again.{}".format(
+                            self.last_response.url, debug_str))
 
             attempts += 1
 
@@ -254,6 +263,6 @@ class AmazonSession:
                            url: str) -> str:
         page_name = os.path.basename(urlparse(url).path).strip(".html")
         i = 0
-        while os.path.isfile("{}_{}".format(page_name, 0)):
+        while os.path.isfile("{}_{}.html".format(page_name, i)):
             i += 1
         return "{}_{}.html".format(page_name, i)
