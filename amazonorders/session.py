@@ -265,7 +265,7 @@ class AmazonSession:
             error_msg = "An error occurred, the page {} returned {}.".format(self.last_response.url,
                                                                              self.last_response.status_code)
             if 500 <= self.last_response.status_code < 600:
-                error_msg += ("Amazon likely had an error (or may be temporarily blocking your requests). "
+                error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
                               "Wait a bit before trying again.").format(self.last_response.url,
                                                                         self.last_response.status_code)
 
