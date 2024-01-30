@@ -250,11 +250,15 @@ class AmazonSession:
 
     def _get_page_from_url(self,
                            url: str) -> str:
-        page_name = os.path.basename(urlparse(url).path).strip(".html")
+        page_name = os.path.splitext(os.path.basename(urlparse(url).path))[0]
+        if not page_name:
+            page_name = "index"
+
         i = 0
-        while os.path.isfile("{}_{}.html".format(page_name, i)):
+        filename_frmt = "{}_{}.html"
+        while os.path.isfile(filename_frmt.format(page_name, i)):
             i += 1
-        return "{}_{}.html".format(page_name, i)
+        return filename_frmt.format(page_name, i)
 
     def _raise_auth_error(self):
         debug_str = " To capture the page to a file, set the `debug` flag." if not self.debug else ""
