@@ -8,14 +8,14 @@ from amazonorders.entity.parsable import Parsable
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
+__version__ = "1.0.9"
 
 logger = logging.getLogger(__name__)
 
 
 class Seller(Parsable):
     """
-    An Amazon Seller of an Amazon `~amazonorders.entity.item.Item`.
+    An Amazon Seller of an Amazon :class:`~amazonorders.entity.item.Item`.
     """
 
     def __init__(self,

@@ -12,7 +12,7 @@ from amazonorders.session import AmazonSession, IODefault
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.8"
+__version__ = "1.0.9"
 
 logger = logging.getLogger("amazonorders")
 
@@ -28,7 +28,7 @@ class IOClick(IODefault):
                msg: str,
                type: str = None,
                **kwargs: Any):
-        return click.prompt(msg, type=type)
+        return click.prompt("--> {}".format(msg), type=type)
 
 
 @click.group()

@@ -8,14 +8,14 @@ from amazonorders.entity.parsable import Parsable
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
+__version__ = "1.0.9"
 
 logger = logging.getLogger(__name__)
 
 
 class Recipient(Parsable):
     """
-    The person receiving an Amazon `~amazonorders.entity.order.Order`.
+    The person receiving an Amazon :class:`~amazonorders.entity.order.Order`.
     """
 
     def __init__(self,

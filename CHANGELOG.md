@@ -3,8 +3,12 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.8...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.9...HEAD)
+
+## [1.0.9](https://github.com/alexdlaird/pyngrok/compare/1.0.8...1.0.9) - 2024-02-07
 ### Added
+- [AuthForm](https://amazon-orders.readthedocs.io/en/1.0.9/api.html#amazonorders.forms.AuthForm)'s now passes `captcha_img_url` to its `prompt()` fallback for Captcha, useful for overriding [IODefault](https://amazon-orders.readthedocs.io/en/1.0.9/api.html#amazonorders.session.IODefault).
+- [MfaDeviceSelectForm](https://amazon-orders.readthedocs.io/en/1.0.9/api.html#amazonorders.forms.MfaDeviceSelectForm) now passes `mfa_device_select_choices` to `prompt()`, useful for overrides [IODefault](https://amazon-orders.readthedocs.io/en/1.0.9/api.html#amazonorders.session.IODefault).
 - Documentation improvements.
 
 ## [1.0.8](https://github.com/alexdlaird/pyngrok/compare/1.0.7...1.0.8) - 2024-01-30

@@ -12,12 +12,16 @@ from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
+__version__ = "1.0.9"
 
 
 class AuthForm(ABC):
     """
     The base class of an authentication ``<form>`` that can be submitted.
+
+    The base implementation will attempt to auto-solve Captcha. If this fails, it will
+    use the default image view to show the Captcha prompt, and it will also pass the
+    image URL to :func:`~amazonorders.session.IODefault.prompt` as ``captcha_img_url``.
     """
 
     def __init__(self,
@@ -109,7 +113,8 @@ class AuthForm(ABC):
 
             self.amazon_session.io.echo("Info: The Captcha couldn't be auto-solved.")
 
-            captcha_response = self.amazon_session.io.prompt("--> Enter the characters shown in the image")
+            captcha_response = self.amazon_session.io.prompt("Enter the characters shown in the image",
+                                                             captcha_img_url=url)
             self.amazon_session.io.echo("")
 
         return captcha_response
@@ -161,6 +166,19 @@ class SignInForm(AuthForm):
 
 
 class MfaDeviceSelectForm(AuthForm):
+    """
+    This will first echo the ``<form>`` device choices, then it will pass the list of choices
+    to :func:`~amazonorders.session.IODefault.prompt` as ``mfa_device_select_choices``. The value passed to
+    :func:`~amazonorders.session.IODefault.prompt` will be a ``list`` of :class:`~bs4.Tag` s, and here's
+    an example of turning each choice in to a ``str`` we can work with:
+
+    .. code:: python
+
+        for field in mfa_device_select_choices:
+            choice_str = "{}: {}".format(i, field["value"].strip())
+            # ... Do something with the choice
+    """
+
     def __init__(self,
                  selector: str = constants.MFA_DEVICE_SELECT_FORM_SELECTOR,
                  solution_attr_key: str = "otpDeviceContext") -> None:
@@ -181,8 +199,9 @@ class MfaDeviceSelectForm(AuthForm):
             i += 1
 
         otp_device = int(
-            self.amazon_session.io.prompt("--> Enter where you would like your one-time passcode sent",
-                                          type=int)
+            self.amazon_session.io.prompt("Choose where you would like your one-time passcode sent",
+                                          type=int,
+                                          mfa_device_select_choices=contexts)
         )
         self.amazon_session.io.echo("")
 
@@ -204,7 +223,7 @@ class MfaForm(AuthForm):
             additional_attrs = {}
         super().fill_form()
 
-        otp = self.amazon_session.io.prompt("--> Enter the one-time passcode sent to your device")
+        otp = self.amazon_session.io.prompt("Enter the one-time passcode sent to your device")
         self.amazon_session.io.echo("")
 
         additional_attrs.update({self.solution_attr_key: otp,

@@ -16,7 +16,7 @@ from amazonorders.forms import SignInForm, MfaDeviceSelectForm, MfaForm, Captcha
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.8"
+__version__ = "1.0.9"
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class IODefault:
         :param kwargs: Unused by the default implementation.
         :return: The user input result.
         """
-        return input("{}: ".format(msg))
+        return input("--> {}: ".format(msg))
 
 
 class AmazonSession:
