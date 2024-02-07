@@ -174,9 +174,12 @@ class MfaDeviceSelectForm(AuthForm):
 
     .. code:: python
 
+        i = 0
         for field in mfa_device_select_choices:
             choice_str = "{}: {}".format(i, field["value"].strip())
             # ... Do something with the choice
+
+            i += 1
     """
 
     def __init__(self,
