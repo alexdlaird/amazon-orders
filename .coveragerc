@@ -2,7 +2,6 @@
 omit =
     venv/**
     */tests/**
-    setup.py
 
 [report]
 precision = 2
