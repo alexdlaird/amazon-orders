@@ -35,24 +35,15 @@ setup(
         "Changelog": "https://github.com/alexdlaird/amazon-orders-python/blob/main/CHANGELOG.md",
         "Sponsor": "https://github.com/sponsors/alexdlaird"
     },
-    keywords=["python", "amazon", "library", "cli"],
     license="MIT",
     classifiers=[
+        "Development Status :: 4 - Beta",
         "Environment :: Console",
         "Environment :: Web Environment",
-        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: MacOS",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: POSIX",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: Unix",
+        "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ]
 )
