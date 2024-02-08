@@ -31,3 +31,30 @@ Changelog = "https://github.com/alexdlaird/amazon-orders-python/blob/main/CHANGE
 Documentation = "https://amazon-orders.readthedocs.io"
 Sponsor = "https://github.com/sponsors/alexdlaird"
 "Source Code" = "https://github.com/alexdlaird/amazon-orders-python"
+
+[tool.coverage.run]
+omit = [
+    "venv/**",
+    "scripts/**",
+    "*/tests/**"
+]
+
+[tool.coverage.report]
+precision = 2
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+]
+
+[tool.coverage.xml]
+output = "_build/coverage/coverage.xml"
+
+[tool.coverage.html]
+title = "Coverage Report"
+directory = "_build/coverage"
