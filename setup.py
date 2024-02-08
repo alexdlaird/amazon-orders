@@ -1,8 +1,8 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.9"
+__version__ = "1.0.10"
 
 with open("README.md", "r") as f:
     long_description = f.read()
@@ -10,8 +10,7 @@ with open("README.md", "r") as f:
 setup(
     name="amazon-orders",
     version=__version__,
-    packages=["amazonorders",
-              "amazonorders.entity"],
+    packages=find_packages(),
     python_requires=">=3.8",
     install_requires=[
         "click",
@@ -23,14 +22,12 @@ setup(
         [console_scripts]
         amazon-orders=amazonorders.cli:amazon_orders_cli
     """,
-    include_package_data=True,
     description="A CLI and library for interacting with Amazon order history.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Alex Laird",
     author_email="contact@alexlaird.com",
     url="https://github.com/alexdlaird/amazon-orders-python",
-    download_url="https://github.com/alexdlaird/amazon-orders-python/archive/{}.tar.gz".format(__version__),
     project_urls={
         "Changelog": "https://github.com/alexdlaird/amazon-orders-python/blob/main/CHANGELOG.md",
         "Sponsor": "https://github.com/sponsors/alexdlaird"
