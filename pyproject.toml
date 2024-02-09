@@ -1,6 +1,6 @@
 [project]
 name = "amazon-orders"
-version = "1.0.10"
+version = "1.0.11"
 description = "A CLI and library for interacting with Amazon order history."
 readme = "README.md"
 license = { file = "LICENSE" }

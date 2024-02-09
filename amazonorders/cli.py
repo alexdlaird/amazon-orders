@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import platform
 from typing import Any, Optional
 
 import click
@@ -57,7 +58,8 @@ def amazon_orders_cli(ctx: Context,
     Session data is persisted between requests and interactions with the CLI, minimizing the need to reauthenticate
     after a successful login attempt.
     """
-    _print_banner()
+    if ctx.invoked_subcommand != "version":
+        _print_banner()
 
     ctx.ensure_object(dict)
     for key, value in kwargs.items():
@@ -177,11 +179,12 @@ def logout(ctx: Context):
 
 
 @amazon_orders_cli.command()
-def version():
+@click.pass_context
+def version(ctx: Context):
     """
     Show the banner and package version.
     """
-    pass
+    ctx.exit("hookee/{} Python/{}".format(VERSION, platform.python_version()))
 
 
 def _print_banner():
