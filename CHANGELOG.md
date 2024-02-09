@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [1.0.10](https://github.com/alexdlaird/pyngrok/compare/1.0.9...1.0.10) - 2024-02-08
 ### Added
-- Build improvements.
+- Migrated to `pyproject.toml`.
 
 ## [1.0.9](https://github.com/alexdlaird/pyngrok/compare/1.0.8...1.0.9) - 2024-02-07
 ### Added
