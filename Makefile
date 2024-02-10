@@ -14,7 +14,7 @@ virtualenv:
 install: virtualenv
 	@( \
 		source venv/bin/activate; \
-		$(PYTHON_BIN) -m pip install .; \
+		python -m pip install .; \
 	)
 
 nopyc:
@@ -27,28 +27,28 @@ clean: nopyc
 test: virtualenv
 	@( \
 		source venv/bin/activate; \
-		$(PYTHON_BIN) -m pip install ".[dev]"; \
+		python -m pip install ".[dev]"; \
 		python -m coverage run -m unittest discover -v -b && python -m coverage xml && python -m coverage html && python -m coverage report; \
 	)
 
 test-integration: virtualenv
 	@( \
 		source venv/bin/activate; \
-		$(PYTHON_BIN) -m pip install ".[dev]"; \
+		python -m pip install ".[dev]"; \
 		INTEGRATION_TEST=True python -m unittest discover -v -b; \
 	)
 
 test-integration-generic: virtualenv
 	@( \
 		source venv/bin/activate; \
-		$(PYTHON_BIN) -m pip install ".[dev]"; \
+		python -m pip install ".[dev]"; \
 		INTEGRATION_TEST_GENERIC=True python -m unittest discover -v -b; \
 	)
 
 test-integration-json: virtualenv
 	@( \
 		source venv/bin/activate; \
-		$(PYTHON_BIN) -m pip install ".[dev]"; \
+		python -m pip install ".[dev]"; \
 		INTEGRATION_TEST_JSON=True python -m unittest discover -v -b; \
 	)
 
@@ -62,7 +62,7 @@ build-test-resources: virtualenv
 docs: virtualenv
 	@( \
 		source venv/bin/activate; \
-		$(PYTHON_BIN) -m pip install ".[docs]"; \
+		python -m pip install ".[docs]"; \
 		mypy amazonorders; \
 		sphinx-build -M html docs build/docs -n; \
 	)
