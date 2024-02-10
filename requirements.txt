@@ -1,4 +1,0 @@
-click
-requests
-amazoncaptcha
-beautifulsoup4

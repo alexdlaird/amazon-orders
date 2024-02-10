@@ -14,7 +14,7 @@ virtualenv:
 install: virtualenv
 	@( \
 		source venv/bin/activate; \
-		python -m pip install -r requirements.txt -r requirements-dev.txt; \
+		$(PYTHON_BIN) -m pip install .; \
 	)
 
 nopyc:
@@ -22,45 +22,49 @@ nopyc:
 	find . -name __pycache__ | xargs rm -rf || true
 
 clean: nopyc
-	rm -rf _build dist *.egg-info venv
+	rm -rf build dist *.egg-info venv
 
-test: install
+test: virtualenv
 	@( \
 		source venv/bin/activate; \
+		$(PYTHON_BIN) -m pip install ".[dev]"; \
 		python -m coverage run -m unittest discover -v -b && python -m coverage xml && python -m coverage html && python -m coverage report; \
 	)
 
-test-integration: install
+test-integration: virtualenv
 	@( \
 		source venv/bin/activate; \
+		$(PYTHON_BIN) -m pip install ".[dev]"; \
 		INTEGRATION_TEST=True python -m unittest discover -v -b; \
 	)
 
-test-integration-generic: install
+test-integration-generic: virtualenv
 	@( \
 		source venv/bin/activate; \
+		$(PYTHON_BIN) -m pip install ".[dev]"; \
 		INTEGRATION_TEST_GENERIC=True python -m unittest discover -v -b; \
 	)
 
-test-integration-json: install
+test-integration-json: virtualenv
 	@( \
 		source venv/bin/activate; \
+		$(PYTHON_BIN) -m pip install ".[dev]"; \
 		INTEGRATION_TEST_JSON=True python -m unittest discover -v -b; \
 	)
 
-build-test-resources: install
+build-test-resources: virtualenv
 	@( \
 		source venv/bin/activate; \
 		make local; \
 		python scripts/build-test-resources.py; \
 	)
 
-docs: install
+docs: virtualenv
 	@( \
 		source venv/bin/activate; \
-		python -m pip install -r docs/requirements.txt; \
+		$(PYTHON_BIN) -m pip install ".[docs]"; \
 		mypy amazonorders; \
-		sphinx-build -M html docs _build/docs -n; \
+		sphinx-build -M html docs build/docs -n; \
 	)
 
 local:

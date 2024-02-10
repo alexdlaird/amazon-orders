@@ -1,7 +1,0 @@
-Sphinx
-sphinx-notfound-page
-sphinx-autodoc-typehints
-mypy
-types-requests
-types-beautifulsoup4
-types-Pillow
