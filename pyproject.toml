@@ -35,6 +35,7 @@ dev = [
 docs = [
     "Sphinx",
     "sphinx-notfound-page",
+    "sphinx_autodoc_typehints",
     "mypy",
     "types-requests",
     "types-beautifulsoup4",
