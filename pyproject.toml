@@ -8,9 +8,9 @@ maintainers = [{ name = "Alex Laird", email = "contact@alexlaird.com" }]
 requires-python = ">=3.8"
 dependencies = [
     "click>=7.1",
-    "requests",
-    "amazoncaptcha",
-    "beautifulsoup4",
+    "requests>=2.23",
+    "amazoncaptcha>=0.4",
+    "beautifulsoup4>=4.8",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
