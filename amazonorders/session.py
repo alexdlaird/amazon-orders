@@ -148,8 +148,7 @@ class AmazonSession:
         with open(self.cookie_jar_path, "w", encoding="utf-8") as f:
             f.write(json.dumps(cookies))
 
-        logger.debug("Response: {} - {}".format(self.last_response.url,
-                                                self.last_response.status_code))
+        logger.debug(f"Response: {self.last_response.url} - {self.last_response.status_code}")
 
         if self.debug:
             page_name = self._get_page_from_url(self.last_response.url)
@@ -255,23 +254,22 @@ class AmazonSession:
             page_name = "index"
 
         i = 0
-        filename_frmt = "{}_{}.html"
-        while os.path.isfile(filename_frmt.format(page_name, i)):
+        filename_frmt = "{page_name}_{index}.html"
+        while os.path.isfile(filename_frmt.format(page_name=page_name, index=i)):
             i += 1
-        return filename_frmt.format(page_name, i)
+        return filename_frmt.format(page_name=page_name, index=i)
 
     def _raise_auth_error(self):
         debug_str = " To capture the page to a file, set the `debug` flag." if not self.debug else ""
         if self.last_response.ok:
-            error_msg = ("An error occurred, this is an unknown page, or its parsed contents don't match a "
-                         "known auth flow: {}.{}").format(self.last_response.url, debug_str)
+            error_msg = f"An error occurred, this is an unknown page, or its parsed contents don't match a known auth flow: {self.last_response.url}.{debug_str}"
         else:
-            error_msg = "An error occurred, the page {} returned {}."
+            error_msg = "An error occurred, the page {url} returned {status_code}."
             if 500 <= self.last_response.status_code < 600:
                 error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
                               "Wait a bit before trying again.")
 
-            error_msg = error_msg.format(self.last_response.url,
-                                         self.last_response.status_code) + debug_str
+            error_msg = error_msg.format(url=self.last_response.url,
+                                         status_code=self.last_response.status_code) + debug_str
 
         raise AmazonOrdersAuthError(error_msg)

@@ -128,8 +128,8 @@ class AuthForm(ABC):
                 parsed_url = urlparse(self.amazon_session.last_response.url)
                 return f"{parsed_url.scheme}://{parsed_url.netloc}{action}"
             else:
-                return "{}/{}".format(
-                    "/".join(self.amazon_session.last_response.url.split("/")[:-1]), action)
+                return "{url}/{path}".format(url="/".join(self.amazon_session.last_response.url.split("/")[:-1]),
+                                             path=action)
         else:
             return action
 

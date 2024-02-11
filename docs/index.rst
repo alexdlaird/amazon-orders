@@ -60,7 +60,7 @@ Or use ``amazon-orders`` programmatically:
     orders = amazon_orders.get_order_history(year=2023)
 
     for order in orders:
-        print("{} - {}".format(order.order_number, order.grand_total))
+        print(f"{order.order_number} - {order.grand_total}")
 
 Dive Deeper
 ===========
