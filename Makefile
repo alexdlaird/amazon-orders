@@ -1,4 +1,4 @@
-.PHONY: all virtualenv install nopyc clean test test-integration test-integration-generic test-integration-json build-test-resources docs local validate-release upload
+.PHONY: all virtualenv install nopyc clean test test-integration test-integration-generic test-integration-json build-test-resources docs check-style local validate-release upload
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -63,8 +63,15 @@ docs: virtualenv
 	@( \
 		source venv/bin/activate; \
 		python -m pip install ".[docs]"; \
-		mypy amazonorders; \
 		sphinx-build -M html docs build/docs -n; \
+	)
+
+check-style: virtualenv
+	@( \
+		source venv/bin/activate; \
+		python -m pip install ".[dev,docs]"; \
+		mypy amazonorders; \
+		flake8; \
 	)
 
 local:

@@ -30,7 +30,10 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "coverage[toml]",
-    "responses"
+    "responses",
+    "flake8",
+    "flake8-pyproject",
+    "pep8-naming"
 ]
 docs = [
     "Sphinx",
