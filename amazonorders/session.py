@@ -266,13 +266,12 @@ class AmazonSession:
             error_msg = ("An error occurred, this is an unknown page, or its parsed contents don't match a "
                          "known auth flow: {}.{}").format(self.last_response.url, debug_str)
         else:
-            error_msg = "An error occurred, the page {} returned {}.".format(self.last_response.url,
-                                                                             self.last_response.status_code)
+            error_msg = "An error occurred, the page {} returned {}."
             if 500 <= self.last_response.status_code < 600:
                 error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
-                              "Wait a bit before trying again.").format(self.last_response.url,
-                                                                        self.last_response.status_code)
+                              "Wait a bit before trying again.")
 
-            error_msg += debug_str
+            error_msg = error_msg.format(self.last_response.url,
+                                         self.last_response.status_code) + debug_str
 
         raise AmazonOrdersAuthError(error_msg)

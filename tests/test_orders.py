@@ -56,7 +56,7 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.GET,
-                "{}?timeFilter=year-2010&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2".format(
+                "{}?timeFilter=year-{}&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2".format(
                     ORDER_HISTORY_URL, year),
                 body=f.read(),
                 status=200,
