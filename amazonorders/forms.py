@@ -126,8 +126,7 @@ class AuthForm(ABC):
         elif not action.startswith("http"):
             if action.startswith("/"):
                 parsed_url = urlparse(self.amazon_session.last_response.url)
-                return "{}://{}{}".format(parsed_url.scheme, parsed_url.netloc,
-                                          action)
+                return f"{parsed_url.scheme}://{parsed_url.netloc}{action}"
             else:
                 return "{}/{}".format(
                     "/".join(self.amazon_session.last_response.url.split("/")[:-1]), action)
@@ -137,7 +136,7 @@ class AuthForm(ABC):
     def _handle_errors(self) -> None:
         error_tag = self.amazon_session.last_response_parsed.select_one(self.error_selector)
         if error_tag:
-            error_msg = "An error occurred: {}\n".format(error_tag.text.strip())
+            error_msg = f"An error occurred: {error_tag.text.strip()}\n"
 
             if self.critical:
                 raise AmazonOrdersAuthError(error_msg)
@@ -198,7 +197,7 @@ class MfaDeviceSelectForm(AuthForm):
         contexts = self.form.select(constants.MFA_DEVICE_SELECT_INPUT_SELECTOR)
         i = 1
         for field in contexts:
-            self.amazon_session.io.echo("{}: {}".format(i, field["value"].strip()))
+            self.amazon_session.io.echo(f"{i}: {field['value'].strip()}")
             i += 1
 
         otp_device = int(
@@ -252,7 +251,7 @@ class CaptchaForm(AuthForm):
         # TODO: eliminate the use of find_parent() here
         img_url = self.form.find_parent().select_one("img")["src"]
         if not img_url.startswith("http"):
-            img_url = "{}{}".format(constants.BASE_URL, img_url)
+            img_url = f"{constants.BASE_URL}{img_url}"
         solution = self._solve_captcha(img_url)
 
         additional_attrs.update({self.solution_attr_key: solution})

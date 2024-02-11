@@ -58,10 +58,10 @@ class AmazonOrders:
             constants.HISTORY_FILTER_QUERY_PARAM = "orderFilter"
 
         orders = []
-        next_page = "{}?{}=year-{}{}".format(constants.ORDER_HISTORY_URL,
-                                             constants.HISTORY_FILTER_QUERY_PARAM,
-                                             year,
-                                             "&startIndex={}".format(start_index) if start_index else "")
+        next_page = "{url}?{query_param}=year-{year}{optional_start_index}".format(url=constants.ORDER_HISTORY_URL,
+                                                                                   query_param=constants.HISTORY_FILTER_QUERY_PARAM,
+                                                                                   year=year,
+                                                                                   optional_start_index=f"&startIndex={start_index}" if start_index else "")
         while next_page:
             self.amazon_session.get(next_page)
             response_parsed = self.amazon_session.last_response_parsed
@@ -83,7 +83,7 @@ class AmazonOrders:
                 if next_page_tag:
                     next_page = next_page_tag["href"]
                     if not next_page.startswith("http"):
-                        next_page = "{}{}".format(constants.BASE_URL, next_page)
+                        next_page = f"{constants.BASE_URL}{next_page}"
                 else:
                     logger.debug("No next page")
             else:
@@ -102,7 +102,7 @@ class AmazonOrders:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        self.amazon_session.get("{}?orderID={}".format(constants.ORDER_DETAILS_URL, order_id))
+        self.amazon_session.get(f"{constants.ORDER_DETAILS_URL}?orderID={order_id}")
 
         order_details_tag = self.amazon_session.last_response_parsed.select_one(constants.ORDER_DETAILS_ENTITY_SELECTOR)
         order = Order(order_details_tag, full_details=True)

@@ -109,7 +109,7 @@ class TestIntegrationJSON(TestCase):
         self.assertTrue(self.amazon_session.is_authenticated)
 
     def run_json_test(self):
-        print("Info: Dynamic test is running from JSON file {}".format(self.filename))
+        print(f"Info: Dynamic test is running from JSON file {self.filename}")
 
         # GIVEN
         func = self.data.pop("func")
@@ -140,8 +140,7 @@ class TestIntegrationJSON(TestCase):
             self.assert_json_items(order, order_json)
         else:
             self.fail(
-                "Unknown function AmazonOrders.{}, check JSON in test file {}".format(
-                    func, self.filename))
+                f"Unknown function AmazonOrders. {func}, check JSON in test file {self.filename}")
 
     def assert_json_items(self, entity, json_dict):
         for json_key, json_value in json_dict.items():

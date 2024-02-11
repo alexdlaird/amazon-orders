@@ -44,10 +44,10 @@ class Item(Parsable):
                                                               return_type=int)
 
     def __repr__(self) -> str:
-        return "<Item: \"{}\">".format(self.title)
+        return f"<Item: \"{self.title}\">"
 
     def __str__(self) -> str:  # pragma: no cover
-        return "Item: {}".format(self.title)
+        return f"Item: {self.title}"
 
     def __lt__(self, other):
         return self.title < other.title

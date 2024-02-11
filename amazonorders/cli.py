@@ -31,7 +31,7 @@ class IOClick(IODefault):
                msg: str,
                type: str = None,
                **kwargs: Any):
-        return click.prompt("--> {}".format(msg), type=type)
+        return click.prompt(f"--> {msg}", type=type)
 
 
 @click.group()
@@ -102,11 +102,10 @@ def history(ctx: Context,
     full_details = kwargs["full_details"]
 
     click.echo("""-----------------------------------------------------------------------
-Order History for {}{}{}
------------------------------------------------------------------------\n""".format(year,
-                                                                                    ", startIndex={}, one page".format(
-                                                                                        start_index) if start_index else ", all pages",
-                                                                                    ", with full details" if full_details else ""))
+Order History for {year}{optional_start_index}{optional_full_details}
+-----------------------------------------------------------------------\n""".format(year=year,
+                                                                                    optional_start_index=f", startIndex={start_index}, one page" if start_index else ", all pages",
+                                                                                    optional_full_details=", with full details" if full_details else ""))
 
     click.echo("Info: This might take a minute ...\n")
 
@@ -122,7 +121,7 @@ Order History for {}{}{}
                                                  full_details=kwargs["full_details"], )
 
         for order in orders:
-            click.echo("{}\n".format(_order_output(order)))
+            click.echo(f"{_order_output(order)}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -147,7 +146,7 @@ def order(ctx: Context,
 
         order = amazon_orders.get_order(order_id)
 
-        click.echo("{}\n".format(_order_output(order)))
+        click.echo(f"{_order_output(order)}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -184,11 +183,11 @@ def version(ctx: Context):
     """
     Show the banner and package version.
     """
-    ctx.exit("hookee/{} Python/{}".format(VERSION, platform.python_version()))
+    ctx.exit(f"hookee/{VERSION} Python/{platform.python_version()}")
 
 
 def _print_banner():
-    click.echo("""
+    click.echo(f"""
 =======================================================================
   ___                                   _____         _               
  / _ \                                 |  _  |       | |              
@@ -197,8 +196,8 @@ def _print_banner():
 | | | | | | | | | (_| |/ / (_) | | | | \ \_/ / | | (_| |  __/ |  \__ \\
 \_| |_/_| |_| |_|\__,_/___\___/|_| |_|  \___/|_|  \__,_|\___|_|  |___/                                                                   
 =======================================================================
-                                                               v{}
-""".format(VERSION))
+                                                               v{VERSION}
+""")
 
 
 def _authenticate(ctx: Context,
@@ -221,31 +220,31 @@ def _order_output(order):
 Order #{}
 -----------------------------------------------------------------------""".format(order.order_number)
 
-    order_str += "\n  Shipments: {}".format(order.shipments)
-    order_str += "\n  Order Details Link: {}".format(order.order_details_link)
-    order_str += "\n  Grand Total: ${:,.2f}".format(order.grand_total)
-    order_str += "\n  Order Placed Date: {}".format(order.order_placed_date)
-    order_str += "\n  {}".format(order.recipient)
+    order_str += f"\n  Shipments: {order.shipments}"
+    order_str += f"\n  Order Details Link: {order.order_details_link}"
+    order_str += f"\n  Grand Total: ${order.grand_total:,.2f}"
+    order_str += f"\n  Order Placed Date: {order.order_placed_date}"
+    order_str += f"\n  {order.recipient}"
     if order.payment_method:
-        order_str += "\n  Payment Method: {}".format(order.payment_method)
+        order_str += f"\n  Payment Method: {order.payment_method}"
     if order.payment_method_last_4:
-        order_str += "\n  Payment Method Last 4: {}".format(order.payment_method_last_4)
+        order_str += f"\n  Payment Method Last 4: {order.payment_method_last_4}"
     if order.subtotal:
-        order_str += "\n  Subtotal: ${:,.2f}".format(order.subtotal)
+        order_str += f"\n  Subtotal: ${order.subtotal:,.2f}"
     if order.shipping_total:
-        order_str += "\n  Shipping Total: ${:,.2f}".format(order.shipping_total)
+        order_str += f"\n  Shipping Total: ${order.shipping_total:,.2f}"
     if order.subscription_discount:
-        order_str += "\n  Subscription Discount: ${:,.2f}".format(order.subscription_discount)
+        order_str += f"\n  Subscription Discount: ${order.subscription_discount:,.2f}"
     if order.total_before_tax:
-        order_str += "\n  Total Before Tax: ${:,.2f}".format(order.total_before_tax)
+        order_str += f"\n  Total Before Tax: ${order.total_before_tax:,.2f}"
     if order.estimated_tax:
-        order_str += "\n  Estimated Tax: ${:,.2f}".format(order.estimated_tax)
+        order_str += f"\n  Estimated Tax: ${order.estimated_tax:,.2f}"
     if order.refund_total:
-        order_str += "\n  Refund Total: ${:,.2f}".format(order.refund_total)
+        order_str += f"\n  Refund Total: ${order.refund_total:,.2f}"
     if order.order_shipped_date:
-        order_str += "\n  Order Shipped Date: {}".format(order.order_shipped_date)
+        order_str += f"\n  Order Shipped Date: {order.order_shipped_date}"
     if order.refund_completed_date:
-        order_str += "\n  Refund Completed Date: {}".format(order.refund_completed_date)
+        order_str += f"\n  Refund Completed Date: {order.refund_completed_date}"
 
     order_str += "\n-----------------------------------------------------------------------"
 

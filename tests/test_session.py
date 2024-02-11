@@ -41,7 +41,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/gp/sign-in.html".format(BASE_URL),
+                f"{BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
@@ -68,7 +68,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/gp/sign-in.html".format(BASE_URL),
+                f"{BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
@@ -96,7 +96,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/gp/sign-in.html".format(BASE_URL),
+                f"{BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
@@ -132,7 +132,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/gp/sign-in.html".format(BASE_URL),
+                f"{BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
@@ -175,7 +175,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/gp/sign-in.html".format(BASE_URL),
+                f"{BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
@@ -183,12 +183,12 @@ class TestSession(UnitTestCase):
             responses.POST,
             SIGN_IN_REDIRECT_URL,
             status=302,
-            headers={"Location": "{}/ap/cvf/request".format(BASE_URL)}
+            headers={"Location": f"{BASE_URL}/ap/cvf/request"}
         )
         with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-1.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.GET,
-                "{}/ap/cvf/request".format(BASE_URL),
+                f"{BASE_URL}/ap/cvf/request",
                 body=f.read(),
                 status=200
             )
@@ -218,7 +218,7 @@ class TestSession(UnitTestCase):
             }
             resp5 = responses.add(
                 responses.POST,
-                "{}/ap/cvf/verify".format(BASE_URL),
+                f"{BASE_URL}/ap/cvf/verify",
                 body=f.read(),
                 status=200,
                 match=[urlencoded_params_matcher(request_data)],
@@ -241,7 +241,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/gp/sign-in.html".format(BASE_URL),
+                f"{BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
@@ -263,7 +263,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.GET,
-                "{}/errors/validateCaptcha".format(BASE_URL),
+                f"{BASE_URL}/errors/validateCaptcha",
                 body=f.read(),
                 status=200,
                 match=[query_string_matcher(
@@ -288,7 +288,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/gp/sign-in.html".format(BASE_URL),
+                f"{BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
@@ -296,12 +296,12 @@ class TestSession(UnitTestCase):
             responses.POST,
             SIGN_IN_REDIRECT_URL,
             status=302,
-            headers={"Location": "{}/ap/cvf/request".format(BASE_URL)}
+            headers={"Location": f"{BASE_URL}/ap/cvf/request"}
         )
         with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-1.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.GET,
-                "{}/ap/cvf/request".format(BASE_URL),
+                f"{BASE_URL}/ap/cvf/request",
                 body=f.read(),
                 status=200
             )
@@ -316,7 +316,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp5 = responses.add(
                 responses.POST,
-                "{}/ap/cvf/verify".format(BASE_URL),
+                f"{BASE_URL}/ap/cvf/verify",
                 body=f.read(),
                 status=200,
             )
@@ -340,7 +340,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}/gp/sign-in.html".format(BASE_URL),
+                f"{BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
@@ -354,7 +354,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.POST,
-                "{}/ap/cvf/approval/verifyOtp".format(BASE_URL),
+                f"{BASE_URL}/ap/cvf/approval/verifyOtp",
                 body=f.read(),
                 status=200,
             )

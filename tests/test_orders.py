@@ -52,12 +52,11 @@ class TestOrders(UnitTestCase):
         year = 2010
         resp1 = self.given_order_history_landing_exists()
         resp2 = self.given_order_history_exists(year, 0)
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-10.html".format(year)), "r",
+        with open(os.path.join(self.RESOURCES_DIR, f"order-history-{year}-10.html"), "r",
                   encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.GET,
-                "{}?timeFilter=year-{}&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2".format(
-                    ORDER_HISTORY_URL, year),
+                f"{ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2",
                 body=f.read(),
                 status=200,
             )
@@ -176,11 +175,11 @@ class TestOrders(UnitTestCase):
         # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "112-9685975-5907428"
-        with open(os.path.join(self.RESOURCES_DIR, "order-details-{}.html".format(order_id)), "r",
+        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}?orderID={}".format(ORDER_DETAILS_URL, order_id),
+                f"{ORDER_DETAILS_URL}?orderID={order_id}",
                 body=f.read(),
                 status=200,
             )

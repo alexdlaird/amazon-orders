@@ -41,10 +41,11 @@ class Parsable:
         try:
             return parse_function(**kwargs)
         except (AttributeError, IndexError, ValueError):
-            logger.warning("When building {}, `{}` could not be parsed.".format(self.__class__.__name__,
-                                                                                parse_function.__name__.split(
-                                                                                    "_parse_")[1]),
-                           exc_info=True)
+            logger.warning(
+                "When building {name}, `{function}` could not be parsed.".format(name=self.__class__.__name__,
+                                                                                 function=parse_function.__name__.split(
+                                                                                     "_parse_")[1]),
+                exc_info=True)
 
     def simple_parse(self,
                      selector: Union[str, list],
@@ -94,8 +95,8 @@ class Parsable:
         # None of the selectors were found
         if not value and required:
             raise AmazonOrderEntityError(
-                "When building {}, field for selector `{}` was None, but this is not allowed.".format(
-                    self.__class__.__name__, selector))
+                "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
+                    name=self.__class__.__name__, selector=selector))
 
         return value
 
@@ -119,5 +120,5 @@ class Parsable:
         :return: The fully qualified URL.
         """
         if not url.startswith("http"):
-            url = "{}{}".format(BASE_URL, url)
+            url = f"{BASE_URL}{url}"
         return url

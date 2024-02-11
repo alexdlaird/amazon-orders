@@ -35,10 +35,10 @@ class Shipment(Parsable):
             link=True)
 
     def __repr__(self) -> str:
-        return "<Shipment: \"{}\">".format(self.items)
+        return f"<Shipment: \"{self.items}\">"
 
     def __str__(self) -> str:  # pragma: no cover
-        return "Shipment: {}".format(self.items)
+        return f"Shipment: {self.items}"
 
     def __lt__(self, other):
         if self.delivery_status:

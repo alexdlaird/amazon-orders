@@ -76,10 +76,10 @@ class Order(Parsable):
         self.refund_completed_date: Optional[date] = self._parse_refund_completed_date() if self.full_details else None
 
     def __repr__(self) -> str:
-        return "<Order #{}: \"{}\">".format(self.order_number, self.items)
+        return f"<Order #{self.order_number}: \"{self.items}\">"
 
     def __str__(self) -> str:  # pragma: no cover
-        return "Order #{}: {}".format(self.order_number, self.items)
+        return f"Order #{self.order_number}: {self.items}"
 
     def _parse_shipments(self) -> List[Shipment]:
         shipments = [Shipment(x) for x in self.parsed.select(constants.SHIPMENT_ENTITY_SELECTOR)]
@@ -95,7 +95,7 @@ class Order(Parsable):
         value = self.simple_parse(constants.FIELD_ORDER_DETAILS_LINK_SELECTOR, link=True)
 
         if not value and self.order_number:
-            value = "{}?orderID={}".format(constants.ORDER_DETAILS_URL, self.order_number)
+            value = f"{constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
 
         return value
 

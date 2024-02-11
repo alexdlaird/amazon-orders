@@ -82,24 +82,21 @@ def build_test_resources(args):
 
     for page in pages_to_download:
         if page["type"] == "order-details":
-            url = "{}?orderID={}".format(ORDER_DETAILS_URL, page["order-id"])
+            url = f"{ORDER_DETAILS_URL}?orderID={page['order-id']}"
             response = amazon_session.get(url)
             response_parsed = BeautifulSoup(response.text, "html.parser")
 
             cleaned_response = _obfuscate(response_parsed, hide_data_rules)
 
-            page_name = "order-details-{}.html".format(page["order-id"])
+            page_name = f"order-details-{page['order-id']}.html"
         else:
-            url = "{}?timeFilter=year-{}&startIndex={}".format(ORDER_HISTORY_URL,
-                                                               page["year"],
-                                                               page["start-index"])
+            url = f"{ORDER_HISTORY_URL}?timeFilter=year-{page['year']}&startIndex={page['start-index']}"
             response = amazon_session.get(url)
             response_parsed = BeautifulSoup(response.text, "html.parser")
 
             cleaned_response = _obfuscate(response_parsed, hide_data_rules)
 
-            page_name = "order-history-{}-{}.html".format(page["year"],
-                                                          page["start-index"])
+            page_name = f"order-history-{page['year']}-{page['start-index']}.html"
 
         with open(os.path.join(ROOT_DIR, "tests", "resources", page_name), "w",
                   encoding="utf-8") as html_file:

@@ -28,10 +28,10 @@ class Recipient(Parsable):
         self.address: Optional[str] = self.safe_parse(self._parse_address)
 
     def __repr__(self) -> str:
-        return "<Recipient: \"{}\">".format(self.name)
+        return f"<Recipient: \"{self.name}\">"
 
     def __str__(self) -> str:  # pragma: no cover
-        return "Recipient: {}".format(self.name)
+        return f"Recipient: {self.name}"
 
     def _parse_address(self) -> Optional[str]:
         value = self.simple_parse(constants.FIELD_RECIPIENT_ADDRESS1_SELECTOR)

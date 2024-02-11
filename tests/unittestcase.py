@@ -67,13 +67,13 @@ class UnitTestCase(TestCase):
             )
 
     def given_order_history_exists(self, year, start_index):
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-{}-{}.html".format(year, start_index)), "r",
+        with open(os.path.join(self.RESOURCES_DIR, f"order-history-{year}-{start_index}.html"), "r",
                   encoding="utf-8") as f:
             return responses.add(
                 responses.GET,
-                "{}?timeFilter=year-{}{}".format(ORDER_HISTORY_URL,
-                                                 year,
-                                                 "&startIndex={}".format(start_index) if start_index else ""),
+                "{url}?timeFilter=year-{year}{optional_start_index}".format(url=ORDER_HISTORY_URL,
+                                                                            year=year,
+                                                                            optional_start_index=f"&startIndex={start_index}" if start_index else ""),
                 body=f.read(),
                 status=200,
             )
@@ -83,7 +83,7 @@ class UnitTestCase(TestCase):
                   encoding="utf-8") as f:
             return responses.add(
                 responses.GET,
-                re.compile("{}?.*".format(ORDER_DETAILS_URL)),
+                re.compile(f"{ORDER_DETAILS_URL}?.*"),
                 body=f.read(),
                 status=200,
             )

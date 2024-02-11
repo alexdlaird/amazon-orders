@@ -12,17 +12,17 @@ BASE_URL = "https://www.amazon.com"
 # URLs for AmazonSession
 ##########################################################################
 
-SIGN_IN_URL = "{}/gp/sign-in.html".format(BASE_URL)
-SIGN_IN_REDIRECT_URL = "{}/ap/signin".format(BASE_URL)
-SIGN_OUT_URL = "{}/gp/sign-out.html".format(BASE_URL)
+SIGN_IN_URL = f"{BASE_URL}/gp/sign-in.html"
+SIGN_IN_REDIRECT_URL = f"{BASE_URL}/ap/signin"
+SIGN_OUT_URL = f"{BASE_URL}/gp/sign-out.html"
 
 ##########################################################################
 # URLs for AmazonOrders
 ##########################################################################
 
-ORDER_HISTORY_LANDING_URL = "{}/gp/css/order-history".format(BASE_URL)
-ORDER_HISTORY_URL = "{}/your-orders/orders".format(BASE_URL)
-ORDER_DETAILS_URL = "{}/gp/your-account/order-details".format(BASE_URL)
+ORDER_HISTORY_LANDING_URL = f"{BASE_URL}/gp/css/order-history"
+ORDER_HISTORY_URL = f"{BASE_URL}/your-orders/orders"
+ORDER_DETAILS_URL = f"{BASE_URL}/gp/your-account/order-details"
 HISTORY_FILTER_QUERY_PARAM = "timeFilter"
 
 ##########################################################################

@@ -67,8 +67,7 @@ class TestCli(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                "{}?orderID={}".format(ORDER_DETAILS_URL,
-                                       order_id),
+                f"{ORDER_DETAILS_URL}?orderID={order_id}",
                 body=f.read(),
                 status=200,
             )

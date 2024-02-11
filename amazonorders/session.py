@@ -58,7 +58,7 @@ class IODefault:
         :param kwargs: Unused by the default implementation.
         :return: The user input result.
         """
-        return input("--> {}: ".format(msg))
+        return input(f"--> {msg}: ")
 
 
 class AmazonSession:
@@ -136,7 +136,7 @@ class AmazonSession:
             kwargs["headers"] = {}
         kwargs["headers"].update(constants.BASE_HEADERS)
 
-        logger.debug("{} request to {}".format(method, url))
+        logger.debug(f"{method} request to {url}")
 
         self.last_response = self.session.request(method, url, **kwargs)
         self.last_response_parsed = BeautifulSoup(self.last_response.text,
@@ -156,7 +156,7 @@ class AmazonSession:
             with open(os.path.join(self.output_dir, page_name), "w",
                       encoding="utf-8") as html_file:
                 logger.debug(
-                    "Response written to file: {}".format(html_file.name))
+                    f"Response written to file: {html_file.name}")
                 html_file.write(self.last_response.text)
 
         return self.last_response

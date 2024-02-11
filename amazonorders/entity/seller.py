@@ -28,10 +28,10 @@ class Seller(Parsable):
         self.link: Optional[str] = self.safe_simple_parse(selector=constants.FIELD_SELLER_LINK_SELECTOR, link=True)
 
     def __repr__(self) -> str:
-        return "<Seller: \"{}\">".format(self.name)
+        return f"<Seller: \"{self.name}\">"
 
     def __str__(self) -> str:  # pragma: no cover
-        return "Seller: {}".format(self.name)
+        return f"Seller: {self.name}"
 
     def _parse_name(self) -> str:
         match_text = "Sold by:"
