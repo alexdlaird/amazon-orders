@@ -12,7 +12,7 @@ from tests.testcase import TestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
+__version__ = "1.0.13"
 
 
 @unittest.skipIf(os.environ.get("INTEGRATION_TEST", "False") == "True",
@@ -42,7 +42,12 @@ class UnitTestCase(TestCase):
             "openid.return_to": "ape:aHR0cHM6Ly93d3cuYW1hem9uLmNvbT8=",
             "prevRID": "ape:SFJBTkVINFBKNkdaU0M2M0dCU00=",
             "subPageType": "SignInClaimCollect",
-            "workflowState": "eyJ6aXAiOiJERUYiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiQTI1NktXIn0.Fhepst_Il21IpAOIEkjtrH9SBeoOApEaG8sCosdpXrbypsISYkeDTw.J5kd8Up08rEVyLYz.TomGGK9BH7ZmR-rz-ZWg7lzmi9rDVcoR_zEZopGMVbOKZhS_wbIx9gFQDdLvCGl8Hc17HJM32_Y2uPj1wEO9ADAYSetlkLDVWuz8xXF0ihtc9Y_UNqDPv1JH_u6LxEOOdKkPIjDhH5yeZ_1OO0K_4Im2AUX6mYpNIu-hIio7WGMmMgANT98nQY8uNuRyPSQQx-TsboMC7T6ogs0xV-6aDyPDzlkCaOp-ZgDSwgrsy-1vxs_Ec0LTdMFSmL2E7zw.ZH7JT2vSuhaN7AGthFkRXg",
+            "workflowState": "eyJ6aXAiOiJERUYiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiQTI1NktXIn0.Fhepst_Il21IpAOIEkjtr"
+                             "H9SBeoOApEaG8sCosdpXrbypsISYkeDTw.J5kd8Up08rEVyLYz.TomGGK9BH7ZmR-rz-ZWg7lzmi9rDVc"
+                             "oR_zEZopGMVbOKZhS_wbIx9gFQDdLvCGl8Hc17HJM32_Y2uPj1wEO9ADAYSetlkLDVWuz8xXF0ihtc9Y_"
+                             "UNqDPv1JH_u6LxEOOdKkPIjDhH5yeZ_1OO0K_4Im2AUX6mYpNIu-hIio7WGMmMgANT98nQY8uNuRyPSQQ"
+                             "x-TsboMC7T6ogs0xV-6aDyPDzlkCaOp-ZgDSwgrsy-1vxs_Ec0LTdMFSmL2E7zw.ZH7JT2vSuhaN7AGth"
+                             "FkRXg",
             "email": "some-username",
             "password": "some-password",
             "rememberMe": "true"
@@ -69,11 +74,13 @@ class UnitTestCase(TestCase):
     def given_order_history_exists(self, year, start_index):
         with open(os.path.join(self.RESOURCES_DIR, f"order-history-{year}-{start_index}.html"), "r",
                   encoding="utf-8") as f:
+            optional_start_index = f"&startIndex={start_index}" if start_index else ""
             return responses.add(
                 responses.GET,
-                "{url}?timeFilter=year-{year}{optional_start_index}".format(url=ORDER_HISTORY_URL,
-                                                                            year=year,
-                                                                            optional_start_index=f"&startIndex={start_index}" if start_index else ""),
+                "{url}?timeFilter=year-{year}"
+                "{optional_start_index}".format(url=ORDER_HISTORY_URL,
+                                                year=year,
+                                                optional_start_index=optional_start_index),
                 body=f.read(),
                 status=200,
             )

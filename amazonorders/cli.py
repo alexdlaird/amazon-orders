@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import os
 import platform
 from typing import Any, Optional
 
@@ -15,9 +16,13 @@ from amazonorders.session import AmazonSession, IODefault
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.10"
+__version__ = "1.0.13"
 
 logger = logging.getLogger("amazonorders")
+
+banner_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "banner.txt")
+with open(banner_path) as f:
+    banner = f.read()
 
 
 class IOClick(IODefault):
@@ -37,7 +42,8 @@ class IOClick(IODefault):
 @click.group()
 @click.option('--username', help="An Amazon username.")
 @click.option('--password', help="An Amazon password.")
-@click.option('--debug', is_flag=True, default=False, help="Enable debugging and send output to command line.")
+@click.option('--debug', is_flag=True, default=False, help="Enable debugging and send output to "
+                                                           "command line.")
 @click.option('--max-auth-attempts', default=10,
               help="Will continue in the login auth loop this many times (successes and failures).")
 @click.option('--output-dir', default=DEFAULT_OUTPUT_DIR,
@@ -101,11 +107,14 @@ def history(ctx: Context,
     start_index = kwargs["start_index"]
     full_details = kwargs["full_details"]
 
+    optional_start_index = f", startIndex={start_index}, one page" if start_index else ", all pages"
+    optional_full_details = ", with full details" if full_details else ""
     click.echo("""-----------------------------------------------------------------------
 Order History for {year}{optional_start_index}{optional_full_details}
------------------------------------------------------------------------\n""".format(year=year,
-                                                                                    optional_start_index=f", startIndex={start_index}, one page" if start_index else ", all pages",
-                                                                                    optional_full_details=", with full details" if full_details else ""))
+-----------------------------------------------------------------------\n"""
+               .format(year=year,
+                       optional_start_index=optional_start_index,
+                       optional_full_details=optional_full_details))
 
     click.echo("Info: This might take a minute ...\n")
 
@@ -183,21 +192,12 @@ def version(ctx: Context):
     """
     Show the banner and package version.
     """
-    ctx.exit(f"hookee/{VERSION} Python/{platform.python_version()}")
+    click.echo(f"hookee/{VERSION} Python/{platform.python_version()}")
+    ctx.exit(0)
 
 
 def _print_banner():
-    click.echo(f"""
-=======================================================================
-  ___                                   _____         _               
- / _ \                                 |  _  |       | |              
-/ /_\ \_ __ ___   __ _ _______  _ __   | | | |_ __ __| | ___ _ __ ___ 
-|  _  | '_ ` _ \ / _` |_  / _ \| '_ \  | | | | '__/ _` |/ _ \ '__/ __|
-| | | | | | | | | (_| |/ / (_) | | | | \ \_/ / | | (_| |  __/ |  \__ \\
-\_| |_/_| |_| |_|\__,_/___\___/|_| |_|  \___/|_|  \__,_|\___|_|  |___/                                                                   
-=======================================================================
-                                                               v{VERSION}
-""")
+    click.echo(banner.format(version=VERSION))
 
 
 def _authenticate(ctx: Context,
@@ -210,7 +210,8 @@ def _authenticate(ctx: Context,
     if amazon_session.auth_cookies_stored():
         if amazon_session.username or amazon_session.password:
             click.echo("Info: You've provided --username and --password, but because a previous session still exists,"
-                       "that is being ignored. If you would like to reauthenticate, call the `logout` command first.\n")
+                       "that is being ignored. If you would like to reauthenticate, call the `logout` command "
+                       "first.\n")
 
     amazon_session.login()
 

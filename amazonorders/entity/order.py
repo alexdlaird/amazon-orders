@@ -14,7 +14,7 @@ from amazonorders.entity.shipment import Shipment
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
+__version__ = "1.0.13"
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class Order(Parsable):
     def _parse_order_number(self) -> str:
         try:
             order_details_link = self._parse_order_details_link()
-        except:
+        except Exception:
             # We're not using safe_parse here because it's fine if this fails, no need for noise
             order_details_link = None
 
@@ -154,7 +154,8 @@ class Order(Parsable):
                     value = BeautifulSoup(json.loads(inline_content), "html.parser")
 
         if not value:
-            # TODO: there are multiple shipToData tags, we should double check we're picking the right one associated with the order
+            # TODO: there are multiple shipToData tags, we should double check we're picking the right one
+            #  associated with the order
             parent_tag = self.parsed.find_parent().select_one(constants.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
             value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
 

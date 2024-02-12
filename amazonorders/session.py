@@ -16,7 +16,7 @@ from amazonorders.forms import SignInForm, MfaDeviceSelectForm, MfaForm, Captcha
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.9"
+__version__ = "1.0.13"
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,9 @@ AUTH_FORMS = [SignInForm(),
               MfaDeviceSelectForm(),
               MfaForm(),
               CaptchaForm(),
-              CaptchaForm(constants.CAPTCHA_2_FORM_SELECTOR, constants.CAPTCHA_2_ERROR_SELECTOR, "field-keywords"),
+              CaptchaForm(constants.CAPTCHA_2_FORM_SELECTOR,
+                          constants.CAPTCHA_2_ERROR_SELECTOR,
+                          "field-keywords"),
               MfaForm(constants.CAPTCHA_OTP_FORM_SELECTOR)]
 
 
@@ -88,7 +90,7 @@ class AmazonSession:
         #: An Amazon password.
         self.password: str = password
 
-        #: Set logger ``DEBUG``, send output to ``stderr``, and write an HTML file for each request made on the session.
+        #: Set logger ``DEBUG``, send output to ``stderr``, and write an HTML file for requests made on the session.
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
@@ -207,7 +209,8 @@ class AmazonSession:
 
         attempts = 0
         while not self.is_authenticated and attempts < self.max_auth_attempts:
-            # TODO: BeautifulSoup doesn't let us query for #nav-item-signout, maybe because it's dynamic on the page, but we should find a better way to do this
+            # TODO: BeautifulSoup doesn't let us query for #nav-item-signout, maybe because it's dynamic on the page,
+            #  but we should find a better way to do this
             if self.auth_cookies_stored() or \
                     ("Hello, sign in" not in self.last_response.text and
                      "nav-item-signout" in self.last_response.text):
@@ -262,7 +265,8 @@ class AmazonSession:
     def _raise_auth_error(self):
         debug_str = " To capture the page to a file, set the `debug` flag." if not self.debug else ""
         if self.last_response.ok:
-            error_msg = f"An error occurred, this is an unknown page, or its parsed contents don't match a known auth flow: {self.last_response.url}.{debug_str}"
+            error_msg = (f"An error occurred, this is an unknown page, or its parsed contents don't match a "
+                         f"known auth flow: {self.last_response.url}.{debug_str}")
         else:
             error_msg = "An error occurred, the page {url} returned {status_code}."
             if 500 <= self.last_response.status_code < 600:

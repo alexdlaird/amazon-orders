@@ -44,6 +44,10 @@ jobs:
         run: make install
       - name: Test
         run: make test
+      - name: Build docs
+        run: make docs
+      - name: Check style
+        run: make check-style
       - name: Validate package
         run: make local
       - name: Upload coverage

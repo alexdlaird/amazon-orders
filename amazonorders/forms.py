@@ -12,7 +12,7 @@ from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.9"
+__version__ = "1.0.13"
 
 
 class AuthForm(ABC):
@@ -70,7 +70,7 @@ class AuthForm(ABC):
         for field in self.form.select("input"):
             try:
                 self.data[field["name"]] = field["value"]
-            except:
+            except Exception:
                 pass
         if additional_attrs:
             self.data.update(additional_attrs)

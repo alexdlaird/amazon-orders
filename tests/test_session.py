@@ -13,7 +13,7 @@ from tests.unittestcase import UnitTestCase
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
+__version__ = "1.0.13"
 
 
 class TestSession(UnitTestCase):
@@ -204,7 +204,12 @@ class TestSession(UnitTestCase):
             request_data = {
                 "clientContext": "132-7968344-2156059",
                 "cvf_captcha_captcha_action": "verifyCaptcha",
-                "cvf_captcha_captcha_token": "sEusNpCt1AQ2rRr2f39/fwAAAAAAAAABPjglplbzE96xUsCT0ZswRq/pkFbblKXbv1cN6hKjq04HzZIYdTBAsdTA9fOZZZsAXG/6qLx8k6IQ8N5gpuIxjtQRhgYiPGzs/b0x0UO9BpFhRTd5JGaUlxx3NdvsaBvaaCDpiGc3E6pzcmhqzqGOuMYMNCP0hLh1u1c+y+6xpzgSr9UYDWHZ9da61HQ8B/ay90YCc5vbiH556wwYffTosLN9LJzCydLp+zzJ2gU1NjWfGyDYvIWYt2h6dCxxJe1jIztakaLnkkJhYQEzHZMC9az8M0S+Yr87/IMh0m9/QMERYs+/cDlUT4jVsqii1qEt/m7pfJMz3G4f",
+                "cvf_captcha_captcha_token": "sEusNpCt1AQ2rRr2f39/fwAAAAAAAAABPjglplbzE96xUsCT0ZswRq/pkFbblKXbv1cN6"
+                                             "hKjq04HzZIYdTBAsdTA9fOZZZsAXG/6qLx8k6IQ8N5gpuIxjtQRhgYiPGzs/b0x0UO9Bp"
+                                             "FhRTd5JGaUlxx3NdvsaBvaaCDpiGc3E6pzcmhqzqGOuMYMNCP0hLh1u1c+y+6xpzgSr9U"
+                                             "YDWHZ9da61HQ8B/ay90YCc5vbiH556wwYffTosLN9LJzCydLp+zzJ2gU1NjWfGyDYvIWY"
+                                             "t2h6dCxxJe1jIztakaLnkkJhYQEzHZMC9az8M0S+Yr87/IMh0m9/QMERYs+/cDlUT4jVs"
+                                             "qii1qEt/m7pfJMz3G4f",
                 "cvf_captcha_captcha_type": "imageCaptcha",
                 "cvf_captcha_input": "FBJRAC",
                 "cvf_captcha_js_enabled_metric": "0",
@@ -267,7 +272,10 @@ class TestSession(UnitTestCase):
                 body=f.read(),
                 status=200,
                 match=[query_string_matcher(
-                    "amzn=Ozn2ONrAzGQc1ZETILqvvA%3D%3D&amzn-r=%2Fap%2Fsignin%3Fopenid.pape.max_auth_age%3D900%26openid.return_to%3Dhttps%253A%252F%252Fwww.amazon.com%253F%26openid.assoc_handle%3Dusflex%26openid.mode%3Dcheckid_setup%26openid.ns%3Dhttp%253A%252F%252Fspecs.openid.net%252Fauth%252F2.0&amzn-pt=AuthenticationPortal&field-keywords=FBJRAC")],
+                    "amzn=Ozn2ONrAzGQc1ZETILqvvA%3D%3D&amzn-r=%2Fap%2Fsignin%3Fopenid.pape.max_auth_age%3D900%26"
+                    "openid.return_to%3Dhttps%253A%252F%252Fwww.amazon.com%253F%26openid.assoc_handle%3Dusflex%2"
+                    "6openid.mode%3Dcheckid_setup%26openid.ns%3Dhttp%253A%252F%252Fspecs.openid.net%252Fauth%252"
+                    "F2.0&amzn-pt=AuthenticationPortal&field-keywords=FBJRAC")],
             )
 
         # WHEN

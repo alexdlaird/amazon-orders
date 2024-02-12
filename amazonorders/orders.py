@@ -10,7 +10,7 @@ from amazonorders.session import AmazonSession
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
+__version__ = "1.0.13"
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,8 @@ class AmazonOrders:
 
         :param year: The year for which to get history.
         :param start_index: The index to start at within the history.
-        :param full_details: Will execute an additional request per Order in the retrieved history to fully populate it.
+        :param full_details: Will execute an additional request per Order in the retrieved history to fully
+            populate it.
         :return: A list of the requested Orders.
         """
         if not self.amazon_session.is_authenticated:
@@ -58,10 +59,12 @@ class AmazonOrders:
             constants.HISTORY_FILTER_QUERY_PARAM = "orderFilter"
 
         orders = []
-        next_page = "{url}?{query_param}=year-{year}{optional_start_index}".format(url=constants.ORDER_HISTORY_URL,
-                                                                                   query_param=constants.HISTORY_FILTER_QUERY_PARAM,
-                                                                                   year=year,
-                                                                                   optional_start_index=f"&startIndex={start_index}" if start_index else "")
+        optional_start_index = f"&startIndex={start_index}" if start_index else ""
+        next_page = ("{url}?{query_param}=year-{year}"
+                     "{optional_start_index}").format(url=constants.ORDER_HISTORY_URL,
+                                                      query_param=constants.HISTORY_FILTER_QUERY_PARAM,
+                                                      year=year,
+                                                      optional_start_index=optional_start_index)
         while next_page:
             self.amazon_session.get(next_page)
             response_parsed = self.amazon_session.last_response_parsed
@@ -104,7 +107,8 @@ class AmazonOrders:
 
         self.amazon_session.get(f"{constants.ORDER_DETAILS_URL}?orderID={order_id}")
 
-        order_details_tag = self.amazon_session.last_response_parsed.select_one(constants.ORDER_DETAILS_ENTITY_SELECTOR)
+        order_details_tag = self.amazon_session.last_response_parsed.select_one(
+            constants.ORDER_DETAILS_ENTITY_SELECTOR)
         order = Order(order_details_tag, full_details=True)
 
         return order

@@ -8,7 +8,7 @@ from amazonorders.exception import AmazonOrdersError, AmazonOrderEntityError
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
+__version__ = "1.0.13"
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +42,10 @@ class Parsable:
             return parse_function(**kwargs)
         except (AttributeError, IndexError, ValueError):
             logger.warning(
-                "When building {name}, `{function}` could not be parsed.".format(name=self.__class__.__name__,
-                                                                                 function=parse_function.__name__.split(
-                                                                                     "_parse_")[1]),
+                "When building {name}, `{function}` "
+                "could not be parsed.".format(name=self.__class__.__name__,
+                                              function=parse_function.__name__.split(
+                                                  "_parse_")[1]),
                 exc_info=True)
 
     def simple_parse(self,

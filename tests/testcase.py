@@ -3,7 +3,7 @@ from datetime import date
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.5"
+__version__ = "1.0.13"
 
 
 class TestCase(unittest.TestCase):
@@ -158,14 +158,16 @@ class TestCase(unittest.TestCase):
             if "Cadeya" in order_item.title:
                 found_cadeya = True
                 self.assertEqual(
-                    "Cadeya Egg Cleaning Brush Silicone, Egg Scrubber for Fresh Eggs, Reusable Cleaning Tools for Egg Washer (Pink)",
+                    "Cadeya Egg Cleaning Brush Silicone, Egg Scrubber for Fresh Eggs, Reusable Cleaning Tools "
+                    "for Egg Washer (Pink)",
                     order_item.title)
                 self.assertIsNotNone(order_item.link)
                 self.assertEqual(date(2024, 1, 31), order_item.return_eligible_date)
             else:
                 found_amazon = True
                 self.assertEqual(
-                    "Swiffer WetJet Hardwood and Floor Spray Mop Cleaner Starter Kit, Includes: 1 Power Mop, 10 Pads, Cleaning Solution, Batteries",
+                    "Swiffer WetJet Hardwood and Floor Spray Mop Cleaner Starter Kit, Includes: 1 Power Mop, "
+                    "10 Pads, Cleaning Solution, Batteries",
                     order_item.title)
                 self.assertIsNotNone(order_item.link)
                 self.assertEqual(date(2024, 1, 31), order_item.return_eligible_date)
@@ -216,7 +218,8 @@ class TestCase(unittest.TestCase):
             if "AAA" in item.title:
                 found_aaa = True
                 self.assertEqual(
-                    "AmazonBasics 36 Pack AAA High-Performance Alkaline Batteries, 10-Year Shelf Life, Easy to Open Value Pack",
+                    "AmazonBasics 36 Pack AAA High-Performance Alkaline Batteries, 10-Year Shelf Life, Easy to "
+                    "Open Value Pack",
                     item.title)
                 self.assertIsNotNone(item.link)
                 # TODO: this actually is shown on the page, it's just collapsed, find a way to parse it
@@ -224,7 +227,8 @@ class TestCase(unittest.TestCase):
             else:
                 found_aa = True
                 self.assertEqual(
-                    "AmazonBasics 48 Pack AA High-Performance Alkaline Batteries, 10-Year Shelf Life, Easy to Open Value Pack",
+                    "AmazonBasics 48 Pack AA High-Performance Alkaline Batteries, 10-Year Shelf Life, Easy to "
+                    "Open Value Pack",
                     item.title)
                 self.assertIsNotNone(item.link)
                 # TODO: this actually is shown on the page, it's just collapsed, find a way to parse it
