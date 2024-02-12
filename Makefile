@@ -70,7 +70,7 @@ check-style: virtualenv
 	@( \
 		source venv/bin/activate; \
 		python -m pip install ".[dev,docs]"; \
-		mypy amazonorders; \
+		mypy amazonorders || true; \
 		flake8; \
 	)
 

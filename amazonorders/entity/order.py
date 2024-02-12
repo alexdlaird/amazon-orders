@@ -55,25 +55,25 @@ class Order(Parsable):
         # Fields below this point are only populated if `full_details` is True
 
         #: The Order payment method. Only populated when ``full_details`` is ``True``.
-        self.payment_method: Optional[str] = self._parse_payment_method() if self.full_details else None
+        self.payment_method: Optional[str] = self._if_full_details(self._parse_payment_method())
         #: The Order payment method's last 4 digits. Only populated when ``full_details`` is ``True``.
-        self.payment_method_last_4: Optional[str] = self._parse_payment_method_last_4() if self.full_details else None
+        self.payment_method_last_4: Optional[str] = self._if_full_details(self._parse_payment_method_last_4())
         #: The Order subtotal. Only populated when ``full_details`` is ``True``.
-        self.subtotal: Optional[float] = self._parse_subtotal() if self.full_details else None
+        self.subtotal: Optional[float] = self._if_full_details(self._parse_subtotal())
         #: The Order shipping total. Only populated when ``full_details`` is ``True``.
-        self.shipping_total: Optional[float] = self._parse_shipping_total() if self.full_details else None
+        self.shipping_total: Optional[float] = self._if_full_details(self._parse_shipping_total())
         #: The Order Subscribe & Save discount. Only populated when ``full_details`` is ``True``.
-        self.subscription_discount: Optional[float] = self._parse_subscription_discount() if self.full_details else None
+        self.subscription_discount: Optional[float] = self._if_full_details(self._parse_subscription_discount())
         #: The Order total before tax. Only populated when ``full_details`` is ``True``.
-        self.total_before_tax: Optional[float] = self._parse_total_before_tax() if self.full_details else None
+        self.total_before_tax: Optional[float] = self._if_full_details(self._parse_total_before_tax())
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
-        self.estimated_tax: Optional[float] = self._parse_estimated_tax() if self.full_details else None
+        self.estimated_tax: Optional[float] = self._if_full_details(self._parse_estimated_tax())
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
-        self.refund_total: Optional[float] = self._parse_refund_total() if self.full_details else None
+        self.refund_total: Optional[float] = self._if_full_details(self._parse_refund_total())
         #: The Order shipped date. Only populated when ``full_details`` is ``True``.
-        self.order_shipped_date: Optional[date] = self._parse_order_shipping_date() if self.full_details else None
+        self.order_shipped_date: Optional[date] = self._if_full_details(self._parse_order_shipping_date())
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
-        self.refund_completed_date: Optional[date] = self._parse_refund_completed_date() if self.full_details else None
+        self.refund_completed_date: Optional[date] = self._if_full_details(self._parse_refund_completed_date())
 
     def __repr__(self) -> str:
         return f"<Order #{self.order_number}: \"{self.items}\">"
@@ -273,3 +273,6 @@ class Order(Parsable):
             value = datetime.strptime(date_str, "%B %d, %Y").date()
 
         return value
+
+    def _if_full_details(self, value):
+        return value if self.full_details else None
