@@ -28,15 +28,15 @@ with open(banner_path) as f:
 
 class IOClick(IODefault):
     def echo(self,
-        msg: str,
-        fg: Optional[str] = None,
-        **kwargs: Any):
+             msg: str,
+             fg: Optional[str] = None,
+             **kwargs: Any):
         click.secho(msg, fg=fg)
 
     def prompt(self,
-        msg: str,
-        type: str = None,
-        **kwargs: Any):
+               msg: str,
+               type: str = None,
+               **kwargs: Any):
         return click.prompt(f"--> {msg}", type=type)
 
 
@@ -52,7 +52,7 @@ class IOClick(IODefault):
               help="The directory where any output files should be produced.")
 @click.pass_context
 def amazon_orders_cli(ctx: Context,
-    **kwargs: Any):
+                      **kwargs: Any):
     """
     amazon-orders is an unofficial library that provides a command line interface alongside a programmatic API that
     can be used to interact with Amazon.com's consumer-facing website.
@@ -101,7 +101,7 @@ def amazon_orders_cli(ctx: Context,
 @click.option('--full-details', is_flag=True, default=False,
               help="Retrieve the full details for each order in the history.")
 def history(ctx: Context,
-    **kwargs: Any):
+            **kwargs: Any):
     """
     Retrieve Amazon order history for a given year.
     """
@@ -145,7 +145,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
 @click.pass_context
 @click.argument("order_id")
 def order(ctx: Context,
-    order_id: str):
+          order_id: str):
     """
     Retrieve the full details for the given Amazon order ID.
     """
@@ -223,7 +223,7 @@ def _print_banner():
 
 
 def _authenticate(ctx: Context,
-    amazon_session: AmazonSession):
+                  amazon_session: AmazonSession):
     if amazon_session.auth_cookies_stored():
         if amazon_session.username or amazon_session.password:
             click.echo(
