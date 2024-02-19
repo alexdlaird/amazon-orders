@@ -35,6 +35,7 @@ test-integration: virtualenv
 	@( \
 		source venv/bin/activate; \
 		python -m pip install ".[dev]"; \
+		python amazonorders/cli.py --username $(AMAZON_USERNAME) --password $(AMAZON_PASSWORD) login; \
 		INTEGRATION_TEST=True python -m unittest discover -v -b; \
 	)
 
@@ -42,6 +43,7 @@ test-integration-generic: virtualenv
 	@( \
 		source venv/bin/activate; \
 		python -m pip install ".[dev]"; \
+		python amazonorders/cli.py --username $(AMAZON_USERNAME) --password $(AMAZON_PASSWORD) login; \
 		INTEGRATION_TEST_GENERIC=True python -m unittest discover -v -b; \
 	)
 
@@ -49,6 +51,7 @@ test-integration-json: virtualenv
 	@( \
 		source venv/bin/activate; \
 		python -m pip install ".[dev]"; \
+		python amazonorders/cli.py --username $(AMAZON_USERNAME) --password $(AMAZON_PASSWORD) login; \
 		INTEGRATION_TEST_JSON=True python -m unittest discover -v -b; \
 	)
 

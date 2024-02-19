@@ -20,37 +20,39 @@ __version__ = "1.0.13"
 
 logger = logging.getLogger("amazonorders")
 
-banner_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "banner.txt")
+banner_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                           "banner.txt")
 with open(banner_path) as f:
     banner = f.read()
 
 
 class IOClick(IODefault):
     def echo(self,
-             msg: str,
-             fg: Optional[str] = None,
-             **kwargs: Any):
+        msg: str,
+        fg: Optional[str] = None,
+        **kwargs: Any):
         click.secho(msg, fg=fg)
 
     def prompt(self,
-               msg: str,
-               type: str = None,
-               **kwargs: Any):
+        msg: str,
+        type: str = None,
+        **kwargs: Any):
         return click.prompt(f"--> {msg}", type=type)
 
 
 @click.group()
 @click.option('--username', help="An Amazon username.")
 @click.option('--password', help="An Amazon password.")
-@click.option('--debug', is_flag=True, default=False, help="Enable debugging and send output to "
-                                                           "command line.")
+@click.option('--debug', is_flag=True, default=False,
+              help="Enable debugging and send output to "
+                   "command line.")
 @click.option('--max-auth-attempts', default=10,
               help="Will continue in the login auth loop this many times (successes and failures).")
 @click.option('--output-dir', default=DEFAULT_OUTPUT_DIR,
               help="The directory where any output files should be produced.")
 @click.pass_context
 def amazon_orders_cli(ctx: Context,
-                      **kwargs: Any):
+    **kwargs: Any):
     """
     amazon-orders is an unofficial library that provides a command line interface alongside a programmatic API that
     can be used to interact with Amazon.com's consumer-facing website.
@@ -83,7 +85,8 @@ def amazon_orders_cli(ctx: Context,
                                    password,
                                    debug=kwargs["debug"],
                                    io=IOClick(),
-                                   max_auth_attempts=kwargs["max_auth_attempts"],
+                                   max_auth_attempts=kwargs[
+                                       "max_auth_attempts"],
                                    output_dir=kwargs["output_dir"])
 
     ctx.obj["amazon_session"] = amazon_session
@@ -93,41 +96,43 @@ def amazon_orders_cli(ctx: Context,
 @click.pass_context
 @click.option('--year', default=datetime.date.today().year,
               help="The year for which to get order history, defaults to the current year.")
-@click.option('--start-index', help="Retrieve the single page of history at the given index.")
+@click.option('--start-index',
+              help="Retrieve the single page of history at the given index.")
 @click.option('--full-details', is_flag=True, default=False,
               help="Retrieve the full details for each order in the history.")
 def history(ctx: Context,
-            **kwargs: Any):
+    **kwargs: Any):
     """
     Retrieve Amazon order history for a given year.
     """
     amazon_session = ctx.obj["amazon_session"]
 
-    year = kwargs["year"]
-    start_index = kwargs["start_index"]
-    full_details = kwargs["full_details"]
-
-    optional_start_index = f", startIndex={start_index}, one page" if start_index else ", all pages"
-    optional_full_details = ", with full details" if full_details else ""
-    click.echo("""-----------------------------------------------------------------------
-Order History for {year}{optional_start_index}{optional_full_details}
------------------------------------------------------------------------\n"""
-               .format(year=year,
-                       optional_start_index=optional_start_index,
-                       optional_full_details=optional_full_details))
-
-    click.echo("Info: This might take a minute ...\n")
-
     try:
         _authenticate(ctx, amazon_session)
+
+        year = kwargs["year"]
+        start_index = kwargs["start_index"]
+        full_details = kwargs["full_details"]
+
+        optional_start_index = f", startIndex={start_index}, one page" if start_index else ", all pages"
+        optional_full_details = ", with full details" if full_details else ""
+        click.echo("""-----------------------------------------------------------------------
+Order History for {year}{optional_start_index}{optional_full_details}
+-----------------------------------------------------------------------\n"""
+                   .format(year=year,
+                           optional_start_index=optional_start_index,
+                           optional_full_details=optional_full_details))
+        click.echo("Info: This might take a minute ...\n")
 
         amazon_orders = AmazonOrders(amazon_session,
                                      debug=amazon_session.debug,
                                      output_dir=ctx.obj["output_dir"])
 
         orders = amazon_orders.get_order_history(year=kwargs["year"],
-                                                 start_index=kwargs["start_index"],
-                                                 full_details=kwargs["full_details"], )
+                                                 start_index=kwargs[
+                                                     "start_index"],
+                                                 full_details=kwargs[
+                                                     "full_details"], )
 
         for order in orders:
             click.echo(f"{_order_output(order)}\n")
@@ -140,7 +145,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
 @click.pass_context
 @click.argument("order_id")
 def order(ctx: Context,
-          order_id: str):
+    order_id: str):
     """
     Retrieve the full details for the given Amazon order ID.
     """
@@ -176,6 +181,23 @@ def check_session(ctx: Context):
 
 @amazon_orders_cli.command()
 @click.pass_context
+def login(ctx: Context):
+    """
+    Login to establish an Amazon session and cookies.
+    """
+    amazon_session = ctx.obj["amazon_session"]
+
+    if amazon_session.auth_cookies_stored():
+        click.echo(
+            "Info: A persisted session exists. Call the `logout` command first to change users.\n")
+    else:
+        _authenticate(ctx, amazon_session)
+
+        click.echo("Info: Successfully logged in to Amazon, session persisted.\n")
+
+
+@amazon_orders_cli.command()
+@click.pass_context
 def logout(ctx: Context):
     """
     Logout of existing Amazon sessions and clear cookies.
@@ -201,17 +223,19 @@ def _print_banner():
 
 
 def _authenticate(ctx: Context,
-                  amazon_session: AmazonSession):
-    if not amazon_session.username and not amazon_session.password:
-        click.echo(ctx.get_help())
-
-        ctx.fail("Amazon --username and --password must be provided, since no previous session was found.")
-
+    amazon_session: AmazonSession):
     if amazon_session.auth_cookies_stored():
         if amazon_session.username or amazon_session.password:
-            click.echo("Info: You've provided --username and --password, but because a previous session still exists,"
-                       "that is being ignored. If you would like to reauthenticate, call the `logout` command "
-                       "first.\n")
+            click.echo(
+                "Info: The --username and --password flags are ignored because a previous session "
+                "still exists. If you would like to reauthenticate, call the `logout` command "
+                "first.\n")
+    else:
+        if not amazon_session.username:
+            amazon_session.username = click.prompt("Username")
+        if not amazon_session.password:
+            amazon_session.password = click.prompt("Password", hide_input=True)
+            click.echo("")
 
     amazon_session.login()
 
@@ -219,7 +243,8 @@ def _authenticate(ctx: Context,
 def _order_output(order):
     order_str = """-----------------------------------------------------------------------
 Order #{}
------------------------------------------------------------------------""".format(order.order_number)
+-----------------------------------------------------------------------""".format(
+        order.order_number)
 
     order_str += f"\n  Shipments: {order.shipments}"
     order_str += f"\n  Order Details Link: {order.order_details_link}"
