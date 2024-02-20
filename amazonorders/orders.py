@@ -24,7 +24,7 @@ class AmazonOrders:
     def __init__(self,
                  amazon_session: AmazonSession,
                  debug: bool = False,
-                 output_dir: str = None) -> None:
+                 output_dir: Optional[str] = None) -> None:
         if not output_dir:
             output_dir = DEFAULT_OUTPUT_DIR
 

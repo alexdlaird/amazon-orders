@@ -35,7 +35,7 @@ class IOClick(IODefault):
 
     def prompt(self,
                msg: str,
-               type: str = None,
+               type: Optional[str] = None,
                **kwargs: Any):
         return click.prompt(f"--> {msg}", type=type)
 

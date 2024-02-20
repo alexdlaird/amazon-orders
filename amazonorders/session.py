@@ -50,7 +50,7 @@ class IODefault:
 
     def prompt(self,
                msg: str,
-               type: str = None,
+               type: Optional[str] = None,
                **kwargs: Any):
         """
         Prompt to the console for user input.
