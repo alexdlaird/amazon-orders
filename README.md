@@ -1,8 +1,9 @@
-[![PyPI Version](https://badge.fury.io/py/amazon-orders.svg)](https://badge.fury.io/py/amazon-orders)
-[![Build](https://github.com/alexdlaird/amazon-orders-python/actions/workflows/build.yml/badge.svg)](https://github.com/alexdlaird/amazon-orders-python/actions/workflows/build.yml)
-[![Codecov](https://codecov.io/gh/alexdlaird/amazon-orders-python/branch/main/graph/badge.svg)](https://codecov.io/gh/alexdlaird/amazon-orders-python)
-[![Python Versions](https://img.shields.io/pypi/pyversions/amazon-orders.svg)](https://pypi.org/project/amazon-orders/)
-[![PyPI License](https://img.shields.io/pypi/l/amazon-orders.svg)](https://pypi.org/project/amazon-orders/)
+[![Version](https://img.shields.io/pypi/v/amazon-orders)](https://pypi.org/project/amazon-orders)
+[![Python Versions](https://img.shields.io/pypi/pyversions/amazon-orders.svg)](https://pypi.org/project/amazon-orders)
+[![Coverage](https://img.shields.io/codecov/c/github/alexdlaird/amazon-orders-python)](https://codecov.io/gh/alexdlaird/amazon-orders-python)
+[![Build](https://img.shields.io/github/actions/workflow/status/alexdlaird/amazon-orders-python/build.yml)](https://github.com/alexdlaird/amazon-orders-python/actions/workflows/build.yml)
+[![Docs](https://img.shields.io/readthedocs/amazon-orders)](https://amazon-orders.readthedocs.io/en/latest)
+[![GitHub License](https://img.shields.io/github/license/alexdlaird/amazon-orders-python)](https://github.com/alexdlaird/amazon-orders-python/blob/main/LICENSE)
 
 # Amazon Orders
 

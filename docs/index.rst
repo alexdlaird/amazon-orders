@@ -1,13 +1,15 @@
-.. image:: https://badge.fury.io/py/amazon-orders.svg
-    :target: https://badge.fury.io/py/amazon-orders
-.. image:: https://github.com/alexdlaird/amazon-orders-python/actions/workflows/build.yml/badge.svg
-    :target: https://github.com/alexdlaird/amazon-orders-python/actions/workflows/build.yml
-.. image:: https://codecov.io/gh/alexdlaird/amazon-orders-python/branch/main/graph/badge.svg
-    :target: https://codecov.io/gh/alexdlaird/amazon-orders-python
+.. image:: https://img.shields.io/pypi/v/amazon-orders
+   :target: https://pypi.org/project/amazon-orders
 .. image:: https://img.shields.io/pypi/pyversions/amazon-orders.svg
-    :target: https://pypi.org/project/amazon-orders/
-.. image:: https://img.shields.io/pypi/l/amazon-orders.svg
-    :target: https://pypi.org/project/amazon-orders/
+   :target: https://pypi.org/project/amazon-orders
+.. image:: https://img.shields.io/codecov/c/github/alexdlaird/amazon-orders-python
+   :target: https://codecov.io/gh/alexdlaird/amazon-orders-python
+.. image:: https://img.shields.io/github/actions/workflow/status/alexdlaird/amazon-orders-python/build.yml
+   :target: https://github.com/alexdlaird/amazon-orders-python/actions/workflows/build.yml
+.. image:: https://img.shields.io/readthedocs/amazon-orders
+   :target: https://amazon-orders.readthedocs.io/en/latest
+.. image:: https://img.shields.io/github/license/alexdlaird/amazon-orders-python
+   :target: https://github.com/alexdlaird/amazon-orders-python
 
 *************
 Amazon Orders
