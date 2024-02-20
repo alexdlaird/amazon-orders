@@ -9,6 +9,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - If `--username` or `--password` are not given and no stored session, CLI will prompt.
 - Build improvements.
 
+### Fixed
+- Issue where `Parsable` objects could not be pickled due to BeautifulSoup `Tag` objects.
+
 ## [1.0.12](https://github.com/alexdlaird/pyngrok/compare/1.0.11...1.0.12) - 2024-02-11
 ### Added
 - Relative dependency pinning in `pyproject.toml`.
