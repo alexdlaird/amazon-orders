@@ -3,7 +3,9 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.12...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.13...HEAD)
+
+## [1.0.13](https://github.com/alexdlaird/pyngrok/compare/1.0.12...1.0.13) - 2024-02-20
 ### Added
 - `login` command to CLI.
 - If `--username` or `--password` are not given and no stored session, CLI will prompt.
