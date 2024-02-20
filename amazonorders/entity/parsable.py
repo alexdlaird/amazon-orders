@@ -24,6 +24,11 @@ class Parsable:
         #: Parsed HTML data that can be used to populate the fields of the entity.
         self.parsed: Tag = parsed
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state.pop("parsed")
+        return state
+
     def safe_parse(self,
                    parse_function: Callable[..., Any],
                    **kwargs: Any) -> Any:
