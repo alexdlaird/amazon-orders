@@ -9,6 +9,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 - Build improvements.
 
+### Changed
+- Renamed `make check-style` to `make check`.
+
 ## [1.0.13](https://github.com/alexdlaird/amazon-orders-python/compare/1.0.12...1.0.13) - 2024-02-20
 ### Added
 - `login` command to CLI.
