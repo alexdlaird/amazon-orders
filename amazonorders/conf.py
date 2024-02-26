@@ -2,7 +2,7 @@ import os
 
 __author__ = "Alex Laird"
 __copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.13"
+__version__ = "1.0.14"
 
 VERSION = __version__
 
