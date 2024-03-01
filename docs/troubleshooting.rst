@@ -55,8 +55,8 @@ look for code that uses `BeautifulSoup's CSS select() methods <https://www.crumm
 Many CSS selector strings used by ``amazon-orders`` are defined in variables in ``constants.py`` and can be
 easily overriden.
 
-If you identify the issue, please `submit a bug report <https://github.com/alexdlaird/amazon-orders-python/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_.
-If you're able to resolve the issue, please `also submit a PR <https://github.com/alexdlaird/amazon-orders-python/compare>`_
+If you identify the issue, please `submit a bug report <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_.
+If you're able to resolve the issue, please `also submit a PR <https://github.com/alexdlaird/amazon-orders/compare>`_
 so others can benefit.
 
 Found an Unknown Page in Auth Flow
@@ -76,7 +76,7 @@ other auth forms are implemented. You'll need to create a new class that inherit
 :class:`~amazonorders.forms.AuthForm`, override :func:`~amazonorders.forms.AuthForm.fill_form`, and add your new form's
 class to the ``list`` ``session.AUTH_FORMS``.
 
-Once you've implemented and tested the new form, `submit a PR <https://github.com/alexdlaird/amazon-orders-python/compare>`_
+Once you've implemented and tested the new form, `submit a PR <https://github.com/alexdlaird/amazon-orders/compare>`_
 for maximum karma!
 
 Found a Missing / Broken Field on an Entity
@@ -91,4 +91,4 @@ enough to be able to utilize :class:`~amazonorders.entity.parsable.Parsable`'s
 If you can't fetch the field's value with just a CSS selector, implementing a new ``_parse()`` function on the
 entity will give you a lot more flexibility.
 
-Once you've implemented and tested the new field, `submit a PR <https://github.com/alexdlaird/amazon-orders-python/compare>`_!
+Once you've implemented and tested the new field, `submit a PR <https://github.com/alexdlaird/amazon-orders/compare>`_!

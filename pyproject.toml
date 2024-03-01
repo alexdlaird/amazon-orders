@@ -49,10 +49,10 @@ docs = [
 amazon-orders = "amazonorders.cli:amazon_orders_cli"
 
 [project.urls]
-Changelog = "https://github.com/alexdlaird/amazon-orders-python/blob/main/CHANGELOG.md"
+Changelog = "https://github.com/alexdlaird/amazon-orders/blob/main/CHANGELOG.md"
 Documentation = "https://amazon-orders.readthedocs.io"
 Sponsor = "https://github.com/sponsors/alexdlaird"
-"Source Code" = "https://github.com/alexdlaird/amazon-orders-python"
+"Source Code" = "https://github.com/alexdlaird/amazon-orders"
 
 [tool.coverage.run]
 omit = [
