@@ -86,7 +86,7 @@ html_theme = "alabaster"
 #
 html_theme_options = {
     "github_user": "alexdlaird",
-    "github_repo": "amazon-orders-python",
+    "github_repo": "amazon-orders",
     "note_bg": "#FFF59C",
 }
 

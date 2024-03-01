@@ -2,10 +2,10 @@
 
 [![Version](https://img.shields.io/pypi/v/amazon-orders)](https://pypi.org/project/amazon-orders)
 [![Python Versions](https://img.shields.io/pypi/pyversions/amazon-orders.svg)](https://pypi.org/project/amazon-orders)
-[![Coverage](https://img.shields.io/codecov/c/github/alexdlaird/amazon-orders-python)](https://codecov.io/gh/alexdlaird/amazon-orders-python)
-[![Build](https://img.shields.io/github/actions/workflow/status/alexdlaird/amazon-orders-python/build.yml)](https://github.com/alexdlaird/amazon-orders/actions/workflows/build.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/alexdlaird/amazon-orders)](https://codecov.io/gh/alexdlaird/amazon-orders)
+[![Build](https://img.shields.io/github/actions/workflow/status/alexdlaird/amazon-orders/build.yml)](https://github.com/alexdlaird/amazon-orders/actions/workflows/build.yml)
 [![Docs](https://img.shields.io/readthedocs/amazon-orders)](https://amazon-orders.readthedocs.io/en/latest)
-[![GitHub License](https://img.shields.io/github/license/alexdlaird/amazon-orders-python)](https://github.com/alexdlaird/amazon-orders/blob/main/LICENSE)
+[![GitHub License](https://img.shields.io/github/license/alexdlaird/amazon-orders)](https://github.com/alexdlaird/amazon-orders/blob/main/LICENSE)
 
 `amazon-orders` is an unofficial library that provides a command line interface alongside a programmatic API that can
 be used to interact with Amazon.com's consumer-facing website.

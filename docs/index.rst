@@ -12,13 +12,13 @@ Amazon Orders
    :target: https://pypi.org/project/amazon-orders
 .. image:: https://img.shields.io/pypi/pyversions/amazon-orders.svg
    :target: https://pypi.org/project/amazon-orders
-.. image:: https://img.shields.io/codecov/c/github/alexdlaird/amazon-orders-python
-   :target: https://codecov.io/gh/alexdlaird/amazon-orders-python
-.. image:: https://img.shields.io/github/actions/workflow/status/alexdlaird/amazon-orders-python/build.yml
+.. image:: https://img.shields.io/codecov/c/github/alexdlaird/amazon-orders
+   :target: https://codecov.io/gh/alexdlaird/amazon-orders
+.. image:: https://img.shields.io/github/actions/workflow/status/alexdlaird/amazon-orders/build.yml
    :target: https://github.com/alexdlaird/amazon-orders/actions/workflows/build.yml
 .. image:: https://img.shields.io/readthedocs/amazon-orders
    :target: https://amazon-orders.readthedocs.io/en/latest
-.. image:: https://img.shields.io/github/license/alexdlaird/amazon-orders-python
+.. image:: https://img.shields.io/github/license/alexdlaird/amazon-orders
    :target: https://github.com/alexdlaird/amazon-orders
 
 ``amazon-orders`` is an unofficial library that provides a command line
