@@ -8,6 +8,8 @@ Amazon Orders
    :alt: amazon-orders - a python library
    :align: center
 
+|
+
 .. image:: https://img.shields.io/pypi/v/amazon-orders
    :target: https://pypi.org/project/amazon-orders
 .. image:: https://img.shields.io/pypi/pyversions/amazon-orders.svg
