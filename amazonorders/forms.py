@@ -1,3 +1,6 @@
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 from abc import ABC
 from io import BytesIO
 from typing import Optional, Dict, Any
@@ -9,10 +12,6 @@ from bs4 import Tag
 
 from amazonorders import constants
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.13"
 
 
 class AuthForm(ABC):

@@ -1,9 +1,8 @@
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 import unittest
 from datetime import date
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.13"
 
 
 class TestCase(unittest.TestCase):

@@ -1,3 +1,6 @@
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 import datetime
 import logging
 from typing import List, Optional
@@ -7,10 +10,6 @@ from amazonorders.conf import DEFAULT_OUTPUT_DIR
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import AmazonSession
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.13"
 
 logger = logging.getLogger(__name__)
 

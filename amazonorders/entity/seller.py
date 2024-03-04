@@ -1,3 +1,6 @@
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 import logging
 from typing import Optional
 
@@ -5,10 +8,6 @@ from bs4 import Tag
 
 from amazonorders import constants
 from amazonorders.entity.parsable import Parsable
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.9"
 
 logger = logging.getLogger(__name__)
 

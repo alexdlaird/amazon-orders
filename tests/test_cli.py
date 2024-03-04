@@ -1,3 +1,6 @@
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 import os
 
 import responses
@@ -6,10 +9,6 @@ from click.testing import CliRunner
 from amazonorders.cli import amazon_orders_cli
 from amazonorders.constants import ORDER_DETAILS_URL
 from tests.unittestcase import UnitTestCase
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
 
 
 class TestCli(UnitTestCase):

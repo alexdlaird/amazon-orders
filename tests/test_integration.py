@@ -1,13 +1,12 @@
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 import os
 import unittest
 
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.testcase import TestCase
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
 
 
 @unittest.skipIf(os.environ.get("INTEGRATION_TEST", "False") != "True",

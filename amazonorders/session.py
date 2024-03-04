@@ -1,3 +1,6 @@
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 import json
 import logging
 import os
@@ -13,10 +16,6 @@ from amazonorders import constants
 from amazonorders.conf import DEFAULT_COOKIE_JAR_PATH, DEFAULT_OUTPUT_DIR
 from amazonorders.exception import AmazonOrdersAuthError
 from amazonorders.forms import SignInForm, MfaDeviceSelectForm, MfaForm, CaptchaForm
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.13"
 
 logger = logging.getLogger(__name__)
 

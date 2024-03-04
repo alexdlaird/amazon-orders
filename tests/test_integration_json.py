@@ -1,3 +1,6 @@
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 import json
 import os
 import unittest
@@ -6,10 +9,6 @@ from datetime import datetime
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.testcase import TestCase
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.5"
 
 PRIVATE_RESOURCES_DIR = os.path.normpath(
     os.path.join(os.path.abspath(os.path.dirname(__file__)),

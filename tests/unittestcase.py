@@ -1,3 +1,6 @@
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 import os
 import re
 import unittest
@@ -9,10 +12,6 @@ from amazonorders import session
 from amazonorders.constants import SIGN_IN_URL, SIGN_IN_REDIRECT_URL, ORDER_HISTORY_LANDING_URL, ORDER_HISTORY_URL, \
     ORDER_DETAILS_URL
 from tests.testcase import TestCase
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.13"
 
 
 @unittest.skipIf(os.environ.get("INTEGRATION_TEST", "False") == "True",

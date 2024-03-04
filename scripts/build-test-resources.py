@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 import json
 import os
 import re
@@ -9,10 +12,6 @@ from bs4 import BeautifulSoup
 
 from amazonorders.constants import ORDER_HISTORY_URL, ORDER_DETAILS_URL
 from amazonorders.session import AmazonSession
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.7"
 
 ROOT_DIR = os.path.normpath(
     os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))

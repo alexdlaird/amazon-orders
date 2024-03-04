@@ -1,3 +1,6 @@
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 import os
 import sys
 import unittest
@@ -10,10 +13,6 @@ from amazonorders.constants import BASE_URL, SIGN_IN_REDIRECT_URL
 from amazonorders.exception import AmazonOrdersAuthError
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.13"
 
 
 class TestSession(UnitTestCase):

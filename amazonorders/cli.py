@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+__copyright__ = "Copyright (c) 2024 Alex Laird"
+__license__ = "MIT"
+
 import datetime
 import logging
 import os
@@ -9,14 +12,11 @@ from typing import Any, Optional
 import click
 from click.core import Context
 
-from amazonorders.conf import DEFAULT_OUTPUT_DIR, VERSION
+from amazonorders import __version__
+from amazonorders.conf import DEFAULT_OUTPUT_DIR
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
-
-__author__ = "Alex Laird"
-__copyright__ = "Copyright 2024, Alex Laird"
-__version__ = "1.0.13"
 
 logger = logging.getLogger("amazonorders")
 
@@ -214,12 +214,12 @@ def version(ctx: Context):
     """
     Show the banner and package version.
     """
-    click.echo(f"hookee/{VERSION} Python/{platform.python_version()}")
+    click.echo(f"hookee/{__version__} Python/{platform.python_version()}")
     ctx.exit(0)
 
 
 def _print_banner():
-    click.echo(banner.format(version=VERSION))
+    click.echo(banner.format(version=__version__))
 
 
 def _authenticate(ctx: Context,
