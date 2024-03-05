@@ -3,7 +3,16 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/1.0.14...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/1.0.15...HEAD)
+
+## [1.0.15](https://github.com/alexdlaird/amazon-orders/compare/1.0.14...1.0.15) - 2024-03-05
+### Added
+- Build and style improvements.
+- Documentation improvements.
+- `pytest` to streamline running unit and integration tests.
+
+### Removed
+- `conf.VERSION`, moved all version information to `amazonorders/__init__.py`. Get package version with `from amazonorders import __version__` instead.
 
 ## [1.0.14](https://github.com/alexdlaird/amazon-orders/compare/1.0.13...1.0.14) - 2024-02-26
 ### Added
