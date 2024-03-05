@@ -28,8 +28,7 @@ test: virtualenv
 	@( \
 		source venv/bin/activate; \
 		python -m pip install ".[dev]"; \
-		coverage run -m pytest -v; \
-		coverage report && coverage xml && coverage html; \
+		coverage run -m pytest -v && coverage report && coverage xml && coverage html; \
 	)
 
 test-integration: virtualenv
