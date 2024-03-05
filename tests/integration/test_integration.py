@@ -2,15 +2,12 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import os
-import unittest
 
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.testcase import TestCase
 
 
-@unittest.skipIf(os.environ.get("INTEGRATION_TEST", "False") != "True",
-                 "Skipping, INTEGRATION_TEST=True was not set in the environment")
 class TestIntegration(TestCase):
     """
     These integration tests look for and assert against specific orders. To run these tests and have them pass,

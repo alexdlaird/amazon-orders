@@ -3,7 +3,6 @@ __license__ = "MIT"
 
 import os
 import re
-import unittest
 
 import responses
 from responses.matchers import urlencoded_params_matcher
@@ -14,8 +13,6 @@ from amazonorders.constants import SIGN_IN_URL, SIGN_IN_REDIRECT_URL, ORDER_HIST
 from tests.testcase import TestCase
 
 
-@unittest.skipIf(os.environ.get("INTEGRATION_TEST", "False") == "True",
-                 "Skipping unit test, INTEGRATION_TEST=True was set in the environment")
 class UnitTestCase(TestCase):
     RESOURCES_DIR = os.path.normpath(
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources"))

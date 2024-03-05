@@ -15,8 +15,6 @@ PRIVATE_RESOURCES_DIR = os.path.normpath(
                  "private-resources"))
 
 
-@unittest.skipIf(os.environ.get("INTEGRATION_TEST_JSON", "False") != "True",
-                 "Skipping, INTEGRATION_TEST_JSON=True was not set in the environment")
 class TestIntegrationJSON(TestCase):
     """
     The two JSON files committed to "private-resources" are provided as examples of the syntax. Any other

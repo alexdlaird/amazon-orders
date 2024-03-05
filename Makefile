@@ -28,7 +28,7 @@ test: virtualenv
 	@( \
 		source venv/bin/activate; \
 		python -m pip install ".[dev]"; \
-		coverage run -m pytest -v && coverage report && coverage xml && coverage html; \
+		coverage run -m pytest -v --ignore=tests/integration && coverage report && coverage xml && coverage html; \
 	)
 
 test-integration: virtualenv
@@ -36,23 +36,7 @@ test-integration: virtualenv
 		source venv/bin/activate; \
 		python -m pip install ".[dev]"; \
 		python amazonorders/cli.py --username $(AMAZON_USERNAME) --password $(AMAZON_PASSWORD) login; \
-		INTEGRATION_TEST=True coverage run -m pytest -v; \
-	)
-
-test-integration-generic: virtualenv
-	@( \
-		source venv/bin/activate; \
-		python -m pip install ".[dev]"; \
-		python amazonorders/cli.py --username $(AMAZON_USERNAME) --password $(AMAZON_PASSWORD) login; \
-		INTEGRATION_TEST_GENERIC=True coverage run -m pytest -v; \
-	)
-
-test-integration-json: virtualenv
-	@( \
-		source venv/bin/activate; \
-		python -m pip install ".[dev]"; \
-		python amazonorders/cli.py --username $(AMAZON_USERNAME) --password $(AMAZON_PASSWORD) login; \
-		INTEGRATION_TEST_JSON=True coverage run -m pytest -v; \
+		coverage run -m pytest -v --rootdir=tests/integration; \
 	)
 
 build-test-resources: virtualenv
