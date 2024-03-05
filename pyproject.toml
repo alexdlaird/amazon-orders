@@ -29,6 +29,7 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = [
+    "pytest",
     "coverage[toml]",
     "responses",
     "flake8",
