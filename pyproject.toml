@@ -1,6 +1,6 @@
 [project]
 name = "amazon-orders"
-version = "1.0.15"
+dynamic = ["version"]
 description = "A CLI and library for interacting with Amazon order history."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -54,6 +54,9 @@ Changelog = "https://github.com/alexdlaird/amazon-orders/blob/main/CHANGELOG.md"
 Documentation = "https://amazon-orders.readthedocs.io"
 Sponsor = "https://github.com/sponsors/alexdlaird"
 "Source Code" = "https://github.com/alexdlaird/amazon-orders"
+
+[tool.setuptools.dynamic]
+version = { attr = "amazonorders.__version__" }
 
 [tool.coverage.run]
 omit = [
