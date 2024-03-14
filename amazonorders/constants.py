@@ -1,11 +1,13 @@
 __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
+import os
+
 ##########################################################################
 # General URL
 ##########################################################################
 
-BASE_URL = "https://www.amazon.com"
+BASE_URL = os.environ.get("AMAZON_BASE_URL", "https://www.amazon.com")
 
 ##########################################################################
 # URLs for AmazonSession
@@ -103,7 +105,8 @@ FIELD_ITEM_TAG_ITERATOR_SELECTOR = ".yohtmlc-item div"
 FIELD_ORDER_DETAILS_LINK_SELECTOR = "a.yohtmlc-order-details-link"
 FIELD_ORDER_NUMBER_SELECTOR = "bdi[dir='ltr']"
 FIELD_ORDER_GRAND_TOTAL_SELECTOR = "div.yohtmlc-order-total span.value"
-FIELD_ORDER_PLACED_DATE_SELECTOR = ["span.order-date-invoice-item", "div.a-span3"]
+FIELD_ORDER_PLACED_DATE_SELECTOR = ["span.order-date-invoice-item",
+                                    "div.a-span3"]
 FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
 FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
 FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = "div#od-subtotals div.a-row"
@@ -125,7 +128,8 @@ FIELD_SHIPMENT_DELIVERY_STATUS_SELECTOR = "div.js-shipment-info-container div.a-
 # CSS selectors for Recipient fields
 #####################################
 
-FIELD_RECIPIENT_NAME_SELECTOR = ["li.displayAddressFullName", "div:nth-child(1)"]
+FIELD_RECIPIENT_NAME_SELECTOR = ["li.displayAddressFullName",
+                                 "div:nth-child(1)"]
 FIELD_RECIPIENT_ADDRESS1_SELECTOR = "li.displayAddressAddressLine1"
 FIELD_RECIPIENT_ADDRESS2_SELECTOR = "li.displayAddressAddressLine2"
 FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR = "li.displayAddressCityStateOrRegionPostalCode"
