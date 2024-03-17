@@ -5,8 +5,6 @@ import datetime
 import os
 import sys
 
-from amazonorders import __version__
-
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -15,6 +13,9 @@ from amazonorders import __version__
 #
 
 sys.path.insert(0, os.path.abspath(".."))
+
+# This import must happen after adding to sys.path so docs build is consistent across environments
+from amazonorders import __version__
 
 # -- Project information -----------------------------------------------------
 
@@ -37,13 +38,13 @@ release = version
 # extensions coming with Sphinx (named "sphinx.ext.*") or your custom
 # ones.
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.doctest",
-    "sphinx.ext.coverage",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.viewcode",
-    "notfound.extension",
-    "sphinx_autodoc_typehints"
+  "sphinx.ext.autodoc",
+  "sphinx.ext.doctest",
+  "sphinx.ext.coverage",
+  "sphinx.ext.intersphinx",
+  "sphinx.ext.viewcode",
+  "notfound.extension",
+  "sphinx_autodoc_typehints"
 ]
 autodoc_member_order = "bysource"
 
@@ -54,7 +55,7 @@ templates_path = ["_templates"]
 # You can specify multiple suffix as a list of string:
 #
 source_suffix = [
-    ".rst"
+  ".rst"
 ]
 
 # The master toctree document.
@@ -83,9 +84,9 @@ html_theme = "alabaster"
 # documentation.
 #
 html_theme_options = {
-    "github_user": "alexdlaird",
-    "github_repo": "amazon-orders",
-    "note_bg": "#FFF59C",
+  "github_user": "alexdlaird",
+  "github_repo": "amazon-orders",
+  "note_bg": "#FFF59C",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -95,7 +96,7 @@ html_static_path = ["_static"]
 html_extra_path = ["_html"]
 
 html_css_files = [
-    "custom.css",
+  "custom.css",
 ]
 
 # Custom sidebar templates, must be a dictionary that maps document names
@@ -107,17 +108,17 @@ html_css_files = [
 # "searchbox.html"]``.
 #
 html_sidebars = {
-    "index": [
-        "sidebartoc.html",
-        "usefullinks.html",
-        "searchbox.html",
-    ],
-    "**": [
-        "sidebartoc.html",
-        "localtoc.html",
-        "usefullinks.html",
-        "searchbox.html",
-    ],
+  "index": [
+    "sidebartoc.html",
+    "usefullinks.html",
+    "searchbox.html",
+  ],
+  "**": [
+    "sidebartoc.html",
+    "localtoc.html",
+    "usefullinks.html",
+    "searchbox.html",
+  ],
 }
 
 toc_object_entries = False
@@ -136,29 +137,29 @@ htmlhelp_basename = "amazonordersdoc"
 # -- Options for LaTeX output ------------------------------------------------
 
 latex_elements = {
-    # The paper size ("letterpaper" or "a4paper").
-    #
-    # "papersize": "letterpaper",
+  # The paper size ("letterpaper" or "a4paper").
+  #
+  # "papersize": "letterpaper",
 
-    # The font size ("10pt", "11pt" or "12pt").
-    #
-    # "pointsize": "10pt",
+  # The font size ("10pt", "11pt" or "12pt").
+  #
+  # "pointsize": "10pt",
 
-    # Additional stuff for the LaTeX preamble.
-    #
-    # "preamble": "",
+  # Additional stuff for the LaTeX preamble.
+  #
+  # "preamble": "",
 
-    # Latex figure (float) alignment
-    #
-    # "figure_align": "htbp",
+  # Latex figure (float) alignment
+  #
+  # "figure_align": "htbp",
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "amazonorders.tex", "amazon-orders Documentation",
-     "Alex Laird", "manual"),
+  (master_doc, "amazonorders.tex", "amazon-orders Documentation",
+   "Alex Laird", "manual"),
 ]
 
 # -- Options for manual page output ------------------------------------------
@@ -166,8 +167,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, "amazonorders", "amazon-orders Documentation",
-     [author], 1)
+  (master_doc, "amazonorders", "amazon-orders Documentation",
+   [author], 1)
 ]
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -176,9 +177,10 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, "amazonorders", "amazon-orders Documentation",
-     author, "amazon-orders", "A CLI and library for interacting with Amazon order history.",
-     "Miscellaneous"),
+  (master_doc, "amazonorders", "amazon-orders Documentation",
+   author, "amazon-orders",
+   "A CLI and library for interacting with Amazon order history.",
+   "Miscellaneous"),
 ]
 
 # -- Options for Epub output -------------------------------------------------
@@ -201,9 +203,10 @@ epub_exclude_files = ["search.html"]
 # -- Extension configuration -------------------------------------------------
 
 intersphinx_mapping = {
-    "click": ("https://click.palletsprojects.com/en/latest", None),
-    "requests": ("https://requests.readthedocs.io/en/latest/", None),
-    "beautifulsoup4": ("https://beautiful-soup-4.readthedocs.io/en/latest/", None),
-    "amazoncaptcha": ("https://amazoncaptcha.readthedocs.io/en/latest/", None),
-    "python": ("https://docs.python.org/3", None)
+  "click": ("https://click.palletsprojects.com/en/latest", None),
+  "requests": ("https://requests.readthedocs.io/en/latest/", None),
+  "beautifulsoup4": (
+  "https://beautiful-soup-4.readthedocs.io/en/latest/", None),
+  "amazoncaptcha": ("https://amazoncaptcha.readthedocs.io/en/latest/", None),
+  "python": ("https://docs.python.org/3", None)
 }
