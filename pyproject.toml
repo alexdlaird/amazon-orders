@@ -55,6 +55,9 @@ Documentation = "https://amazon-orders.readthedocs.io"
 Sponsor = "https://github.com/sponsors/alexdlaird"
 "Source Code" = "https://github.com/alexdlaird/amazon-orders"
 
+[tool.setuptools]
+package-dir = {"" = "amazonorders"}
+
 [tool.setuptools.dynamic]
 version = { attr = "amazonorders.__version__" }
 
