@@ -56,7 +56,7 @@ Sponsor = "https://github.com/sponsors/alexdlaird"
 "Source Code" = "https://github.com/alexdlaird/amazon-orders"
 
 [tool.setuptools]
-package-dir = {"" = "amazonorders"}
+package-dir = { amazonorders = "amazonorders" }
 
 [tool.setuptools.dynamic]
 version = { attr = "amazonorders.__version__" }
