@@ -31,10 +31,10 @@ classifiers = [
 dev = [
     "pytest",
     "coverage[toml]",
-    "responses",
     "flake8",
     "flake8-pyproject",
-    "pep8-naming"
+    "pep8-naming",
+    "responses"
 ]
 docs = [
     "Sphinx",

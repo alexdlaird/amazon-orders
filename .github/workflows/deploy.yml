@@ -1,38 +1,34 @@
-name: "Deploy"
+name: Deploy
 
-run-name: "Release ${{ github.ref_name }}"
+run-name: Release ${{ github.ref_name }}
 
 on:
   release:
     types: [ created ]
 
 jobs:
+  build:
+    name: Build
+    uses: alexdlaird/amazon-orders/.github/workflows/build.yml@main
+    secrets: inherit
+
   deploy:
     name: Deploy
+    needs: build
 
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.11
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
-      - name: Install dependencies
-        run: make install
+          python-version: 3.12
       - name: Get version
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
       - name: Validate version
         run: make validate-release VERSION=${{ steps.get_version.outputs.VERSION }}
-      - name: Test
-        run: make test
-      - name: Build docs
-        run: make docs
-      - name: Check code
-        run: make check
-      - name: Validate package
-        run: make local
       - name: Publish
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}

@@ -1,0 +1,25 @@
+name: Nightly Test
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+
+jobs:
+  test:
+    name: Nightly Test
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: Test
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          retry_wait_seconds: 300
+          max_attempts: 3
+          command: make install test
