@@ -1,4 +1,4 @@
-.PHONY: all virtualenv install nopyc clean test test-integration test-integration-generic test-integration-json build-test-resources docs check local validate-release upload
+.PHONY: all virtualenv install nopyc clean test test-integration build-test-resources docs check local validate-release upload
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -35,8 +35,7 @@ test-integration: virtualenv
 	@( \
 		source venv/bin/activate; \
 		python -m pip install ".[dev]"; \
-		python amazonorders/cli.py --username $(AMAZON_USERNAME) --password $(AMAZON_PASSWORD) login; \
-		coverage run -m pytest -v --rootdir=tests/integration; \
+		coverage run -m pytest -v -s --rootdir=tests/integration; \
 	)
 
 build-test-resources: virtualenv

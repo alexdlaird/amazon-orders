@@ -2,11 +2,20 @@ name: Nightly Test
 
 on:
   schedule:
-    - cron: "0 9 * * *"
+    - cron: "0 17 * * *"
 
 jobs:
   test:
     name: Nightly Test
+
+    env:
+      AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
+      AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
+      TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+      TWILIO_PHONE_NUMBER: ${{ secrets.TWILIO_PHONE_NUMBER }}
+      TO_PHONE_NUMBER: ${{ secrets.TO_PHONE_NUMBER }}
+      NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
 
     runs-on: ubuntu-latest
 
@@ -22,4 +31,5 @@ jobs:
           timeout_minutes: 15
           retry_wait_seconds: 300
           max_attempts: 3
+          # This implementation is ready to go, just awaiting for Twilio account approval, then change to test-integration
           command: make install test

@@ -4,53 +4,33 @@ __license__ = "MIT"
 import datetime
 import os
 
-from amazonorders.orders import AmazonOrders
-from amazonorders.session import AmazonSession
-from tests.testcase import TestCase
+from tests.integrationtestcase import IntegrationTestCase
 
 
-class TestIntegrationGeneric(TestCase):
+class TestIntegrationGeneric(IntegrationTestCase):
     """
     These integration tests run generically against any Amazon account. The only requirement is that the
     account in question has at least one order in the year ``INTEGRATION_TEST_YEAR`` (defaults to the
     current year). The only assertions done on the fields populated are ``isNotNoneNone``.
     """
-    amazon_session = None
 
     @classmethod
     def setUpClass(cls):
-        cls.credentials_found = os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")
-        cls.year_found = os.environ.get("INTEGRATION_TEST_YEAR", datetime.date.today().year)
+        super().setUpClass()
 
-        cls.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
-                                           os.environ.get("AMAZON_PASSWORD"))
-        cls.amazon_session.login()
-
-        cls.amazon_orders = AmazonOrders(cls.amazon_session)
-
-    def setUp(self):
-        if not self.credentials_found:
-            self.fail("AMAZON_USERNAME and AMAZON_PASSWORD environment variables not set")
-
-        self.assertTrue(self.amazon_session.is_authenticated)
+        cls.year = os.environ.get("INTEGRATION_TEST_YEAR", datetime.date.today().year)
 
     def test_get_order_history(self):
-        # GIVEN
-        year = int(os.environ.get("INTEGRATION_TEST_YEAR"))
-
         # WHEN
-        orders = self.amazon_orders.get_order_history(year=year)
+        orders = self.amazon_orders.get_order_history(year=self.year)
 
         # THEN
         self.assertGreaterEqual(len(orders), 1)
         self.assert_populated_generic(orders[0], False)
 
     def test_get_order_history_full_details(self):
-        # GIVEN
-        year = int(os.environ.get("INTEGRATION_TEST_YEAR"))
-
         # WHEN
-        orders = self.amazon_orders.get_order_history(year=year, full_details=True)
+        orders = self.amazon_orders.get_order_history(year=self.year, full_details=True)
 
         # THEN
         self.assertGreaterEqual(len(orders), 1)
@@ -58,8 +38,7 @@ class TestIntegrationGeneric(TestCase):
 
     def test_get_order(self):
         # GIVEN
-        year = int(os.environ.get("INTEGRATION_TEST_YEAR"))
-        orders = self.amazon_orders.get_order_history(year=year)
+        orders = self.amazon_orders.get_order_history(year=self.year)
         self.assertGreaterEqual(len(orders), 1)
         self.assertIsNotNone(orders[0].order_number)
         order_id = orders[0].order_number

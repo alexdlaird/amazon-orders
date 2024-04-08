@@ -24,6 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
@@ -34,7 +35,10 @@ dev = [
     "flake8",
     "flake8-pyproject",
     "pep8-naming",
-    "responses"
+    "responses",
+    "flask",
+    "twilio",
+    "pyngrok"
 ]
 docs = [
     "Sphinx",

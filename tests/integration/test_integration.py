@@ -1,37 +1,14 @@
 __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
-import os
-
-from amazonorders.orders import AmazonOrders
-from amazonorders.session import AmazonSession
-from tests.testcase import TestCase
+from tests.integrationtestcase import IntegrationTestCase
 
 
-class TestIntegration(TestCase):
+class TestIntegration(IntegrationTestCase):
     """
     These integration tests look for and assert against specific orders. To run these tests and have them pass,
     contact the owner of the GitHub repo.
     """
-    amazon_session = None
-
-    @classmethod
-    def setUpClass(cls):
-        cls.credentials_found = os.environ.get(
-            "AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")
-
-        cls.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
-                                           os.environ.get("AMAZON_PASSWORD"))
-        cls.amazon_session.login()
-
-        cls.amazon_orders = AmazonOrders(cls.amazon_session)
-
-    def setUp(self):
-        if not self.credentials_found:
-            self.fail(
-                "AMAZON_USERNAME and AMAZON_PASSWORD environment variables not set")
-
-        self.assertTrue(self.amazon_session.is_authenticated)
 
     def test_get_order_history(self):
         # GIVEN

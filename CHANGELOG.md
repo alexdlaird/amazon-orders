@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/1.0.16...HEAD)
+### Added
+- Build improvements.
+- Test improvements.
 
 ## [1.0.16](https://github.com/alexdlaird/amazon-orders/compare/1.0.15...1.0.16) - 2024-03-24
 ### Added
