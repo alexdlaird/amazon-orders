@@ -65,6 +65,7 @@ class TinySMSServer:
 
         # Start the servers and proxy to localhost
         flask_server = Thread(target=app.run,
+                              daemon=True,
                               kwargs={"port": self.flask_port})
         flask_server.start()
         print("Flask server started on port {}".format(self.flask_port))
