@@ -8,7 +8,7 @@ from amazonorders.orders import AmazonOrders
 from amazonorders.session import IODefault, AmazonSession
 
 from tests.testcase import TestCase
-from tests.util.smsprompt import TinySMSServer, IODefaultWithTextPrompt, start_tiny_server
+from tests.util.smsprompt import IODefaultWithTextPrompt, start_tiny_server
 
 
 class IntegrationTestCase(TestCase):

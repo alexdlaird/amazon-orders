@@ -30,7 +30,8 @@ class TinySMSServer:
     """
     Use Twilio in combination Flask and ``pyngrok`` to build a tiny server that uses a webhook to receive the
     text responses when a prompt is initiated. The prompt will wait until a response text is received (via the
-    webhook). You can find docs and a basic Flask example for ``pyngrok`` `here <https://pyngrok.readthedocs.io/en/latest/integrations.html#flask>`_.
+    webhook). You can find docs and a basic Flask example for ``pyngrok``
+    `here <https://pyngrok.readthedocs.io/en/latest/integrations.html#flask>`_.
     """
 
     def __init__(self,
