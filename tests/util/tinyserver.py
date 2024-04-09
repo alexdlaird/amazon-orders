@@ -8,6 +8,26 @@ from pyngrok import ngrok
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 
+_tiny_server = None
+
+
+def get_tiny_server(twilio_account_sid, twilio_auth_token, twilio_phone_number,
+                    to_phone_number):
+    global _tiny_server
+
+    if not _tiny_server:
+        _tiny_server = TinySMSServer(twilio_account_sid=twilio_account_sid,
+                                     twilio_auth_token=twilio_auth_token,
+                                     twilio_phone_number=twilio_phone_number,
+                                     flask_port=os.environ.get("FLASK_PORT", "8000"))
+        _tiny_server.start()
+
+        print(f"\n--> TinySMSServer initialized, prompts will be sent over text to {to_phone_number}")
+    else:
+        print("\n--> Existing TinySMSServer found, reusing")
+
+    return _tiny_server
+
 
 class TinySMSServer:
     """
@@ -17,11 +37,7 @@ class TinySMSServer:
     `here <https://pyngrok.readthedocs.io/en/latest/integrations.html#flask>`_.
     """
 
-    def __init__(self,
-                 twilio_account_sid=os.environ.get("TWILIO_ACCOUNT_SID"),
-                 twilio_auth_token=os.environ.get("TWILIO_AUTH_TOKEN"),
-                 twilio_phone_number=os.environ.get("TWILIO_PHONE_NUMBER"),
-                 flask_port=os.environ.get("FLASK_PORT", "8000")):
+    def __init__(self, twilio_account_sid, twilio_auth_token, twilio_phone_number, flask_port):
         self.twilio_account_sid = twilio_account_sid
         self.twilio_auth_token = twilio_auth_token
         self.twilio_phone_number = twilio_phone_number

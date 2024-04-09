@@ -76,10 +76,6 @@ class TestIntegrationJSON(IntegrationTestCase):
     define here the fields and values under the ``Order`` that you want to assert on.
     """
 
-    @classmethod
-    def setUpClass(cls, flask_port_offset=2):
-        super().setUpClass(flask_port_offset)
-
     def __init__(self, method_name, filename=None, data=None):
         super(TestIntegrationJSON, self).__init__(method_name)
 

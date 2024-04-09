@@ -9,7 +9,7 @@ from amazonorders.session import IODefault, AmazonSession
 
 from tests.testcase import TestCase
 from tests.util.smsprompt import IODefaultWithTextPrompt
-from tests.util.tinyserver import TinySMSServer
+from tests.util.tinyserver import get_tiny_server
 
 
 class IntegrationTestCase(TestCase):
@@ -25,25 +25,21 @@ class IntegrationTestCase(TestCase):
     - NGROK_AUTHTOKEN
     """
 
-    default_flask_port = os.environ.get("FLASK_PORT", "8000")
     amazon_session = None
     tiny_server = None
 
     @classmethod
-    def setUpClass(cls, flask_port_offset=0):
+    def setUpClass(cls):
         cls.credentials_found = os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")
 
+        twilio_account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
+        twilio_auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
+        twilio_phone_number = os.environ.get("TWILIO_PHONE_NUMBER")
         to_phone_number = os.environ.get("TO_PHONE_NUMBER")
-        if (os.environ.get("TWILIO_ACCOUNT_SID") and
-                os.environ.get("TWILIO_AUTH_TOKEN") and
-                os.environ.get("TWILIO_PHONE_NUMBER") and
-                to_phone_number and
-                os.environ.get("NGROK_AUTHTOKEN")):
-            flask_port = int(cls.default_flask_port) + flask_port_offset
-            cls.tiny_server = TinySMSServer(flask_port=flask_port)
-            cls.tiny_server.start()
-
-            print(f"\n--> TinySMSServer initialized, prompts will be sent over text to {to_phone_number}")
+        if (os.environ.get("NGROK_AUTHTOKEN") and twilio_account_sid and twilio_auth_token and
+                twilio_phone_number and to_phone_number):
+            cls.tiny_server = get_tiny_server(twilio_account_sid, twilio_auth_token, twilio_phone_number,
+                                              to_phone_number)
 
             io = IODefaultWithTextPrompt(cls.tiny_server, to_phone_number)
         else:
@@ -61,9 +57,3 @@ class IntegrationTestCase(TestCase):
             self.fail("AMAZON_USERNAME and AMAZON_PASSWORD environment variables not set")
 
         self.assertTrue(self.amazon_session.is_authenticated)
-
-    @classmethod
-    def tearDownClass(cls):
-        if cls.tiny_server:
-            print("shut. it. down.")
-            cls.tiny_server.stop()
