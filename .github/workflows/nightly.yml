@@ -1,6 +1,7 @@
 name: Nightly Test
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "0 17 * * *"
 
@@ -31,5 +32,4 @@ jobs:
           timeout_minutes: 15
           retry_wait_seconds: 300
           max_attempts: 3
-          # This implementation is ready to go, just awaiting for Twilio account approval, then change to test-integration
-          command: make install test
+          command: make install test-integration
