@@ -15,8 +15,8 @@ class TestIntegrationGeneric(IntegrationTestCase):
     """
 
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def setUpClass(cls, flask_port_offset=1):
+        super().setUpClass(flask_port_offset)
 
         cls.year = os.environ.get("INTEGRATION_TEST_YEAR", datetime.date.today().year)
 
