@@ -49,6 +49,7 @@ jobs:
 
   automerge:
     name: "Auto Approve"
+    if: github.event_name == "pull_request"
     needs: [build, validate]
 
     runs-on: ubuntu-latest
