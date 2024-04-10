@@ -1,13 +1,13 @@
-name: Nightly Test
+name: Weekly Test
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 17 * * *"
+    - cron: "0 17 1 * *"
 
 jobs:
   test:
-    name: Nightly Test
+    name: Weekly Test
 
     env:
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
