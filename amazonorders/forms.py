@@ -20,7 +20,7 @@ class AuthForm(ABC):
 
     The base implementation will attempt to auto-solve Captcha. If this fails, it will
     use the default image view to show the Captcha prompt, and it will also pass the
-    image URL to :func:`~amazonorders.session.IODefault.prompt` as ``captcha_img_url``.
+    image URL to :func:`~amazonorders.session.IODefault.prompt` as ``img_url``.
     """
 
     def __init__(self,
@@ -166,18 +166,9 @@ class SignInForm(AuthForm):
 class MfaDeviceSelectForm(AuthForm):
     """
     This will first echo the ``<form>`` device choices, then it will pass the list of choices
-    to :func:`~amazonorders.session.IODefault.prompt` as ``mfa_device_select_choices``. The value passed to
-    :func:`~amazonorders.session.IODefault.prompt` will be a ``list`` of :class:`~bs4.Tag` s, and here's
-    an example of turning each choice in to a ``str`` we can work with:
-
-    .. code:: python
-
-        i = 0
-        for field in mfa_device_select_choices:
-            choice_str = "{}: {}".format(i, field["value"].strip())
-            # ... Do something with the choice
-
-            i += 1
+    to :func:`~amazonorders.session.IODefault.prompt` as ``choices``. The value passed to
+    :func:`~amazonorders.session.IODefault.prompt` will be a ``list`` of  the ``value`` from
+    each of ``input`` tag.
     """
 
     def __init__(self,
@@ -197,7 +188,7 @@ class MfaDeviceSelectForm(AuthForm):
         i = 0
         choices = []
         for field in contexts:
-            choices.append(f"{i}: {field['value'].strip()}")
+            choices.append(f"{i}: {field[constants.MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE].strip()}")
             i += 1
 
         otp_device = int(
