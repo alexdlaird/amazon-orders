@@ -17,17 +17,8 @@ class IODefaultWithTextPrompt(IODefault):
     def prompt(self,
                msg,
                **kwargs):
-        if "mfa_device_select_choices" in kwargs:
-            # Rebuild the prompt message with given device choices included
-            i = 0
-            choices_str = ""
-            for field in kwargs.pop("mfa_device_select_choices"):
-                choices_str += "{}: {}\n".format(i, field["value"].strip())
+        if "choices" in kwargs:
+            msg = "{}\n\n{}".format("\n".join(kwargs.get("choices")), msg)
 
-                i += 1
-            msg = "{}\n{}".format(choices_str, msg)
-        if "captcha_img_url" in kwargs:
-            # Rename the image URL var for SMS
-            kwargs["img_url"] = kwargs.pop("captcha_img_url")
         return self.tiny_server.await_text_response(self.phone_number, msg,
                                                     **kwargs)

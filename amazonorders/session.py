@@ -59,6 +59,9 @@ class IODefault:
         :param kwargs: Unused by the default implementation.
         :return: The user input result.
         """
+        for choice in kwargs.get("choices", []):
+            self.echo(choice, **kwargs)
+
         return input(f"--> {msg}: ")
 
 

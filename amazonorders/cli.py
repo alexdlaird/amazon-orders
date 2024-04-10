@@ -37,6 +37,9 @@ class IOClick(IODefault):
                msg: str,
                type: Optional[str] = None,
                **kwargs: Any):
+        for choice in kwargs.get("choices", []):
+            self.echo(choice, **kwargs)
+
         return click.prompt(f"--> {msg}", type=type)
 
 

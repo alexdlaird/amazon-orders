@@ -113,7 +113,7 @@ class AuthForm(ABC):
             self.amazon_session.io.echo("Info: The Captcha couldn't be auto-solved.")
 
             captcha_response = self.amazon_session.io.prompt("Enter the characters shown in the image",
-                                                             captcha_img_url=url)
+                                                             img_url=url)
             self.amazon_session.io.echo("")
 
         return captcha_response
@@ -194,15 +194,16 @@ class MfaDeviceSelectForm(AuthForm):
         super().fill_form()
 
         contexts = self.form.select(constants.MFA_DEVICE_SELECT_INPUT_SELECTOR)
-        i = 1
+        i = 0
+        choices = []
         for field in contexts:
-            self.amazon_session.io.echo(f"{i}: {field['value'].strip()}")
+            choices.append(f"{i}: {field['value'].strip()}")
             i += 1
 
         otp_device = int(
             self.amazon_session.io.prompt("Choose where you would like your one-time passcode sent",
                                           type=int,
-                                          mfa_device_select_choices=contexts)
+                                          choices=choices)
         )
         self.amazon_session.io.echo("")
 

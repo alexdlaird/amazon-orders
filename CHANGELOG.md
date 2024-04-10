@@ -8,6 +8,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Build improvements.
 - Test improvements.
 
+### Changed
+- Renamed `kwarg` passed to `IODefault.prompt()` from `captcha_img_url` to `img_url`.
+- Renamed `kwarg` passed to `IODefault.prompt()` from `mfa_device_select_choices` to `choices`.
+
 ## [1.0.16](https://github.com/alexdlaird/amazon-orders/compare/1.0.15...1.0.16) - 2024-03-24
 ### Added
 - `constants.BASE_URL` will look for the environment variable `AMAZON_BASE_URL` before defaulting to "https://www.amazon.com".
