@@ -1,4 +1,4 @@
-name: Weekly Test
+name: Integration Test
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    name: Weekly Test
+    name: Integration Test
 
     env:
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
