@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/1.1.1...HEAD)
+### Added
+- Documentation improvements.
+
+### Changed
+- [AmazonOrder.debug](https://amazon-orders.readthedocs.io/en/1.1.2/api.html#amazonorders.orders.AmazonOrders.debug) defaults to the value of [AmazonSession.debug](https://amazon-orders.readthedocs.io/en/1.1.2/api.html#amazonorders.session.AmazonSession.debug) if an override is not passed.
 
 ## [1.1.1](https://github.com/alexdlaird/amazon-orders/compare/1.0.16...1.1.1) - 2024-04-09
 ### Added

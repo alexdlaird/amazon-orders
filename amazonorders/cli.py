@@ -128,7 +128,6 @@ Order History for {year}{optional_start_index}{optional_full_details}
         click.echo("Info: This might take a minute ...\n")
 
         amazon_orders = AmazonOrders(amazon_session,
-                                     debug=amazon_session.debug,
                                      output_dir=ctx.obj["output_dir"])
 
         orders = amazon_orders.get_order_history(year=kwargs["year"],
@@ -158,7 +157,6 @@ def order(ctx: Context,
         _authenticate(ctx, amazon_session)
 
         amazon_orders = AmazonOrders(amazon_session,
-                                     debug=amazon_session.debug,
                                      output_dir=ctx.obj["output_dir"])
 
         order = amazon_orders.get_order(order_id)
