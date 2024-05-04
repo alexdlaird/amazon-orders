@@ -37,7 +37,8 @@ class TestCase(unittest.TestCase):
             self.assertEqual(30.99, order.total_before_tax)
             self.assertEqual(3.02, order.estimated_tax)
             self.assertEqual(date(2018, 12, 28), order.order_shipped_date)
-            self.assertEqual("New", order.items[0].condition)
+            # As of April 2024, this is no longer shown in Order History
+            # self.assertEqual("New", order.items[0].condition)
             self.assertEqual(30.99, order.items[0].price)
             self.assertEqual("Amazon.com Services, Inc",
                              order.items[0].seller.name)
@@ -73,7 +74,8 @@ class TestCase(unittest.TestCase):
             self.assertEqual(33.01, order.total_before_tax)
             self.assertEqual(2.89, order.estimated_tax)
             self.assertEqual(date(2020, 10, 28), order.order_shipped_date)
-            self.assertEqual("New", order.items[0].condition)
+            # As of April 2024, this is no longer shown in Order History
+            # self.assertEqual("New", order.items[0].condition)
             self.assertEqual(38.84, order.items[0].price)
             self.assertEqual("Amazon.com Services, Inc",
                              order.items[0].seller.name)
@@ -111,7 +113,8 @@ class TestCase(unittest.TestCase):
             self.assertEqual(76.11, order.refund_total)
             self.assertEqual(date(2020, 10, 19), order.order_shipped_date)
             self.assertTrue(date(2020, 11, 2), order.refund_completed_date)
-            self.assertEqual("New", order.items[0].condition)
+            # As of April 2024, this is no longer shown in Order History
+            # self.assertEqual("New", order.items[0].condition)
             self.assertEqual(69.99, order.items[0].price)
             self.assertEqual("Amazon.com Services, Inc",
                              order.items[0].seller.name)
@@ -184,9 +187,11 @@ class TestCase(unittest.TestCase):
             self.assertEqual(43.23, order.total_before_tax)
             self.assertEqual(3.38, order.estimated_tax)
             self.assertEqual(date(2023, 12, 7), order.order_shipped_date)
-            self.assertEqual("New", order.items[0].condition)
+            # As of April 2024, this is no longer shown in Order History
+            # self.assertEqual("New", order.items[0].condition)
             self.assertEqual(14.99, order.items[0].price)
-            self.assertEqual("New", order.items[1].condition)
+            # As of April 2024, this is no longer shown in Order History
+            # self.assertEqual("New", order.items[1].condition)
             self.assertEqual(28.24, order.items[1].price)
             found_cadeya = False
             found_amazon = False
@@ -251,14 +256,16 @@ class TestCase(unittest.TestCase):
             for item in order.items:
                 if "AAA" in item.title:
                     found_aa = True
-                    self.assertEqual("New", item.condition)
+                    # As of April 2024, this is no longer shown in Order History
+                    # self.assertEqual("New", item.condition)
                     self.assertEqual(10.99, item.price)
                     self.assertEqual("Amazon.com Services, Inc",
                                      item.seller.name)
                     self.assertIsNone(item.seller.link)
                 else:
                     found_aaa = True
-                    self.assertEqual("New", item.condition)
+                    # As of April 2024, this is no longer shown in Order History
+                    # self.assertEqual("New", item.condition)
                     self.assertEqual(15.49, item.price)
                     self.assertEqual("Amazon.com Services, Inc",
                                      item.seller.name)
@@ -288,6 +295,7 @@ class TestCase(unittest.TestCase):
             self.assertIsNotNone(order.shipping_total)
             self.assertIsNotNone(order.total_before_tax)
             self.assertIsNotNone(order.estimated_tax)
-            self.assertIsNotNone(order.items[0].condition)
+            # As of April 2024, this is no longer shown in Order History
+            # self.assertIsNotNone(order.items[0].condition)
             self.assertIsNotNone(order.items[0].price)
             self.assertIsNotNone(order.items[0].seller.name)

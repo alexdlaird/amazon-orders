@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/1.1.1...HEAD)
 ### Added
 - Documentation improvements.
+- Test improvements (Amazon no longer provider the `condition` field in many cases).
 
 ### Changed
 - [AmazonOrder.debug](https://amazon-orders.readthedocs.io/en/1.1.2/api.html#amazonorders.orders.AmazonOrders.debug) defaults to the value of [AmazonSession.debug](https://amazon-orders.readthedocs.io/en/1.1.2/api.html#amazonorders.session.AmazonSession.debug) if an override is not passed.
