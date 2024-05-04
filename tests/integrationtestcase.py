@@ -4,9 +4,7 @@ __license__ = "MIT"
 import os
 
 from amazonorders.orders import AmazonOrders
-
-from amazonorders.session import IODefault, AmazonSession
-
+from amazonorders.session import AmazonSession, IODefault
 from tests.testcase import TestCase
 from tests.util.smsprompt import IODefaultWithTextPrompt
 from tests.util.tinyserver import get_tiny_server

@@ -2,8 +2,7 @@ import os
 import threading
 import time
 
-from flask import Flask, Response
-from flask import request
+from flask import Flask, Response, request
 from pyngrok import ngrok
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse

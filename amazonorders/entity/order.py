@@ -3,9 +3,9 @@ __license__ = "MIT"
 
 import json
 import logging
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import List, Optional, TypeVar
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
 

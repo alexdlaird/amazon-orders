@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 from abc import ABC
 from io import BytesIO
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 from PIL import Image
@@ -11,7 +11,7 @@ from amazoncaptcha import AmazonCaptcha
 from bs4 import Tag
 
 from amazonorders import constants
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
+from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
 
 
 class AuthForm(ABC):

@@ -5,7 +5,7 @@ import os
 
 import responses
 
-from amazonorders.constants import ORDER_HISTORY_URL, ORDER_DETAILS_URL
+from amazonorders.constants import ORDER_DETAILS_URL, ORDER_HISTORY_URL
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession

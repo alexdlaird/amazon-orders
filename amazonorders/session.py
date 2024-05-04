@@ -4,18 +4,18 @@ __license__ = "MIT"
 import json
 import logging
 import os
-from typing import Optional, Any
+from typing import Any, Optional
 from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup, Tag
-from requests import Session, Response
+from requests import Response, Session
 from requests.utils import dict_from_cookiejar
 
 from amazonorders import constants
 from amazonorders.conf import DEFAULT_COOKIE_JAR_PATH, DEFAULT_OUTPUT_DIR
 from amazonorders.exception import AmazonOrdersAuthError
-from amazonorders.forms import SignInForm, MfaDeviceSelectForm, MfaForm, CaptchaForm
+from amazonorders.forms import CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm
 
 logger = logging.getLogger(__name__)
 

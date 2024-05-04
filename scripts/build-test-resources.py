@@ -10,7 +10,7 @@ import sys
 
 from bs4 import BeautifulSoup
 
-from amazonorders.constants import ORDER_HISTORY_URL, ORDER_DETAILS_URL
+from amazonorders.constants import ORDER_DETAILS_URL, ORDER_HISTORY_URL
 from amazonorders.session import AmazonSession
 
 ROOT_DIR = os.path.normpath(

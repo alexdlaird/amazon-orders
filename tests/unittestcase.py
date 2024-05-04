@@ -8,8 +8,8 @@ import responses
 from responses.matchers import urlencoded_params_matcher
 
 from amazonorders import session
-from amazonorders.constants import SIGN_IN_URL, SIGN_IN_REDIRECT_URL, ORDER_HISTORY_LANDING_URL, ORDER_HISTORY_URL, \
-    ORDER_DETAILS_URL
+from amazonorders.constants import ORDER_DETAILS_URL, ORDER_HISTORY_LANDING_URL, ORDER_HISTORY_URL, \
+    SIGN_IN_REDIRECT_URL, SIGN_IN_URL
 from tests.testcase import TestCase
 
 

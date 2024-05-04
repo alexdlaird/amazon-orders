@@ -51,11 +51,14 @@ for order in orders:
 
 ## Documentation
 
-For more advanced usage, `amazon-orders`'s official documentation is available at [http://amazon-orders.readthedocs.io](http://amazon-orders.readthedocs.io).
+For more advanced usage, `amazon-orders`'s official documentation is available
+at [http://amazon-orders.readthedocs.io](http://amazon-orders.readthedocs.io).
 
 ## Contributing
 
-If you would like to get involved, be sure to review the [Contribution Guide](https://github.com/alexdlaird/amazon-orders/blob/main/CONTRIBUTING.rst).
+If you would like to get involved, be sure to review
+the [Contribution Guide](https://github.com/alexdlaird/amazon-orders/blob/main/CONTRIBUTING.rst).
 
-Want to contribute financially? If you've found `amazon-orders` useful, [sponsorship](https://github.com/sponsors/alexdlaird) would
+Want to contribute financially? If you've found `amazon-orders`
+useful, [sponsorship](https://github.com/sponsors/alexdlaird) would
 also be greatly appreciated!

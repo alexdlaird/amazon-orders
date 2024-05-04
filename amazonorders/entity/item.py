@@ -2,7 +2,7 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import logging
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import Optional
 
 from bs4 import Tag
