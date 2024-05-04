@@ -21,7 +21,8 @@ def get_tiny_server(twilio_account_sid, twilio_auth_token, twilio_phone_number):
                                      flask_port=os.environ.get("FLASK_PORT", "8000"))
         _tiny_server.start()
 
-        print(f"\n--> TinySMSServer initialized, prompt responses to Twilio number {twilio_phone_number} will be intercepted")
+        print(f"\n--> TinySMSServer initialized, prompt responses to Twilio number "
+              f"{twilio_phone_number} will be intercepted")
     else:
         print("\n--> Existing TinySMSServer found, reusing")
 
