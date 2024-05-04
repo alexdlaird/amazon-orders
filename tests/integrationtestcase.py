@@ -38,8 +38,7 @@ class IntegrationTestCase(TestCase):
         to_phone_number = os.environ.get("TO_PHONE_NUMBER")
         if (os.environ.get("NGROK_AUTHTOKEN") and twilio_account_sid and twilio_auth_token and
                 twilio_phone_number and to_phone_number):
-            cls.tiny_server = get_tiny_server(twilio_account_sid, twilio_auth_token, twilio_phone_number,
-                                              to_phone_number)
+            cls.tiny_server = get_tiny_server(twilio_account_sid, twilio_auth_token, twilio_phone_number)
 
             io = IODefaultWithTextPrompt(cls.tiny_server, to_phone_number)
         else:

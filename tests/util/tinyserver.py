@@ -11,8 +11,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 _tiny_server = None
 
 
-def get_tiny_server(twilio_account_sid, twilio_auth_token, twilio_phone_number,
-                    to_phone_number):
+def get_tiny_server(twilio_account_sid, twilio_auth_token, twilio_phone_number):
     global _tiny_server
 
     if not _tiny_server:
@@ -22,7 +21,7 @@ def get_tiny_server(twilio_account_sid, twilio_auth_token, twilio_phone_number,
                                      flask_port=os.environ.get("FLASK_PORT", "8000"))
         _tiny_server.start()
 
-        print(f"\n--> TinySMSServer initialized, prompts will be sent over text to {to_phone_number}")
+        print(f"\n--> TinySMSServer initialized, prompt responses to Twilio number {twilio_phone_number} will be intercepted")
     else:
         print("\n--> Existing TinySMSServer found, reusing")
 
@@ -84,7 +83,7 @@ class TinySMSServer:
                 incoming_phone_number.sid).update(sms_url=sms_callback_url,
                                                   sms_method="POST")
 
-    def await_text_response(self, to_number, msg, img_url=None, **kwargs):
+    def await_text_response(self, to_phone_number, msg, img_url=None, **kwargs):
         if self.locked:
             raise RuntimeError("This class and method act as a singleton, awaiting `locked` to be False.")
 
@@ -92,12 +91,12 @@ class TinySMSServer:
 
         # Send the text message
         self.twilio_client.api.account.messages.create(
-            to=to_number,
+            to=to_phone_number,
             from_=self.twilio_phone_number,
             body=msg,
             media_url=[img_url] if img_url else None)
 
-        print("--> SMS sent to {}, awaiting response ...".format(to_number))
+        print("--> SMS sent to {}, awaiting response ...".format(to_phone_number))
 
         # Await the response ...
         while not self.webhook_response:
