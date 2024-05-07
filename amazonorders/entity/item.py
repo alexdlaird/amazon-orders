@@ -4,7 +4,6 @@ __license__ = "MIT"
 import logging
 from datetime import date, datetime
 from typing import Optional
-import re
 
 from bs4 import Tag
 
