@@ -124,7 +124,7 @@ class Order(Parsable):
                         value = inner_tag.text.strip()
                         break
 
-        value = float(value.replace("$", ""))
+        value = float(value.replace("$", "").replace(",", ""))
 
         return value
 
@@ -188,7 +188,7 @@ class Order(Parsable):
             if "subtotal" in tag.text.lower():
                 inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = float(inner_tag.text.strip().replace("$", ""))
+                    value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break
 
         return value
@@ -200,7 +200,7 @@ class Order(Parsable):
             if "shipping" in tag.text.lower():
                 inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = float(inner_tag.text.strip().replace("$", ""))
+                    value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break
 
         return value
@@ -212,7 +212,7 @@ class Order(Parsable):
             if "subscribe" in tag.text.lower():
                 inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = float(inner_tag.text.strip().replace("$", ""))
+                    value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break
 
         return value
@@ -224,7 +224,7 @@ class Order(Parsable):
             if "before tax" in tag.text.lower():
                 inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = float(inner_tag.text.strip().replace("$", ""))
+                    value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break
 
         return value
@@ -236,7 +236,7 @@ class Order(Parsable):
             if "estimated tax" in tag.text.lower():
                 inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = float(inner_tag.text.strip().replace("$", ""))
+                    value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break
 
         return value
@@ -248,7 +248,7 @@ class Order(Parsable):
             if "refund total" in tag.text.lower() and "tax refund" not in tag.text.lower():
                 inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = float(inner_tag.text.strip().replace("$", ""))
+                    value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break
 
         return value
