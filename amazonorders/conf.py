@@ -1,21 +1,13 @@
 import copy
 import logging
 import os
-import platform
 from typing import Any, Dict, Optional
 
 import yaml
 
 logger = logging.getLogger(__name__)
 
-system = platform.system().lower()
-if system == "darwin":
-    _DEFAULT_CONFIG_DIR = os.path.join("Library", "Application Support", "amazonorders")
-elif system in ["windows", "cygwin"]:
-    _DEFAULT_CONFIG_DIR = os.path.join("AppData", "Local", "amazonorders")
-else:
-    _DEFAULT_CONFIG_DIR = os.path.join(".config", "amazonorders")
-
+_DEFAULT_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "amazonorders")
 _DEFAULT_CONFIG = {
     "locale": "en-US",
     "output_dir": os.getcwd(),
