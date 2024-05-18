@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
+from amazonorders.exception import AmazonOrdersNotFoundError
 from tests.integrationtestcase import IntegrationTestCase
 
 
@@ -87,7 +88,7 @@ class TestIntegration(IntegrationTestCase):
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(
             orders[3], True)
 
-    def dtest_get_order(self):
+    def test_get_order(self):
         # GIVEN
         order_id = "112-9685975-5907428"
 
@@ -97,3 +98,11 @@ class TestIntegration(IntegrationTestCase):
         # THEN
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(
             order, True)
+
+    def test_get_order_does_not_exist(self):
+        # GIVEN
+        order_id = "1234-fake-id"
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersNotFoundError):
+            self.amazon_orders.get_order(order_id)

@@ -9,6 +9,13 @@ class AmazonOrdersError(Exception):
     pass
 
 
+class AmazonOrdersNotFoundError(Exception):
+    """
+    Raised when an Amazon page is not found.
+    """
+    pass
+
+
 class AmazonOrdersAuthError(AmazonOrdersError):
     """
     Raised when an ``amazon-orders`` authentication error has occurred.
