@@ -6,7 +6,7 @@ import logging
 from typing import List, Optional
 
 from amazonorders import constants
-from amazonorders.conf import DEFAULT_OUTPUT_DIR
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import AmazonSession
@@ -23,11 +23,11 @@ class AmazonOrders:
     def __init__(self,
                  amazon_session: AmazonSession,
                  debug: Optional[bool] = None,
-                 output_dir: Optional[str] = None) -> None:
+                 config: AmazonOrdersConfig = None) -> None:
         if not debug:
             debug = amazon_session.debug
-        if not output_dir:
-            output_dir = DEFAULT_OUTPUT_DIR
+        if not config:
+            config = amazon_session.config
 
         #: The AmazonSession to use for requests.
         self.amazon_session: AmazonSession = amazon_session
@@ -36,8 +36,6 @@ class AmazonOrders:
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
-        #: The directory where any output files will be produced, defaults to ``conf.DEFAULT_OUTPUT_DIR``.
-        self.output_dir = output_dir
 
     def get_order_history(self,
                           year: int = datetime.date.today().year,

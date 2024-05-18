@@ -13,8 +13,9 @@ import click
 from click.core import Context
 
 from amazonorders import __version__
-from amazonorders.conf import DEFAULT_OUTPUT_DIR
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersError
+from amazonorders.localization import Localization
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
 
@@ -51,7 +52,7 @@ class IOClick(IODefault):
                    "command line.")
 @click.option('--max-auth-attempts', default=10,
               help="Will continue in the login auth loop this many times (successes and failures).")
-@click.option('--output-dir', default=DEFAULT_OUTPUT_DIR,
+@click.option('--output-dir',
               help="The directory where any output files should be produced.")
 @click.pass_context
 def amazon_orders_cli(ctx: Context,
@@ -81,6 +82,12 @@ def amazon_orders_cli(ctx: Context,
         logger.setLevel(logging.DEBUG)
         logger.addHandler(logging.StreamHandler())
 
+    ctx.obj["conf"] = AmazonOrdersConfig()
+    # TODO: clean this up
+    if "output_dir" in kwargs:
+        ctx.obj["conf"].update_config("output_dir", kwargs["output_dir"], save=False)
+    ctx.obj["locale"] = Localization(ctx.obj["conf"])
+
     username = kwargs.get("username")
     password = kwargs.get("password")
 
@@ -90,7 +97,7 @@ def amazon_orders_cli(ctx: Context,
                                    io=IOClick(),
                                    max_auth_attempts=kwargs[
                                        "max_auth_attempts"],
-                                   output_dir=kwargs["output_dir"])
+                                   config=ctx.obj["conf"])
 
     ctx.obj["amazon_session"] = amazon_session
 
@@ -128,7 +135,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
         click.echo("Info: This might take a minute ...\n")
 
         amazon_orders = AmazonOrders(amazon_session,
-                                     output_dir=ctx.obj["output_dir"])
+                                     config=ctx.obj["conf"])
 
         orders = amazon_orders.get_order_history(year=kwargs["year"],
                                                  start_index=kwargs[
@@ -157,7 +164,7 @@ def order(ctx: Context,
         _authenticate(ctx, amazon_session)
 
         amazon_orders = AmazonOrders(amazon_session,
-                                     output_dir=ctx.obj["output_dir"])
+                                     config=ctx.obj["conf"])
 
         order = amazon_orders.get_order(order_id)
 
@@ -207,6 +214,23 @@ def logout(ctx: Context):
     amazon_session.logout()
 
     click.echo("Info: Successfully logged out of the Amazon session.\n")
+
+
+@amazon_orders_cli.command()
+@click.pass_context
+@click.argument("key")
+@click.argument("value")
+def update_config(ctx: Context,
+                  key: str,
+                  value: str):
+    """
+    TODO: document
+    """
+    conf = ctx.obj["conf"]
+
+    conf.update_config(key, value)
+
+    click.echo(f"Info: Config \"{key}\" updated to \"{value}\".\n")
 
 
 @amazon_orders_cli.command()

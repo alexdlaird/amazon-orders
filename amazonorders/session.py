@@ -13,7 +13,7 @@ from requests import Response, Session
 from requests.utils import dict_from_cookiejar
 
 from amazonorders import constants
-from amazonorders.conf import DEFAULT_COOKIE_JAR_PATH, DEFAULT_OUTPUT_DIR
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError
 from amazonorders.forms import CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm
 
@@ -79,13 +79,10 @@ class AmazonSession:
                  password: str,
                  debug: bool = False,
                  max_auth_attempts: int = 10,
-                 cookie_jar_path: str = None,
                  io: IODefault = IODefault(),
-                 output_dir: str = None) -> None:
-        if not cookie_jar_path:
-            cookie_jar_path = DEFAULT_COOKIE_JAR_PATH
-        if not output_dir:
-            output_dir = DEFAULT_OUTPUT_DIR
+                 config: AmazonOrdersConfig = None) -> None:
+        if not config:
+            config = AmazonOrdersConfig()
 
         #: An Amazon username.
         self.username: str = username
@@ -98,12 +95,10 @@ class AmazonSession:
             logger.setLevel(logging.DEBUG)
         #: Will continue in :func:`login`'s auth flow this many times (successes and failures).
         self.max_auth_attempts: int = max_auth_attempts
-        #: The path to persist session cookies, defaults to ``conf.DEFAULT_COOKIE_JAR_PATH``.
-        self.cookie_jar_path: str = cookie_jar_path
         #: The I/O handler for echoes and prompts.
         self.io: IODefault = io
-        #: The directory where any output files will be produced, defaults to ``conf.DEFAULT_OUTPUT_DIR``.
-        self.output_dir = output_dir
+        #: TODO document this
+        self.config = config
 
         #: The shared session to be used across all requests.
         self.session: Session = Session()
@@ -114,11 +109,11 @@ class AmazonSession:
         #: If :func:`login` has been executed and successfully logged in the session.
         self.is_authenticated: bool = False
 
-        cookie_dir = os.path.dirname(self.cookie_jar_path)
+        cookie_dir = os.path.dirname(self.config.get_config()["cookie_jar_path"])
         if not os.path.exists(cookie_dir):
             os.makedirs(cookie_dir)
-        if os.path.exists(self.cookie_jar_path):
-            with open(self.cookie_jar_path, "r", encoding="utf-8") as f:
+        if os.path.exists(self.config.get_config()["cookie_jar_path"]):
+            with open(self.config.get_config()["cookie_jar_path"], "r", encoding="utf-8") as f:
                 data = json.loads(f.read())
                 cookies = requests.utils.cookiejar_from_dict(data)
                 self.session.cookies.update(cookies)
@@ -147,16 +142,16 @@ class AmazonSession:
                                                   "html.parser")
 
         cookies = dict_from_cookiejar(self.session.cookies)
-        if os.path.exists(self.cookie_jar_path):
-            os.remove(self.cookie_jar_path)
-        with open(self.cookie_jar_path, "w", encoding="utf-8") as f:
+        if os.path.exists(self.config.get_config()["cookie_jar_path"]):
+            os.remove(self.config.get_config()["cookie_jar_path"])
+        with open(self.config.get_config()["cookie_jar_path"], "w", encoding="utf-8") as f:
             f.write(json.dumps(cookies))
 
         logger.debug(f"Response: {self.last_response.url} - {self.last_response.status_code}")
 
         if self.debug:
             page_name = self._get_page_from_url(self.last_response.url)
-            with open(os.path.join(self.output_dir, page_name), "w",
+            with open(os.path.join(self.config.get_config()["output_dir"], page_name), "w",
                       encoding="utf-8") as html_file:
                 logger.debug(
                     f"Response written to file: {html_file.name}")
@@ -244,8 +239,8 @@ class AmazonSession:
         """
         self.get(constants.SIGN_OUT_URL)
 
-        if os.path.exists(self.cookie_jar_path):
-            os.remove(self.cookie_jar_path)
+        if os.path.exists(self.config.get_config()["cookie_jar_path"]):
+            os.remove(self.config.get_config()["cookie_jar_path"])
 
         self.session.close()
         self.session = Session()

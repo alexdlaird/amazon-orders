@@ -15,6 +15,7 @@ class TestCli(UnitTestCase):
     def setUp(self):
         super().setUp()
 
+        # TODO: need a CLI command to pass in an override config path
         self.runner = CliRunner()
 
     def test_missing_credentials(self):
