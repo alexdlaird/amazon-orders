@@ -8,6 +8,7 @@ class AmazonOrdersError(Exception):
     """
     pass
 
+
 class AmazonOrdersNotFoundError(Exception):
     """
     Raised when an Amazon page is not found.
