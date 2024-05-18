@@ -57,7 +57,7 @@ class Item(Parsable):
         for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             price = tag.text.strip()
             if price.startswith("$"):
-                value = float(price.replace("$", ""))
+                value = float(price.replace("$", "").replace(",", ""))
 
         return value
 
