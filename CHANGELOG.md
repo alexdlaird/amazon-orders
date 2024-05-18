@@ -6,6 +6,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/1.1.1...HEAD)
 
+## [1.1.2](https://github.com/alexdlaird/amazon-orders/compare/1.1.1...1.1.2) - TBD
+
 ### Added
 
 - Raise `AmazonOrdersNotFoundError` when Order is not found.
