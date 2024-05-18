@@ -8,7 +8,7 @@ from typing import List, Optional
 from amazonorders import constants
 from amazonorders.conf import DEFAULT_OUTPUT_DIR
 from amazonorders.entity.order import Order
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
@@ -107,6 +107,8 @@ class AmazonOrders:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         self.amazon_session.get(f"{constants.ORDER_DETAILS_URL}?orderID={order_id}")
+        if not self.amazon_session.last_response.url.startswith(constants.ORDER_DETAILS_URL):
+            raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found")
 
         order_details_tag = self.amazon_session.last_response_parsed.select_one(
             constants.ORDER_DETAILS_ENTITY_SELECTOR)
