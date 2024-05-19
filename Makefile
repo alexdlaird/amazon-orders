@@ -35,7 +35,7 @@ test-integration: virtualenv
 	@( \
 		source venv/bin/activate; \
 		python -m pip install ".[dev]"; \
-		coverage run -m pytest -v -s --rootdir=tests/integration; \
+		coverage run -m pytest -v -s tests/integration; \
 	)
 
 build-test-resources: virtualenv
