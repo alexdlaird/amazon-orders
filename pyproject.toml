@@ -31,6 +31,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "parameterized",
     "coverage[toml]",
     "flake8",
     "flake8-pyproject",
