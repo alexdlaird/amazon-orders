@@ -34,7 +34,8 @@ class IntegrationTestCase(TestCase):
         twilio_auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
         twilio_phone_number = os.environ.get("TWILIO_PHONE_NUMBER")
         to_phone_number = os.environ.get("TO_PHONE_NUMBER")
-        if (os.environ.get("NGROK_AUTHTOKEN") and twilio_account_sid and twilio_auth_token and
+        if (os.environ.get("USE_TINY_SERVER", "False") == "True" and
+                os.environ.get("NGROK_AUTHTOKEN") and twilio_account_sid and twilio_auth_token and
                 twilio_phone_number and to_phone_number):
             cls.tiny_server = get_tiny_server(twilio_account_sid, twilio_auth_token, twilio_phone_number)
 
