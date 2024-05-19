@@ -12,9 +12,14 @@ jobs:
     uses: alexdlaird/amazon-orders/.github/workflows/build.yml@main
     secrets: inherit
 
+  integration:
+    name: Integration Test
+    uses: alexdlaird/amazon-orders/.github/workflows/integration.yml@main
+    secrets: inherit
+
   deploy:
     name: Deploy
-    needs: build
+    needs: [build, integration]
 
     runs-on: ubuntu-latest
 
