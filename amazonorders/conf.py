@@ -50,9 +50,6 @@ class AmazonOrdersConfig:
     def __getattr__(self, key):
         return self._data[key]
 
-    # def __setattr__(self, key, value):
-    #     self.data[key] = value
-
     def update_config(self, key, value, save=True):
         self._data[key] = value
 

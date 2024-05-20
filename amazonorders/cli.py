@@ -85,9 +85,9 @@ def amazon_orders_cli(ctx: Context,
     ctx.obj["conf"] = AmazonOrdersConfig()
     # TODO: clean up config overrides, and allow passing an override config path from CLI
     if "output_dir" in kwargs:
-        ctx.obj["conf"].update_config("output_dir", kwargs["output_dir"], save=False)
+        ctx.obj["conf"].update_config("output_dir", kwargs["output_dir"])
     if "max_auth_attempts" in kwargs:
-        ctx.obj["conf"].update_config("max_auth_attempts", kwargs["max_auth_attempts"], save=False)
+        ctx.obj["conf"].update_config("max_auth_attempts", kwargs["max_auth_attempts"])
 
     ctx.obj["locale"] = Localization(ctx.obj["conf"])
 
