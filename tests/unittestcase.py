@@ -9,6 +9,7 @@ import responses
 from responses.matchers import urlencoded_params_matcher
 
 from amazonorders import conf
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.constants import ORDER_DETAILS_URL, ORDER_HISTORY_LANDING_URL, ORDER_HISTORY_URL, \
     SIGN_IN_REDIRECT_URL, SIGN_IN_URL
 from tests.testcase import TestCase
@@ -19,16 +20,20 @@ class UnitTestCase(TestCase):
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources"))
 
     def setUp(self):
-        conf._DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".config")
-        conf._DEFAULT_CONFIG["output_dir"] = os.path.join(conf._DEFAULT_CONFIG_DIR, "output")
-        conf._DEFAULT_CONFIG["cookie_jar_path"] = os.path.join(conf._DEFAULT_CONFIG_DIR, "cookies.json")
+        conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".config")
+        test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")
+        test_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.json")
+        self.test_config = AmazonOrdersConfig(data={
+            "output_dir": test_output_dir,
+            "cookie_jar_path": test_cookie_jar_path
+        })
 
-        if os.path.exists(conf._DEFAULT_CONFIG["cookie_jar_path"]):
-            os.remove(conf._DEFAULT_CONFIG["cookie_jar_path"])
+        if os.path.exists(test_cookie_jar_path):
+            os.remove(test_cookie_jar_path)
 
     def tearDown(self):
-        if os.path.exists(conf._DEFAULT_CONFIG_DIR):
-            shutil.rmtree(conf._DEFAULT_CONFIG_DIR)
+        if os.path.exists(conf.DEFAULT_CONFIG_DIR):
+            shutil.rmtree(conf.DEFAULT_CONFIG_DIR)
 
     def given_login_responses_success(self):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:

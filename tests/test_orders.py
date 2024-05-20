@@ -16,7 +16,9 @@ class TestOrders(UnitTestCase):
     def setUp(self):
         super().setUp()
 
-        self.amazon_session = AmazonSession("some-username", "some-password")
+        self.amazon_session = AmazonSession("some-username",
+                                            "some-password",
+                                            config=self.test_config)
 
         self.amazon_orders = AmazonOrders(self.amazon_session)
 

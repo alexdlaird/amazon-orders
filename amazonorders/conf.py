@@ -1,4 +1,3 @@
-import copy
 import logging
 import os
 from typing import Any, Dict, Optional
@@ -7,70 +6,60 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "amazonorders")
-_DEFAULT_CONFIG = {
-    "locale": "en-US",
-    "output_dir": os.getcwd(),
-    "cookie_jar_path": os.path.join(_DEFAULT_CONFIG_DIR, "cookies.json")
-}
+DEFAULT_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "amazonorders")
 
 
 class AmazonOrdersConfig:
     def __init__(self,
                  config_path: Optional[str] = None,
                  data: Optional[Dict[str, Any]] = None):
-        self.config_path: Optional[str] = os.path.join(_DEFAULT_CONFIG_DIR,
-                                                       "config.yml") if config_path is None else config_path
-        self._config_cache: Dict[str, Dict[str, Any]] = {}
-
-        if not os.path.exists(self.config_path):
-            self._install_default_config(data)
-
-    def get_config(self,
-                   use_cache: bool = True):
-        if self.config_path not in self._config_cache or not use_cache:
-            with open(self.config_path, "r") as config_file:
-                config = yaml.safe_load(config_file)
-                if config is None:
-                    config = _DEFAULT_CONFIG
-
-            self._config_cache[self.config_path] = config
-
-        return self._config_cache[self.config_path]
-
-    def update_config(self,
-                      key,
-                      value,
-                      save=True):
-        config = self.get_config()
-
-        config[key] = value
-
-        # TODO: cleanup this up
-        if save:
-            with open(self.config_path, "w") as config_file:
-                logger.debug(f"Saving config to {self.config_path} ...")
-
-                yaml.dump(config, config_file)
-
-    def _install_default_config(self,
-                                data: Optional[Dict[str, Any]] = None) -> None:
-        if data is None:
+        if not data:
             data = {}
-        else:
-            data = copy.deepcopy(data)
 
-        data.update(_DEFAULT_CONFIG)
+        self.config_path: str = os.path.join(DEFAULT_CONFIG_DIR, "config.yml") if config_path is None else config_path
 
+        # Provision default configs
+        self._data = {
+            "locale": "en-US",
+            "output_dir": os.path.join(os.getcwd(), "output"),
+            "cookie_jar_path": os.path.join(DEFAULT_CONFIG_DIR, "cookies.json")
+        }
+
+        if os.path.exists(self.config_path):
+            with open(self.config_path, "r") as config_file:
+                logger.debug(f"Loading config from {self.config_path} ...")
+                config = yaml.safe_load(config_file)
+                if config is not None:
+                    config.update(data)
+                    data = config
+
+        # Overload defaults if values passed
+        self._data.update(data)
+
+        # Ensure directories and files exist for config data
         config_dir = os.path.dirname(self.config_path)
         if not os.path.exists(config_dir):
             os.makedirs(config_dir)
-        if not os.path.exists(data["output_dir"]):
-            os.makedirs(data["output_dir"])
-        if not os.path.exists(self.config_path):
-            open(self.config_path, "w").close()
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+        cookie_jar_dir = os.path.dirname(self.cookie_jar_path)
+        if not os.path.exists(cookie_jar_dir):
+            os.makedirs(cookie_jar_dir)
 
+    def __getattr__(self, key):
+        return self._data[key]
+
+    # def __setattr__(self, key, value):
+    #     self.data[key] = value
+
+    def update_config(self, key, value, save=True):
+        self._data[key] = value
+
+        if save:
+            self.save()
+
+    def save(self):
         with open(self.config_path, "w") as config_file:
-            logger.debug(f"Installing default config to {self.config_path} ...")
+            logger.debug(f"Saving config to {self.config_path} ...")
 
-            yaml.dump(data, config_file)
+            yaml.dump(self._data, config_file)

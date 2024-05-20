@@ -5,6 +5,7 @@ import os
 import shutil
 
 from amazonorders import conf
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
 from tests.testcase import TestCase
@@ -45,23 +46,28 @@ class IntegrationTestCase(TestCase):
         else:
             io = IODefault()
 
-        conf._DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".config")
-        conf._DEFAULT_CONFIG["output_dir"] = os.path.join(conf._DEFAULT_CONFIG_DIR, "output")
-        conf._DEFAULT_CONFIG["cookie_jar_path"] = os.path.join(conf._DEFAULT_CONFIG_DIR, "cookies.json")
+        conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".integration-config")
+        test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")
+        test_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.json")
+        cls.test_config = AmazonOrdersConfig(data={
+            "output_dir": test_output_dir,
+            "cookie_jar_path": test_cookie_jar_path
+        })
 
-        if os.path.exists(conf._DEFAULT_CONFIG["cookie_jar_path"]):
-            os.remove(conf._DEFAULT_CONFIG["cookie_jar_path"])
+        if os.path.exists(test_cookie_jar_path):
+            os.remove(test_cookie_jar_path)
 
         cls.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
                                            os.environ.get("AMAZON_PASSWORD"),
-                                           io=io)
+                                           io=io,
+                                           config=cls.test_config)
         cls.amazon_session.login()
 
         cls.amazon_orders = AmazonOrders(cls.amazon_session)
 
     def tearDownClass(cls):
-        if os.path.exists(conf._DEFAULT_CONFIG_DIR):
-            shutil.rmtree(conf._DEFAULT_CONFIG_DIR)
+        if os.path.exists(conf.DEFAULT_CONFIG_DIR):
+            shutil.rmtree(conf.DEFAULT_CONFIG_DIR)
 
     def setUp(self):
         if not self.credentials_found:

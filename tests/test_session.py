@@ -20,7 +20,8 @@ class TestSession(UnitTestCase):
         super().setUp()
 
         self.amazon_session = AmazonSession("some-username",
-                                            "some-password")
+                                            "some-password",
+                                            config=self.test_config)
 
     @responses.activate
     def test_login(self):
