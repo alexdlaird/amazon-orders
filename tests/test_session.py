@@ -89,7 +89,7 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
 
     @responses.activate
-    @patch('builtins.input')
+    @patch("builtins.input")
     def test_mfa(self, input_mock):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
@@ -125,7 +125,7 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp3.call_count)
 
     @responses.activate
-    @patch('builtins.input')
+    @patch("builtins.input")
     def test_new_otp(self, input_mock):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
@@ -289,8 +289,9 @@ class TestSession(UnitTestCase):
 
     @unittest.skipIf(sys.platform == "win32", reason="Windows does not respect PIL's show() method in tests")
     @responses.activate
-    @patch('builtins.input')
-    def test_captcha_1_hard(self, input_mock):
+    @patch("builtins.input")
+    @patch("PIL.Image.Image.show")
+    def test_captcha_1_hard(self, show_mock, input_mock):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
@@ -341,7 +342,7 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp5.call_count)
 
     @responses.activate
-    @patch('builtins.input')
+    @patch("builtins.input")
     def test_captcha_otp(self, input_mock):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
