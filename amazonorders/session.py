@@ -78,7 +78,6 @@ class AmazonSession:
                  username: str,
                  password: str,
                  debug: bool = False,
-                 max_auth_attempts: int = 10,
                  io: IODefault = IODefault(),
                  config: AmazonOrdersConfig = None) -> None:
         if not config:
@@ -93,12 +92,10 @@ class AmazonSession:
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
-        #: Will continue in :func:`login`'s auth flow this many times (successes and failures).
-        self.max_auth_attempts: int = max_auth_attempts
         #: The I/O handler for echoes and prompts.
         self.io: IODefault = io
         #: TODO document this
-        self.config = config
+        self.config: AmazonOrdersConfig = config
 
         #: The shared session to be used across all requests.
         self.session: Session = Session()
@@ -109,11 +106,11 @@ class AmazonSession:
         #: If :func:`login` has been executed and successfully logged in the session.
         self.is_authenticated: bool = False
 
-        cookie_dir = os.path.dirname(self.config.get_config()["cookie_jar_path"])
+        cookie_dir = os.path.dirname(self.config.cookie_jar_path)
         if not os.path.exists(cookie_dir):
             os.makedirs(cookie_dir)
-        if os.path.exists(self.config.get_config()["cookie_jar_path"]):
-            with open(self.config.get_config()["cookie_jar_path"], "r", encoding="utf-8") as f:
+        if os.path.exists(self.config.cookie_jar_path):
+            with open(self.config.cookie_jar_path, "r", encoding="utf-8") as f:
                 data = json.loads(f.read())
                 cookies = requests.utils.cookiejar_from_dict(data)
                 self.session.cookies.update(cookies)
@@ -142,16 +139,16 @@ class AmazonSession:
                                                   "html.parser")
 
         cookies = dict_from_cookiejar(self.session.cookies)
-        if os.path.exists(self.config.get_config()["cookie_jar_path"]):
-            os.remove(self.config.get_config()["cookie_jar_path"])
-        with open(self.config.get_config()["cookie_jar_path"], "w", encoding="utf-8") as f:
+        if os.path.exists(self.config.cookie_jar_path):
+            os.remove(self.config.cookie_jar_path)
+        with open(self.config.cookie_jar_path, "w", encoding="utf-8") as f:
             f.write(json.dumps(cookies))
 
         logger.debug(f"Response: {self.last_response.url} - {self.last_response.status_code}")
 
         if self.debug:
             page_name = self._get_page_from_url(self.last_response.url)
-            with open(os.path.join(self.config.get_config()["output_dir"], page_name), "w",
+            with open(os.path.join(self.config.output_dir, page_name), "w",
                       encoding="utf-8") as html_file:
                 logger.debug(
                     f"Response written to file: {html_file.name}")
@@ -205,7 +202,7 @@ class AmazonSession:
             self.get(constants.SIGN_IN_URL)
 
         attempts = 0
-        while not self.is_authenticated and attempts < self.max_auth_attempts:
+        while not self.is_authenticated and attempts < self.config.max_auth_attempts:
             # TODO: BeautifulSoup doesn't let us query for #nav-item-signout, maybe because it's dynamic on the page,
             #  but we should find a better way to do this
             if self.auth_cookies_stored() or \
@@ -229,7 +226,7 @@ class AmazonSession:
 
             attempts += 1
 
-        if attempts == self.max_auth_attempts:
+        if attempts == self.config.max_auth_attempts:
             raise AmazonOrdersAuthError(
                 "Max authentication flow attempts reached.")
 
@@ -239,8 +236,8 @@ class AmazonSession:
         """
         self.get(constants.SIGN_OUT_URL)
 
-        if os.path.exists(self.config.get_config()["cookie_jar_path"]):
-            os.remove(self.config.get_config()["cookie_jar_path"])
+        if os.path.exists(self.config.cookie_jar_path):
+            os.remove(self.config.cookie_jar_path)
 
         self.session.close()
         self.session = Session()

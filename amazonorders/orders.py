@@ -31,6 +31,8 @@ class AmazonOrders:
 
         #: The AmazonSession to use for requests.
         self.amazon_session: AmazonSession = amazon_session
+        #: TODO document this
+        self.config: AmazonOrdersConfig = config
 
         #: Set logger ``DEBUG`` and send output to ``stderr``.
         self.debug: bool = debug

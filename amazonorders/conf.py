@@ -21,6 +21,7 @@ class AmazonOrdersConfig:
         # Provision default configs
         self._data = {
             "locale": "en-US",
+            "max_auth_attempts": 10,
             "output_dir": os.path.join(os.getcwd(), "output"),
             "cookie_jar_path": os.path.join(DEFAULT_CONFIG_DIR, "cookies.json")
         }
