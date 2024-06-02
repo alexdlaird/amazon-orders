@@ -2,32 +2,32 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 
-def select(tag, selector):
+def select(parsed, selector):
     """
     TODO: document
 
-    :param tag:
-    :param selector:
-    :return:
+    :param parsed: The ``Tag`` from which to attempt selection.
+    :param selector: The CSS selector(s) for the field.
+    :return: The selected tag
     """
 
     if isinstance(selector, str):
         selector = [selector]
 
     for s in selector:
-        next_tag = tag.select(s)
-        if next_tag:
-            return next_tag
+        tag = parsed.select(s)
+        if tag:
+            return tag
 
     return []
 
 
-def select_one(tag, selector):
+def select_one(parsed, selector):
     """
     TODO: document
 
-    :param tag:
-    :param selector:
+    :param parsed: The ``Tag`` from which to attempt selection.
+    :param selector: The CSS selector(s) for the field.
     :return:
     """
 
@@ -35,6 +35,6 @@ def select_one(tag, selector):
         selector = [selector]
 
     for s in selector:
-        next_tag = tag.select_one(s)
-        if next_tag:
-            return next_tag
+        tag = parsed.select_one(s)
+        if tag:
+            return tag

@@ -51,7 +51,7 @@ class AuthForm(ABC):
         :return: Whether the ``<form>`` selection was successful.
         """
         self.amazon_session = amazon_session
-        self.form = parsed.select_one(self.selector)
+        self.form = util.select_one(parsed, self.selector)
 
         return self.form is not None
 
