@@ -10,12 +10,17 @@ DEFAULT_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "amazonord
 
 
 class AmazonOrdersConfig:
+    """
+    # TODO: document
+    """
+
     def __init__(self,
                  config_path: Optional[str] = None,
                  data: Optional[Dict[str, Any]] = None):
         if not data:
             data = {}
 
+        #: The path to use for the config file.
         self.config_path: str = os.path.join(DEFAULT_CONFIG_DIR, "config.yml") if config_path is None else config_path
 
         # Provision default configs

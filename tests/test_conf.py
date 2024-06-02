@@ -24,6 +24,8 @@ class TestConf(TestCase):
         config_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "config.yml")
         self.assertFalse(os.path.exists(conf.DEFAULT_CONFIG_DIR))
         self.assertFalse(os.path.exists(config_path))
+        self.assertFalse(os.path.exists(self.test_output_dir))
+        self.assertFalse(os.path.exists(self.test_cookie_jar_path))
 
         # GIVEN
         config = AmazonOrdersConfig(data={
@@ -35,6 +37,7 @@ class TestConf(TestCase):
         self.assertEqual(config_path, config.config_path)
         self.assertTrue(os.path.exists(conf.DEFAULT_CONFIG_DIR))
         self.assertFalse(os.path.exists(config_path))
+        self.assertTrue(os.path.exists(self.test_output_dir))
         self.assertEqual("en-US", config.locale)
         self.assertEqual(10, config.max_auth_attempts)
         self.assertEqual(self.test_output_dir, config.output_dir)
@@ -51,6 +54,36 @@ locale: en-US
 max_auth_attempts: 10
 output_dir: {}
 """.format(self.test_cookie_jar_path, self.test_output_dir), f.read())
+
+    def test_override_default(self):
+        # GIVEN
+        config = AmazonOrdersConfig(data={
+            "max_auth_attempts": 11
+        })
+
+        self.assertEqual(11, config.max_auth_attempts)
+
+    def test_load_from_file(self):
+        # GIVEN
+        config_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "load-from-config.yml")
+        test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "load-from-config-output")
+        test_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "load-from-config-cookies.json")
+        os.makedirs(conf.DEFAULT_CONFIG_DIR)
+        with open(config_path, "w") as f:
+            f.write("""cookie_jar_path: {}
+locale: some-locale
+max_auth_attempts: 11
+output_dir: {}
+""".format(test_cookie_jar_path, test_output_dir))
+
+        # WHEN
+        config = AmazonOrdersConfig(config_path=config_path)
+
+        self.assertEqual(config_path, config.config_path)
+        self.assertEqual("some-locale", config.locale)
+        self.assertEqual(11, config.max_auth_attempts)
+        self.assertEqual(test_output_dir, config.output_dir)
+        self.assertEqual(test_cookie_jar_path, config.cookie_jar_path)
 
     def test_update_config(self):
         # TODO: implement

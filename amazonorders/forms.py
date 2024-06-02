@@ -135,7 +135,7 @@ class AuthForm(ABC):
     def _handle_errors(self) -> None:
         error_tag = self.amazon_session.last_response_parsed.select_one(self.error_selector)
         if error_tag:
-            error_msg = f"An error occurred: {error_tag.text.strip()}\n"
+            error_msg = f"An error occurred: {error_tag.text.strip().rstrip('.')}.\n"
 
             if self.critical:
                 raise AmazonOrdersAuthError(error_msg)

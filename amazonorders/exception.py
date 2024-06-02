@@ -9,7 +9,7 @@ class AmazonOrdersError(Exception):
     pass
 
 
-class AmazonOrdersNotFoundError(Exception):
+class AmazonOrdersNotFoundError(AmazonOrdersError):
     """
     Raised when an Amazon page is not found.
     """

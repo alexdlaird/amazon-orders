@@ -227,8 +227,7 @@ class AmazonSession:
             attempts += 1
 
         if attempts == self.config.max_auth_attempts:
-            raise AmazonOrdersAuthError(
-                "Max authentication flow attempts reached.")
+            raise AmazonOrdersAuthError("Max authentication flow attempts reached.")
 
     def logout(self) -> None:
         """

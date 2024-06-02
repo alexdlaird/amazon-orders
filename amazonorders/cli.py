@@ -140,7 +140,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
                    .format(year=year,
                            optional_start_index=optional_start_index,
                            optional_full_details=optional_full_details))
-        click.echo("Info: This might take a minute ...\n")
+        click.echo("Info: Fetching order history, this might take a minute ...")
 
         amazon_orders = AmazonOrders(amazon_session,
                                      config=ctx.obj["conf"])
@@ -150,6 +150,8 @@ Order History for {year}{optional_start_index}{optional_full_details}
                                                      "start_index"],
                                                  full_details=kwargs[
                                                      "full_details"], )
+
+        click.echo("... {} orders parsed.\n".format(len(orders)))
 
         for order in orders:
             click.echo(f"{_order_output(order)}\n")
@@ -247,7 +249,7 @@ def version(ctx: Context):
     """
     Show the banner and package version.
     """
-    click.echo(f"hookee/{__version__} Python/{platform.python_version()}")
+    click.echo(f"amazon-orders/{__version__} Python/{platform.python_version()}")
     ctx.exit(0)
 
 

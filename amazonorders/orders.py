@@ -108,7 +108,7 @@ class AmazonOrders:
 
         self.amazon_session.get(f"{constants.ORDER_DETAILS_URL}?orderID={order_id}")
         if not self.amazon_session.last_response.url.startswith(constants.ORDER_DETAILS_URL):
-            raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found")
+            raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.")
 
         order_details_tag = self.amazon_session.last_response_parsed.select_one(
             constants.ORDER_DETAILS_ENTITY_SELECTOR)
