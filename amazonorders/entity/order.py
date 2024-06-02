@@ -9,7 +9,7 @@ from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
-from amazonorders import constants
+from amazonorders import constants, util
 from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
@@ -81,12 +81,12 @@ class Order(Parsable):
         return f"Order #{self.order_number}: {self.items}"
 
     def _parse_shipments(self) -> List[Shipment]:
-        shipments = [Shipment(x) for x in self.parsed.select(constants.SHIPMENT_ENTITY_SELECTOR)]
+        shipments = [Shipment(x) for x in util.select(self.parsed, constants.SHIPMENT_ENTITY_SELECTOR)]
         shipments.sort()
         return shipments
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x) for x in self.parsed.select(constants.ITEM_ENTITY_SELECTOR)]
+        items = [Item(x) for x in util.select(self.parsed, constants.ITEM_ENTITY_SELECTOR)]
         items.sort()
         return items
 
@@ -117,9 +117,9 @@ class Order(Parsable):
         value = self.simple_parse(constants.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
 
         if not value:
-            for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
+            for tag in util.select(self.parsed, constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
                 if "grand total" in tag.text.lower():
-                    inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                    inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                     if inner_tag:
                         value = inner_tag.text.strip()
                         break
@@ -142,10 +142,10 @@ class Order(Parsable):
         return value
 
     def _parse_recipient(self) -> Recipient:
-        value = self.parsed.select_one(constants.FIELD_ORDER_ADDRESS_SELECTOR)
+        value = util.select_one(self.parsed, constants.FIELD_ORDER_ADDRESS_SELECTOR)
 
         if not value:
-            value = self.parsed.select_one(constants.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
+            value = util.select_one(self.parsed, constants.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
             if value:
                 inline_content = value.get("data-a-popover", {}).get("inlineContent")
@@ -155,7 +155,7 @@ class Order(Parsable):
         if not value:
             # TODO: there are multiple shipToData tags, we should double check we're picking the right one
             #  associated with the order
-            parent_tag = self.parsed.find_parent().select_one(constants.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
+            parent_tag = util.select_one(self.parsed.find_parent(), constants.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
             value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
 
         return Recipient(value)
@@ -163,7 +163,7 @@ class Order(Parsable):
     def _parse_payment_method(self) -> Optional[str]:
         value = None
 
-        tag = self.parsed.select_one(constants.FIELD_ORDER_PAYMENT_METHOD_SELECTOR)
+        tag = util.select_one(self.parsed, constants.FIELD_ORDER_PAYMENT_METHOD_SELECTOR)
         if tag:
             value = tag["alt"]
 
@@ -172,7 +172,7 @@ class Order(Parsable):
     def _parse_payment_method_last_4(self) -> Optional[str]:
         value = None
 
-        tag = self.parsed.select_one(constants.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR)
+        tag = util.select_one(self.parsed, constants.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR)
         if tag:
             ending_sibling = tag.find_next_siblings()[-1]
             split_str = "ending in"
@@ -184,9 +184,9 @@ class Order(Parsable):
     def _parse_subtotal(self) -> Optional[float]:
         value = None
 
-        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
+        for tag in util.select(self.parsed, constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "subtotal" in tag.text.lower():
-                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
                     value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break
@@ -196,9 +196,9 @@ class Order(Parsable):
     def _parse_shipping_total(self) -> Optional[float]:
         value = None
 
-        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
+        for tag in util.select(self.parsed, constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "shipping" in tag.text.lower():
-                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
                     value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break
@@ -208,9 +208,9 @@ class Order(Parsable):
     def _parse_subscription_discount(self) -> Optional[float]:
         value = None
 
-        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
+        for tag in util.select(self.parsed, constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "subscribe" in tag.text.lower():
-                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
                     value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break
@@ -220,9 +220,9 @@ class Order(Parsable):
     def _parse_total_before_tax(self) -> Optional[float]:
         value = None
 
-        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
+        for tag in util.select(self.parsed, constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "before tax" in tag.text.lower():
-                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
                     value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break
@@ -232,9 +232,9 @@ class Order(Parsable):
     def _parse_estimated_tax(self) -> Optional[float]:
         value = None
 
-        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
+        for tag in util.select(self.parsed, constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "estimated tax" in tag.text.lower():
-                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
                     value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break
@@ -244,9 +244,9 @@ class Order(Parsable):
     def _parse_refund_total(self) -> Optional[float]:
         value = None
 
-        for tag in self.parsed.select(constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
+        for tag in util.select(self.parsed, constants.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             if "refund total" in tag.text.lower() and "tax refund" not in tag.text.lower():
-                inner_tag = tag.select_one(constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
                     value = float(inner_tag.text.strip().replace("$", "").replace(",", ""))
                     break

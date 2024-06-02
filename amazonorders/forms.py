@@ -10,7 +10,7 @@ from PIL import Image
 from amazoncaptcha import AmazonCaptcha
 from bs4 import Tag
 
-from amazonorders import constants
+from amazonorders import constants, util
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
 
 
@@ -133,7 +133,7 @@ class AuthForm(ABC):
             return action
 
     def _handle_errors(self) -> None:
-        error_tag = self.amazon_session.last_response_parsed.select_one(self.error_selector)
+        error_tag = util.select_one(self.amazon_session.last_response_parsed, self.error_selector)
         if error_tag:
             error_msg = f"An error occurred: {error_tag.text.strip().rstrip('.')}.\n"
 
@@ -184,7 +184,7 @@ class MfaDeviceSelectForm(AuthForm):
             additional_attrs = {}
         super().fill_form()
 
-        contexts = self.form.select(constants.MFA_DEVICE_SELECT_INPUT_SELECTOR)
+        contexts = util.select(self.form, constants.MFA_DEVICE_SELECT_INPUT_SELECTOR)
         i = 0
         choices = []
         for field in contexts:

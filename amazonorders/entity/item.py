@@ -7,7 +7,7 @@ from typing import Optional
 
 from bs4 import Tag
 
-from amazonorders import constants
+from amazonorders import constants, util
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.seller import Seller
 
@@ -54,7 +54,7 @@ class Item(Parsable):
     def _parse_price(self) -> Optional[float]:
         value = None
 
-        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
+        for tag in util.select(self.parsed, constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             price = tag.text.strip()
             if price.startswith("$"):
                 value = float(price.replace("$", "").replace(",", ""))
@@ -64,7 +64,7 @@ class Item(Parsable):
     def _parse_seller(self) -> Optional[Seller]:
         value = None
 
-        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
+        for tag in util.select(self.parsed, constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             if "Sold by:" in tag.text:
                 value = Seller(tag)
 
@@ -73,7 +73,7 @@ class Item(Parsable):
     def _parse_condition(self) -> Optional[str]:
         value = None
 
-        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
+        for tag in util.select(self.parsed, constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             split_str = "Condition:"
             if split_str in tag.text:
                 value = tag.text.split(split_str)[1].strip()
@@ -83,7 +83,7 @@ class Item(Parsable):
     def _parse_return_eligible_date(self) -> Optional[date]:
         value = None
 
-        for tag in self.parsed.select(constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
+        for tag in util.select(self.parsed, constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             if "Return" in tag.text:
                 tag_str = tag.text.strip()
                 split_str = "through "

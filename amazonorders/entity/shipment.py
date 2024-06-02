@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from bs4 import Tag
 
-from amazonorders import constants
+from amazonorders import constants, util
 from amazonorders.constants import ITEM_ENTITY_SELECTOR
 from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
@@ -46,6 +46,6 @@ class Shipment(Parsable):
             return str(self.items) < str(other.items)
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x) for x in self.parsed.select(ITEM_ENTITY_SELECTOR)]
+        items = [Item(x) for x in util.select(self.parsed, ITEM_ENTITY_SELECTOR)]
         items.sort()
         return items

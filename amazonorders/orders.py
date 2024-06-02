@@ -5,7 +5,7 @@ import datetime
 import logging
 from typing import List, Optional
 
-from amazonorders import constants
+from amazonorders import constants, util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError
@@ -70,7 +70,7 @@ class AmazonOrders:
             self.amazon_session.get(next_page)
             response_parsed = self.amazon_session.last_response_parsed
 
-            for order_tag in response_parsed.select(constants.ORDER_HISTORY_ENTITY_SELECTOR):
+            for order_tag in util.select(response_parsed, constants.ORDER_HISTORY_ENTITY_SELECTOR):
                 order = Order(order_tag)
 
                 if full_details:
@@ -83,7 +83,7 @@ class AmazonOrders:
 
             next_page = None
             if start_index is None:
-                next_page_tag = response_parsed.select_one(constants.NEXT_PAGE_LINK_SELECTOR)
+                next_page_tag = util.select_one(response_parsed, constants.NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
                     next_page = next_page_tag["href"]
                     if not next_page.startswith("http"):
