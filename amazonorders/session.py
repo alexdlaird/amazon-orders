@@ -94,7 +94,7 @@ class AmazonSession:
             logger.setLevel(logging.DEBUG)
         #: The I/O handler for echoes and prompts.
         self.io: IODefault = io
-        #: TODO document this
+        #: The AmazonOrdersConfig to use.
         self.config: AmazonOrdersConfig = config
 
         #: The shared session to be used across all requests.

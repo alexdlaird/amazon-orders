@@ -50,10 +50,14 @@ class IOClick(IODefault):
 @click.option('--debug', is_flag=True, default=False,
               help="Enable debugging and send output to "
                    "command line.")
-@click.option('--max-auth-attempts', default=10,
-              help="Will continue in the login auth loop this many times (successes and failures).")
+@click.option('--config-path',
+              help="The config path.")
+@click.option('--max-auth-attempts',
+              help="The max auth loop attempts to make (successes and failures), passing this overrides config value.")
 @click.option('--output-dir',
-              help="The directory where any output files should be produced.")
+              help="The directory where any output files should be produced, passing this overrides config value.")
+@click.option('--locale',
+              help="The directory where any output files should be produced, passing this overrides config value.")
 @click.pass_context
 def amazon_orders_cli(ctx: Context,
                       **kwargs: Any):
@@ -82,12 +86,15 @@ def amazon_orders_cli(ctx: Context,
         logger.setLevel(logging.DEBUG)
         logger.addHandler(logging.StreamHandler())
 
-    ctx.obj["conf"] = AmazonOrdersConfig()
-    # TODO: clean up config overrides, and allow passing an override config path from CLI
-    if "output_dir" in kwargs:
-        ctx.obj["conf"].update_config("output_dir", kwargs["output_dir"])
-    if "max_auth_attempts" in kwargs:
-        ctx.obj["conf"].update_config("max_auth_attempts", kwargs["max_auth_attempts"])
+    data = {}
+    if kwargs.get("locale"):
+        data["locale"] = kwargs["locale"]
+    if kwargs.get("output_dir"):
+        data["output_dir"] = kwargs["output_dir"]
+    if kwargs.get("max_auth_attempts"):
+        data["max_auth_attempts"] = kwargs["max_auth_attempts"]
+    ctx.obj["conf"] = AmazonOrdersConfig(config_path=kwargs.get("config_path"),
+                                         data=data)
 
     ctx.obj["locale"] = Localization(ctx.obj["conf"])
 
@@ -225,7 +232,7 @@ def update_config(ctx: Context,
                   key: str,
                   value: str):
     """
-    TODO: document
+    Persist the given config value to the config file.
     """
     conf = ctx.obj["conf"]
 

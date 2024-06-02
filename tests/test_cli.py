@@ -15,13 +15,13 @@ class TestCli(UnitTestCase):
     def setUp(self):
         super().setUp()
 
-        # TODO: need a CLI command to pass in an override config path
         self.runner = CliRunner()
 
     def test_missing_credentials(self):
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
-                                      ["--username", "", "--password", ""])
+                                      ["--config-path", self.test_config.config_path,
+                                       "--username", "", "--password", ""])
 
         # THEN
         self.assertEqual(2, response.exit_code)
@@ -38,7 +38,8 @@ class TestCli(UnitTestCase):
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
-                                      ["--username", "some-username", "--password",
+                                      ["--config-path", self.test_config.config_path,
+                                       "--username", "some-username", "--password",
                                        "some-password", "history", "--year",
                                        year, "--start-index", start_index])
 
@@ -74,10 +75,15 @@ class TestCli(UnitTestCase):
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
-                                      ["--username", "some-username", "--password",
+                                      ["--config-path", self.test_config.config_path,
+                                       "--username", "some-username", "--password",
                                        "some-password", "order", order_id])
 
         # THEN
         self.assertEqual(0, response.exit_code)
         self.assertEqual(1, resp1.call_count)
         self.assertIn("Order #112-2961628-4757846", response.output)
+
+    def test_update_config(self):
+        # TODO: implement
+        pass
