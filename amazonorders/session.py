@@ -147,7 +147,7 @@ class AmazonSession:
         logger.debug(f"Response: {self.last_response.url} - {self.last_response.status_code}")
 
         if self.debug:
-            page_name = self._get_page_from_url(self.last_response.url)
+            page_name = self._get_page_from_url(self.config.output_dir, self.last_response.url)
             with open(os.path.join(self.config.output_dir, page_name), "w",
                       encoding="utf-8") as html_file:
                 logger.debug(
@@ -244,6 +244,7 @@ class AmazonSession:
         self.is_authenticated = False
 
     def _get_page_from_url(self,
+                           output_dir: str,
                            url: str) -> str:
         page_name = os.path.splitext(os.path.basename(urlparse(url).path))[0]
         if not page_name:
@@ -251,7 +252,7 @@ class AmazonSession:
 
         i = 0
         filename_frmt = "{page_name}_{index}.html"
-        while os.path.isfile(filename_frmt.format(page_name=page_name, index=i)):
+        while os.path.isfile(os.path.join(output_dir, filename_frmt.format(page_name=page_name, index=i))):
             i += 1
         return filename_frmt.format(page_name=page_name, index=i)
 
