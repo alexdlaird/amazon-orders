@@ -14,4 +14,5 @@ build
 .dmypy.json
 
 tests/.config/
+tests/.integration-config/
 scripts/*.html

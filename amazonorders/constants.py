@@ -84,7 +84,7 @@ NEXT_PAGE_LINK_SELECTOR = "ul.a-pagination li.a-last a"
 # is passed.
 ##########################################################################
 
-ORDER_HISTORY_ENTITY_SELECTOR = "div.order"
+ORDER_HISTORY_ENTITY_SELECTOR = ["div.order", "div.order-card"]
 ORDER_DETAILS_ENTITY_SELECTOR = "div#orderDetails"
 ITEM_ENTITY_SELECTOR = "div:has(> div.yohtmlc-item)"
 SHIPMENT_ENTITY_SELECTOR = "div.shipment"
@@ -104,7 +104,7 @@ FIELD_ITEM_TAG_ITERATOR_SELECTOR = ".yohtmlc-item div"
 #####################################
 
 FIELD_ORDER_DETAILS_LINK_SELECTOR = "a.yohtmlc-order-details-link"
-FIELD_ORDER_NUMBER_SELECTOR = "bdi[dir='ltr']"
+FIELD_ORDER_NUMBER_SELECTOR = ["bdi[dir='ltr']", "span[dir='ltr']"]
 FIELD_ORDER_GRAND_TOTAL_SELECTOR = "div.yohtmlc-order-total span.value"
 FIELD_ORDER_PLACED_DATE_SELECTOR = ["span.order-date-invoice-item",
                                     "div.a-span3"]

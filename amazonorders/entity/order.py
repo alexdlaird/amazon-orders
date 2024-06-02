@@ -14,6 +14,7 @@ from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
+from amazonorders.exception import AmazonOrderEntityError
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +125,11 @@ class Order(Parsable):
                         value = inner_tag.text.strip()
                         break
 
+        if not value:
+            raise AmazonOrderEntityError(
+                "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
+                    name=self.__class__.__name__, selector=constants.FIELD_ORDER_GRAND_TOTAL_SELECTOR))
+
         value = float(value.replace("$", "").replace(",", ""))
 
         return value
@@ -131,10 +137,15 @@ class Order(Parsable):
     def _parse_order_placed_date(self) -> date:
         value = self.simple_parse(constants.FIELD_ORDER_PLACED_DATE_SELECTOR)
 
-        if "Ordered on" in value:
+        if value and "Ordered on" in value:
             split_str = "Ordered on"
         else:
             split_str = "Order placed"
+
+        if not value or split_str not in value:
+            raise AmazonOrderEntityError(
+                "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
+                    name=self.__class__.__name__, selector=constants.FIELD_ORDER_PLACED_DATE_SELECTOR))
 
         value = value.split(split_str)[1].strip()
         value = datetime.strptime(value, "%B %d, %Y").date()
