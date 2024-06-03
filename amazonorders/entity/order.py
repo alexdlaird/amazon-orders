@@ -124,6 +124,9 @@ class Order(Parsable):
                     if inner_tag:
                         value = inner_tag.text.strip()
                         break
+        else:
+            if value.lower().startswith("total"):
+                value = value[5:].strip()
 
         if not value:
             raise AmazonOrderEntityError(

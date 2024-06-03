@@ -238,6 +238,16 @@ def update_config(ctx: Context,
     """
     conf = ctx.obj["conf"]
 
+    if value.isdigit():
+        if value.isdecimal():
+            value = float(value)
+            if value.is_integer():
+                value = int(value)
+    elif value.lower() == 'true':
+        value = True
+    elif value.lower() == 'false':
+        value = False
+
     conf.update_config(key, value)
 
     click.echo(f"Info: Config \"{key}\" updated to \"{value}\".\n")

@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import os
+import unittest
 
 import responses
 
@@ -13,6 +14,11 @@ from tests.unittestcase import UnitTestCase
 
 
 class TestOrders(UnitTestCase):
+    temp_order_history_file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "output",
+                                                "temp-order-history.html")
+    temp_order_details_file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "output",
+                                                "temp-order-details.html")
+
     def setUp(self):
         super().setUp()
 
@@ -191,3 +197,51 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
         self.assertEqual(1, resp1.call_count)
+
+    @unittest.skipIf(not os.path.exists(temp_order_history_file_path),
+                     reason="Skipped, to debug an order history page, place it at tests/output/temp-order-history.html")
+    @responses.activate
+    def test_temp_order_history_file(self):
+        """
+        This test
+        """
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2024
+        start_index = 0
+        resp1 = self.given_order_history_landing_exists()
+        resp2 = self.given_any_order_history_exists("order-history-2018-0.html")
+        with open(self.temp_order_history_file_path, "r", encoding="utf-8") as f:
+            resp3 = responses.add(
+                responses.GET,
+                "{url}?timeFilter=year-{year}&startIndex={start_index}".format(url=ORDER_HISTORY_URL,
+                                                                               year=year,
+                                                                               start_index=start_index),
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+        print(orders)
+
+    @unittest.skipIf(not os.path.exists(temp_order_details_file_path),
+                     reason="Skipped, to debug an order details page, place it at tests/output/temp-order-details.html")
+    @responses.activate
+    def test_temp_order_details_file(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "temp-1234"
+        with open(self.temp_order_details_file_path, "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                f"{ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        print(order)

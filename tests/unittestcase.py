@@ -93,8 +93,18 @@ class UnitTestCase(TestCase):
                 status=200,
             )
 
-    def given_any_order_details_exists(self, order_html_file):
-        with open(os.path.join(self.RESOURCES_DIR, order_html_file), "r",
+    def given_any_order_history_exists(self, order_history_html_file):
+        with open(os.path.join(self.RESOURCES_DIR, order_history_html_file), "r",
+                  encoding="utf-8") as f:
+            return responses.add(
+                responses.GET,
+                re.compile(f"{ORDER_HISTORY_URL}?.*"),
+                body=f.read(),
+                status=200,
+            )
+
+    def given_any_order_details_exists(self, order_details_html_file):
+        with open(os.path.join(self.RESOURCES_DIR, order_details_html_file), "r",
                   encoding="utf-8") as f:
             return responses.add(
                 responses.GET,

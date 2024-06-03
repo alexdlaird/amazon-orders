@@ -86,5 +86,15 @@ output_dir: {}
         self.assertEqual(test_cookie_jar_path, config.cookie_jar_path)
 
     def test_update_config(self):
-        # TODO: implement
-        pass
+        # GIVEN
+        config = AmazonOrdersConfig(data={
+            "max_auth_attempts": 11
+        })
+
+        self.assertEqual(11, config.max_auth_attempts)
+
+        # WHEN
+        config.update_config("max_auth_attempts", 7)
+
+        # THEN
+        self.assertEqual(7, config.max_auth_attempts)

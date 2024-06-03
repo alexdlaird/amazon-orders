@@ -85,5 +85,18 @@ class TestCli(UnitTestCase):
         self.assertIn("Order #112-2961628-4757846", response.output)
 
     def test_update_config(self):
-        # TODO: implement
-        pass
+        # GIVEN
+        self.test_config.save()
+        with open(self.test_config.config_path, "r") as f:
+            self.assertIn("max_auth_attempts: 10", f.read())
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      ["--config-path", self.test_config.config_path,
+                                       "update-config", "max_auth_attempts", "7"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertIn("max_auth_attempts\" updated", response.output)
+        with open(self.test_config.config_path, "r") as f:
+            self.assertIn("max_auth_attempts: 7", f.read())

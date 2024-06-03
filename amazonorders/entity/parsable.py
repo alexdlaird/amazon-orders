@@ -90,7 +90,7 @@ class Parsable:
                         continue
 
                     value = tag.text.strip()
-                    # TODO: is there a dynamic way to accomplish this?
+                    # TODO: find a dynamic way to accomplish this
                     if return_type == float:
                         value = float(value)
                     elif return_type == int:

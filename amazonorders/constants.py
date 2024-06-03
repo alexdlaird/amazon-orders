@@ -105,7 +105,7 @@ FIELD_ITEM_TAG_ITERATOR_SELECTOR = ".yohtmlc-item div"
 
 FIELD_ORDER_DETAILS_LINK_SELECTOR = "a.yohtmlc-order-details-link"
 FIELD_ORDER_NUMBER_SELECTOR = ["bdi[dir='ltr']", "span[dir='ltr']"]
-FIELD_ORDER_GRAND_TOTAL_SELECTOR = "div.yohtmlc-order-total span.value"
+FIELD_ORDER_GRAND_TOTAL_SELECTOR = ["div.yohtmlc-order-total span.value", "div.order-header div.a-column.a-span2"]
 FIELD_ORDER_PLACED_DATE_SELECTOR = ["span.order-date-invoice-item",
                                     "div.a-span3"]
 FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"

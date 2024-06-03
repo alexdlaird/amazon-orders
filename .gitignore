@@ -15,4 +15,5 @@ build
 
 tests/.config/
 tests/.integration-config/
+tests/output/
 scripts/*.html
