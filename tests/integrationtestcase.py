@@ -65,6 +65,7 @@ class IntegrationTestCase(TestCase):
 
         cls.amazon_orders = AmazonOrders(cls.amazon_session)
 
+    @classmethod
     def tearDownClass(cls):
         if os.path.exists(conf.DEFAULT_CONFIG_DIR):
             shutil.rmtree(conf.DEFAULT_CONFIG_DIR)

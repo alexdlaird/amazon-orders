@@ -210,13 +210,11 @@ class TestOrders(UnitTestCase):
         year = 2024
         start_index = 0
         resp1 = self.given_order_history_landing_exists()
-        resp2 = self.given_any_order_history_exists("order-history-2018-0.html")
         with open(self.temp_order_history_file_path, "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.GET,
-                "{url}?timeFilter=year-{year}&startIndex={start_index}".format(url=ORDER_HISTORY_URL,
-                                                                               year=year,
-                                                                               start_index=start_index),
+                "{url}?timeFilter=year-{year}".format(url=ORDER_HISTORY_URL,
+                                                      year=year),
                 body=f.read(),
                 status=200,
             )
