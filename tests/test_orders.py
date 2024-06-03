@@ -222,7 +222,16 @@ class TestOrders(UnitTestCase):
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
 
-        print(orders)
+        # THEN, assert the primary fields are populated without regression
+        for order in orders:
+            self.assertIsNotNone(order.order_number)
+            self.assertIsNotNone(order.grand_total)
+            self.assertIsNotNone(order.order_placed_date)
+            self.assertIsNotNone(order.order_details_link)
+            self.assertTrue(len(order.items) > 0)
+            self.assertIsNotNone(order.items[0].title)
+            self.assertIsNotNone(order.items[0].link)
+            self.assertTrue(len(order.shipments) > 0)
 
     @unittest.skipIf(not os.path.exists(temp_order_details_file_path),
                      reason="Skipped, to debug an order details page, place it at tests/output/temp-order-details.html")
@@ -242,4 +251,13 @@ class TestOrders(UnitTestCase):
         # WHEN
         order = self.amazon_orders.get_order(order_id)
 
-        print(order)
+        # THEN, assert the primary fields are populated without regression
+        self.assertIsNotNone(order.order_number)
+        self.assertIsNotNone(order.grand_total)
+        self.assertIsNotNone(order.order_placed_date)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertTrue(len(order.items) > 0)
+        self.assertIsNotNone(order.items[0].title)
+        self.assertIsNotNone(order.items[0].link)
+        self.assertIsNotNone(order.items[0].price)
+        self.assertTrue(len(order.shipments) > 0)

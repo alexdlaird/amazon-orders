@@ -86,8 +86,8 @@ NEXT_PAGE_LINK_SELECTOR = "ul.a-pagination li.a-last a"
 
 ORDER_HISTORY_ENTITY_SELECTOR = ["div.order", "div.order-card"]
 ORDER_DETAILS_ENTITY_SELECTOR = "div#orderDetails"
-ITEM_ENTITY_SELECTOR = "div:has(> div.yohtmlc-item)"
-SHIPMENT_ENTITY_SELECTOR = "div.shipment"
+ITEM_ENTITY_SELECTOR = ["div:has(> div.yohtmlc-item)", ".item-box"]
+SHIPMENT_ENTITY_SELECTOR = ["div.shipment", "div.delivery-box"]
 
 #####################################
 # CSS selectors for Item fields
@@ -95,8 +95,8 @@ SHIPMENT_ENTITY_SELECTOR = "div.shipment"
 
 FIELD_ITEM_IMG_LINK_SELECTOR = "a img"
 FIELD_ITEM_QUANTITY_SELECTOR = "span.item-view-qty"
-FIELD_ITEM_TITLE_SELECTOR = ".yohtmlc-item a"
-FIELD_ITEM_LINK_SELECTOR = ".yohtmlc-item a"
+FIELD_ITEM_TITLE_SELECTOR = [".yohtmlc-item a", ".yohtmlc-product-title"]
+FIELD_ITEM_LINK_SELECTOR = [".yohtmlc-item a", "a:has(> .yohtmlc-product-title)"]
 FIELD_ITEM_TAG_ITERATOR_SELECTOR = ".yohtmlc-item div"
 
 #####################################
