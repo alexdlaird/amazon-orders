@@ -15,7 +15,6 @@ from click.core import Context
 from amazonorders import __version__
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersError
-from amazonorders.localization import Localization
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
 
@@ -57,7 +56,7 @@ class IOClick(IODefault):
 @click.option('--output-dir',
               help="The directory where any output files should be produced, passing this overrides config value.")
 @click.option('--locale',
-              help="The directory where any output files should be produced, passing this overrides config value.")
+              help="The locale for the Amazon website. Presently only the default 'en-US' is supported.")
 @click.pass_context
 def amazon_orders_cli(ctx: Context,
                       **kwargs: Any):
@@ -95,8 +94,6 @@ def amazon_orders_cli(ctx: Context,
         data["max_auth_attempts"] = kwargs["max_auth_attempts"]
     ctx.obj["conf"] = AmazonOrdersConfig(config_path=kwargs.get("config_path"),
                                          data=data)
-
-    ctx.obj["locale"] = Localization(ctx.obj["conf"])
 
     username = kwargs.get("username")
     password = kwargs.get("password")
