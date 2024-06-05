@@ -25,6 +25,13 @@ Session Management
     :private-members:
     :show-inheritance:
 
+Configuration
+-------------
+.. automodule:: amazonorders.conf
+    :members:
+    :private-members:
+    :show-inheritance:
+
 Entities
 --------
 
@@ -62,6 +69,14 @@ Exceptions
 ----------
 
 .. automodule:: amazonorders.exception
+    :members:
+    :private-members:
+    :show-inheritance:
+
+Utility Functions
+-----------------
+
+.. automodule:: amazonorders.util
     :members:
     :private-members:
     :show-inheritance:
