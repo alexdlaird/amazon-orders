@@ -199,7 +199,8 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp1.call_count)
 
     @unittest.skipIf(not os.path.exists(temp_order_history_file_path),
-                     reason="Skipped, to debug an order history page, place it at tests/output/temp-order-history.html")
+                     reason="Skipped, to debug an order history page, "
+                            "place it at tests/output/temp-order-history.html")
     @responses.activate
     def test_temp_order_history_file(self):
         """
@@ -209,9 +210,9 @@ class TestOrders(UnitTestCase):
         self.amazon_session.is_authenticated = True
         year = 2024
         start_index = 0
-        resp1 = self.given_order_history_landing_exists()
+        self.given_order_history_landing_exists()
         with open(self.temp_order_history_file_path, "r", encoding="utf-8") as f:
-            resp3 = responses.add(
+            responses.add(
                 responses.GET,
                 "{url}?timeFilter=year-{year}".format(url=ORDER_HISTORY_URL,
                                                       year=year),
@@ -234,14 +235,15 @@ class TestOrders(UnitTestCase):
             self.assertTrue(len(order.shipments) > 0)
 
     @unittest.skipIf(not os.path.exists(temp_order_details_file_path),
-                     reason="Skipped, to debug an order details page, place it at tests/output/temp-order-details.html")
+                     reason="Skipped, to debug an order details page, "
+                            "place it at tests/output/temp-order-details.html")
     @responses.activate
     def test_temp_order_details_file(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "temp-1234"
         with open(self.temp_order_details_file_path, "r", encoding="utf-8") as f:
-            resp1 = responses.add(
+            responses.add(
                 responses.GET,
                 f"{ORDER_DETAILS_URL}?orderID={order_id}",
                 body=f.read(),

@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import os
-import shutil
 
 from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig

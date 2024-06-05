@@ -40,7 +40,8 @@ class Parsable:
         :return: The return value from ``parse_function``.
         """
         if not parse_function.__name__.startswith("_parse_") and parse_function.__name__ != "simple_parse":
-            raise AmazonOrdersError("The name of the `parse_function` passed to this method must start with `_parse_`.")
+            raise AmazonOrdersError("The name of the `parse_function` passed "
+                                    "to this method must start with `_parse_`.")
 
         try:
             return parse_function(**kwargs)

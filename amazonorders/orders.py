@@ -75,7 +75,8 @@ class AmazonOrders:
 
                 if full_details:
                     self.amazon_session.get(order.order_details_link)
-                    order_details_tag = util.select_one(self.amazon_session.last_response_parsed, constants.ORDER_DETAILS_ENTITY_SELECTOR)
+                    order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
+                                                        constants.ORDER_DETAILS_ENTITY_SELECTOR)
                     order = Order(order_details_tag, full_details=True, clone=order)
 
                 orders.append(order)

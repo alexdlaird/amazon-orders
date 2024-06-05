@@ -14,7 +14,6 @@ from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
-from amazonorders.exception import AmazonOrderEntityError
 
 logger = logging.getLogger(__name__)
 
