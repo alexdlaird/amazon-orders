@@ -64,8 +64,8 @@ class AmazonOrdersConfig:
                       value: str,
                       save: bool = True) -> None:
         """
-        Update the given key/value pair in the config object. By default, this update will also be persisted to the config
-        file, but if only the object should be updated without persisted, passing ``save=False``.
+        Update the given key/value pair in the config object. By default, this update will also be persisted to the
+        config file, but if only the object should be updated without persisted, passing ``save=False``.
 
         :param key: The to be updated.
         :param value: The new value.

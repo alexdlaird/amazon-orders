@@ -9,9 +9,10 @@ from bs4 import Tag
 def select(parsed: Tag,
            selector: List[str]) -> Tag:
     """
-    This is a helper function that extends BeautifulSoup's `select() <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_
-    method to allow for multiple selectors. It will iterate through the list of ``selectors`` until one is found to
-    return a populated list of ``Tag``'s, then return that.
+    This is a helper function that extends BeautifulSoup's `select() <https://www.crummy.com/software/
+    BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_ method to allow for multiple selectors. It will
+    iterate through the list of ``selectors`` until one is found to return a populated list of ``Tag``'s, then
+    return that.
 
     :param parsed: The ``Tag`` from which to attempt selection.
     :param selector: The CSS selector(s) for the field.
@@ -32,9 +33,10 @@ def select(parsed: Tag,
 def select_one(parsed: Tag,
                selector: List[str]) -> Tag:
     """
-    This is a helper function that extends BeautifulSoup's `select_one() <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_
-    method to allow for multiple selectors. It will iterate through the list of ``selectors`` until one is found to
-    return a populated single ``Tag``, then return that.
+    This is a helper function that extends BeautifulSoup's `select_one() <https://www.crummy.com/software/
+    BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_ method to allow for multiple selectors. It will
+    iterate through the list of ``selectors`` until one is found to return a populated single ``Tag``, then
+    return that.
 
     :param parsed: The ``Tag`` from which to attempt selection.
     :param selector: The CSS selector(s) for the field.
