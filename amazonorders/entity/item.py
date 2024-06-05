@@ -39,8 +39,7 @@ class Item(Parsable):
         self.image_link: Optional[str] = self.safe_simple_parse(selector=constants.FIELD_ITEM_IMG_LINK_SELECTOR,
                                                                 link=True)
         #: The Item quantity.
-        self.quantity: Optional[int] = self.safe_simple_parse(selector=constants.FIELD_ITEM_QUANTITY_SELECTOR,
-                                                              return_type=int)
+        self.quantity: Optional[int] = self.safe_simple_parse(selector=constants.FIELD_ITEM_QUANTITY_SELECTOR)
 
     def __repr__(self) -> str:
         return f"<Item: \"{self.title}\">"
@@ -57,7 +56,7 @@ class Item(Parsable):
         for tag in util.select(self.parsed, constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             price = tag.text.strip()
             if price.startswith("$"):
-                value = float(price.replace("$", "").replace(",", ""))
+                value = self.parse_currency(price)
 
         return value
 

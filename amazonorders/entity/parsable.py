@@ -2,10 +2,11 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import logging
-from typing import Any, Callable, Optional, Type, Union
+from typing import Any, Callable, Optional, Union
 
 from bs4 import Tag
 
+from amazonorders import util
 from amazonorders.constants import BASE_URL
 from amazonorders.exception import AmazonOrderEntityError, AmazonOrdersError
 
@@ -56,9 +57,8 @@ class Parsable:
     def simple_parse(self,
                      selector: Union[str, list],
                      link: bool = False,
-                     return_type: Optional[Type] = None,
                      text_contains: Optional[str] = None,
-                     required: bool = False, ) -> Any:
+                     required: bool = False) -> Any:
         """
         Will attempt to extract the text value of the given CSS selector(s) for a field, and
         is suitable for most basic functionality on a well-formed page.
@@ -68,7 +68,6 @@ class Parsable:
 
         :param selector: The CSS selector(s) for the field.
         :param link: If a link, the value of ``src`` or ``href`` will be returned.
-        :param return_type: Specify ``int`` or ``float`` to return a value other than ``str``.
         :param text_contains: Only select the field if this value is found in its text content.
         :param required: If required, an exception will be thrown instead of returning ``None``.
         :return: The cleaned up return value from the parsed ``selector``.
@@ -90,17 +89,9 @@ class Parsable:
                     if text_contains and text_contains not in tag.text:
                         continue
 
-                    value = tag.text.strip()
-                    # TODO: find a dynamic way to accomplish this
-                    if return_type == float:
-                        value = float(value)
-                    elif return_type == int:
-                        value = int(value)
-                    elif value == "":
-                        value = None
+                    value = util.to_type(tag.text.strip())
                 break
 
-        # None of the selectors were found
         if not value and required:
             raise AmazonOrderEntityError(
                 "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
@@ -130,3 +121,16 @@ class Parsable:
         if not url.startswith("http"):
             url = f"{BASE_URL}{url}"
         return url
+
+    def parse_currency(self,
+                       value: str) -> Union[int, float]:
+        """
+        Parse a currency value from a string, stripping non-numeric values to return it as a primitive.
+
+        :param value: The currency to parse.
+        :return: The currency as a primitive.
+        """
+        return util.to_type(value
+                            .strip()
+                            .replace("$", "")
+                            .replace(",", ""))

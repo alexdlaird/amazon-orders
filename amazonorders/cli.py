@@ -12,7 +12,7 @@ from typing import Any, Optional
 import click
 from click.core import Context
 
-from amazonorders import __version__
+from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
@@ -235,17 +235,7 @@ def update_config(ctx: Context,
     """
     conf = ctx.obj["conf"]
 
-    if value.isdigit():
-        if value.isdecimal():
-            value = float(value)
-            if value.is_integer():
-                value = int(value)
-    elif value.lower() == 'true':
-        value = True
-    elif value.lower() == 'false':
-        value = False
-
-    conf.update_config(key, value)
+    conf.update_config(key, util.to_type(value))
 
     click.echo(f"Info: Config \"{key}\" updated to \"{value}\".\n")
 
