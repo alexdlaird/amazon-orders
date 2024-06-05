@@ -139,9 +139,7 @@ class TestCase(unittest.TestCase):
             order_item = next(filter(lambda i: i.title == shipment.items[0].title, order.items))
             self.assertEqual(str(order_item),
                              str(shipment.items[0]))
-            if "TestIntegration" in self.__class__.__name__:
-                self.assertIsNone(shipment.tracking_link)
-            else:
+            if "TestIntegration" not in self.__class__.__name__:
                 self.assertIsNotNone(shipment.tracking_link)
             if "Cadeya" in shipment.items[0].title:
                 found_cadeya = True
@@ -207,6 +205,88 @@ class TestCase(unittest.TestCase):
                                      seller.name)
                     self.assertIsNone(seller.link)
             self.assertTrue(found_cadeya)
+            self.assertTrue(found_amazon)
+
+    def assert_order_112_6539663_7312263_multiple_items_shipments_sellers(self, order, full_details):
+        self.assertEqual(45.25, order.grand_total)
+        self.assertEqual("112-6539663-7312263", order.order_number)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2024, 5, 12), order.order_placed_date)
+        self.assertEqual("Alex Laird", order.recipient.name)
+        self.assertIsNotNone(order.recipient.address)
+        self.assertEqual(2, len(order.shipments))
+        found_kimoe = False
+        found_amazon = False
+        for shipment in order.shipments:
+            self.assertEqual(1, len(shipment.items))
+            order_item = next(filter(lambda i: i.title == shipment.items[0].title, order.items))
+            self.assertEqual(str(order_item),
+                             str(shipment.items[0]))
+            if "TestIntegration" not in self.__class__.__name__:
+                self.assertIsNotNone(shipment.tracking_link)
+            if "kimoe" in shipment.items[0].title:
+                found_kimoe = True
+                self.assertIn("Delivered May 18", shipment.delivery_status)
+            else:
+                found_amazon = True
+                self.assertIn("Delivered May 13", shipment.delivery_status)
+        self.assertTrue(found_kimoe)
+        self.assertTrue(found_amazon)
+        self.assertEqual(str(order.items),
+                         str(order.shipments[0].items + order.shipments[1].items))
+        self.assertEqual(2, len(order.items))
+        found_kimoe = False
+        found_amazon = False
+        for order_item in order.items:
+            if "kimoe" in order_item.title:
+                found_kimoe = True
+                self.assertEqual(
+                    "kimoe 5LB 100% Natural Non-GMO Dried mealworms-High-Protein for Birds, Chicken，Ducks",
+                    order_item.title)
+                self.assertIsNotNone(order_item.link)
+                self.assertIsNone(order_item.return_eligible_date)
+            else:
+                found_amazon = True
+                self.assertEqual(
+                    "Go Green Power Inc. GG-13725BK 16/3 Heavy Duty Extension Cord, Outdoor Extension Cord, "
+                    "Black, 25 ft",
+                    order_item.title)
+                self.assertIsNotNone(order_item.link)
+                self.assertEqual(date(2024, 6, 12), order_item.return_eligible_date)
+        self.assertTrue(found_kimoe)
+        self.assertTrue(found_amazon)
+
+        self.assertEqual(order.full_details, full_details)
+
+        if full_details:
+            self.assertEqual("American Express", order.payment_method)
+            self.assertEqual(4, len(order.payment_method_last_4))
+            self.assertEqual(42.29, order.subtotal)
+            self.assertEqual(0.00, order.shipping_total)
+            self.assertIsNone(order.subscription_discount)
+            self.assertEqual(42.29, order.total_before_tax)
+            self.assertEqual(2.96, order.estimated_tax)
+            self.assertEqual(date(2024, 5, 16), order.order_shipped_date)
+            # As of April 2024, this is no longer shown in Order History
+            # self.assertEqual("New", order.items[0].condition)
+            self.assertEqual(12.30, order.items[0].price)
+            # As of April 2024, this is no longer shown in Order History
+            # self.assertEqual("New", order.items[1].condition)
+            self.assertEqual(29.99, order.items[1].price)
+            found_kimoe = False
+            found_amazon = False
+            for order_item in order.items:
+                seller = order_item.seller
+                if "kimoe" in seller.name:
+                    found_kimoe = True
+                    self.assertEqual("kimoe store", seller.name)
+                    self.assertIsNotNone(seller.link)
+                else:
+                    found_amazon = True
+                    self.assertEqual("Amazon.com Services, Inc",
+                                     seller.name)
+                    self.assertIsNone(seller.link)
+            self.assertTrue(found_kimoe)
             self.assertTrue(found_amazon)
 
     def assert_order_113_1625648_3437067_multiple_items(self, order, full_details):

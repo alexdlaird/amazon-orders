@@ -94,7 +94,7 @@ SHIPMENT_ENTITY_SELECTOR = ["div.shipment", "div.delivery-box"]
 #####################################
 
 FIELD_ITEM_IMG_LINK_SELECTOR = "a img"
-FIELD_ITEM_QUANTITY_SELECTOR = "span.item-view-qty"
+FIELD_ITEM_QUANTITY_SELECTOR = ["span.item-view-qty", "span.product-image__qty"]
 FIELD_ITEM_TITLE_SELECTOR = [".yohtmlc-item a", ".yohtmlc-product-title"]
 FIELD_ITEM_LINK_SELECTOR = [".yohtmlc-item a", "a:has(> .yohtmlc-product-title)"]
 FIELD_ITEM_TAG_ITERATOR_SELECTOR = ".yohtmlc-item div"
@@ -123,7 +123,7 @@ FIELD_ORDER_REFUND_COMPLETED_DATE = "#orderDetails div.a-box.a-last div div div.
 #####################################
 
 FIELD_SHIPMENT_TRACKING_LINK_SELECTOR = "span.track-package-button a"
-FIELD_SHIPMENT_DELIVERY_STATUS_SELECTOR = "div.js-shipment-info-container div.a-row"
+FIELD_SHIPMENT_DELIVERY_STATUS_SELECTOR = ["div.js-shipment-info-container div.a-row", "span.delivery-box__primary-text"]
 
 #####################################
 # CSS selectors for Recipient fields

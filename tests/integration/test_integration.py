@@ -13,14 +13,16 @@ class TestIntegration(IntegrationTestCase):
 
     def test_get_order_history(self):
         # GIVEN
-        year = 2018
+        year = 2020
+        start_index = 40
 
         # WHEN
-        orders = self.amazon_orders.get_order_history(year=year)
+        orders = self.amazon_orders.get_order_history(year=year,
+                                                      start_index=start_index)
 
         # THEN
-        self.assertEqual(85, len(orders))
-        self.assert_order_112_0399923_3070642(orders[3], False)
+        self.assertEqual(10, len(orders))
+        self.assert_order_114_9460922_7737063(orders[3], False)
 
     def test_get_order_history_full_details(self):
         # GIVEN
@@ -76,7 +78,7 @@ class TestIntegration(IntegrationTestCase):
 
     def test_get_order_history_multiple_items_shipments_sellers(self):
         # GIVEN
-        year = 2023
+        year = 2024
         start_index = 10
 
         # WHEN
@@ -85,18 +87,18 @@ class TestIntegration(IntegrationTestCase):
                                                       full_details=True)
 
         # THEN
-        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(
-            orders[3], True)
+        self.assert_order_112_6539663_7312263_multiple_items_shipments_sellers(
+            orders[5], True)
 
     def test_get_order(self):
         # GIVEN
-        order_id = "112-9685975-5907428"
+        order_id = "112-6539663-7312263"
 
         # WHEN
         order = self.amazon_orders.get_order(order_id)
 
         # THEN
-        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(
+        self.assert_order_112_6539663_7312263_multiple_items_shipments_sellers(
             order, True)
 
     def test_get_order_does_not_exist(self):

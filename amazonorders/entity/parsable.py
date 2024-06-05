@@ -96,6 +96,8 @@ class Parsable:
                         value = float(value)
                     elif return_type == int:
                         value = int(value)
+                    elif value == "":
+                        value = None
                 break
 
         # None of the selectors were found
