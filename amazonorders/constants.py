@@ -123,7 +123,8 @@ FIELD_ORDER_REFUND_COMPLETED_DATE = "#orderDetails div.a-box.a-last div div div.
 #####################################
 
 FIELD_SHIPMENT_TRACKING_LINK_SELECTOR = "span.track-package-button a"
-FIELD_SHIPMENT_DELIVERY_STATUS_SELECTOR = ["div.js-shipment-info-container div.a-row", "span.delivery-box__primary-text"]
+FIELD_SHIPMENT_DELIVERY_STATUS_SELECTOR = ["div.js-shipment-info-container div.a-row",
+                                           "span.delivery-box__primary-text"]
 
 #####################################
 # CSS selectors for Recipient fields
