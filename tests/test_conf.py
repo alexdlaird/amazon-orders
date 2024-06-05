@@ -38,7 +38,6 @@ class TestConf(TestCase):
         self.assertTrue(os.path.exists(conf.DEFAULT_CONFIG_DIR))
         self.assertFalse(os.path.exists(config_path))
         self.assertTrue(os.path.exists(self.test_output_dir))
-        self.assertEqual("en-US", config.locale)
         self.assertEqual(10, config.max_auth_attempts)
         self.assertEqual(self.test_output_dir, config.output_dir)
         self.assertEqual(self.test_cookie_jar_path, config.cookie_jar_path)
@@ -50,7 +49,6 @@ class TestConf(TestCase):
         self.assertTrue(os.path.exists(config_path))
         with open(config.config_path, "r") as f:
             self.assertEqual("""cookie_jar_path: {}
-locale: en-US
 max_auth_attempts: 10
 output_dir: {}
 """.format(self.test_cookie_jar_path, self.test_output_dir), f.read())
@@ -71,7 +69,6 @@ output_dir: {}
         os.makedirs(conf.DEFAULT_CONFIG_DIR)
         with open(config_path, "w") as f:
             f.write("""cookie_jar_path: {}
-locale: some-locale
 max_auth_attempts: 11
 output_dir: {}
 """.format(test_cookie_jar_path, test_output_dir))
@@ -80,7 +77,6 @@ output_dir: {}
         config = AmazonOrdersConfig(config_path=config_path)
 
         self.assertEqual(config_path, config.config_path)
-        self.assertEqual("some-locale", config.locale)
         self.assertEqual(11, config.max_auth_attempts)
         self.assertEqual(test_output_dir, config.output_dir)
         self.assertEqual(test_cookie_jar_path, config.cookie_jar_path)
