@@ -54,9 +54,6 @@ class IntegrationTestCase(TestCase):
             "cookie_jar_path": test_cookie_jar_path
         })
 
-        if os.path.exists(test_cookie_jar_path):
-            os.remove(test_cookie_jar_path)
-
         cls.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
                                            os.environ.get("AMAZON_PASSWORD"),
                                            io=io,
@@ -64,11 +61,6 @@ class IntegrationTestCase(TestCase):
         cls.amazon_session.login()
 
         cls.amazon_orders = AmazonOrders(cls.amazon_session)
-
-    @classmethod
-    def tearDownClass(cls):
-        if os.path.exists(conf.DEFAULT_CONFIG_DIR):
-            shutil.rmtree(conf.DEFAULT_CONFIG_DIR)
 
     def setUp(self):
         if not self.credentials_found:
