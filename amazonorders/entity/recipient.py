@@ -22,7 +22,8 @@ class Recipient(Parsable):
         super().__init__(parsed)
 
         #: The Recipient name.
-        self.name: str = self.safe_simple_parse(selector=constants.FIELD_RECIPIENT_NAME_SELECTOR, required=True)
+        self.name: str = self.safe_simple_parse(selector=constants.FIELD_RECIPIENT_NAME_SELECTOR,
+                                                required=True)
         #: The Recipient address.
         self.address: Optional[str] = self.safe_parse(self._parse_address)
 

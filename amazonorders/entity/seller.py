@@ -22,7 +22,7 @@ class Seller(Parsable):
         super().__init__(parsed)
 
         #: The Seller name.
-        self.name: str = self.safe_parse(self._parse_name)
+        self.name: str = self.safe_simple_parse(constants.FIELD_SELLER_NAME_SELECTOR, prefix_split="Sold by:")
         #: The Seller link.
         self.link: Optional[str] = self.safe_simple_parse(selector=constants.FIELD_SELLER_LINK_SELECTOR, link=True)
 
@@ -31,12 +31,3 @@ class Seller(Parsable):
 
     def __str__(self) -> str:  # pragma: no cover
         return f"Seller: {self.name}"
-
-    def _parse_name(self) -> str:
-        match_text = "Sold by:"
-        value = self.simple_parse(constants.FIELD_SELLER_NAME_SELECTOR, text_contains=match_text)
-
-        if value:
-            value = value.split(match_text)[1]
-
-        return value.strip()

@@ -7,7 +7,7 @@ from bs4 import Tag
 
 
 def select(parsed: Tag,
-           selector: List[str]) -> Tag:
+           selector: List[str]) -> List[Tag]:
     """
     This is a helper function that extends BeautifulSoup's `select() <https://www.crummy.com/software/
     BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_ method to allow for multiple selectors.

@@ -257,21 +257,19 @@ class Order(Parsable):
         return value
 
     def _parse_order_shipping_date(self) -> Optional[date]:
-        match_text = "Items shipped:"
-        value = self.simple_parse(constants.FIELD_ORDER_SHIPPED_DATE_SELECTOR, text_contains=match_text)
+        value = self.simple_parse(constants.FIELD_ORDER_SHIPPED_DATE_SELECTOR, prefix_split="Items shipped:")
 
         if value:
-            date_str = value.split(match_text)[1].strip().split("-")[0].strip()
+            date_str = value.split("-")[0].strip()
             value = datetime.strptime(date_str, "%B %d, %Y").date()
 
         return value
 
     def _parse_refund_completed_date(self) -> Optional[date]:
-        match_text = "Refund: Completed"
-        value = self.simple_parse(constants.FIELD_ORDER_REFUND_COMPLETED_DATE, text_contains=match_text)
+        value = self.simple_parse(constants.FIELD_ORDER_REFUND_COMPLETED_DATE, prefix_split="Refund: Completed")
 
         if value:
-            date_str = value.split(match_text)[1].strip().split("-")[0].strip()
+            date_str = value.split("-")[0].strip()
             value = datetime.strptime(date_str, "%B %d, %Y").date()
 
         return value

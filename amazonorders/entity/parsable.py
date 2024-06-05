@@ -58,7 +58,8 @@ class Parsable:
                      selector: Union[str, list],
                      link: bool = False,
                      text_contains: Optional[str] = None,
-                     required: bool = False) -> Any:
+                     required: bool = False,
+                     prefix_split: Optional[str] = None) -> Any:
         """
         Will attempt to extract the text value of the given CSS selector(s) for a field, and
         is suitable for most basic functionality on a well-formed page.
@@ -70,6 +71,7 @@ class Parsable:
         :param link: If a link, the value of ``src`` or ``href`` will be returned.
         :param text_contains: Only select the field if this value is found in its text content.
         :param required: If required, an exception will be thrown instead of returning ``None``.
+        :param prefix_split: Only select the field with the given prefix, returning the right side of the split if so.
         :return: The cleaned up return value from the parsed ``selector``.
         """
         if isinstance(selector, str):
@@ -78,18 +80,29 @@ class Parsable:
         value = None
 
         for s in selector:
-            tag = self.parsed.select_one(s)
-            if tag:
-                if link:
-                    key = "href"
-                    if "src" in tag.attrs:
-                        key = "src"
-                    value = self.with_base_url(tag.attrs[key])
-                else:
-                    if text_contains and text_contains not in tag.text:
-                        continue
+            for tag in self.parsed.select(s):
+                if tag:
+                    if link:
+                        key = "href"
+                        # Check if the link is being pulled from an <img> tag
+                        if "src" in tag.attrs:
+                            key = "src"
+                        value = self.with_base_url(tag.attrs[key])
+                    else:
+                        if text_contains and text_contains not in tag.text:
+                            continue
 
-                    value = util.to_type(tag.text.strip())
+                        if prefix_split:
+                            if prefix_split not in tag.text:
+                                continue
+                            else:
+                                value = tag.text.strip().split(prefix_split)[1]
+                        else:
+                            value = tag.text
+
+                        value = util.to_type(value.strip())
+                    break
+            if value:
                 break
 
         if not value and required:

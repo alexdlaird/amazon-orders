@@ -32,7 +32,8 @@ class Item(Parsable):
         #: The Item Seller.
         self.seller: Optional[Seller] = self.safe_parse(self._parse_seller)
         #: The Item condition.
-        self.condition: Optional[str] = self.safe_parse(self._parse_condition)
+        self.condition: Optional[str] = self.safe_simple_parse(selector=constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR,
+                                                               prefix_split="Condition:")
         #: The Item return eligible date.
         self.return_eligible_date: Optional[date] = self.safe_parse(self._parse_return_eligible_date)
         #: The Item image URL.
@@ -66,16 +67,6 @@ class Item(Parsable):
         for tag in util.select(self.parsed, constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
             if "Sold by:" in tag.text:
                 value = Seller(tag)
-
-        return value
-
-    def _parse_condition(self) -> Optional[str]:
-        value = None
-
-        for tag in util.select(self.parsed, constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
-            split_str = "Condition:"
-            if split_str in tag.text:
-                value = tag.text.split(split_str)[1].strip()
 
         return value
 
