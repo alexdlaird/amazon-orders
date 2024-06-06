@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/1.1.3...HEAD)
 
+### Added
+- Support for `locale` in config.
+- Improvements to helper functions for simple parsing support (including currency parsing improvements).
+
 ## [1.1.3](https://github.com/alexdlaird/amazon-orders/compare/1.1.2...1.1.3) - 2024-06-05
 
 ### Added
