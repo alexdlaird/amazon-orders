@@ -59,7 +59,8 @@ class Parsable:
                      link: bool = False,
                      text_contains: Optional[str] = None,
                      required: bool = False,
-                     prefix_split: Optional[str] = None) -> Any:
+                     prefix_split: Optional[str] = None,
+                     wrap_tag: Optional[Any] = None) -> Any:
         """
         Will attempt to extract the text value of the given CSS selector(s) for a field, and
         is suitable for most basic functionality on a well-formed page.
@@ -72,6 +73,7 @@ class Parsable:
         :param text_contains: Only select the field if this value is found in its text content.
         :param required: If required, an exception will be thrown instead of returning ``None``.
         :param prefix_split: Only select the field with the given prefix, returning the right side of the split if so.
+        :param wrap_tag: The found tag will be wrapped in this class before returning.
         :return: The cleaned up return value from the parsed ``selector``.
         """
         if isinstance(selector, str):
@@ -100,7 +102,10 @@ class Parsable:
                         else:
                             value = tag.text
 
-                        value = util.to_type(value.strip())
+                        if wrap_tag:
+                            value = wrap_tag(tag)
+                        else:
+                            value = util.to_type(value.strip())
                     break
             if value:
                 break
@@ -135,14 +140,17 @@ class Parsable:
             url = f"{BASE_URL}{url}"
         return url
 
-    def parse_currency(self,
-                       value: str) -> Union[int, float]:
+    def to_currency(self,
+                    value: Union[str, int, float]) -> Union[int, float, None]:
         """
-        Parse a currency value from a string, stripping non-numeric values to return it as a primitive.
+        Clean up a currency, stripping non-numeric values and returning it as a primitive.
 
         :param value: The currency to parse.
         :return: The currency as a primitive.
         """
+        if not value or isinstance(value, (int, float)):
+            return value
+
         return util.to_type(value
                             .strip()
                             .replace("$", "")

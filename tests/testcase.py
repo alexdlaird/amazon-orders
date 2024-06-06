@@ -7,8 +7,8 @@ from datetime import date
 
 class TestCase(unittest.TestCase):
     def assert_order_112_0399923_3070642(self, order, full_details):
-        self.assertEqual(34.01, order.grand_total)
         self.assertEqual("112-0399923-3070642", order.order_number)
+        self.assertEqual(34.01, order.grand_total)
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2018, 12, 21), order.order_placed_date)
         self.assertEqual("Alex Laird", order.recipient.name)
@@ -45,8 +45,8 @@ class TestCase(unittest.TestCase):
             self.assertIsNone(order.items[0].seller.link)
 
     def assert_order_114_9460922_7737063(self, order, full_details):
-        self.assertEqual(35.90, order.grand_total)
         self.assertEqual("114-9460922-7737063", order.order_number)
+        self.assertEqual(35.90, order.grand_total)
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2020, 10, 27), order.order_placed_date)
         self.assertEqual("Alex Laird", order.recipient.name)
@@ -82,8 +82,8 @@ class TestCase(unittest.TestCase):
             self.assertIsNone(order.items[0].seller.link)
 
     def assert_order_112_2961628_4757846_return(self, order, full_details):
-        self.assertEqual(76.11, order.grand_total)
         self.assertEqual("112-2961628-4757846", order.order_number)
+        self.assertEqual(76.11, order.grand_total)
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2020, 10, 18), order.order_placed_date)
         self.assertEqual("Alex Laird", order.recipient.name)
@@ -125,8 +125,8 @@ class TestCase(unittest.TestCase):
         self.assertEqual(2, order.items[0].quantity)
 
     def assert_order_112_9685975_5907428_multiple_items_shipments_sellers(self, order, full_details):
-        self.assertEqual(46.61, order.grand_total)
         self.assertEqual("112-9685975-5907428", order.order_number)
+        self.assertEqual(46.61, order.grand_total)
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2023, 12, 7), order.order_placed_date)
         self.assertEqual("Alex Laird", order.recipient.name)
@@ -208,8 +208,8 @@ class TestCase(unittest.TestCase):
             self.assertTrue(found_amazon)
 
     def assert_order_112_6539663_7312263_multiple_items_shipments_sellers(self, order, full_details):
-        self.assertEqual(45.25, order.grand_total)
         self.assertEqual("112-6539663-7312263", order.order_number)
+        self.assertEqual(45.25, order.grand_total)
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2024, 5, 12), order.order_placed_date)
         self.assertEqual("Alex Laird", order.recipient.name)
@@ -354,8 +354,8 @@ class TestCase(unittest.TestCase):
             self.assertTrue(found_aaa)
 
     def assert_populated_generic(self, order, full_details):
-        self.assertIsNotNone(order.grand_total)
         self.assertIsNotNone(order.order_number)
+        self.assertIsNotNone(order.grand_total)
         self.assertIsNotNone(order.order_details_link)
         self.assertIsNotNone(order.order_placed_date)
         self.assertIsNotNone(order.recipient.name)

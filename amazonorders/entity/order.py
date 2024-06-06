@@ -127,7 +127,7 @@ class Order(Parsable):
             if value.lower().startswith("total"):
                 value = value[5:].strip()
 
-        value = self.parse_currency(value)
+        value = self.to_currency(value)
 
         return value
 
@@ -191,7 +191,7 @@ class Order(Parsable):
             if "subtotal" in tag.text.lower():
                 inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = self.parse_currency(inner_tag.text)
+                    value = self.to_currency(inner_tag.text)
                     break
 
         return value
@@ -203,7 +203,7 @@ class Order(Parsable):
             if "shipping" in tag.text.lower():
                 inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = self.parse_currency(inner_tag.text)
+                    value = self.to_currency(inner_tag.text)
                     break
 
         return value
@@ -215,7 +215,7 @@ class Order(Parsable):
             if "subscribe" in tag.text.lower():
                 inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = self.parse_currency(inner_tag.text)
+                    value = self.to_currency(inner_tag.text)
                     break
 
         return value
@@ -227,7 +227,7 @@ class Order(Parsable):
             if "before tax" in tag.text.lower():
                 inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = self.parse_currency(inner_tag.text)
+                    value = self.to_currency(inner_tag.text)
                     break
 
         return value
@@ -239,7 +239,7 @@ class Order(Parsable):
             if "estimated tax" in tag.text.lower():
                 inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = self.parse_currency(inner_tag.text)
+                    value = self.to_currency(inner_tag.text)
                     break
 
         return value
@@ -251,7 +251,7 @@ class Order(Parsable):
             if "refund total" in tag.text.lower() and "tax refund" not in tag.text.lower():
                 inner_tag = util.select_one(tag, constants.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = self.parse_currency(inner_tag.text)
+                    value = self.to_currency(inner_tag.text)
                     break
 
         return value

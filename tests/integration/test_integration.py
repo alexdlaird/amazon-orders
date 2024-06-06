@@ -88,7 +88,7 @@ class TestIntegration(IntegrationTestCase):
 
         # THEN
         self.assert_order_112_6539663_7312263_multiple_items_shipments_sellers(
-            orders[5], True)
+            orders[7], True)
 
     def test_get_order(self):
         # GIVEN

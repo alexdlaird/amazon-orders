@@ -28,9 +28,13 @@ class Item(Parsable):
         #: The Item link.
         self.link: str = self.safe_simple_parse(selector=constants.FIELD_ITEM_LINK_SELECTOR, link=True, required=True)
         #: The Item price.
-        self.price: Optional[float] = self.safe_parse(self._parse_price)
+        self.price: Optional[float] = self.to_currency(
+            self.safe_simple_parse(selector=constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR,
+                                   prefix_split="$"))
         #: The Item Seller.
-        self.seller: Optional[Seller] = self.safe_parse(self._parse_seller)
+        self.seller: Optional[Seller] = self.safe_simple_parse(selector=constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR,
+                                                               text_contains="Sold by:",
+                                                               wrap_tag=Seller)
         #: The Item condition.
         self.condition: Optional[str] = self.safe_simple_parse(selector=constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR,
                                                                prefix_split="Condition:")
@@ -50,25 +54,6 @@ class Item(Parsable):
 
     def __lt__(self, other):
         return self.title < other.title
-
-    def _parse_price(self) -> Optional[float]:
-        value = None
-
-        for tag in util.select(self.parsed, constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
-            price = tag.text.strip()
-            if price.startswith("$"):
-                value = self.parse_currency(price)
-
-        return value
-
-    def _parse_seller(self) -> Optional[Seller]:
-        value = None
-
-        for tag in util.select(self.parsed, constants.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
-            if "Sold by:" in tag.text:
-                value = Seller(tag)
-
-        return value
 
     def _parse_return_eligible_date(self) -> Optional[date]:
         value = None
