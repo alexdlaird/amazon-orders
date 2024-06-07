@@ -2,7 +2,7 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import logging
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, Type, Union
 
 from bs4 import Tag
 
@@ -60,7 +60,7 @@ class Parsable:
                      text_contains: Optional[str] = None,
                      required: bool = False,
                      prefix_split: Optional[str] = None,
-                     wrap_tag: Optional[Any] = None) -> Any:
+                     wrap_tag: Optional[Type] = None) -> Any:
         """
         Will attempt to extract the text value of the given CSS selector(s) for a field, and
         is suitable for most basic functionality on a well-formed page.
@@ -68,12 +68,15 @@ class Parsable:
         The ``selector`` can be either a ``str`` or a ``list``. If a ``list`` is given, each
         selector in the list will be tried.
 
+        In most cases the selected tag's text will be returned, but if ``wrap_tag`` is given, the
+        tag itself (wrapped in the class) will be returned.
+
         :param selector: The CSS selector(s) for the field.
         :param link: If a link, the value of ``src`` or ``href`` will be returned.
         :param text_contains: Only select the field if this value is found in its text content.
         :param required: If required, an exception will be thrown instead of returning ``None``.
         :param prefix_split: Only select the field with the given prefix, returning the right side of the split if so.
-        :param wrap_tag: The found tag will be wrapped in this class before returning.
+        :param wrap_tag: Wrap the selected tag in this class before returning.
         :return: The cleaned up return value from the parsed ``selector``.
         """
         if isinstance(selector, str):

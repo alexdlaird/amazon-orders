@@ -7,22 +7,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/1.1.3...HEAD)
 
 ### Added
-- Support for `locale` in config.
-- Improvements to helper functions for simple parsing support (including currency parsing improvements).
+
+- Improvements to helper functions for simple parsing support (`prefix_split`, currency improvements, and more).
+- Bug fixes and stability improvements.
 
 ## [1.1.3](https://github.com/alexdlaird/amazon-orders/compare/1.1.2...1.1.3) - 2024-06-05
 
 ### Added
+
 - Config is now managed through a YAML file, with support for CLI overrides.
 - Documentation improvements.
 
 ### Fixed
+
 - Parsing issues due to change in Amazon.com DOM.
 - Other minor bug fixes.
 
 ## [1.1.2](https://github.com/alexdlaird/amazon-orders/compare/1.1.1...1.1.2) - 2024-05-18
 
 ### Added
+
 - Build improvements.
 - Documentation improvements.
 - Test improvements (Amazon no longer provides the `condition` field in many cases).

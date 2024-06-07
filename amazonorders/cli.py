@@ -55,8 +55,6 @@ class IOClick(IODefault):
               help="The max auth loop attempts to make (successes and failures), passing this overrides config value.")
 @click.option('--output-dir',
               help="The directory where any output files should be produced, passing this overrides config value.")
-@click.option('--locale',
-              help="The locale for the Amazon website. Presently only the default 'en-US' is supported.")
 @click.pass_context
 def amazon_orders_cli(ctx: Context,
                       **kwargs: Any):
@@ -86,8 +84,6 @@ def amazon_orders_cli(ctx: Context,
         logger.addHandler(logging.StreamHandler())
 
     data = {}
-    if kwargs.get("locale"):
-        data["locale"] = kwargs["locale"]
     if kwargs.get("output_dir"):
         data["output_dir"] = kwargs["output_dir"]
     if kwargs.get("max_auth_attempts"):
