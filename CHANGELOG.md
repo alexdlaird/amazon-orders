@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- Improvements to helper functions for simple parsing support (`prefix_split`, currency improvements, and more).
+- Improvements to helper functions for simple parsing support (`prefix_split`, parsing improvements, and more).
 - Bug fixes and stability improvements.
 
 ## [1.1.3](https://github.com/alexdlaird/amazon-orders/compare/1.1.2...1.1.3) - 2024-06-05
