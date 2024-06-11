@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
+import importlib
 from typing import List, Union
 
 from bs4 import Tag
@@ -79,3 +80,16 @@ def to_type(value: str) -> Union[int, float, bool, str, None]:
             value = False
 
     return value
+
+
+def load_class(package: List,
+               clazz: str):
+    """
+    TODO: document
+
+    :param package:
+    :param clazz:
+    :return:
+    """
+    constants_mod = importlib.import_module(".".join(package))
+    return getattr(constants_mod, clazz)

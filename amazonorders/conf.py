@@ -4,6 +4,8 @@ from typing import Any, Dict, Optional
 
 import yaml
 
+from amazonorders import util
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "amazonorders")
@@ -31,7 +33,10 @@ class AmazonOrdersConfig:
         self._data = {
             "max_auth_attempts": 10,
             "output_dir": os.path.join(os.getcwd(), "output"),
-            "cookie_jar_path": os.path.join(DEFAULT_CONFIG_DIR, "cookies.json")
+            "cookie_jar_path": os.path.join(DEFAULT_CONFIG_DIR, "cookies.json"),
+            "constants_class": "amazonorders.constants.Constants",
+            "selectors_class": "amazonorders.selectors.Selectors",
+            "order_class": "amazonorders.entity.order.Order",
         }
 
         if os.path.exists(self.config_path):
@@ -54,6 +59,13 @@ class AmazonOrdersConfig:
         cookie_jar_dir = os.path.dirname(self.cookie_jar_path)
         if not os.path.exists(cookie_jar_dir):
             os.makedirs(cookie_jar_dir)
+
+        constants_class_split = self.constants_class.split(".")
+        selectors_class_split = self.selectors_class.split(".")
+        self.constants = util.load_class(constants_class_split[:-1], constants_class_split[-1])()
+        self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
+        order_class_split = self.order_class.split(".")
+        self.order_class = util.load_class(order_class_split[:-1], order_class_split[-1])
 
     def __getattr__(self, key):
         return self._data[key]

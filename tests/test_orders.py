@@ -6,7 +6,6 @@ import unittest
 
 import responses
 
-from amazonorders.constants import ORDER_DETAILS_URL, ORDER_HISTORY_URL
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
@@ -63,7 +62,7 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.GET,
-                f"{ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2",
+                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2",
                 body=f.read(),
                 status=200,
             )
@@ -186,7 +185,7 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                f"{ORDER_DETAILS_URL}?orderID={order_id}",
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
                 body=f.read(),
                 status=200,
             )
@@ -214,7 +213,7 @@ class TestOrders(UnitTestCase):
         with open(self.temp_order_history_file_path, "r", encoding="utf-8") as f:
             responses.add(
                 responses.GET,
-                "{url}?timeFilter=year-{year}".format(url=ORDER_HISTORY_URL,
+                "{url}?timeFilter=year-{year}".format(url=self.test_config.constants.ORDER_HISTORY_URL,
                                                       year=year),
                 body=f.read(),
                 status=200,
@@ -245,7 +244,7 @@ class TestOrders(UnitTestCase):
         with open(self.temp_order_details_file_path, "r", encoding="utf-8") as f:
             responses.add(
                 responses.GET,
-                f"{ORDER_DETAILS_URL}?orderID={order_id}",
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
                 body=f.read(),
                 status=200,
             )

@@ -6,8 +6,8 @@ from typing import List, Optional
 
 from bs4 import Tag
 
-from amazonorders import constants, util
-from amazonorders.constants import ITEM_ENTITY_SELECTOR
+from amazonorders import util
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 
@@ -20,17 +20,18 @@ class Shipment(Parsable):
     """
 
     def __init__(self,
-                 parsed: Tag) -> None:
-        super().__init__(parsed)
+                 parsed: Tag,
+                 config: AmazonOrdersConfig) -> None:
+        super().__init__(parsed, config)
 
         #: The Shipment Items.
         self.items: List[Item] = self._parse_items()
         #: The Shipment delivery status.
         self.delivery_status: Optional[str] = self.safe_simple_parse(
-            selector=constants.FIELD_SHIPMENT_DELIVERY_STATUS_SELECTOR)
+            selector=self.config.selectors.FIELD_SHIPMENT_DELIVERY_STATUS_SELECTOR)
         #: The Shipment tracking link.
         self.tracking_link: Optional[str] = self.safe_simple_parse(
-            selector=constants.FIELD_SHIPMENT_TRACKING_LINK_SELECTOR,
+            selector=self.config.selectors.FIELD_SHIPMENT_TRACKING_LINK_SELECTOR,
             link=True)
 
     def __repr__(self) -> str:
@@ -46,6 +47,6 @@ class Shipment(Parsable):
             return str(self.items) < str(other.items)
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x) for x in util.select(self.parsed, ITEM_ENTITY_SELECTOR)]
+        items = [Item(x, self.config) for x in util.select(self.parsed, self.config.selectors.ITEM_ENTITY_SELECTOR)]
         items.sort()
         return items

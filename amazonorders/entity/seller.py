@@ -6,7 +6,7 @@ from typing import Optional
 
 from bs4 import Tag
 
-from amazonorders import constants
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
 
 logger = logging.getLogger(__name__)
@@ -18,13 +18,14 @@ class Seller(Parsable):
     """
 
     def __init__(self,
-                 parsed: Tag) -> None:
-        super().__init__(parsed)
+                 parsed: Tag,
+                 config: AmazonOrdersConfig) -> None:
+        super().__init__(parsed, config)
 
         #: The Seller name.
-        self.name: str = self.safe_simple_parse(constants.FIELD_SELLER_NAME_SELECTOR, prefix_split="Sold by:")
+        self.name: str = self.safe_simple_parse(self.config.selectors.FIELD_SELLER_NAME_SELECTOR, prefix_split="Sold by:")
         #: The Seller link.
-        self.link: Optional[str] = self.safe_simple_parse(selector=constants.FIELD_SELLER_LINK_SELECTOR, link=True)
+        self.link: Optional[str] = self.safe_simple_parse(selector=self.config.selectors.FIELD_SELLER_LINK_SELECTOR, link=True)
 
     def __repr__(self) -> str:
         return f"<Seller: \"{self.name}\">"

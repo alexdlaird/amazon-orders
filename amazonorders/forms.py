@@ -11,6 +11,7 @@ from amazoncaptcha import AmazonCaptcha
 from bs4 import Tag
 
 from amazonorders import constants, util
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
 
 
@@ -24,13 +25,16 @@ class AuthForm(ABC):
     """
 
     def __init__(self,
+                 config: AmazonOrdersConfig,
                  selector: str,
-                 error_selector: str = constants.DEFAULT_ERROR_TAG_SELECTOR,
+                 error_selector: Optional[str] = None,
                  critical: bool = False) -> None:
+        #: The AmazonOrdersConfig to use.
+        self.config: AmazonOrdersConfig = config
         #: The CSS selector for the ``<form>``.
         self.selector: str = selector
         #: The CSS selector for the error div when form submission fails.
-        self.error_selector: str = error_selector
+        self.error_selector: str = error_selector or config.selectors.DEFAULT_ERROR_TAG_SELECTOR
         #: If ``critical``, form submission failures will raise :class:`~amazonorders.exception.AmazonOrdersAuthError`.
         self.critical: bool = critical
         #: The :class:`~amazonorders.session.AmazonSession` on which to submit the form.
@@ -145,9 +149,13 @@ class AuthForm(ABC):
 
 class SignInForm(AuthForm):
     def __init__(self,
-                 selector: str = constants.SIGN_IN_FORM_SELECTOR,
+                 config: AmazonOrdersConfig,
+                 selector: Optional[str] = None,
                  solution_attr_key: str = "email") -> None:
-        super().__init__(selector, critical=True)
+        if not selector:
+            selector = config.selectors.SIGN_IN_FORM_SELECTOR
+
+        super().__init__(config, selector, critical=True)
 
         self.solution_attr_key = solution_attr_key
 
@@ -172,9 +180,13 @@ class MfaDeviceSelectForm(AuthForm):
     """
 
     def __init__(self,
-                 selector: str = constants.MFA_DEVICE_SELECT_FORM_SELECTOR,
+                 config: AmazonOrdersConfig,
+                 selector: Optional[str] = None,
                  solution_attr_key: str = "otpDeviceContext") -> None:
-        super().__init__(selector)
+        if not selector:
+            selector = config.selectors.MFA_DEVICE_SELECT_FORM_SELECTOR
+
+        super().__init__(config, selector)
 
         self.solution_attr_key = solution_attr_key
 
@@ -184,11 +196,11 @@ class MfaDeviceSelectForm(AuthForm):
             additional_attrs = {}
         super().fill_form()
 
-        contexts = util.select(self.form, constants.MFA_DEVICE_SELECT_INPUT_SELECTOR)
+        contexts = util.select(self.form, self.config.selectors.MFA_DEVICE_SELECT_INPUT_SELECTOR)
         i = 0
         choices = []
         for field in contexts:
-            choices.append(f"{i}: {field[constants.MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE].strip()}")
+            choices.append(f"{i}: {field[self.config.selectors.MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE].strip()}")
             i += 1
 
         otp_device = int(
@@ -204,9 +216,13 @@ class MfaDeviceSelectForm(AuthForm):
 
 class MfaForm(AuthForm):
     def __init__(self,
-                 selector: str = constants.MFA_FORM_SELECTOR,
+                 config: AmazonOrdersConfig,
+                 selector: Optional[str] = None,
                  solution_attr_key: str = "otpCode") -> None:
-        super().__init__(selector)
+        if not selector:
+            selector = config.selectors.MFA_FORM_SELECTOR
+
+        super().__init__(config, selector)
 
         self.solution_attr_key = solution_attr_key
 
@@ -226,10 +242,16 @@ class MfaForm(AuthForm):
 
 class CaptchaForm(AuthForm):
     def __init__(self,
-                 selector: str = constants.CAPTCHA_1_FORM_SELECTOR,
-                 error_selector: str = constants.CAPTCHA_1_ERROR_SELECTOR,
+                 config: AmazonOrdersConfig,
+                 selector: Optional[str] = None,
+                 error_selector: str = None,
                  solution_attr_key: str = "cvf_captcha_input") -> None:
-        super().__init__(selector, error_selector)
+        if not selector:
+            selector = config.selectors.CAPTCHA_1_FORM_SELECTOR
+        elif not error_selector:
+            error_selector = config.selectors.CAPTCHA_1_ERROR_SELECTOR
+
+        super().__init__(config, selector, error_selector)
 
         self.solution_attr_key = solution_attr_key
 
@@ -242,7 +264,7 @@ class CaptchaForm(AuthForm):
         # TODO: eliminate the use of find_parent() here
         img_url = self.form.find_parent().select_one("img")["src"]
         if not img_url.startswith("http"):
-            img_url = f"{constants.BASE_URL}{img_url}"
+            img_url = f"{self.config.constants.BASE_URL}{img_url}"
         solution = self._solve_captcha(img_url)
 
         additional_attrs.update({self.solution_attr_key: solution})

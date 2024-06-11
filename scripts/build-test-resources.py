@@ -10,7 +10,7 @@ import sys
 
 from bs4 import BeautifulSoup
 
-from amazonorders.constants import ORDER_DETAILS_URL, ORDER_HISTORY_URL
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.session import AmazonSession
 
 ROOT_DIR = os.path.normpath(
@@ -79,9 +79,11 @@ def build_test_resources(args):
 
         sys.exit(1)
 
+    config = AmazonOrdersConfig()
+
     for page in pages_to_download:
         if page["type"] == "order-details":
-            url = f"{ORDER_DETAILS_URL}?orderID={page['order-id']}"
+            url = f"{config.constants.ORDER_DETAILS_URL}?orderID={page['order-id']}"
             response = amazon_session.get(url)
             response_parsed = BeautifulSoup(response.text, "html.parser")
 
@@ -89,7 +91,7 @@ def build_test_resources(args):
 
             page_name = f"order-details-{page['order-id']}.html"
         else:
-            url = f"{ORDER_HISTORY_URL}?timeFilter=year-{page['year']}&startIndex={page['start-index']}"
+            url = f"{config.constants.ORDER_HISTORY_URL}?timeFilter=year-{page['year']}&startIndex={page['start-index']}"
             response = amazon_session.get(url)
             response_parsed = BeautifulSoup(response.text, "html.parser")
 

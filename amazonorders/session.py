@@ -4,7 +4,7 @@ __license__ = "MIT"
 import json
 import logging
 import os
-from typing import Any, Optional
+from typing import Any, Optional, List
 from urllib.parse import urlparse
 
 import requests
@@ -12,21 +12,11 @@ from bs4 import BeautifulSoup, Tag
 from requests import Response, Session
 from requests.utils import dict_from_cookiejar
 
-from amazonorders import constants
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError
 from amazonorders.forms import CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm
 
 logger = logging.getLogger(__name__)
-
-AUTH_FORMS = [SignInForm(),
-              MfaDeviceSelectForm(),
-              MfaForm(),
-              CaptchaForm(),
-              CaptchaForm(constants.CAPTCHA_2_FORM_SELECTOR,
-                          constants.CAPTCHA_2_ERROR_SELECTOR,
-                          "field-keywords"),
-              MfaForm(constants.CAPTCHA_OTP_FORM_SELECTOR)]
 
 
 class IODefault:
@@ -79,9 +69,21 @@ class AmazonSession:
                  password: str,
                  debug: bool = False,
                  io: IODefault = IODefault(),
-                 config: AmazonOrdersConfig = None) -> None:
+                 config: AmazonOrdersConfig = None,
+                 auth_forms: Optional[List] = None) -> None:
         if not config:
             config = AmazonOrdersConfig()
+        if not auth_forms:
+            auth_forms = [SignInForm(config),
+                          MfaDeviceSelectForm(config),
+                          MfaForm(config),
+                          CaptchaForm(config),
+                          CaptchaForm(config,
+                                      config.selectors.CAPTCHA_2_FORM_SELECTOR,
+                                      config.selectors.CAPTCHA_2_ERROR_SELECTOR,
+                                      "field-keywords"),
+                          MfaForm(config,
+                                  config.selectors.CAPTCHA_OTP_FORM_SELECTOR)]
 
         #: An Amazon username.
         self.username: str = username
@@ -96,6 +98,8 @@ class AmazonSession:
         self.io: IODefault = io
         #: The AmazonOrdersConfig to use.
         self.config: AmazonOrdersConfig = config
+        #: The list of known form implementations to use with authentication.
+        self.auth_forms: List = auth_forms
 
         #: The shared session to be used across all requests.
         self.session: Session = Session()
@@ -130,7 +134,7 @@ class AmazonSession:
         """
         if "headers" not in kwargs:
             kwargs["headers"] = {}
-        kwargs["headers"].update(constants.BASE_HEADERS)
+        kwargs["headers"].update(self.config.constants.BASE_HEADERS)
 
         logger.debug(f"{method} request to {url}")
 
@@ -194,12 +198,13 @@ class AmazonSession:
         Session cookies are persisted, and if existing session data is found during this auth flow, it will be
         skipped entirely and flagged as authenticated.
         """
-        self.get(constants.SIGN_IN_URL)
+        self.get(self.config.constants.SIGN_IN_URL)
 
         # If our local session data is stale, Amazon will redirect us to the signin page
-        if self.auth_cookies_stored() and self.last_response.url.split("?")[0] == constants.SIGN_IN_REDIRECT_URL:
+        if self.auth_cookies_stored() and self.last_response.url.split("?")[
+            0] == self.config.constants.SIGN_IN_REDIRECT_URL:
             self.logout()
-            self.get(constants.SIGN_IN_URL)
+            self.get(self.config.constants.SIGN_IN_URL)
 
         attempts = 0
         while not self.is_authenticated and attempts < self.config.max_auth_attempts:
@@ -212,7 +217,7 @@ class AmazonSession:
                 break
 
             form_found = False
-            for form in AUTH_FORMS:
+            for form in self.auth_forms:
                 if form.select_form(self, self.last_response_parsed):
                     form_found = True
 
@@ -233,7 +238,7 @@ class AmazonSession:
         """
         Logout and close the existing Amazon session and clear cookies.
         """
-        self.get(constants.SIGN_OUT_URL)
+        self.get(self.config.constants.SIGN_OUT_URL)
 
         if os.path.exists(self.config.cookie_jar_path):
             os.remove(self.config.cookie_jar_path)

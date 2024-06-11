@@ -6,7 +6,7 @@ from typing import Optional
 
 from bs4 import Tag
 
-from amazonorders import constants
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
 
 logger = logging.getLogger(__name__)
@@ -18,11 +18,12 @@ class Recipient(Parsable):
     """
 
     def __init__(self,
-                 parsed: Tag) -> None:
-        super().__init__(parsed)
+                 parsed: Tag,
+                 config: AmazonOrdersConfig) -> None:
+        super().__init__(parsed, config)
 
         #: The Recipient name.
-        self.name: str = self.safe_simple_parse(selector=constants.FIELD_RECIPIENT_NAME_SELECTOR,
+        self.name: str = self.safe_simple_parse(selector=self.config.selectors.FIELD_RECIPIENT_NAME_SELECTOR,
                                                 required=True)
         #: The Recipient address.
         self.address: Optional[str] = self.safe_parse(self._parse_address)
@@ -34,17 +35,17 @@ class Recipient(Parsable):
         return f"Recipient: {self.name}"
 
     def _parse_address(self) -> Optional[str]:
-        value = self.simple_parse(constants.FIELD_RECIPIENT_ADDRESS1_SELECTOR)
+        value = self.simple_parse(self.config.selectors.FIELD_RECIPIENT_ADDRESS1_SELECTOR)
 
         if value:
             values = [
                 value,
-                self.simple_parse(constants.FIELD_RECIPIENT_ADDRESS2_SELECTOR),
-                self.simple_parse(constants.FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR),
-                self.simple_parse(constants.FIELD_RECIPIENT_ADDRESS_COUNTRY_SELECTOR),
+                self.simple_parse(self.config.selectors.FIELD_RECIPIENT_ADDRESS2_SELECTOR),
+                self.simple_parse(self.config.selectors.FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR),
+                self.simple_parse(self.config.selectors.FIELD_RECIPIENT_ADDRESS_COUNTRY_SELECTOR),
             ]
             value = "\n".join(filter(None, values))
         else:
-            value = self.simple_parse(constants.FIELD_RECIPIENT_ADDRESS_FALLBACK_SELECTOR)
+            value = self.simple_parse(self.config.selectors.FIELD_RECIPIENT_ADDRESS_FALLBACK_SELECTOR)
 
         return value

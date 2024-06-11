@@ -10,8 +10,6 @@ from responses.matchers import urlencoded_params_matcher
 
 from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig
-from amazonorders.constants import ORDER_DETAILS_URL, ORDER_HISTORY_LANDING_URL, ORDER_HISTORY_URL, \
-    SIGN_IN_REDIRECT_URL, SIGN_IN_URL
 from tests.testcase import TestCase
 
 
@@ -39,7 +37,7 @@ class UnitTestCase(TestCase):
         with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
             self.signin_response = responses.add(
                 responses.GET,
-                SIGN_IN_URL,
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
@@ -63,7 +61,7 @@ class UnitTestCase(TestCase):
         with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             self.authenticated_response = responses.add(
                 responses.POST,
-                SIGN_IN_REDIRECT_URL,
+                self.test_config.constants.SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
                 match=[urlencoded_params_matcher(request_data)],
@@ -74,7 +72,7 @@ class UnitTestCase(TestCase):
                   encoding="utf-8") as f:
             return responses.add(
                 responses.GET,
-                ORDER_HISTORY_LANDING_URL,
+                self.test_config.constants.ORDER_HISTORY_LANDING_URL,
                 body=f.read(),
                 status=200,
             )
@@ -86,7 +84,7 @@ class UnitTestCase(TestCase):
             return responses.add(
                 responses.GET,
                 "{url}?timeFilter=year-{year}"
-                "{optional_start_index}".format(url=ORDER_HISTORY_URL,
+                "{optional_start_index}".format(url=self.test_config.constants.ORDER_HISTORY_URL,
                                                 year=year,
                                                 optional_start_index=optional_start_index),
                 body=f.read(),
@@ -98,7 +96,7 @@ class UnitTestCase(TestCase):
                   encoding="utf-8") as f:
             return responses.add(
                 responses.GET,
-                re.compile(f"{ORDER_HISTORY_URL}?.*"),
+                re.compile(f"{self.test_config.constants.ORDER_HISTORY_URL}?.*"),
                 body=f.read(),
                 status=200,
             )
@@ -108,7 +106,7 @@ class UnitTestCase(TestCase):
                   encoding="utf-8") as f:
             return responses.add(
                 responses.GET,
-                re.compile(f"{ORDER_DETAILS_URL}?.*"),
+                re.compile(f"{self.test_config.constants.ORDER_DETAILS_URL}?.*"),
                 body=f.read(),
                 status=200,
             )

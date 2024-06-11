@@ -7,7 +7,6 @@ import responses
 from click.testing import CliRunner
 
 from amazonorders.cli import amazon_orders_cli
-from amazonorders.constants import ORDER_DETAILS_URL
 from tests.unittestcase import UnitTestCase
 
 
@@ -68,7 +67,7 @@ class TestCli(UnitTestCase):
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                f"{ORDER_DETAILS_URL}?orderID={order_id}",
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
                 body=f.read(),
                 status=200,
             )

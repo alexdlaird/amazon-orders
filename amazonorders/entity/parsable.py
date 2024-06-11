@@ -7,7 +7,7 @@ from typing import Any, Callable, Optional, Type, Union
 from bs4 import Tag
 
 from amazonorders import util
-from amazonorders.constants import BASE_URL
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrderEntityError, AmazonOrdersError
 
 logger = logging.getLogger(__name__)
@@ -20,9 +20,12 @@ class Parsable:
     """
 
     def __init__(self,
-                 parsed: Tag) -> None:
+                 parsed: Tag,
+                 config: AmazonOrdersConfig) -> None:
         #: Parsed HTML data that can be used to populate the fields of the entity.
         self.parsed: Tag = parsed
+        #: The AmazonOrdersConfig to use.
+        self.config: AmazonOrdersConfig = config
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -106,7 +109,7 @@ class Parsable:
                             value = tag.text
 
                         if wrap_tag:
-                            value = wrap_tag(tag)
+                            value = wrap_tag(tag, self.config)
                         else:
                             value = util.to_type(value.strip())
                     break
@@ -140,7 +143,7 @@ class Parsable:
         :return: The fully qualified URL.
         """
         if not url.startswith("http"):
-            url = f"{BASE_URL}{url}"
+            url = f"{self.config.constants.BASE_URL}{url}"
         return url
 
     def to_currency(self,

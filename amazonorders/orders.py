@@ -55,39 +55,39 @@ class AmazonOrders:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        self.amazon_session.get(constants.ORDER_HISTORY_LANDING_URL)
+        self.amazon_session.get(self.config.constants.ORDER_HISTORY_LANDING_URL)
         if not self.amazon_session.last_response_parsed.select_one("select[name='timeFilter']"):
             constants.HISTORY_FILTER_QUERY_PARAM = "orderFilter"
 
         orders = []
         optional_start_index = f"&startIndex={start_index}" if start_index else ""
         next_page = ("{url}?{query_param}=year-{year}"
-                     "{optional_start_index}").format(url=constants.ORDER_HISTORY_URL,
-                                                      query_param=constants.HISTORY_FILTER_QUERY_PARAM,
+                     "{optional_start_index}").format(url=self.config.constants.ORDER_HISTORY_URL,
+                                                      query_param=self.config.constants.HISTORY_FILTER_QUERY_PARAM,
                                                       year=year,
                                                       optional_start_index=optional_start_index)
         while next_page:
             self.amazon_session.get(next_page)
             response_parsed = self.amazon_session.last_response_parsed
 
-            for order_tag in util.select(response_parsed, constants.ORDER_HISTORY_ENTITY_SELECTOR):
-                order = Order(order_tag)
+            for order_tag in util.select(response_parsed, self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
+                order = self.config.order_class(order_tag, self.config)
 
                 if full_details:
                     self.amazon_session.get(order.order_details_link)
                     order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
-                                                        constants.ORDER_DETAILS_ENTITY_SELECTOR)
-                    order = Order(order_details_tag, full_details=True, clone=order)
+                                                        self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+                    order = self.config.order_class(order_details_tag, self.config, full_details=True, clone=order)
 
                 orders.append(order)
 
             next_page = None
             if start_index is None:
-                next_page_tag = util.select_one(response_parsed, constants.NEXT_PAGE_LINK_SELECTOR)
+                next_page_tag = util.select_one(response_parsed, self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
                     next_page = next_page_tag["href"]
                     if not next_page.startswith("http"):
-                        next_page = f"{constants.BASE_URL}{next_page}"
+                        next_page = f"{self.config.constants.BASE_URL}{next_page}"
                 else:
                     logger.debug("No next page")
             else:
@@ -106,12 +106,12 @@ class AmazonOrders:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        self.amazon_session.get(f"{constants.ORDER_DETAILS_URL}?orderID={order_id}")
-        if not self.amazon_session.last_response.url.startswith(constants.ORDER_DETAILS_URL):
+        self.amazon_session.get(f"{self.config.constants.ORDER_DETAILS_URL}?orderID={order_id}")
+        if not self.amazon_session.last_response.url.startswith(self.config.constants.ORDER_DETAILS_URL):
             raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.")
 
         order_details_tag = self.amazon_session.last_response_parsed.select_one(
-            constants.ORDER_DETAILS_ENTITY_SELECTOR)
-        order = Order(order_details_tag, full_details=True)
+            self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+        order = self.config.order_class(order_details_tag, self.config, full_details=True)
 
         return order

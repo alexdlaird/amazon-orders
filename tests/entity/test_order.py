@@ -4,10 +4,10 @@ __license__ = "MIT"
 from bs4 import BeautifulSoup
 
 from amazonorders.entity.order import Order
-from tests.testcase import TestCase
+from tests.unittestcase import UnitTestCase
 
 
-class TestOrder(TestCase):
+class TestOrder(UnitTestCase):
     def test_order_currency_stripped(self):
         # GIVEN
         html = """
@@ -333,7 +333,7 @@ href="/gp/buyagain/ref=ppx_od_dt_b_bia?ie=UTF8&amp;ats=eyJZXMiOiJCMDdZ%0AUUREOTR
         parsed = BeautifulSoup(html, "html.parser")
 
         # WHEN
-        order = Order(parsed, full_details=True)
+        order = Order(parsed, self.test_config, full_details=True)
 
         # THEN
         self.assertEqual(order.subtotal, 1111.99)

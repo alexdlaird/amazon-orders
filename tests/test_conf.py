@@ -48,9 +48,12 @@ class TestConf(TestCase):
         # THEN
         self.assertTrue(os.path.exists(config_path))
         with open(config.config_path, "r") as f:
-            self.assertEqual("""cookie_jar_path: {}
+            self.assertEqual("""constants_class: amazonorders.constants.Constants
+cookie_jar_path: {}
 max_auth_attempts: 10
+order_class: amazonorders.entity.order.Order
 output_dir: {}
+selectors_class: amazonorders.selectors.Selectors
 """.format(self.test_cookie_jar_path, self.test_output_dir), f.read())
 
     def test_override_default(self):

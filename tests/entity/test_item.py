@@ -4,10 +4,10 @@ __license__ = "MIT"
 from bs4 import BeautifulSoup
 
 from amazonorders.entity.item import Item
-from tests.testcase import TestCase
+from tests.unittestcase import UnitTestCase
 
 
-class TestItem(TestCase):
+class TestItem(UnitTestCase):
     def test_price_stripped(self):
         # GIVEN
         html = """
@@ -33,7 +33,7 @@ class TestItem(TestCase):
         parsed = BeautifulSoup(html, "html.parser")
 
         # WHEN
-        item = Item(parsed)
+        item = Item(parsed, self.test_config)
 
         # THEN
         self.assertEqual(item.title, "Item Title")

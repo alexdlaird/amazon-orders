@@ -51,8 +51,8 @@ To see what the effected page looks like, `enable debug mode`_, then rerun your 
 ``debug`` mode saves parsed HTML files locally for you so you can inspect the DOM and compare it to
 the parsing code within ``amazon-orders``. This may give you some insight in to what changed.
 In ``amazon-orders``, look for code that uses `BeautifulSoup's CSS select() methods <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_.
-Many CSS selector strings used by ``amazon-orders`` are defined in variables in ``constants.py`` and
-can be easily overridden.
+CSS selector strings used by ``amazon-orders`` are defined in variables in :class:`~amazonorders.selectors.Selectors``
+and can be easily overridden.
 
 If you identify the issue, please `submit a bug report <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_.
 If you're able to resolve the issue, please `also submit a PR <https://github.com/alexdlaird/amazon-orders/compare>`_
