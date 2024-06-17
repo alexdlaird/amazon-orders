@@ -79,7 +79,7 @@ class TestIntegration(IntegrationTestCase):
     def test_get_order_history_multiple_items_shipments_sellers(self):
         # GIVEN
         year = 2024
-        start_index = 10
+        start_index = 20
 
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year,
@@ -88,7 +88,7 @@ class TestIntegration(IntegrationTestCase):
 
         # THEN
         self.assert_order_112_6539663_7312263_multiple_items_shipments_sellers(
-            orders[7], True)
+            orders[4], True)
 
     def test_get_order(self):
         # GIVEN
