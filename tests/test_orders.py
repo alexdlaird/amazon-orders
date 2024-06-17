@@ -62,7 +62,8 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2",
+                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}"
+                "&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2",
                 body=f.read(),
                 status=200,
             )

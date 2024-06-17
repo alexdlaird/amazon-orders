@@ -23,9 +23,11 @@ class Seller(Parsable):
         super().__init__(parsed, config)
 
         #: The Seller name.
-        self.name: str = self.safe_simple_parse(self.config.selectors.FIELD_SELLER_NAME_SELECTOR, prefix_split="Sold by:")
+        self.name: str = self.safe_simple_parse(self.config.selectors.FIELD_SELLER_NAME_SELECTOR,
+                                                prefix_split="Sold by:")
         #: The Seller link.
-        self.link: Optional[str] = self.safe_simple_parse(selector=self.config.selectors.FIELD_SELLER_LINK_SELECTOR, link=True)
+        self.link: Optional[str] = self.safe_simple_parse(selector=self.config.selectors.FIELD_SELLER_LINK_SELECTOR,
+                                                          link=True)
 
     def __repr__(self) -> str:
         return f"<Seller: \"{self.name}\">"

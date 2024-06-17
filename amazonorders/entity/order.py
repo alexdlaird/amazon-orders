@@ -9,7 +9,7 @@ from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
-from amazonorders import constants, util
+from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
@@ -83,7 +83,8 @@ class Order(Parsable):
         return f"Order #{self.order_number}: {self.items}"
 
     def _parse_shipments(self) -> List[Shipment]:
-        shipments = [Shipment(x, self.config) for x in util.select(self.parsed, self.config.selectors.SHIPMENT_ENTITY_SELECTOR)]
+        shipments = [Shipment(x, self.config) for x in util.select(self.parsed,
+                                                                   self.config.selectors.SHIPMENT_ENTITY_SELECTOR)]
         shipments.sort()
         return shipments
 
@@ -160,7 +161,8 @@ class Order(Parsable):
         if not value:
             # TODO: there are multiple shipToData tags, we should double check we're picking the right one
             #  associated with the order
-            parent_tag = util.select_one(self.parsed.find_parent(), self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
+            parent_tag = util.select_one(self.parsed.find_parent(),
+                                         self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
             value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
 
         return Recipient(value, self.config)
@@ -259,7 +261,8 @@ class Order(Parsable):
         return value
 
     def _parse_order_shipping_date(self) -> Optional[date]:
-        value = self.simple_parse(self.config.selectors.FIELD_ORDER_SHIPPED_DATE_SELECTOR, prefix_split="Items shipped:")
+        value = self.simple_parse(self.config.selectors.FIELD_ORDER_SHIPPED_DATE_SELECTOR,
+                                  prefix_split="Items shipped:")
 
         if value:
             date_str = value.split("-")[0].strip()
@@ -268,7 +271,8 @@ class Order(Parsable):
         return value
 
     def _parse_refund_completed_date(self) -> Optional[date]:
-        value = self.simple_parse(self.config.selectors.FIELD_ORDER_REFUND_COMPLETED_DATE, prefix_split="Refund: Completed")
+        value = self.simple_parse(self.config.selectors.FIELD_ORDER_REFUND_COMPLETED_DATE,
+                                  prefix_split="Refund: Completed")
 
         if value:
             date_str = value.split("-")[0].strip()

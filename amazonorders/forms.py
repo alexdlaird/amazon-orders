@@ -10,7 +10,7 @@ from PIL import Image
 from amazoncaptcha import AmazonCaptcha
 from bs4 import Tag
 
-from amazonorders import constants, util
+from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
 

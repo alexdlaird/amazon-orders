@@ -4,7 +4,7 @@ __license__ = "MIT"
 import json
 import logging
 import os
-from typing import Any, Optional, List
+from typing import Any, List, Optional
 from urllib.parse import urlparse
 
 import requests
@@ -201,8 +201,8 @@ class AmazonSession:
         self.get(self.config.constants.SIGN_IN_URL)
 
         # If our local session data is stale, Amazon will redirect us to the signin page
-        if self.auth_cookies_stored() and self.last_response.url.split("?")[
-            0] == self.config.constants.SIGN_IN_REDIRECT_URL:
+        if (self.auth_cookies_stored() and
+                self.last_response.url.split("?")[0] == self.config.constants.SIGN_IN_REDIRECT_URL):
             self.logout()
             self.get(self.config.constants.SIGN_IN_URL)
 
