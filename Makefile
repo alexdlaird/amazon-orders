@@ -38,6 +38,13 @@ test-integration: virtualenv
 		coverage run -m pytest -v -s tests/integration; \
 	)
 
+test-integration-generic: virtualenv
+	@( \
+		source venv/bin/activate; \
+		python -m pip install ".[dev]"; \
+		coverage run -m pytest -v -s tests/integration/test_integration_generic.py; \
+	)
+
 build-test-resources: virtualenv
 	@( \
 		source venv/bin/activate; \

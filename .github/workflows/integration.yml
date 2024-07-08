@@ -33,4 +33,4 @@ jobs:
           timeout_minutes: 15
           retry_wait_seconds: 300
           max_attempts: 3
-          command: USE_TINY_SERVER=True make install test-integration
+          command: USE_TINY_SERVER=True make install test-integration-generic
