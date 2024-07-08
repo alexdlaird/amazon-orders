@@ -22,7 +22,7 @@ class Item(Parsable):
 
     def __init__(self,
                  parsed: Tag,
-                 config: AmazonOrdersConfig, ) -> None:
+                 config: AmazonOrdersConfig) -> None:
         super().__init__(parsed, config)
 
         #: The Item title.
