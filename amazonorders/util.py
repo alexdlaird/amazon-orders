@@ -8,7 +8,7 @@ from bs4 import Tag
 
 
 def select(parsed: Tag,
-           selector: List[str]) -> List[Tag]:
+           selector: Union[List[str], str]) -> List[Tag]:
     """
     This is a helper function that extends BeautifulSoup's `select() <https://www.crummy.com/software/
     BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_ method to allow for multiple selectors.
@@ -32,7 +32,7 @@ def select(parsed: Tag,
 
 
 def select_one(parsed: Tag,
-               selector: List[str]) -> Tag:
+               selector: Union[List[str], str]) -> Tag:
     """
     This is a helper function that extends BeautifulSoup's `select_one() <https://www.crummy.com/software/
     BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_ method to allow for multiple selectors.
@@ -85,11 +85,11 @@ def to_type(value: str) -> Union[int, float, bool, str, None]:
 def load_class(package: List,
                clazz: str):
     """
-    TODO: document
+    Import the given class from the given package, and return it.
 
-    :param package:
-    :param clazz:
-    :return:
+    :param package: The package.
+    :param clazz: The class to import.
+    :return: The return class.
     """
     constants_mod = importlib.import_module(".".join(package))
     return getattr(constants_mod, clazz)
