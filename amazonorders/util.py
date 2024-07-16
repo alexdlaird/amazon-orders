@@ -19,7 +19,6 @@ def select(parsed: Tag,
     :param selector: The CSS selector(s) for the field.
     :return: The selected tag.
     """
-
     if isinstance(selector, str):
         selector = [selector]
 
@@ -43,7 +42,6 @@ def select_one(parsed: Tag,
     :param selector: The CSS selector(s) for the field.
     :return:
     """
-
     if isinstance(selector, str):
         selector = [selector]
 
