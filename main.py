@@ -1,8 +1,11 @@
 from amazonorders.session import AmazonSession
 from amazonorders.orders import AmazonOrders
 
-amazon_session = AmazonSession("EMAIL",
-                               "PASSWORD")
+amazon_session = AmazonSession("Email",
+                               "Password")
+
+# Clear existing session by logging out
+amazon_session.logout()
 amazon_session.login()
 
 amazon_orders = AmazonOrders(amazon_session)
