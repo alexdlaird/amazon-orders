@@ -29,7 +29,7 @@ class Order(Parsable):
     def __init__(self,
                  parsed: Tag,
                  config: AmazonOrdersConfig,
-                 full_details: bool = False,
+                 full_details: bool = True,
                  clone: Optional[Entity] = None) -> None:
         super().__init__(parsed, config)
 
@@ -51,7 +51,7 @@ class Order(Parsable):
         self.order_placed_date: date = clone.order_placed_date if clone else self.safe_parse(
             self._parse_order_placed_date)
         #: The Order Recipients.
-        self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient)
+        self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient, parsed=parsed)
 
         # Fields below this point are only populated if `full_details` is True
 
@@ -147,25 +147,9 @@ class Order(Parsable):
 
         return value
 
-    def _parse_recipient(self) -> Recipient:
-        value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_SELECTOR)
-
-        if not value:
-            value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
-
-            if value:
-                inline_content = value.get("data-a-popover", {}).get("inlineContent")
-                if inline_content:
-                    value = BeautifulSoup(json.loads(inline_content), "html.parser")
-
-        if not value:
-            # TODO: there are multiple shipToData tags, we should double check we're picking the right one
-            #  associated with the order
-            parent_tag = util.select_one(self.parsed.find_parent(),
-                                         self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
-            value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
-
-        return Recipient(value, self.config)
+    def _parse_recipient(self, parsed):
+        # Implement the parsing logic here
+        pass
 
     def _parse_payment_method(self) -> Optional[str]:
         value = None
