@@ -8,7 +8,9 @@ from typing import List, Optional
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
+from amazonorders.entity.transaction import Transaction
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError
+from amazonorders.lib.transactions import parse_transaction_form_tag
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
@@ -117,3 +119,48 @@ class AmazonOrders:
         order = self.config.order_cls(order_details_tag, self.config, full_details=True)
 
         return order
+
+    def get_transactions(
+        self,
+        days: int = 365,
+    ) -> List[Transaction]:
+        """
+        Get the Amazon transactions for the given number of days.
+
+        :param days: The number of days worth of transactions to get.
+        :return: A list of the requested Transactions.
+        """
+        if not self.amazon_session.is_authenticated:
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
+
+        min_date = datetime.date.today() - datetime.timedelta(days=days)
+
+        self.amazon_session.get(self.config.constants.TRANSACTION_HISTORY_LANDING_URL)
+        assert self.amazon_session.last_response_parsed
+
+        form_tag = self.amazon_session.last_response_parsed.select_one(
+            self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR
+        )
+
+        transactions: List[Transaction] = []
+        while form_tag:
+            loaded_transactions, next_page_post_url, next_page_post_data = (
+                parse_transaction_form_tag(form_tag, self.config)
+            )
+            for transaction in loaded_transactions:
+                if transaction.completed_date >= min_date:
+                    transactions.append(transaction)
+                else:
+                    return transactions
+
+            if next_page_post_url is None:
+                return transactions
+
+            self.amazon_session.post(next_page_post_url, data=next_page_post_data)
+            assert self.amazon_session.last_response_parsed
+
+            form_tag = self.amazon_session.last_response_parsed.select_one(
+                self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR
+            )
+
+        return transactions

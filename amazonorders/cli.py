@@ -131,7 +131,7 @@ def history(ctx: Context,
 Order History for {year}{optional_start_index}{optional_full_details}
 -----------------------------------------------------------------------\n"""
                    .format(year=year,
-                           optional_start_index=optional_start_index,
+                optional_start_index=optional_start_index,
                            optional_full_details=optional_full_details))
         click.echo("Info: Fetching order history, this might take a minute ...")
 
@@ -172,6 +172,46 @@ def order(ctx: Context,
         order = amazon_orders.get_order(order_id)
 
         click.echo(f"{_order_output(order)}\n")
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+
+@amazon_orders_cli.command()
+@click.pass_context
+@click.option(
+    "--days",
+    default=365,
+    help="The number of days of transactions to get.",
+)
+def transactions(ctx: Context, **kwargs: Any):
+    """
+    Retrieve Amazon order history for a given year.
+    """
+    amazon_session = ctx.obj["amazon_session"]
+
+    try:
+        _authenticate(ctx, amazon_session)
+
+        days = kwargs["days"]
+
+        click.echo(
+            """-----------------------------------------------------------------------
+Transaction History for {days} days
+-----------------------------------------------------------------------\n""".format(
+                days=days
+            )
+        )
+        click.echo("Info: Fetching transaction history, this might take a minute ...")
+
+        amazon_transactions = AmazonOrders(amazon_session, config=ctx.obj["conf"])
+
+        transactions = amazon_transactions.get_transactions(days=days)
+
+        click.echo("... {} transactions parsed.\n".format(len(transactions)))
+
+        for transaction in transactions:
+            click.echo(f"{transaction}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))

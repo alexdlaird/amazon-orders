@@ -36,6 +36,7 @@ dev = [
     "coverage[toml]",
     "flake8",
     "flake8-pyproject",
+    "freezegun",
     "pep8-naming",
     "responses",
     "flask",

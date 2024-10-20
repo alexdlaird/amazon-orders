@@ -2,13 +2,14 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import logging
+import re
 from typing import Any, Callable, Optional, Type, Union
 
 from bs4 import Tag
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
-from amazonorders.exception import AmazonOrderEntityError, AmazonOrdersError
+from amazonorders.exception import AmazonOrdersEntityError, AmazonOrdersError
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +118,7 @@ class Parsable:
                 break
 
         if not value and required:
-            raise AmazonOrderEntityError(
+            raise AmazonOrdersEntityError(
                 "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
                     name=self.__class__.__name__, selector=selector))
 
@@ -160,9 +161,9 @@ class Parsable:
         if not value:
             return None
 
-        currency = util.to_type(
-            value.strip().replace("$", "").replace(",", "")
-        )
+        value = value.strip()
+        value = re.sub("[a-zA-Z$,]+", "", value)
+        currency = util.to_type(value)
 
         if isinstance(currency, str):
             return None
