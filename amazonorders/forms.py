@@ -3,16 +3,19 @@ __license__ = "MIT"
 
 from abc import ABC
 from io import BytesIO
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 from urllib.parse import urlparse
 
-from PIL import Image
 from amazoncaptcha import AmazonCaptcha
 from bs4 import Tag
+from PIL import Image
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
+
+if TYPE_CHECKING:
+    from amazonorders.session import AmazonSession
 
 
 class AuthForm(ABC):
@@ -26,26 +29,26 @@ class AuthForm(ABC):
 
     def __init__(self,
                  config: AmazonOrdersConfig,
-                 selector: str,
+                 selector: Optional[str],
                  error_selector: Optional[str] = None,
                  critical: bool = False) -> None:
         #: The AmazonOrdersConfig to use.
         self.config: AmazonOrdersConfig = config
         #: The CSS selector for the ``<form>``.
-        self.selector: str = selector
+        self.selector: Optional[str] = selector
         #: The CSS selector for the error div when form submission fails.
         self.error_selector: str = error_selector or config.selectors.DEFAULT_ERROR_TAG_SELECTOR
         #: If ``critical``, form submission failures will raise :class:`~amazonorders.exception.AmazonOrdersAuthError`.
         self.critical: bool = critical
         #: The :class:`~amazonorders.session.AmazonSession` on which to submit the form.
-        self.amazon_session = None
+        self.amazon_session: Optional["AmazonSession"] = None
         #: The selected ``<form>``.
         self.form: Optional[Tag] = None
         #: The ``<form>`` data that will be submitted.
-        self.data: Optional[Dict[Any]] = None
+        self.data: Optional[Dict[str, Any]] = None
 
     def select_form(self,
-                    amazon_session,
+                    amazon_session: "AmazonSession",
                     parsed: Tag) -> bool:
         """
         Using the ``selector`` defined on this instance, select the ``<form>`` for the given :class:`~bs4.Tag`.
@@ -54,6 +57,9 @@ class AuthForm(ABC):
         :param parsed: The ``Tag`` from which to select the ``<form>``.
         :return: Whether the ``<form>`` selection was successful.
         """
+        if not self.selector:
+            raise AmazonOrdersError("Must set a selector first.")
+
         self.amazon_session = amazon_session
         self.form = util.select_one(parsed, self.selector)
 
@@ -72,7 +78,7 @@ class AuthForm(ABC):
         self.data = {}
         for field in self.form.select("input"):
             try:
-                self.data[field["name"]] = field["value"]
+                self.data[str(field["name"])] = field["value"]
             except Exception:
                 pass
         if additional_attrs:
@@ -84,10 +90,12 @@ class AuthForm(ABC):
         """
         if not self.form:
             raise AmazonOrdersError("Call AuthForm.select_form() first.")
+        elif not self.amazon_session:
+            raise AmazonOrdersError("Call AuthForm.select_form() first.")
         elif not self.data:
             raise AmazonOrdersError("Call AuthForm.fill_form() first.")
 
-        method = self.form.get("method", "GET").upper()
+        method = str(self.form.get("method", "GET")).upper()
         action = self._get_form_action()
         request_data = {"params" if method == "GET" else "data": self.data}
         self.amazon_session.request(method,
@@ -108,6 +116,9 @@ class AuthForm(ABC):
 
     def _solve_captcha(self,
                        url: str) -> str:
+        if not self.amazon_session:
+            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+
         captcha_response = AmazonCaptcha.fromlink(url).solve()
         if not captcha_response or captcha_response.lower() == "not solved":
             img_response = self.amazon_session.session.get(url)
@@ -123,10 +134,17 @@ class AuthForm(ABC):
         return captcha_response
 
     def _get_form_action(self) -> str:
+        if not self.amazon_session:
+            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+        elif not self.form:
+            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+
         action = self.form.get("action")
         if not action:
             return self.amazon_session.last_response.url
-        elif not action.startswith("http"):
+
+        action = str(action)
+        if not action.startswith("http"):
             if action.startswith("/"):
                 parsed_url = urlparse(self.amazon_session.last_response.url)
                 return f"{parsed_url.scheme}://{parsed_url.netloc}{action}"
@@ -137,6 +155,9 @@ class AuthForm(ABC):
             return action
 
     def _handle_errors(self) -> None:
+        if not self.amazon_session:
+            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+
         error_tag = util.select_one(self.amazon_session.last_response_parsed, self.error_selector)
         if error_tag:
             error_msg = f"An error occurred: {error_tag.text.strip().rstrip('.')}.\n"
@@ -161,9 +182,13 @@ class SignInForm(AuthForm):
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
+        if not self.amazon_session:
+            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+
         if not additional_attrs:
             additional_attrs = {}
         super().fill_form()
+        assert self.data is not None
 
         additional_attrs.update({self.solution_attr_key: self.amazon_session.username,
                                  "password": self.amazon_session.password,
@@ -192,15 +217,21 @@ class MfaDeviceSelectForm(AuthForm):
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
+        if not self.form:
+            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+        elif not self.amazon_session:
+            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+
         if not additional_attrs:
             additional_attrs = {}
         super().fill_form()
+        assert self.data is not None
 
         contexts = util.select(self.form, self.config.selectors.MFA_DEVICE_SELECT_INPUT_SELECTOR)
         i = 0
         choices = []
         for field in contexts:
-            choices.append(f"{i}: {field[self.config.selectors.MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE].strip()}")
+            choices.append(f"{i}: {str(field[self.config.selectors.MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE]).strip()}")
             i += 1
 
         otp_device = int(
@@ -228,9 +259,13 @@ class MfaForm(AuthForm):
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
+        if not self.amazon_session:
+            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+
         if not additional_attrs:
             additional_attrs = {}
         super().fill_form()
+        assert self.data is not None
 
         otp = self.amazon_session.io.prompt("Enter the one-time passcode sent to your device")
         self.amazon_session.io.echo("")
@@ -244,7 +279,7 @@ class CaptchaForm(AuthForm):
     def __init__(self,
                  config: AmazonOrdersConfig,
                  selector: Optional[str] = None,
-                 error_selector: str = None,
+                 error_selector: Optional[str] = None,
                  solution_attr_key: str = "cvf_captcha_input") -> None:
         if not selector:
             selector = config.selectors.CAPTCHA_1_FORM_SELECTOR
@@ -257,12 +292,23 @@ class CaptchaForm(AuthForm):
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
+        if not self.form:
+            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+
         if not additional_attrs:
             additional_attrs = {}
         super().fill_form(additional_attrs)
+        assert self.data is not None
 
         # TODO: eliminate the use of find_parent() here
-        img_url = self.form.find_parent().select_one("img")["src"]
+        form_parent = self.form.find_parent()
+        assert form_parent is not None
+
+        img_tag = form_parent.select_one("img")
+        assert img_tag is not None
+
+        img_url = str(img_tag["src"])
+
         if not img_url.startswith("http"):
             img_url = f"{self.config.constants.BASE_URL}{img_url}"
         solution = self._solve_captcha(img_url)

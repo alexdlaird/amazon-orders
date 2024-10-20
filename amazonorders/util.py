@@ -2,13 +2,12 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import importlib
-from typing import List, Union
+from typing import List, Optional, Union
 
 from bs4 import Tag
 
 
-def select(parsed: Tag,
-           selector: Union[List[str], str]) -> List[Tag]:
+def select(parsed: Tag, selector: Union[List[str], str]) -> List[Tag]:
     """
     This is a helper function that extends BeautifulSoup's `select() <https://www.crummy.com/software/
     BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_ method to allow for multiple selectors.
@@ -30,8 +29,7 @@ def select(parsed: Tag,
     return []
 
 
-def select_one(parsed: Tag,
-               selector: Union[List[str], str]) -> Tag:
+def select_one(parsed: Tag, selector: Union[List[str], str]) -> Optional[Tag]:
     """
     This is a helper function that extends BeautifulSoup's `select_one() <https://www.crummy.com/software/
     BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_ method to allow for multiple selectors.
@@ -49,6 +47,7 @@ def select_one(parsed: Tag,
         tag = parsed.select_one(s)
         if tag:
             return tag
+    return None
 
 
 def to_type(value: str) -> Union[int, float, bool, str, None]:
@@ -63,25 +62,26 @@ def to_type(value: str) -> Union[int, float, bool, str, None]:
     if not value or value == "":
         return None
 
+    rv: Union[int, float, bool, str] = value
+
     try:
-        value = int(value)
+        rv = int(rv)
     except ValueError:
         try:
-            value = float(value)
+            rv = float(rv)
         except ValueError:
             pass
 
-    if isinstance(value, str):
-        if value.lower() == "true":
-            value = True
-        elif value.lower() == "false":
-            value = False
+    if isinstance(rv, str):
+        if rv.lower() == "true":
+            rv = True
+        elif rv.lower() == "false":
+            rv = False
 
-    return value
+    return rv
 
 
-def load_class(package: List,
-               clazz: str):
+def load_class(package: List, clazz: str):
     """
     Import the given class from the given package, and return it.
 

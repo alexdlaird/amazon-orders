@@ -154,15 +154,23 @@ class Order(Parsable):
             value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
             if value:
-                inline_content = value.get("data-a-popover", {}).get("inlineContent")
+                data_popover = value.get("data-a-popover", {})  # type: ignore[arg-type]
+                inline_content = data_popover.get("inlineContent")  # type: ignore[union-attr]
                 if inline_content:
                     value = BeautifulSoup(json.loads(inline_content), "html.parser")
 
         if not value:
             # TODO: there are multiple shipToData tags, we should double check we're picking the right one
             #  associated with the order
-            parent_tag = util.select_one(self.parsed.find_parent(),
-                                         self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
+            parsed_parent = self.parsed.find_parent()
+            assert parsed_parent is not None
+
+            parent_tag = util.select_one(
+                parsed_parent,
+                self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR
+            )
+            assert parent_tag is not None
+
             value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
 
         return Recipient(value, self.config)
@@ -172,7 +180,7 @@ class Order(Parsable):
 
         tag = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR)
         if tag:
-            value = tag["alt"]
+            value = str(tag["alt"])
 
         return value
 
