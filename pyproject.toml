@@ -78,6 +78,7 @@ omit = [
 [tool.coverage.report]
 precision = 2
 exclude_lines = [
+    "if TYPE_CHECKING:",
     "pragma: no cover",
     "def __repr__",
     "if self.debug",

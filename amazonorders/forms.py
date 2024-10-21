@@ -58,7 +58,7 @@ class AuthForm(ABC):
         :return: Whether the ``<form>`` selection was successful.
         """
         if not self.selector:
-            raise AmazonOrdersError("Must set a selector first.")
+            raise AmazonOrdersError("Must set a selector first.")  # pragma: no cover
 
         self.amazon_session = amazon_session
         self.form = util.select_one(parsed, self.selector)
@@ -73,7 +73,9 @@ class AuthForm(ABC):
         :param additional_attrs: Additional attributes to add to the ``<form>`` data for submission.
         """
         if not self.form:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
 
         self.data = {}
         for field in self.form.select("input"):
@@ -89,11 +91,17 @@ class AuthForm(ABC):
         Submit the populated ``<form>``.
         """
         if not self.form:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
         elif not self.amazon_session:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
         elif not self.data:
-            raise AmazonOrdersError("Call AuthForm.fill_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.fill_form() first."
+            )  # pragma: no cover
 
         method = str(self.form.get("method", "GET")).upper()
         action = self._get_form_action()
@@ -117,7 +125,9 @@ class AuthForm(ABC):
     def _solve_captcha(self,
                        url: str) -> str:
         if not self.amazon_session:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
 
         captcha_response = AmazonCaptcha.fromlink(url).solve()
         if not captcha_response or captcha_response.lower() == "not solved":
@@ -135,9 +145,13 @@ class AuthForm(ABC):
 
     def _get_form_action(self) -> str:
         if not self.amazon_session:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
         elif not self.form:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
 
         action = self.form.get("action")
         if not action:
@@ -156,7 +170,9 @@ class AuthForm(ABC):
 
     def _handle_errors(self) -> None:
         if not self.amazon_session:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
 
         error_tag = util.select_one(self.amazon_session.last_response_parsed, self.error_selector)
         if error_tag:
@@ -183,7 +199,9 @@ class SignInForm(AuthForm):
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
         if not self.amazon_session:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
 
         if not additional_attrs:
             additional_attrs = {}
@@ -218,9 +236,13 @@ class MfaDeviceSelectForm(AuthForm):
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
         if not self.form:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
         elif not self.amazon_session:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
 
         if not additional_attrs:
             additional_attrs = {}
@@ -260,7 +282,9 @@ class MfaForm(AuthForm):
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
         if not self.amazon_session:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
 
         if not additional_attrs:
             additional_attrs = {}
@@ -293,7 +317,9 @@ class CaptchaForm(AuthForm):
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
         if not self.form:
-            raise AmazonOrdersError("Call AuthForm.select_form() first.")
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
 
         if not additional_attrs:
             additional_attrs = {}
