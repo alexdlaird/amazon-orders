@@ -154,10 +154,17 @@ class Parsable:
         :param value: The currency to parse.
         :return: The currency as a primitive.
         """
-        if not value or isinstance(value, (int, float)):
+        if isinstance(value, (int, float)):
             return value
 
-        return util.to_type(value
-                            .strip()
-                            .replace("$", "")
-                            .replace(",", ""))
+        if not value:
+            return None
+
+        currency = util.to_type(
+            value.strip().replace("$", "").replace(",", "")
+        )
+
+        if isinstance(currency, str):
+            return None
+
+        return currency

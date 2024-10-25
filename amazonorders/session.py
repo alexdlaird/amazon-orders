@@ -39,7 +39,7 @@ class IODefault:
 
     def prompt(self,
                msg: str,
-               type: Optional[str] = None,
+               type: Optional[Any] = None,
                **kwargs: Any):
         """
         Prompt to the console for user input.
@@ -65,11 +65,11 @@ class AmazonSession:
     """
 
     def __init__(self,
-                 username: str,
-                 password: str,
+                 username: Optional[str],
+                 password: Optional[str],
                  debug: bool = False,
                  io: IODefault = IODefault(),
-                 config: AmazonOrdersConfig = None,
+                 config: Optional[AmazonOrdersConfig] = None,
                  auth_forms: Optional[List] = None) -> None:
         if not config:
             config = AmazonOrdersConfig()
@@ -86,9 +86,9 @@ class AmazonSession:
                                   config.selectors.CAPTCHA_OTP_FORM_SELECTOR)]
 
         #: An Amazon username.
-        self.username: str = username
+        self.username: Optional[str] = username
         #: An Amazon password.
-        self.password: str = password
+        self.password: Optional[str] = password
 
         #: Set logger ``DEBUG``, send output to ``stderr``, and write an HTML file for requests made on the session.
         self.debug: bool = debug
@@ -104,9 +104,9 @@ class AmazonSession:
         #: The shared session to be used across all requests.
         self.session: Session = Session()
         #: The last response executed on the Session.
-        self.last_response: Optional[Response] = None
+        self.last_response: Response = Response()
         #: A parsed representation of the last response executed on the Session.
-        self.last_response_parsed: Optional[Tag] = None
+        self.last_response_parsed: Tag = Tag(name="html")
         #: If :func:`login` has been executed and successfully logged in the session.
         self.is_authenticated: bool = False
 
