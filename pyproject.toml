@@ -36,6 +36,7 @@ dev = [
     "coverage[toml]",
     "flake8",
     "flake8-pyproject",
+    "freezegun",
     "pep8-naming",
     "responses",
     "flask",
@@ -50,6 +51,7 @@ docs = [
     "types-requests",
     "types-beautifulsoup4",
     "types-Pillow",
+    "types-PyYAML",
 ]
 
 [project.scripts]
@@ -77,6 +79,7 @@ omit = [
 [tool.coverage.report]
 precision = 2
 exclude_lines = [
+    "if TYPE_CHECKING:",
     "pragma: no cover",
     "def __repr__",
     "if self.debug",
@@ -98,3 +101,12 @@ directory = "build/coverage"
 max-line-length = 119
 statistics = true
 exclude = "scripts/*,docs/*,venv/*,build/*,dist/*,.egg-info/*,.mypy_cache/*"
+
+[tool.mypy]
+python_version = "3.8"
+
+[[tool.mypy.overrides]]
+module = [
+    "amazoncaptcha.*",
+]
+ignore_missing_imports = true

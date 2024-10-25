@@ -5,10 +5,12 @@ import datetime
 import logging
 from typing import List, Optional
 
-from amazonorders import constants, util
+from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
+from amazonorders.entity.transaction import Transaction
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError
+from amazonorders.lib.transactions import parse_transaction_form_tag
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
@@ -23,7 +25,7 @@ class AmazonOrders:
     def __init__(self,
                  amazon_session: AmazonSession,
                  debug: Optional[bool] = None,
-                 config: AmazonOrdersConfig = None) -> None:
+                 config: Optional[AmazonOrdersConfig] = None) -> None:
         if not debug:
             debug = amazon_session.debug
         if not config:
@@ -56,28 +58,30 @@ class AmazonOrders:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         self.amazon_session.get(self.config.constants.ORDER_HISTORY_LANDING_URL)
-        if not self.amazon_session.last_response_parsed.select_one("select[name='timeFilter']"):
-            constants.HISTORY_FILTER_QUERY_PARAM = "orderFilter"
 
         orders = []
         optional_start_index = f"&startIndex={start_index}" if start_index else ""
-        next_page = ("{url}?{query_param}=year-{year}"
-                     "{optional_start_index}").format(url=self.config.constants.ORDER_HISTORY_URL,
-                                                      query_param=self.config.constants.HISTORY_FILTER_QUERY_PARAM,
-                                                      year=year,
-                                                      optional_start_index=optional_start_index)
+        next_page: Optional[str] = (
+            "{url}?{query_param}=year-{year}{optional_start_index}"
+        ).format(
+            url=self.config.constants.ORDER_HISTORY_URL,
+            query_param=self.config.constants.HISTORY_FILTER_QUERY_PARAM,
+            year=year,
+            optional_start_index=optional_start_index
+        )
+
         while next_page:
             self.amazon_session.get(next_page)
             response_parsed = self.amazon_session.last_response_parsed
 
             for order_tag in util.select(response_parsed, self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
-                order = self.config.order_class(order_tag, self.config)
+                order = self.config.order_cls(order_tag, self.config)
 
                 if full_details:
                     self.amazon_session.get(order.order_details_link)
                     order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
                                                         self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-                    order = self.config.order_class(order_details_tag, self.config, full_details=True, clone=order)
+                    order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order)
 
                 orders.append(order)
 
@@ -85,7 +89,7 @@ class AmazonOrders:
             if start_index is None:
                 next_page_tag = util.select_one(response_parsed, self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
-                    next_page = next_page_tag["href"]
+                    next_page = str(next_page_tag["href"])
                     if not next_page.startswith("http"):
                         next_page = f"{self.config.constants.BASE_URL}{next_page}"
                 else:
@@ -112,6 +116,51 @@ class AmazonOrders:
 
         order_details_tag = self.amazon_session.last_response_parsed.select_one(
             self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-        order = self.config.order_class(order_details_tag, self.config, full_details=True)
+        order = self.config.order_cls(order_details_tag, self.config, full_details=True)
 
         return order
+
+    def get_transactions(
+        self,
+        days: int = 365,
+    ) -> List[Transaction]:
+        """
+        Get the Amazon transactions for the given number of days.
+
+        :param days: The number of days worth of transactions to get.
+        :return: A list of the requested Transactions.
+        """
+        if not self.amazon_session.is_authenticated:
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
+
+        min_date = datetime.date.today() - datetime.timedelta(days=days)
+
+        self.amazon_session.get(self.config.constants.TRANSACTION_HISTORY_LANDING_URL)
+        assert self.amazon_session.last_response_parsed
+
+        form_tag = self.amazon_session.last_response_parsed.select_one(
+            self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR
+        )
+
+        transactions: List[Transaction] = []
+        while form_tag:
+            loaded_transactions, next_page_post_url, next_page_post_data = (
+                parse_transaction_form_tag(form_tag, self.config)
+            )
+            for transaction in loaded_transactions:
+                if transaction.completed_date >= min_date:
+                    transactions.append(transaction)
+                else:
+                    return transactions
+
+            if next_page_post_url is None:
+                return transactions
+
+            self.amazon_session.post(next_page_post_url, data=next_page_post_data)
+            assert self.amazon_session.last_response_parsed
+
+            form_tag = self.amazon_session.last_response_parsed.select_one(
+                self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR
+            )
+
+        return transactions
