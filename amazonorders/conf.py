@@ -66,8 +66,8 @@ class AmazonOrdersConfig:
 
         self.constants = util.load_class(constants_class_split[:-1], constants_class_split[-1])()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
-        self.order_class = util.load_class(order_class_split[:-1], order_class_split[-1])
-        self.shipment_class = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
+        self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
+        self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
 
     def __getattr__(self, key):
         return self._data[key]
