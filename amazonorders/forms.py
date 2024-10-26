@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 from abc import ABC
 from io import BytesIO
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 from urllib.parse import urlparse
 
 from PIL import Image
@@ -13,6 +13,9 @@ from bs4 import Tag
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
+
+if TYPE_CHECKING:
+    from amazonorders.session import AmazonSession
 
 
 class AuthForm(ABC):
@@ -38,14 +41,14 @@ class AuthForm(ABC):
         #: If ``critical``, form submission failures will raise :class:`~amazonorders.exception.AmazonOrdersAuthError`.
         self.critical: bool = critical
         #: The :class:`~amazonorders.session.AmazonSession` on which to submit the form.
-        self.amazon_session = None
+        self.amazon_session: Optional[AmazonSession] = None
         #: The selected ``<form>``.
         self.form: Optional[Tag] = None
         #: The ``<form>`` data that will be submitted.
-        self.data: Optional[Dict[Any]] = None
+        self.data: Optional[Dict[str, Any]] = None
 
     def select_form(self,
-                    amazon_session,
+                    amazon_session: AmazonSession,
                     parsed: Tag) -> bool:
         """
         Using the ``selector`` defined on this instance, select the ``<form>`` for the given :class:`~bs4.Tag`.
@@ -244,7 +247,7 @@ class CaptchaForm(AuthForm):
     def __init__(self,
                  config: AmazonOrdersConfig,
                  selector: Optional[str] = None,
-                 error_selector: str = None,
+                 error_selector: Optional[str] = None,
                  solution_attr_key: str = "cvf_captcha_input") -> None:
         if not selector:
             selector = config.selectors.CAPTCHA_1_FORM_SELECTOR

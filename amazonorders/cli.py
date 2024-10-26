@@ -35,7 +35,7 @@ class IOClick(IODefault):
 
     def prompt(self,
                msg: str,
-               type: Optional[str] = None,
+               type: Optional[Any] = None,
                **kwargs: Any):
         for choice in kwargs.get("choices", []):
             self.echo(choice, **kwargs)

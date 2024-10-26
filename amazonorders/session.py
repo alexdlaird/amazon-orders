@@ -39,7 +39,7 @@ class IODefault:
 
     def prompt(self,
                msg: str,
-               type: Optional[str] = None,
+               type: Optional[Any] = None,
                **kwargs: Any):
         """
         Prompt to the console for user input.
@@ -69,7 +69,7 @@ class AmazonSession:
                  password: str,
                  debug: bool = False,
                  io: IODefault = IODefault(),
-                 config: AmazonOrdersConfig = None,
+                 config: Optional[AmazonOrdersConfig] = None,
                  auth_forms: Optional[List] = None) -> None:
         if not config:
             config = AmazonOrdersConfig()

@@ -23,7 +23,7 @@ class AmazonOrders:
     def __init__(self,
                  amazon_session: AmazonSession,
                  debug: Optional[bool] = None,
-                 config: AmazonOrdersConfig = None) -> None:
+                 config: Optional[AmazonOrdersConfig] = None) -> None:
         if not debug:
             debug = amazon_session.debug
         if not config:

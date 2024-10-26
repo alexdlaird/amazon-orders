@@ -4,7 +4,7 @@ __license__ = "MIT"
 import json
 import logging
 from datetime import date, datetime
-from typing import List, Optional
+from typing import List, Optional, TypeVar
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
@@ -18,6 +18,8 @@ from amazonorders.entity.shipment import Shipment
 
 logger = logging.getLogger(__name__)
 
+OrderEntity = TypeVar('OrderEntity', bound='Order')
+
 
 class Order(Parsable):
     """
@@ -28,7 +30,7 @@ class Order(Parsable):
                  parsed: Tag,
                  config: AmazonOrdersConfig,
                  full_details: bool = False,
-                 clone: Optional["Order"] = None) -> None:
+                 clone: Optional[OrderEntity] = None) -> None:
         super().__init__(parsed, config)
 
         #: If the Orders full details were populated from its details page.
