@@ -15,7 +15,7 @@ jobs:
     name: Build
 
     env:
-      PY_COLORS: "1"
+      FORCE_COLOR: "1"
 
     strategy:
       fail-fast: false
