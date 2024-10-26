@@ -58,6 +58,7 @@ class IntegrationTestCase(TestCase):
 
         cls.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
                                            os.environ.get("AMAZON_PASSWORD"),
+                                           os.environ.get("DEBUG", "False") == "True",
                                            io=io,
                                            config=cls.test_config)
         cls.amazon_session.login()
