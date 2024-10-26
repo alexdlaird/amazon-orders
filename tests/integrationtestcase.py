@@ -33,6 +33,7 @@ class IntegrationTestCase(TestCase):
     def setUpClass(cls):
         if not (os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")):
             print("AMAZON_USERNAME and AMAZON_PASSWORD environment variables must be set to run integration tests")
+
             sys.exit(1)
 
         twilio_account_sid = os.environ.get("TWILIO_ACCOUNT_SID")

@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import json
 import os
+import sys
 from datetime import datetime
 
 from parameterized import parameterized
@@ -26,6 +27,15 @@ if os.path.exists(PRIVATE_RESOURCES_DIR):
 env_json_data = []
 if "AMAZON_ORDERS_INTEGRATION_TEST_JSON" in os.environ:
     data = json.loads(os.environ["AMAZON_ORDERS_INTEGRATION_TEST_JSON"])
+    if not isinstance(data, list):
+        print("AMAZON_ORDERS_INTEGRATION_TEST_JSON must be a list of JSON objects")
+
+        sys.exit(1)
+
+    i = 0
+    for test in data:
+        env_json_data.append((f"env_var_test_{i}", test))
+        i += 1
 
 
 class TestIntegrationJSON(IntegrationTestCase):
@@ -93,8 +103,8 @@ class TestIntegrationJSON(IntegrationTestCase):
     """
 
     @parameterized.expand(private_json_file_data + env_json_data, skip_on_empty=True)
-    def test_json(self, filename, data):
-        print(f"Info: Dynamic test is running from JSON file {filename}")
+    def test_json(self, testname, data):
+        print(f"Info: Dynamic test is running from JSON {testname}")
 
         # GIVEN
         func = data.pop("func")
