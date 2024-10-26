@@ -6,9 +6,9 @@ from io import BytesIO
 from typing import Any, Dict, Optional, TYPE_CHECKING
 from urllib.parse import urlparse
 
+from PIL import Image
 from amazoncaptcha import AmazonCaptcha
 from bs4 import Tag
-from PIL import Image
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
@@ -90,17 +90,9 @@ class AuthForm(ABC):
         """
         Submit the populated ``<form>``.
         """
-        if not self.form:
+        if not self.amazon_session or not self.form or not self.data:
             raise AmazonOrdersError(
                 "Call AuthForm.select_form() first."
-            )  # pragma: no cover
-        elif not self.amazon_session:
-            raise AmazonOrdersError(
-                "Call AuthForm.select_form() first."
-            )  # pragma: no cover
-        elif not self.data:
-            raise AmazonOrdersError(
-                "Call AuthForm.fill_form() first."
             )  # pragma: no cover
 
         method = str(self.form.get("method", "GET")).upper()
@@ -144,11 +136,7 @@ class AuthForm(ABC):
         return captcha_response
 
     def _get_form_action(self) -> str:
-        if not self.amazon_session:
-            raise AmazonOrdersError(
-                "Call AuthForm.select_form() first."
-            )  # pragma: no cover
-        elif not self.form:
+        if not self.amazon_session or not self.form:
             raise AmazonOrdersError(
                 "Call AuthForm.select_form() first."
             )  # pragma: no cover
@@ -206,7 +194,10 @@ class SignInForm(AuthForm):
         if not additional_attrs:
             additional_attrs = {}
         super().fill_form()
-        assert self.data is not None
+        if not self.data:
+            raise AmazonOrdersError(
+                "AuthForm did not populate. Check if Amazon changed the expected HTML."
+            )  # pragma: no cover
 
         additional_attrs.update({self.solution_attr_key: self.amazon_session.username,
                                  "password": self.amazon_session.password,
@@ -235,11 +226,7 @@ class MfaDeviceSelectForm(AuthForm):
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
-        if not self.form:
-            raise AmazonOrdersError(
-                "Call AuthForm.select_form() first."
-            )  # pragma: no cover
-        elif not self.amazon_session:
+        if not self.amazon_session or not self.form:
             raise AmazonOrdersError(
                 "Call AuthForm.select_form() first."
             )  # pragma: no cover
@@ -247,7 +234,10 @@ class MfaDeviceSelectForm(AuthForm):
         if not additional_attrs:
             additional_attrs = {}
         super().fill_form()
-        assert self.data is not None
+        if not self.data:
+            raise AmazonOrdersError(
+                "AuthForm did not populate. Check if Amazon changed the expected HTML."
+            )  # pragma: no cover
 
         contexts = util.select(self.form, self.config.selectors.MFA_DEVICE_SELECT_INPUT_SELECTOR)
         i = 0
@@ -289,7 +279,11 @@ class MfaForm(AuthForm):
         if not additional_attrs:
             additional_attrs = {}
         super().fill_form()
-        assert self.data is not None
+        if not self.data:
+            raise AmazonOrdersError(
+                "AuthForm did not populate, but it's required. "
+                "Check if Amazon changed the expected HTML."
+            )  # pragma: no cover
 
         otp = self.amazon_session.io.prompt("Enter the one-time passcode sent to your device")
         self.amazon_session.io.echo("")
@@ -324,14 +318,25 @@ class CaptchaForm(AuthForm):
         if not additional_attrs:
             additional_attrs = {}
         super().fill_form(additional_attrs)
-        assert self.data is not None
+        if not self.data:
+            raise AmazonOrdersError(
+                "AuthForm did not populate. Check if Amazon changed the expected HTML."
+            )  # pragma: no cover
 
         # TODO: eliminate the use of find_parent() here
         form_parent = self.form.find_parent()
-        assert form_parent is not None
+        if not form_parent:
+            raise AmazonOrdersError(
+                "AuthForm parent not found, but it's required. "
+                "Check if Amazon changed the expected HTML."
+            )  # pragma: no cover
 
         img_tag = form_parent.select_one("img")
-        assert img_tag is not None
+        if not img_tag:
+            raise AmazonOrdersError(
+                "AuthForm <img> tag not found, but it's required. "
+                "Check if Amazon changed the expected HTML."
+            )  # pragma: no cover
 
         img_url = str(img_tag["src"])
 

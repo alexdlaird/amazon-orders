@@ -15,6 +15,7 @@ from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
+from amazonorders.exception import AmazonOrdersError
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +172,11 @@ class Order(Parsable):
                 parsed_parent,
                 self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR
             )
-            assert parent_tag is not None
+            if not parent_tag:
+                raise AmazonOrdersError(
+                    "FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR resulted in None, but it's required. "
+                    "Check if Amazon changed the expected HTML."
+                )  # pragma: no cover
 
             value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
 
