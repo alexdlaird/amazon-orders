@@ -2,7 +2,7 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import importlib
-from typing import List, Union
+from typing import List, Union, Optional
 
 from bs4 import Tag
 
@@ -31,7 +31,7 @@ def select(parsed: Tag,
 
 
 def select_one(parsed: Tag,
-               selector: Union[List[str], str]) -> Tag:
+               selector: Union[List[str], str]) -> Optional[Tag]:
     """
     This is a helper function that extends BeautifulSoup's `select_one() <https://www.crummy.com/software/
     BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_ method to allow for multiple selectors.
@@ -40,7 +40,7 @@ def select_one(parsed: Tag,
 
     :param parsed: The ``Tag`` from which to attempt selection.
     :param selector: The CSS selector(s) for the field.
-    :return:
+    :return: The selection tag.
     """
     if isinstance(selector, str):
         selector = [selector]
@@ -49,6 +49,8 @@ def select_one(parsed: Tag,
         tag = parsed.select_one(s)
         if tag:
             return tag
+
+    return None
 
 
 def to_type(value: str) -> Union[int, float, bool, str, None]:

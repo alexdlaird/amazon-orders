@@ -112,6 +112,6 @@ class AmazonOrders:
 
         order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
                                             self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-        order = self.config.order_class(order_details_tag, self.config, full_details=True)
+        order: Order = self.config.order_class(order_details_tag, self.config, full_details=True)
 
         return order

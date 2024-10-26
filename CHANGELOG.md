@@ -11,11 +11,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Support for Amazon's new `data-component` tags.
 - Simplified integration tests to more quickly catch regressions.
 - Bug fixes and stability improvements.
+- `order_class` to the config file, which allows `Order` to be extended.
+- `order_class` to the config file, which allows for overriding the `Order` class.
+- `shipment_class` to the config file, which allows for overriding the `Shipment` class.
 
 ### Changed
 
-- Removed global constants in `amazonorders.constants`. Now `amazonorders.constants.Constants` and `amazonorders.selectors.Selectors` classes are used, can be override with `constants_class` and `selectors_class` in the config file.
-- Added `order_class` to the config file, which allows for overriding the `Order` class.
+- Removed global constants in `amazonorders.constants`. Now `amazonorders.constants.Constants` and `amazonorders.selectors.Selectors` classes are used, can be overridden with `constants_class` and `selectors_class` in the config file.
+
+### Removed
+
+- `session.AUTH_FORMS`. Pass `auth_forms` when instantiating `AmazonSession` instead.
 
 ## [1.1.4](https://github.com/alexdlaird/amazon-orders/compare/1.1.3...1.1.4) - 2024-06-07
 
