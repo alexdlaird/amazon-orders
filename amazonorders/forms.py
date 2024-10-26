@@ -41,14 +41,14 @@ class AuthForm(ABC):
         #: If ``critical``, form submission failures will raise :class:`~amazonorders.exception.AmazonOrdersAuthError`.
         self.critical: bool = critical
         #: The :class:`~amazonorders.session.AmazonSession` on which to submit the form.
-        self.amazon_session: Optional[AmazonSession] = None
+        self.amazon_session: Optional["AmazonSession"] = None
         #: The selected ``<form>``.
         self.form: Optional[Tag] = None
         #: The ``<form>`` data that will be submitted.
         self.data: Optional[Dict[str, Any]] = None
 
     def select_form(self,
-                    amazon_session: AmazonSession,
+                    amazon_session: "AmazonSession",
                     parsed: Tag) -> bool:
         """
         Using the ``selector`` defined on this instance, select the ``<form>`` for the given :class:`~bs4.Tag`.
