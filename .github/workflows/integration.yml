@@ -11,6 +11,9 @@ jobs:
     name: Integration Test
 
     env:
+      FORCE_COLOR: 1
+
+    env:
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
       AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
       TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}

@@ -15,7 +15,7 @@ jobs:
     name: Build
 
     env:
-      FORCE_COLOR: "1"
+      FORCE_COLOR: 1
 
     strategy:
       fail-fast: false

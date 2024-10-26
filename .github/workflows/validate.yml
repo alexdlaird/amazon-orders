@@ -7,6 +7,9 @@ jobs:
   validate:
     name: Validate
 
+    env:
+      FORCE_COLOR: 1
+
     runs-on: ubuntu-latest
 
     steps:
