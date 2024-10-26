@@ -16,7 +16,7 @@ PRIVATE_RESOURCES_DIR = os.path.normpath(
 private_json_file_data = []
 if os.path.exists(PRIVATE_RESOURCES_DIR):
     for filename in os.listdir(PRIVATE_RESOURCES_DIR):
-        if filename == ".gitignore":
+        if filename == ".gitignore" or filename.startswith("example-"):
             continue
 
         with open(os.path.join(PRIVATE_RESOURCES_DIR, filename), "r", encoding="utf-8") as f:
@@ -87,7 +87,7 @@ class TestIntegrationJSON(IntegrationTestCase):
     define here the fields and values under the ``Order`` that you want to assert on.
     """
 
-    @parameterized.expand(private_json_file_data)
+    @parameterized.expand(private_json_file_data, skip_on_empty=True)
     def test_json(self, filename, data):
         print(f"Info: Dynamic test is running from JSON file {filename}")
 
