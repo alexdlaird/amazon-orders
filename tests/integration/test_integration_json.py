@@ -23,11 +23,16 @@ if os.path.exists(PRIVATE_RESOURCES_DIR):
             data = json.loads(f.read())
             private_json_file_data.append((filename, data))
 
+env_json_data = []
+if "AMAZON_ORDERS_INTEGRATION_TEST_JSON" in os.environ:
+    data = json.loads(os.environ["AMAZON_ORDERS_INTEGRATION_TEST_JSON"])
+
 
 class TestIntegrationJSON(IntegrationTestCase):
     """
     The two JSON files committed to "private-resources" are provided as examples of the syntax. Any other
-    files created in "private-resources" will be ignored by ``.gitignore``.
+    files created in "private-resources" will be ignored by ``.gitignore``. Alternatively, instead of files,
+    this same JSON syntax can be provided as a list in the environment variable AMAZON_ORDERS_INTEGRATION_TEST_JSON.
 
     The starting JSON of a test description is:
 
@@ -87,7 +92,7 @@ class TestIntegrationJSON(IntegrationTestCase):
     define here the fields and values under the ``Order`` that you want to assert on.
     """
 
-    @parameterized.expand(private_json_file_data, skip_on_empty=True)
+    @parameterized.expand(private_json_file_data + env_json_data, skip_on_empty=True)
     def test_json(self, filename, data):
         print(f"Info: Dynamic test is running from JSON file {filename}")
 
