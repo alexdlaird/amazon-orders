@@ -18,7 +18,7 @@ from amazonorders.entity.shipment import Shipment
 
 logger = logging.getLogger(__name__)
 
-Entity = TypeVar('Entity', bound='Order')
+OrderEntity = TypeVar('OrderEntity', bound='Order')
 
 
 class Order(Parsable):
@@ -30,7 +30,7 @@ class Order(Parsable):
                  parsed: Tag,
                  config: AmazonOrdersConfig,
                  full_details: bool = False,
-                 clone: Optional[Entity] = None) -> None:
+                 clone: Optional[OrderEntity] = None) -> None:
         super().__init__(parsed, config)
 
         #: If the Orders full details were populated from its details page.
@@ -83,13 +83,15 @@ class Order(Parsable):
         return f"Order #{self.order_number}: {self.items}"
 
     def _parse_shipments(self) -> List[Shipment]:
-        shipments = [Shipment(x, self.config) for x in util.select(self.parsed,
-                                                                   self.config.selectors.SHIPMENT_ENTITY_SELECTOR)]
+        shipments: List[Shipment] = [self.config.shipment_class(x, self.config)
+                                     for x in util.select(self.parsed,
+                                                          self.config.selectors.SHIPMENT_ENTITY_SELECTOR)]
         shipments.sort()
         return shipments
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x, self.config) for x in util.select(self.parsed, self.config.selectors.ITEM_ENTITY_SELECTOR)]
+        items = [Item(x, self.config)
+                 for x in util.select(self.parsed, self.config.selectors.ITEM_ENTITY_SELECTOR)]
         items.sort()
         return items
 

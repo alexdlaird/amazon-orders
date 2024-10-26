@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import json
 import os
+import sys
 from datetime import datetime
 
 from parameterized import parameterized
@@ -16,18 +17,32 @@ PRIVATE_RESOURCES_DIR = os.path.normpath(
 private_json_file_data = []
 if os.path.exists(PRIVATE_RESOURCES_DIR):
     for filename in os.listdir(PRIVATE_RESOURCES_DIR):
-        if filename == ".gitignore":
+        if filename == ".gitignore" or filename.startswith("example-"):
             continue
 
         with open(os.path.join(PRIVATE_RESOURCES_DIR, filename), "r", encoding="utf-8") as f:
             data = json.loads(f.read())
             private_json_file_data.append((filename, data))
 
+env_json_data = []
+if "AMAZON_ORDERS_INTEGRATION_TEST_JSON" in os.environ:
+    data = json.loads(os.environ["AMAZON_ORDERS_INTEGRATION_TEST_JSON"])
+    if not isinstance(data, list):
+        print("AMAZON_ORDERS_INTEGRATION_TEST_JSON must be a list of JSON objects")
+
+        sys.exit(1)
+
+    i = 0
+    for test in data:
+        env_json_data.append((f"env_var_test_{i}", test))
+        i += 1
+
 
 class TestIntegrationJSON(IntegrationTestCase):
     """
     The two JSON files committed to "private-resources" are provided as examples of the syntax. Any other
-    files created in "private-resources" will be ignored by ``.gitignore``.
+    files created in "private-resources" will be ignored by ``.gitignore``. Alternatively, instead of files,
+    this same JSON syntax can be provided as a list in the environment variable AMAZON_ORDERS_INTEGRATION_TEST_JSON.
 
     The starting JSON of a test description is:
 
@@ -87,9 +102,9 @@ class TestIntegrationJSON(IntegrationTestCase):
     define here the fields and values under the ``Order`` that you want to assert on.
     """
 
-    @parameterized.expand(private_json_file_data)
-    def test_json(self, filename, data):
-        print(f"Info: Dynamic test is running from JSON file {filename}")
+    @parameterized.expand(private_json_file_data + env_json_data, skip_on_empty=True)
+    def test_json(self, testname, data):
+        print(f"Info: Dynamic test is running from JSON {testname}")
 
         # GIVEN
         func = data.pop("func")
