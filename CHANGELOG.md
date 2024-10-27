@@ -58,9 +58,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- [AmazonOrder.debug](https://amazon-orders.readthedocs.io/en/1.1.2/api.html#amazonorders.orders.AmazonOrders.debug)
+- [AmazonOrder.debug](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.debug)
   defaults to the value
-  of [AmazonSession.debug](https://amazon-orders.readthedocs.io/en/1.1.2/api.html#amazonorders.session.AmazonSession.debug)
+  of [AmazonSession.debug](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.debug)
   if an override is not passed.
 
 ## [1.1.1](https://github.com/alexdlaird/amazon-orders/compare/1.0.16...1.1.1) - 2024-04-09
@@ -145,12 +145,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- [AuthForm](https://amazon-orders.readthedocs.io/en/1.0.9/api.html#amazonorders.forms.AuthForm)'s now
+- [AuthForm](https://amazon-orders.readthedocs.io/api.html#amazonorders.forms.AuthForm)'s now
   passes `captcha_img_url` to its `prompt()` fallback for Captcha, useful for
-  overriding [IODefault](https://amazon-orders.readthedocs.io/en/1.0.9/api.html#amazonorders.session.IODefault).
-- [MfaDeviceSelectForm](https://amazon-orders.readthedocs.io/en/1.0.9/api.html#amazonorders.forms.MfaDeviceSelectForm)
+  overriding [IODefault](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.IODefault).
+- [MfaDeviceSelectForm](https://amazon-orders.readthedocs.io/api.html#amazonorders.forms.MfaDeviceSelectForm)
   now passes `mfa_device_select_choices` to `prompt()`, useful for
-  overrides [IODefault](https://amazon-orders.readthedocs.io/en/1.0.9/api.html#amazonorders.session.IODefault).
+  overrides [IODefault](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.IODefault).
 - Documentation improvements.
 
 ## [1.0.8](https://github.com/alexdlaird/amazon-orders/compare/1.0.7...1.0.8) - 2024-01-30
@@ -163,9 +163,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- [AuthForm](https://amazon-orders.readthedocs.io/en/1.0.7/api.html#amazonorders.forms.AuthForm) abstract class, and
+- [AuthForm](https://amazon-orders.readthedocs.io/api.html#amazonorders.forms.AuthForm) abstract class, and
   migrated all auth flow items to subclasses of this class.
-- [Parsable.simple_parse()](https://amazon-orders.readthedocs.io/en/1.0.7/api.html#amazonorders.entities.parsable.Parsable.simple_parse),
+- [Parsable.simple_parse()](https://amazon-orders.readthedocs.io/api.html#amazonorders.entities.parsable.Parsable.simple_parse),
   which can handle most basic fields when parised with CSS selectors.
 - Stability improvements.
 - Test improvements.
@@ -192,17 +192,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- [Item.image_link](https://amazon-orders.readthedocs.io/en/1.0.5/api.html#amazonorders.entity.item.Item.image_link).
-- [Item.quantity](https://amazon-orders.readthedocs.io/en/1.0.5/api.html#amazonorders.entity.item.Item.quantity).
+- [Item.image_link](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.item.Item.image_link).
+- [Item.quantity](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.item.Item.quantity).
 - `version` command to CLI.
 - Test improvements.
 
 ### Changed
 
 - Migrated to using CSS selectors
-  in [`AmazonSession`](https://amazon-orders.readthedocs.io/en/1.0.5/api.html#amazonorders.session.AmazonSession)
+  in [`AmazonSession`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession)
 - Migrated to using CSS selectors
-  in [`AmazonOrders`](https://amazon-orders.readthedocs.io/en/1.0.5/api.html#amazonorders.orders.AmazonOrders)
+  in [`AmazonOrders`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders)
 
 ## [1.0.4](https://github.com/alexdlaird/amazon-orders/compare/1.0.3...1.0.4) - 2024-01-24
 
@@ -211,13 +211,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - A new OTP auth flow from Amazon that can occur after Captcha.
 - Parameters `--max-auth-attempts` and `--output-dir` to CLI.
 - `DEFAULT_OUTPUT_DIR`, which defaults to `os.getcwd()`, but allows users to change where output files are written.
-- [`Troubleshooting`](https://amazon-orders.readthedocs.io/en/1.0.4/troubleshooting.html) section to the docs.
+- [`Troubleshooting`](https://amazon-orders.readthedocs.io/troubleshooting.html) section to the docs.
 - Test improvements, including the ability to run dynamic tests using private order data from JSON files.
 
 ### Changed
 
 - Improved string representations of entities,
-  including [`Order`](https://amazon-orders.readthedocs.io/en/1.0.4/api.html#amazonorders.entity.order.Order), moved
+  including [`Order`](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order), moved
   string representation of all fields back to `cli.py` out of the `__str__` method.
 - Moved `DEFAULT_COOKIE_JAR_PATH` to `conf.py`.
 
@@ -246,7 +246,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - Auth flow now also checks session cookies in addition to parsing the page for signs of login.
 - All fields to string representation
-  of [`Order`](https://amazon-orders.readthedocs.io/en/1.0.1/api.html#amazonorders.entity.order.Order), so they are not
+  of [`Order`](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order), so they are not
   output on the CLI.
 - `logout` command to CLI.
 - Documentation improvements.
@@ -255,7 +255,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - Improvements to CLI, including error message cleanup on auth exceptions.
-- [`Order.order_details_link`](https://amazon-orders.readthedocs.io/en/1.0.1/api.html#amazonorders.entity.order.Order.order_details_link)
+- [`Order.order_details_link`](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order.order_details_link)
   is now properly populated even on the details page.
 - `.gitattributes` to HTML files are now ignore by Linguist.
 
