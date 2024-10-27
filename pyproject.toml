@@ -102,11 +102,6 @@ max-line-length = 119
 statistics = true
 exclude = "scripts/*,docs/*,venv/*,build/*,dist/*,.egg-info/*,.mypy_cache/*"
 
-[tool.mypy]
-python_version = "3.8"
-
 [[tool.mypy.overrides]]
-module = [
-    "amazoncaptcha.*",
-]
+module = "amazoncaptcha.*"
 ignore_missing_imports = true

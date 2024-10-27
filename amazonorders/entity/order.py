@@ -4,7 +4,7 @@ __license__ = "MIT"
 import json
 import logging
 from datetime import date, datetime
-from typing import List, Optional, TypeVar
+from typing import List, Optional, TypeVar, Union, Any
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
@@ -15,10 +15,11 @@ from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
+from amazonorders.exception import AmazonOrdersError
 
 logger = logging.getLogger(__name__)
 
-Entity = TypeVar('Entity', bound='Order')
+OrderEntity = TypeVar("OrderEntity", bound="Order")
 
 
 class Order(Parsable):
@@ -30,7 +31,7 @@ class Order(Parsable):
                  parsed: Tag,
                  config: AmazonOrdersConfig,
                  full_details: bool = False,
-                 clone: Optional[Entity] = None) -> None:
+                 clone: Optional[OrderEntity] = None) -> None:
         super().__init__(parsed, config)
 
         #: If the Orders full details were populated from its details page.
@@ -83,13 +84,15 @@ class Order(Parsable):
         return f"Order #{self.order_number}: {self.items}"
 
     def _parse_shipments(self) -> List[Shipment]:
-        shipments = [Shipment(x, self.config) for x in util.select(self.parsed,
-                                                                   self.config.selectors.SHIPMENT_ENTITY_SELECTOR)]
+        shipments: List[Shipment] = [self.config.shipment_cls(x, self.config)
+                                     for x in util.select(self.parsed,
+                                                          self.config.selectors.SHIPMENT_ENTITY_SELECTOR)]
         shipments.sort()
         return shipments
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x, self.config) for x in util.select(self.parsed, self.config.selectors.ITEM_ENTITY_SELECTOR)]
+        items = [Item(x, self.config)
+                 for x in util.select(self.parsed, self.config.selectors.ITEM_ENTITY_SELECTOR)]
         items.sort()
         return items
 
@@ -169,7 +172,11 @@ class Order(Parsable):
                 parsed_parent,
                 self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR
             )
-            assert parent_tag is not None
+            if not parent_tag:
+                raise AmazonOrdersError(
+                    "FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR resulted in None, but it's required. "
+                    "Check if Amazon changed the expected HTML."
+                )  # pragma: no cover
 
             value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
 
@@ -288,5 +295,6 @@ class Order(Parsable):
 
         return value
 
-    def _if_full_details(self, value):
+    def _if_full_details(self,
+                         value: Any) -> Union[Any | None]:
         return value if self.full_details else None

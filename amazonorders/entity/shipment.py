@@ -2,7 +2,7 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, TypeVar
 
 from bs4 import Tag
 
@@ -12,6 +12,8 @@ from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 
 logger = logging.getLogger(__name__)
+
+ShipmentEntity = TypeVar("ShipmentEntity", bound="Shipment")
 
 
 class Shipment(Parsable):
@@ -40,7 +42,8 @@ class Shipment(Parsable):
     def __str__(self) -> str:  # pragma: no cover
         return f"Shipment: {self.items}"
 
-    def __lt__(self, other):
+    def __lt__(self,
+               other: ShipmentEntity) -> bool:
         if self.delivery_status:
             return self.delivery_status < str(other.delivery_status if other.delivery_status else "")
         else:

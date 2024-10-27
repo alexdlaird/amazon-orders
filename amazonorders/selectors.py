@@ -38,19 +38,19 @@ class Selectors:
     ##########################################################################
 
     ORDER_HISTORY_ENTITY_SELECTOR = ["div.order", "div.order-card"]
-    ORDER_DETAILS_ENTITY_SELECTOR = "div#orderDetails"
-    ITEM_ENTITY_SELECTOR = ["div:has(> div.yohtmlc-item)", ".item-box"]
-    SHIPMENT_ENTITY_SELECTOR = ["div.shipment", "div.delivery-box"]
+    ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails", "[data-component='orderCard']"]
+    ITEM_ENTITY_SELECTOR = ["div:has(> div.yohtmlc-item)", ".item-box", "[data-component='purchasedItems']"]
+    SHIPMENT_ENTITY_SELECTOR = ["div.shipment", "div.delivery-box", "[data-component='shipments']"]
 
     #####################################
     # CSS selectors for Item fields
     #####################################
 
     FIELD_ITEM_IMG_LINK_SELECTOR = "a img"
-    FIELD_ITEM_QUANTITY_SELECTOR = ["span.item-view-qty", "span.product-image__qty"]
-    FIELD_ITEM_TITLE_SELECTOR = [".yohtmlc-item a", ".yohtmlc-product-title"]
-    FIELD_ITEM_LINK_SELECTOR = [".yohtmlc-item a", "a:has(> .yohtmlc-product-title)"]
-    FIELD_ITEM_TAG_ITERATOR_SELECTOR = ".yohtmlc-item div"
+    FIELD_ITEM_QUANTITY_SELECTOR = ["span.item-view-qty", "span.product-image__qty", "[data-component='itemQuantity']"]
+    FIELD_ITEM_TITLE_SELECTOR = [".yohtmlc-item a", ".yohtmlc-product-title", "[data-component='itemTitle']"]
+    FIELD_ITEM_LINK_SELECTOR = [".yohtmlc-item a", "a:has(> .yohtmlc-product-title)", "[data-component='itemTitle'] a"]
+    FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div", "[data-component='purchasedItemsRightGrid']"]
 
     #####################################
     # CSS selectors for Order fields

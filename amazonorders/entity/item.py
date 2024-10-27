@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import logging
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, TypeVar
 
 from bs4 import Tag
 
@@ -13,6 +13,8 @@ from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.seller import Seller
 
 logger = logging.getLogger(__name__)
+
+ItemEntity = TypeVar("ItemEntity", bound="Item")
 
 
 class Item(Parsable):
@@ -60,7 +62,8 @@ class Item(Parsable):
     def __str__(self) -> str:  # pragma: no cover
         return f"Item: {self.title}"
 
-    def __lt__(self, other):
+    def __lt__(self,
+               other: ItemEntity) -> bool:
         return self.title < other.title
 
     def _parse_return_eligible_date(self) -> Optional[date]:

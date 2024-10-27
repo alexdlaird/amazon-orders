@@ -11,6 +11,7 @@ jobs:
     name: Integration Test
 
     env:
+      FORCE_COLOR: 1
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
       AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
       TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
@@ -33,4 +34,4 @@ jobs:
           timeout_minutes: 15
           retry_wait_seconds: 300
           max_attempts: 3
-          command: USE_TINY_SERVER=True make install test-integration-generic
+          command: USE_TINY_SERVER=True make test-integration

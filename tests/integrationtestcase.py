@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import os
+import sys
 
 from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig
@@ -30,7 +31,10 @@ class IntegrationTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.credentials_found = os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")
+        if not (os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")):
+            print("AMAZON_USERNAME and AMAZON_PASSWORD environment variables must be set to run integration tests")
+
+            sys.exit(1)
 
         twilio_account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
         twilio_auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
@@ -55,6 +59,7 @@ class IntegrationTestCase(TestCase):
 
         cls.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
                                            os.environ.get("AMAZON_PASSWORD"),
+                                           os.environ.get("DEBUG", "False") == "True",
                                            io=io,
                                            config=cls.test_config)
         cls.amazon_session.login()
@@ -62,7 +67,4 @@ class IntegrationTestCase(TestCase):
         cls.amazon_orders = AmazonOrders(cls.amazon_session)
 
     def setUp(self):
-        if not self.credentials_found:
-            self.fail("AMAZON_USERNAME and AMAZON_PASSWORD environment variables not set")
-
         self.assertTrue(self.amazon_session.is_authenticated)

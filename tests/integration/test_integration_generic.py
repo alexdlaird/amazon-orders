@@ -4,6 +4,7 @@ __license__ = "MIT"
 import datetime
 import os
 
+from amazonorders.exception import AmazonOrdersNotFoundError
 from tests.integrationtestcase import IntegrationTestCase
 
 
@@ -48,3 +49,11 @@ class TestIntegrationGeneric(IntegrationTestCase):
 
         # THEN
         self.assert_populated_generic(order, True)
+
+    def test_get_order_does_not_exist(self):
+        # GIVEN
+        order_id = "1234-fake-id"
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersNotFoundError):
+            self.amazon_orders.get_order(order_id)

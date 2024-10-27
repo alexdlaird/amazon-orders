@@ -54,6 +54,7 @@ max_auth_attempts: 10
 order_class: amazonorders.entity.order.Order
 output_dir: {}
 selectors_class: amazonorders.selectors.Selectors
+shipment_class: amazonorders.entity.shipment.Shipment
 """.format(self.test_cookie_jar_path, self.test_output_dir), f.read())
 
     def test_override_default(self):

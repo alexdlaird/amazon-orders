@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import logging
 import re
-from typing import Any, Callable, Optional, Type, Union
+from typing import Any, Callable, Optional, Type, Union, Dict
 
 from bs4 import Tag
 
@@ -28,7 +28,7 @@ class Parsable:
         #: The AmazonOrdersConfig to use.
         self.config: AmazonOrdersConfig = config
 
-    def __getstate__(self):
+    def __getstate__(self) -> Dict:
         state = self.__dict__.copy()
         state.pop("parsed")
         return state
@@ -86,7 +86,7 @@ class Parsable:
         if isinstance(selector, str):
             selector = [selector]
 
-        value = None
+        value: Union[int, float, bool, str, None] = None
 
         for s in selector:
             for tag in self.parsed.select(s):
@@ -126,7 +126,7 @@ class Parsable:
 
     def safe_simple_parse(self,
                           selector: Union[str, list],
-                          **kwargs) -> Any:
+                          **kwargs: Any) -> Any:
         """
         A helper function that uses :func:`simple_parse` as the ``parse_function()`` passed to :func:`safe_parse`.
 
@@ -136,7 +136,8 @@ class Parsable:
         """
         return self.safe_parse(self.simple_parse, selector=selector, **kwargs)
 
-    def with_base_url(self, url):
+    def with_base_url(self,
+                      url: str) -> str:
         """
         If the given URL is relative, the ``BASE_URL`` will be prepended.
 

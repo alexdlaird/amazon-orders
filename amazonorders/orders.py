@@ -114,9 +114,9 @@ class AmazonOrders:
         if not self.amazon_session.last_response.url.startswith(self.config.constants.ORDER_DETAILS_URL):
             raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.")
 
-        order_details_tag = self.amazon_session.last_response_parsed.select_one(
-            self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-        order = self.config.order_cls(order_details_tag, self.config, full_details=True)
+        order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
+                                            self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+        order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True)
 
         return order
 

@@ -2,7 +2,7 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import importlib
-from typing import List, Optional, Union
+from typing import List, Union, Optional, Callable
 
 from bs4 import Tag
 
@@ -38,7 +38,7 @@ def select_one(parsed: Tag, selector: Union[List[str], str]) -> Optional[Tag]:
 
     :param parsed: The ``Tag`` from which to attempt selection.
     :param selector: The CSS selector(s) for the field.
-    :return:
+    :return: The selection tag.
     """
     if isinstance(selector, str):
         selector = [selector]
@@ -81,7 +81,7 @@ def to_type(value: str) -> Union[int, float, bool, str, None]:
     return rv
 
 
-def load_class(package: List, clazz: str):
+def load_class(package: List, clazz: str) -> Callable:
     """
     Import the given class from the given package, and return it.
 

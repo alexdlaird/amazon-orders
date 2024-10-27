@@ -23,7 +23,6 @@ class AmazonOrdersConfig:
     def __init__(self,
                  config_path: Optional[str] = None,
                  data: Optional[Dict[str, Any]] = None) -> None:
-
         #: The path to use for the config file.
         self.config_path: str = os.path.join(DEFAULT_CONFIG_DIR, "config.yml") if config_path is None else config_path
 
@@ -35,6 +34,7 @@ class AmazonOrdersConfig:
             "constants_class": "amazonorders.constants.Constants",
             "selectors_class": "amazonorders.selectors.Selectors",
             "order_class": "amazonorders.entity.order.Order",
+            "shipment_class": "amazonorders.entity.shipment.Shipment",
         }
 
         if os.path.exists(self.config_path):
@@ -61,12 +61,15 @@ class AmazonOrdersConfig:
         constants_class_split = self.constants_class.split(".")
         selectors_class_split = self.selectors_class.split(".")
         order_class_split = self.order_class.split(".")
+        shipment_class_split = self.shipment_class.split(".")
 
         self.constants = util.load_class(constants_class_split[:-1], constants_class_split[-1])()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
+        self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
 
-    def __getattr__(self, key):
+    def __getattr__(self,
+                    key: str) -> Any:
         return self._data[key]
 
     def update_config(self,
