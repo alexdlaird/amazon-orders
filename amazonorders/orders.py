@@ -5,7 +5,7 @@ import datetime
 import logging
 from typing import List, Optional
 
-from amazonorders import constants, util
+from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError
@@ -56,28 +56,30 @@ class AmazonOrders:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         self.amazon_session.get(self.config.constants.ORDER_HISTORY_LANDING_URL)
-        if not self.amazon_session.last_response_parsed.select_one("select[name='timeFilter']"):
-            constants.HISTORY_FILTER_QUERY_PARAM = "orderFilter"
 
         orders = []
         optional_start_index = f"&startIndex={start_index}" if start_index else ""
-        next_page = ("{url}?{query_param}=year-{year}"
-                     "{optional_start_index}").format(url=self.config.constants.ORDER_HISTORY_URL,
-                                                      query_param=self.config.constants.HISTORY_FILTER_QUERY_PARAM,
-                                                      year=year,
-                                                      optional_start_index=optional_start_index)
+        next_page: Optional[str] = (
+            "{url}?{query_param}=year-{year}{optional_start_index}"
+        ).format(
+            url=self.config.constants.ORDER_HISTORY_URL,
+            query_param=self.config.constants.HISTORY_FILTER_QUERY_PARAM,
+            year=year,
+            optional_start_index=optional_start_index
+        )
+
         while next_page:
             self.amazon_session.get(next_page)
             response_parsed = self.amazon_session.last_response_parsed
 
             for order_tag in util.select(response_parsed, self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
-                order = self.config.order_class(order_tag, self.config)
+                order = self.config.order_cls(order_tag, self.config)
 
                 if full_details:
                     self.amazon_session.get(order.order_details_link)
                     order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
                                                         self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-                    order = self.config.order_class(order_details_tag, self.config, full_details=True, clone=order)
+                    order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order)
 
                 orders.append(order)
 
@@ -85,7 +87,7 @@ class AmazonOrders:
             if start_index is None:
                 next_page_tag = util.select_one(response_parsed, self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
-                    next_page = next_page_tag["href"]
+                    next_page = str(next_page_tag["href"])
                     if not next_page.startswith("http"):
                         next_page = f"{self.config.constants.BASE_URL}{next_page}"
                 else:
@@ -112,6 +114,6 @@ class AmazonOrders:
 
         order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
                                             self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-        order: Order = self.config.order_class(order_details_tag, self.config, full_details=True)
+        order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True)
 
         return order

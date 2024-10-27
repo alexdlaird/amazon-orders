@@ -23,8 +23,6 @@ class AmazonOrdersConfig:
     def __init__(self,
                  config_path: Optional[str] = None,
                  data: Optional[Dict[str, Any]] = None) -> None:
-        if not data:
-            data = {}
 
         #: The path to use for the config file.
         self.config_path: str = os.path.join(DEFAULT_CONFIG_DIR, "config.yml") if config_path is None else config_path
@@ -45,11 +43,11 @@ class AmazonOrdersConfig:
                 logger.debug(f"Loading config from {self.config_path} ...")
                 config = yaml.safe_load(config_file)
                 if config is not None:
-                    config.update(data)
+                    config.update(data or {})
                     data = config
 
         # Overload defaults if values passed
-        self._data.update(data)
+        self._data.update(data or {})
 
         # Ensure directories and files exist for config data
         config_dir = os.path.dirname(self.config_path)
@@ -68,8 +66,8 @@ class AmazonOrdersConfig:
 
         self.constants = util.load_class(constants_class_split[:-1], constants_class_split[-1])()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
-        self.order_class = util.load_class(order_class_split[:-1], order_class_split[-1])
-        self.shipment_class = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
+        self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
+        self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
 
     def __getattr__(self, key):
         return self._data[key]
