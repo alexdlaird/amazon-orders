@@ -178,6 +178,46 @@ def order(ctx: Context,
         ctx.fail(str(e))
 
 
+@amazon_orders_cli.command()
+@click.pass_context
+@click.option(
+    "--days",
+    default=365,
+    help="The number of days of transactions to get.",
+)
+def transactions(ctx: Context, **kwargs: Any):
+    """
+    Retrieve Amazon order history for a given year.
+    """
+    amazon_session = ctx.obj["amazon_session"]
+
+    try:
+        _authenticate(amazon_session)
+
+        days = kwargs["days"]
+
+        click.echo(
+            """-----------------------------------------------------------------------
+Transaction History for {days} days
+-----------------------------------------------------------------------\n""".format(
+                days=days
+            )
+        )
+        click.echo("Info: Fetching transaction history, this might take a minute ...")
+
+        amazon_transactions = AmazonOrders(amazon_session, config=ctx.obj["conf"])
+
+        transactions = amazon_transactions.get_transactions(days=days)
+
+        click.echo("... {} transactions parsed.\n".format(len(transactions)))
+
+        for transaction in transactions:
+            click.echo(f"{transaction}\n")
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+
 @amazon_orders_cli.command(short_help="Check if persisted session exists.")
 @click.pass_context
 def check_session(ctx: Context) -> None:
