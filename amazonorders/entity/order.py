@@ -157,7 +157,7 @@ class Order(Parsable):
             value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
             if value:
-                data_popover = value.get("data-a-popover", {})  # type: ignore[arg-type]
+                data_popover = value.get("data-a-popover", {})  # type: ignore[var-annotated]
                 inline_content = data_popover.get("inlineContent")  # type: ignore[union-attr]
                 if inline_content:
                     value = BeautifulSoup(json.loads(inline_content), "html.parser")
