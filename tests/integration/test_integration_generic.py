@@ -23,7 +23,8 @@ class TestIntegrationGeneric(IntegrationTestCase):
 
     def test_get_order_history(self):
         # WHEN
-        orders = self.amazon_orders.get_order_history(year=self.year)
+        orders = self.amazon_orders.get_order_history(year=self.year,
+                                                      start_index=os.environ.get("START_INDEX"))
 
         # THEN
         self.assertGreaterEqual(len(orders), 1)
@@ -31,7 +32,9 @@ class TestIntegrationGeneric(IntegrationTestCase):
 
     def test_get_order_history_full_details(self):
         # WHEN
-        orders = self.amazon_orders.get_order_history(year=self.year, full_details=True)
+        orders = self.amazon_orders.get_order_history(year=self.year,
+                                                      start_index=os.environ.get("START_INDEX"),
+                                                      full_details=True)
 
         # THEN
         self.assertGreaterEqual(len(orders), 1)
@@ -39,7 +42,8 @@ class TestIntegrationGeneric(IntegrationTestCase):
 
     def test_get_order(self):
         # GIVEN
-        orders = self.amazon_orders.get_order_history(year=self.year)
+        orders = self.amazon_orders.get_order_history(year=self.year,
+                                                      start_index=os.environ.get("START_INDEX"))
         self.assertGreaterEqual(len(orders), 1)
         self.assertIsNotNone(orders[0].order_number)
         order_id = orders[0].order_number
