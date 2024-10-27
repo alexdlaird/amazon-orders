@@ -19,7 +19,7 @@ from amazonorders.exception import AmazonOrdersError
 
 logger = logging.getLogger(__name__)
 
-OrderEntity = TypeVar('OrderEntity', bound='Order')
+OrderEntity = TypeVar("OrderEntity", bound="Order")
 
 
 class Order(Parsable):

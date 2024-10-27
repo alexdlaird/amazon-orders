@@ -23,7 +23,6 @@ class AmazonOrdersConfig:
     def __init__(self,
                  config_path: Optional[str] = None,
                  data: Optional[Dict[str, Any]] = None) -> None:
-
         #: The path to use for the config file.
         self.config_path: str = os.path.join(DEFAULT_CONFIG_DIR, "config.yml") if config_path is None else config_path
 

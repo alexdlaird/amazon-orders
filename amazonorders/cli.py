@@ -44,16 +44,16 @@ class IOClick(IODefault):
 
 
 @click.group()
-@click.option('--username', help="An Amazon username.")
-@click.option('--password', help="An Amazon password.")
-@click.option('--debug', is_flag=True, default=False,
+@click.option("--username", help="An Amazon username.")
+@click.option("--password", help="An Amazon password.")
+@click.option("--debug", is_flag=True, default=False,
               help="Enable debugging and send output to "
                    "command line.")
-@click.option('--config-path',
+@click.option("--config-path",
               help="The config path.")
-@click.option('--max-auth-attempts',
+@click.option("--max-auth-attempts",
               help="The max auth loop attempts to make (successes and failures), passing this overrides config value.")
-@click.option('--output-dir',
+@click.option("--output-dir",
               help="The directory where any output files should be produced, passing this overrides config value.")
 @click.pass_context
 def amazon_orders_cli(ctx: Context,
@@ -105,11 +105,11 @@ def amazon_orders_cli(ctx: Context,
 
 @amazon_orders_cli.command()
 @click.pass_context
-@click.option('--year', default=datetime.date.today().year,
+@click.option("--year", default=datetime.date.today().year,
               help="The year for which to get order history, defaults to the current year.")
-@click.option('--start-index',
+@click.option("--start-index",
               help="Retrieve the single page of history at the given index.")
-@click.option('--full-details', is_flag=True, default=False,
+@click.option("--full-details", is_flag=True, default=False,
               help="Retrieve the full details for each order in the history.")
 def history(ctx: Context,
             **kwargs: Any):
