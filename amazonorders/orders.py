@@ -76,6 +76,12 @@ class AmazonOrders:
                 order: Order = self.config.order_cls(order_tag, self.config)
 
                 if full_details:
+                    if not order.order_details_link:
+                        logger.warning(f"order_details_link for Order {order.order_number} did not populate, "
+                                       f"cannot read full details.")
+
+                        continue
+
                     self.amazon_session.get(order.order_details_link)
                     order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
                                                         self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
