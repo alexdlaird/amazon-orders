@@ -79,7 +79,7 @@ class AmazonOrders:
                     self.amazon_session.get(order.order_details_link)
                     order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
                                                         self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-                    order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order)
+                    order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order)
 
                 orders.append(order)
 
