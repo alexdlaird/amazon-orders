@@ -132,7 +132,7 @@ def history(ctx: Context,
 Order History for {year}{optional_start_index}{optional_full_details}
 -----------------------------------------------------------------------\n"""
                    .format(year=year,
-                optional_start_index=optional_start_index,
+                           optional_start_index=optional_start_index,
                            optional_full_details=optional_full_details))
         click.echo("Info: Fetching order history, this might take a minute ...")
 
@@ -192,7 +192,7 @@ def transactions(ctx: Context, **kwargs: Any):
     amazon_session = ctx.obj["amazon_session"]
 
     try:
-        _authenticate(ctx, amazon_session)
+        _authenticate(amazon_session)
 
         days = kwargs["days"]
 
