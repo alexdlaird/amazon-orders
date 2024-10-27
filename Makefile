@@ -55,7 +55,7 @@ check: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev,docs]"; \
-		mypy amazonorders || true; \
+		mypy amazonorders; \
 		flake8; \
 	)
 

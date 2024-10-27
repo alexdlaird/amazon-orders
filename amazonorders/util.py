@@ -2,7 +2,7 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import importlib
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Callable
 
 from bs4 import Tag
 
@@ -81,7 +81,7 @@ def to_type(value: str) -> Union[int, float, bool, str, None]:
     return rv
 
 
-def load_class(package: List, clazz: str):
+def load_class(package: List, clazz: str) -> Callable:
     """
     Import the given class from the given package, and return it.
 

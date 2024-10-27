@@ -14,6 +14,7 @@ from click.core import Context
 
 from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
@@ -30,13 +31,13 @@ class IOClick(IODefault):
     def echo(self,
              msg: str,
              fg: Optional[str] = None,
-             **kwargs: Any):
+             **kwargs: Any) -> None:
         click.secho(msg, fg=fg)
 
     def prompt(self,
                msg: str,
                type: Optional[Any] = None,
-               **kwargs: Any):
+               **kwargs: Any) -> Any:
         for choice in kwargs.get("choices", []):
             self.echo(choice, **kwargs)
 
@@ -57,7 +58,7 @@ class IOClick(IODefault):
               help="The directory where any output files should be produced, passing this overrides config value.")
 @click.pass_context
 def amazon_orders_cli(ctx: Context,
-                      **kwargs: Any):
+                      **kwargs: Any) -> None:
     """
     amazon-orders is an unofficial library that provides a command line interface alongside a programmatic API that
     can be used to interact with Amazon.com's consumer-facing website.
@@ -112,14 +113,14 @@ def amazon_orders_cli(ctx: Context,
 @click.option("--full-details", is_flag=True, default=False,
               help="Retrieve the full details for each order in the history.")
 def history(ctx: Context,
-            **kwargs: Any):
+            **kwargs: Any) -> None:
     """
     Retrieve Amazon order history for a given year.
     """
     amazon_session = ctx.obj["amazon_session"]
 
     try:
-        _authenticate(ctx, amazon_session)
+        _authenticate(amazon_session)
 
         year = kwargs["year"]
         start_index = kwargs["start_index"]
@@ -157,14 +158,14 @@ Order History for {year}{optional_start_index}{optional_full_details}
 @click.pass_context
 @click.argument("order_id")
 def order(ctx: Context,
-          order_id: str):
+          order_id: str) -> None:
     """
     Retrieve the full details for the given Amazon order ID.
     """
     amazon_session = ctx.obj["amazon_session"]
 
     try:
-        _authenticate(ctx, amazon_session)
+        _authenticate(amazon_session)
 
         amazon_orders = AmazonOrders(amazon_session,
                                      config=ctx.obj["conf"])
@@ -179,7 +180,7 @@ def order(ctx: Context,
 
 @amazon_orders_cli.command(short_help="Check if persisted session exists.")
 @click.pass_context
-def check_session(ctx: Context):
+def check_session(ctx: Context) -> None:
     """
     Check if a persisted session exists, meaning commands can be called without needing to provide credentials.
     """
@@ -192,7 +193,7 @@ def check_session(ctx: Context):
 
 @amazon_orders_cli.command()
 @click.pass_context
-def login(ctx: Context):
+def login(ctx: Context) -> None:
     """
     Login to establish an Amazon session and cookies.
     """
@@ -202,14 +203,14 @@ def login(ctx: Context):
         click.echo(
             "Info: A persisted session exists. Call the `logout` command first to change users.\n")
     else:
-        _authenticate(ctx, amazon_session)
+        _authenticate(amazon_session)
 
         click.echo("Info: Successfully logged in to Amazon, session persisted.\n")
 
 
 @amazon_orders_cli.command()
 @click.pass_context
-def logout(ctx: Context):
+def logout(ctx: Context) -> None:
     """
     Logout of existing Amazon sessions and clear cookies.
     """
@@ -225,7 +226,7 @@ def logout(ctx: Context):
 @click.argument("value")
 def update_config(ctx: Context,
                   key: str,
-                  value: str):
+                  value: str) -> None:
     """
     Persist the given config value to the config file.
     """
@@ -238,7 +239,7 @@ def update_config(ctx: Context,
 
 @amazon_orders_cli.command()
 @click.pass_context
-def version(ctx: Context):
+def version(ctx: Context) -> None:
     """
     Show the banner and package version.
     """
@@ -246,12 +247,11 @@ def version(ctx: Context):
     ctx.exit(0)
 
 
-def _print_banner():
+def _print_banner() -> None:
     click.echo(banner.format(version=__version__))
 
 
-def _authenticate(ctx: Context,
-                  amazon_session: AmazonSession):
+def _authenticate(amazon_session: AmazonSession) -> None:
     if amazon_session.auth_cookies_stored():
         if amazon_session.username or amazon_session.password:
             click.echo(
@@ -268,7 +268,7 @@ def _authenticate(ctx: Context,
     amazon_session.login()
 
 
-def _order_output(order):
+def _order_output(order: Order) -> str:
     order_str = """-----------------------------------------------------------------------
 Order #{}
 -----------------------------------------------------------------------""".format(

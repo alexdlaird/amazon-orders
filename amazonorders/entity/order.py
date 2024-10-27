@@ -4,7 +4,7 @@ __license__ = "MIT"
 import json
 import logging
 from datetime import date, datetime
-from typing import List, Optional, TypeVar
+from typing import List, Optional, TypeVar, Union, Any
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
@@ -295,5 +295,6 @@ class Order(Parsable):
 
         return value
 
-    def _if_full_details(self, value):
+    def _if_full_details(self,
+                         value: Any) -> Union[Any | None]:
         return value if self.full_details else None

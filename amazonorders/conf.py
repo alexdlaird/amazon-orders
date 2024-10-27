@@ -68,7 +68,8 @@ class AmazonOrdersConfig:
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
 
-    def __getattr__(self, key):
+    def __getattr__(self,
+                    key: str) -> Any:
         return self._data[key]
 
     def update_config(self,

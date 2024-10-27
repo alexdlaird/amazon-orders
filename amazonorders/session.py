@@ -14,7 +14,7 @@ from requests.utils import dict_from_cookiejar
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError
-from amazonorders.forms import CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm
+from amazonorders.forms import CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm, AuthForm
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class IODefault:
 
     def echo(self,
              msg: str,
-             **kwargs: Any):
+             **kwargs: Any) -> None:
         """
         Echo a message to the console.
 
@@ -40,7 +40,7 @@ class IODefault:
     def prompt(self,
                msg: str,
                type: Optional[Any] = None,
-               **kwargs: Any):
+               **kwargs: Any) -> Any:
         """
         Prompt to the console for user input.
 
@@ -99,7 +99,7 @@ class AmazonSession:
         #: The AmazonOrdersConfig to use.
         self.config: AmazonOrdersConfig = config
         #: The list of known form implementations to use with authentication.
-        self.auth_forms: List = auth_forms
+        self.auth_forms: List[AuthForm] = auth_forms
 
         #: The shared session to be used across all requests.
         self.session: Session = Session()
@@ -162,7 +162,7 @@ class AmazonSession:
 
     def get(self,
             url: str,
-            **kwargs: Any):
+            **kwargs: Any) -> Response:
         """
         Perform a GET request.
 
@@ -173,7 +173,7 @@ class AmazonSession:
         return self.request("GET", url, **kwargs)
 
     def post(self,
-             url,
+             url: str,
              **kwargs: Any) -> Response:
         """
         Perform a POST request.
@@ -184,7 +184,7 @@ class AmazonSession:
         """
         return self.request("POST", url, **kwargs)
 
-    def auth_cookies_stored(self):
+    def auth_cookies_stored(self) -> bool:
         cookies = dict_from_cookiejar(self.session.cookies)
         return cookies.get("session-token") and cookies.get("x-main")
 
@@ -261,7 +261,7 @@ class AmazonSession:
             i += 1
         return filename_frmt.format(page_name=page_name, index=i)
 
-    def _raise_auth_error(self):
+    def _raise_auth_error(self) -> None:
         debug_str = " To capture the page to a file, set the `debug` flag." if not self.debug else ""
         if self.last_response.ok:
             error_msg = (f"An error occurred, this is an unknown page, or its parsed contents don't match a "

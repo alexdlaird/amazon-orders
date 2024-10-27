@@ -10,7 +10,7 @@ class IODefaultWithTextPrompt(IODefault):
     command prompt on ``IODefault`` does.
     """
 
-    def __init__(self, tiny_server, to_phone_number):
+    def __init__(self, tiny_server, to_phone_number) -> None:
         self.tiny_server = tiny_server
         self.to_phone_number = to_phone_number
 
@@ -18,7 +18,7 @@ class IODefaultWithTextPrompt(IODefault):
 
     def prompt(self,
                msg,
-               **kwargs):
+               **kwargs) -> None:
         if "choices" in kwargs:
             msg = "{}\n\n{}".format("\n".join(kwargs.get("choices")), msg)
 
