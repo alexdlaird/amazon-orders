@@ -296,5 +296,5 @@ class Order(Parsable):
         return value
 
     def _if_full_details(self,
-                         value: Any) -> Union[Any | None]:
+                         value: Any) -> Union[Any, None]:
         return value if self.full_details else None
