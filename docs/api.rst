@@ -32,6 +32,16 @@ Configuration
     :private-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.constants
+    :members:
+    :private-members:
+    :show-inheritance:
+
+.. automodule:: amazonorders.selectors
+    :members:
+    :private-members:
+    :show-inheritance:
+
 Entities
 --------
 

@@ -4,16 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/1.1.4...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/2.0.0...HEAD)
+
+## [2.0.0](https://github.com/alexdlaird/amazon-orders/compare/1.1.4...2.0.0) - 2024-10-26
 
 ### Added
 
 - Support for Amazon's new `data-component` tags.
-- Simplified integration tests to more quickly catch regressions.
-- Bug fixes and stability improvements.
-- `order_class` to the config file, which allows `Order` to be extended.
 - `order_class` to the config file, which allows for overriding the `Order` class.
 - `shipment_class` to the config file, which allows for overriding the `Shipment` class.
+- Simplified integration tests to more quickly catch regressions.
+- Bug fixes and stability improvements.
 
 ### Changed
 
