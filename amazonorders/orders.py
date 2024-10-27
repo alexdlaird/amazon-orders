@@ -75,13 +75,13 @@ class AmazonOrders:
             response_parsed = self.amazon_session.last_response_parsed
 
             for order_tag in util.select(response_parsed, self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
-                order = self.config.order_cls(order_tag, self.config)
+                order: Order = self.config.order_cls(order_tag, self.config)
 
                 if full_details:
                     self.amazon_session.get(order.order_details_link)
                     order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
                                                         self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-                    order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order)
+                    order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order)
 
                 orders.append(order)
 

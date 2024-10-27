@@ -14,6 +14,7 @@ jobs:
       FORCE_COLOR: 1
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
       AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
+      START_INDEX: ${{ vars.START_INDEX }}
       TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
       TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
       TWILIO_PHONE_NUMBER: ${{ secrets.TWILIO_PHONE_NUMBER }}

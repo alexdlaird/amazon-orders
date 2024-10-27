@@ -19,7 +19,7 @@ Amazon Orders
 .. image:: https://img.shields.io/github/actions/workflow/status/alexdlaird/amazon-orders/build.yml
    :target: https://github.com/alexdlaird/amazon-orders/actions/workflows/build.yml
 .. image:: https://img.shields.io/readthedocs/amazon-orders
-   :target: https://amazon-orders.readthedocs.io/en/latest
+   :target: https://amazon-orders.readthedocs.io
 .. image:: https://img.shields.io/github/license/alexdlaird/amazon-orders
    :target: https://github.com/alexdlaird/amazon-orders
 

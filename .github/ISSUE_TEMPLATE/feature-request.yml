@@ -18,7 +18,7 @@ body:
       required: true
     - label: I have searched [Issues](issues?q=is%3Aissue) to see if the feature has already been requested
       required: true
-    - label: If relevant, I have [enabled `debug` mode](https://amazon-orders.readthedocs.io/en/latest/troubleshooting.html#enable-debug-mode) and am attaching relevant console logs and HTML files
+    - label: If relevant, I have [enabled `debug` mode](https://amazon-orders.readthedocs.io/troubleshooting.html#enable-debug-mode) and am attaching relevant console logs and HTML files
 
 - type: textarea
   id: describe-the-feature

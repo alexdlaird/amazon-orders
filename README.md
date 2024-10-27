@@ -1,4 +1,4 @@
-<p align="center"><img alt="amazon-orders - a python library" src="https://amazon-orders.readthedocs.io/en/latest/_images/logo.png" /></p>
+<p align="center"><img alt="amazon-orders - a python library" src="https://amazon-orders.readthedocs.io/_images/logo.png" /></p>
 
 [![Version](https://img.shields.io/pypi/v/amazon-orders)](https://pypi.org/project/amazon-orders)
 [![Python Versions](https://img.shields.io/pypi/pyversions/amazon-orders.svg)](https://pypi.org/project/amazon-orders)
@@ -10,9 +10,9 @@
 `amazon-orders` is an unofficial library that provides a command line interface alongside a programmatic API that can
 be used to interact with Amazon.com's consumer-facing website.
 
-This works by parsing website data from Amazon.com. A period build validates functionality to ensure its
+This works by parsing website data from Amazon.com. A periodic build validates functionality to ensure its
 stability, but as Amazon provides no official API to use, this package may break at any time. This
-package only supports the English version of the website.
+package only officially supports the English version of the website.
 
 ## Installation
 
