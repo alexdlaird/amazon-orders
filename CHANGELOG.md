@@ -11,11 +11,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - Support for Amazon's new `data-component` tags.
-- Simplified integration tests to more quickly catch regressions.
-- Bug fixes and stability improvements.
-- `order_class` to the config file, which allows `Order` to be extended.
 - `order_class` to the config file, which allows for overriding the `Order` class.
 - `shipment_class` to the config file, which allows for overriding the `Shipment` class.
+- Simplified integration tests to more quickly catch regressions.
+- Bug fixes and stability improvements.
 
 ### Changed
 
