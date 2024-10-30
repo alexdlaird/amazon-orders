@@ -4,7 +4,7 @@ __license__ = "MIT"
 import json
 import logging
 from datetime import date, datetime
-from typing import List, Optional, TypeVar, Union, Any
+from typing import Any, List, Optional, TypeVar, Union
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
@@ -15,7 +15,6 @@ from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
-from amazonorders.exception import AmazonOrdersError
 
 logger = logging.getLogger(__name__)
 
@@ -150,14 +149,14 @@ class Order(Parsable):
 
         return value
 
-    def _parse_recipient(self) -> Recipient:
+    def _parse_recipient(self) -> Optional[Recipient]:
         value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_SELECTOR)
 
         if not value:
             value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
             if value:
-                data_popover = value.get("data-a-popover", {})  # type: ignore[var-annotated]
+                data_popover = value.get("data-a-popover", {})  # type: ignore[arg-type]
                 inline_content = data_popover.get("inlineContent")  # type: ignore[union-attr]
                 if inline_content:
                     value = BeautifulSoup(json.loads(inline_content), "html.parser")
@@ -175,6 +174,9 @@ class Order(Parsable):
 
             if parent_tag:
                 value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
+
+        if not value:
+            return None
 
         return Recipient(value, self.config)
 
