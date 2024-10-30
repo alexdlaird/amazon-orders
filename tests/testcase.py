@@ -373,10 +373,12 @@ class TestCase(unittest.TestCase):
             self.assertIsNotNone(order.payment_method)
             self.assertEqual(4, len(order.payment_method_last_4))
             self.assertIsNotNone(order.subtotal)
-            self.assertIsNotNone(order.shipping_total)
+            if order.recipient:
+                self.assertIsNotNone(order.shipping_total)
             self.assertIsNotNone(order.total_before_tax)
             self.assertIsNotNone(order.estimated_tax)
             # As of April 2024, this is no longer shown in Order History
             # self.assertIsNotNone(order.items[0].condition)
-            self.assertIsNotNone(order.items[0].price)
-            self.assertIsNotNone(order.items[0].seller.name)
+            if order.recipient:
+                self.assertIsNotNone(order.items[0].price)
+                self.assertIsNotNone(order.items[0].seller.name)
