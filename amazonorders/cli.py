@@ -278,7 +278,11 @@ Order #{}
     order_str += f"\n  Order Details Link: {order.order_details_link}"
     order_str += f"\n  Grand Total: ${order.grand_total:,.2f}"
     order_str += f"\n  Order Placed Date: {order.order_placed_date}"
-    order_str += f"\n  {order.recipient}"
+    if order.recipient:
+        order_str += f"\n  {order.recipient}"
+    else:
+        order_str += "\n  Recipient: None"
+
     if order.payment_method:
         order_str += f"\n  Payment Method: {order.payment_method}"
     if order.payment_method_last_4:

@@ -5,7 +5,6 @@ import json
 import logging
 from datetime import date, datetime
 from typing import Any, List, Optional, TypeVar, Union
-from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
@@ -41,7 +40,9 @@ class Order(Parsable):
         #: The Order Items.
         self.items: List[Item] = clone.items if clone and not full_details else self._parse_items()
         #: The Order number.
-        self.order_number: str = clone.order_number if clone else self.safe_parse(self._parse_order_number)
+        self.order_number: str = clone.order_number if clone else self.safe_simple_parse(
+            selector=self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR,
+            required=True)
         #: The Order details link.
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
             self._parse_order_details_link)
@@ -100,21 +101,6 @@ class Order(Parsable):
 
         if not value and self.order_number:
             value = f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
-
-        return value
-
-    def _parse_order_number(self) -> str:
-        try:
-            order_details_link = self._parse_order_details_link()
-        except Exception:
-            # We're not using safe_parse here because it's fine if this fails, no need for noise
-            order_details_link = None
-
-        if order_details_link:
-            parsed_url = urlparse(order_details_link)
-            value = parse_qs(parsed_url.query)["orderID"][0]
-        else:
-            value = self.simple_parse(self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR, required=True)
 
         return value
 
