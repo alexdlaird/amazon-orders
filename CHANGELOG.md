@@ -10,7 +10,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-Build and stability improvements.
+- Support for Amazon's new `data-component` tag on order subtotals.
+- Build and stability improvements.
 
 ### Fixed
 

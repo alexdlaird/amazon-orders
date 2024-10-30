@@ -61,7 +61,7 @@ class Selectors:
                                         "div.a-span3"]
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
-    FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = "div#od-subtotals div.a-row"
+    FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["div#od-subtotals div.a-row", "[data-component='orderSubtotals']"]
     FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR = "div.a-span-last"
     FIELD_ORDER_ADDRESS_SELECTOR = "div.displayAddressDiv"
     FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR = "div.recipient span.a-declarative"

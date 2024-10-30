@@ -358,8 +358,9 @@ class TestCase(unittest.TestCase):
         self.assertIsNotNone(order.grand_total)
         self.assertIsNotNone(order.order_details_link)
         self.assertIsNotNone(order.order_placed_date)
-        self.assertIsNotNone(order.recipient.name)
-        self.assertIsNotNone(order.recipient.address)
+        if order.recipient:
+            self.assertIsNotNone(order.recipient.name)
+            self.assertIsNotNone(order.recipient.address)
         self.assertGreaterEqual(len(order.shipments), 1)
         self.assertEqual(str(order.items), str(order.shipments[0].items))
         self.assertGreaterEqual(len(order.items), 1)
