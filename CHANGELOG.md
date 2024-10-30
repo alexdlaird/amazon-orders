@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- `item_class` to the config file, which allows for overriding the `Item` class.
 - Support for Amazon's new `data-component` tag on order subtotals.
 - Build and stability improvements.
 

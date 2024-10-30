@@ -50,6 +50,11 @@ class Shipment(Parsable):
             return str(self.items) < str(other.items)
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x, self.config) for x in util.select(self.parsed, self.config.selectors.ITEM_ENTITY_SELECTOR)]
+        if not self.parsed:
+            return []
+
+        items: List[Item] = [self.config.item_cls(x, self.config)
+                             for x in util.select(self.parsed,
+                                                  self.config.selectors.ITEM_ENTITY_SELECTOR)]
         items.sort()
         return items

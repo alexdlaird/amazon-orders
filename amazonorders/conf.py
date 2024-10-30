@@ -35,6 +35,7 @@ class AmazonOrdersConfig:
             "selectors_class": "amazonorders.selectors.Selectors",
             "order_class": "amazonorders.entity.order.Order",
             "shipment_class": "amazonorders.entity.shipment.Shipment",
+            "item_class": "amazonorders.entity.item.Item",
         }
 
         if os.path.exists(self.config_path):
@@ -62,11 +63,13 @@ class AmazonOrdersConfig:
         selectors_class_split = self.selectors_class.split(".")
         order_class_split = self.order_class.split(".")
         shipment_class_split = self.shipment_class.split(".")
+        item_class_split = self.item_class.split(".")
 
         self.constants = util.load_class(constants_class_split[:-1], constants_class_split[-1])()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
+        self.item_cls = util.load_class(item_class_split[:-1], item_class_split[-1])
 
     def __getattr__(self,
                     key: str) -> Any:
