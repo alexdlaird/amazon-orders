@@ -172,13 +172,9 @@ class Order(Parsable):
                 parsed_parent,
                 self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR
             )
-            if not parent_tag:
-                raise AmazonOrdersError(
-                    "FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR resulted in None, but it's required. "
-                    "Check if Amazon changed the expected HTML."
-                )  # pragma: no cover
 
-            value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
+            if parent_tag:
+                value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
 
         return Recipient(value, self.config)
 

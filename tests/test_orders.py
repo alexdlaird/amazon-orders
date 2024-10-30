@@ -204,7 +204,8 @@ class TestOrders(UnitTestCase):
     @responses.activate
     def test_temp_order_history_file(self):
         """
-        This test
+        This test can be used to drop in an order history page at tests/output/temp-order-history.html to easily
+        run a test against it for debugging purposes.
         """
         # GIVEN
         self.amazon_session.is_authenticated = True
@@ -239,6 +240,10 @@ class TestOrders(UnitTestCase):
                             "place it at tests/output/temp-order-details.html")
     @responses.activate
     def test_temp_order_details_file(self):
+        """
+        This test can be used to drop in an order details page at tests/output/temp-order-details.html to easily
+        run a test against it for debugging purposes.
+        """
         # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "temp-1234"
