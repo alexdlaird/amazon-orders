@@ -36,7 +36,7 @@ class Selectors:
     ##########################################################################
 
     ORDER_HISTORY_ENTITY_SELECTOR = ["div.order", "div.order-card"]
-    ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails", "[data-component='orderCard']"]
+    ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails", "div#ordersContainer", "[data-component='orderCard']"]
     ITEM_ENTITY_SELECTOR = ["div:has(> div.yohtmlc-item)", ".item-box", "[data-component='purchasedItems']"]
     SHIPMENT_ENTITY_SELECTOR = ["div.shipment", "div.delivery-box", "[data-component='shipments']"]
 

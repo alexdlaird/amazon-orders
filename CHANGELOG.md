@@ -18,6 +18,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - The return value of `Order._parse_recipient()` is now optional, so parsing doesn't break digital goods without a shipping address.
 - Redundant order ID logic to parse from the URI, simplified to consistently fetch from page.
+- Support for order details selector on Amazon's legacy digital orders page.
 
 ## [2.0.1](https://github.com/alexdlaird/amazon-orders/compare/2.0.0...2.0.1) - 2024-10-27
 
