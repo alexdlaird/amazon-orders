@@ -3,6 +3,19 @@ name: Integration Test
 on:
   workflow_call:
   workflow_dispatch:
+    inputs:
+      AMAZON_USERNAME:
+        type: string
+        description: Amazon username of account to run tests against
+        default: ${{ secrets.AMAZON_USERNAME }}
+      AMAZON_PASSWORD:
+        type: string
+        description: Amazon password of account to run tests against
+        default: ${{ secrets.AMAZON_PASSWORD }}
+      TO_PHONE_NUMBER:
+        type: string
+        description: Phone number to which 2FA login codes will be sent
+        default: ${{ secrets.TO_PHONE_NUMBER }}
   schedule:
     - cron: "0 17 * * 1"
 
@@ -12,13 +25,13 @@ jobs:
 
     env:
       FORCE_COLOR: 1
-      AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
-      AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
+      AMAZON_USERNAME: ${{ inputs.AMAZON_USERNAME }}
+      AMAZON_PASSWORD: ${{ inputs.AMAZON_PASSWORD }}
       START_INDEX_FULL_HISTORY: ${{ vars.START_INDEX_FULL_HISTORY }}
       TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
       TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
       TWILIO_PHONE_NUMBER: ${{ secrets.TWILIO_PHONE_NUMBER }}
-      TO_PHONE_NUMBER: ${{ secrets.TO_PHONE_NUMBER }}
+      TO_PHONE_NUMBER: ${{ inputs.TO_PHONE_NUMBER }}
       NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
 
     runs-on: ubuntu-latest
