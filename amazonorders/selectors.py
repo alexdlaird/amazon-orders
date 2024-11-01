@@ -3,6 +3,16 @@ __license__ = "MIT"
 
 
 class Selectors:
+    """
+    A class containing CSS selectors. Extend and override with `selectors_class` in the config:
+
+    .. code-block:: python
+
+        from amazonorders.conf import AmazonOrdersConfig
+
+        config = AmazonOrdersConfig(data={"selectors_class": "my_module.MyConstants"})
+    """
+
     ##########################################################################
     # CSS selectors for AuthForms
     ##########################################################################

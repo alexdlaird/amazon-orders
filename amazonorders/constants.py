@@ -5,6 +5,16 @@ import os
 
 
 class Constants:
+    """
+    A class containing useful constants. Extend and override with `constants_class` in the config:
+
+    .. code-block:: python
+
+        from amazonorders.conf import AmazonOrdersConfig
+
+        config = AmazonOrdersConfig(data={"constants_class": "my_module.MyConstants"})
+    """
+
     ##########################################################################
     # General URL
     ##########################################################################

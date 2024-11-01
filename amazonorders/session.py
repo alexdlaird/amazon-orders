@@ -98,7 +98,8 @@ class AmazonSession:
         self.io: IODefault = io
         #: The AmazonOrdersConfig to use.
         self.config: AmazonOrdersConfig = config
-        #: The list of known form implementations to use with authentication.
+        #: The list of form implementations to use with authentication. If a value is passed for this when
+        #: instantiating an AmazonSession, ensure that list is populated with the default form implementations.
         self.auth_forms: List[AuthForm] = auth_forms
 
         #: The shared session to be used across all requests.
