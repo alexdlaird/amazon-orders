@@ -2,9 +2,12 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import importlib
+import logging
 from typing import List, Union, Optional, Callable
 
 from bs4 import Tag
+
+logger = logging.getLogger(__name__)
 
 
 def select(parsed: Tag, selector: Union[List[str], str]) -> List[Tag]:

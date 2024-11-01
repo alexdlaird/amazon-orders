@@ -6,6 +6,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/2.0.2...HEAD)
 
+## [2.0.3](https://github.com/alexdlaird/amazon-orders/compare/2.0.2...2.0.3) - 2024-11-01
+
+### Added
+
+- Further support for Amazon's new `data-component` tag on order price, seller, and return eligibility, and fixing an issue with `Shipment` parsing.
+- [`Parsable.to_date()`](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.parsable.Parsable.to_date) attempts multiple date formats.
+
+### Fixed
+
+- An issue with `Shipment`s parsing with Amazon's new `data-component`.
+
 ## [2.0.2](https://github.com/alexdlaird/amazon-orders/compare/2.0.1...2.0.2) - 2024-10-30
 
 ### Added

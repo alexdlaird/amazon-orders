@@ -2,7 +2,7 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import logging
-from datetime import date, datetime
+from datetime import date
 from typing import Optional, TypeVar
 
 from bs4 import Tag
@@ -35,11 +35,11 @@ class Item(Parsable):
                                                 link=True, required=True)
         #: The Item price.
         self.price: Optional[float] = self.to_currency(
-            self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_TAG_ITERATOR_SELECTOR,
+            self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_PRICE_SELECTOR,
                                    prefix_split="$"))
         #: The Item Seller.
         self.seller: Optional[Seller] = self.safe_simple_parse(
-            selector=self.config.selectors.FIELD_ITEM_TAG_ITERATOR_SELECTOR,
+            selector=self.config.selectors.FIELD_ITEM_SELLER_SELECTOR,
             text_contains="Sold by:",
             wrap_tag=Seller)
         #: The Item condition.
@@ -69,7 +69,7 @@ class Item(Parsable):
     def _parse_return_eligible_date(self) -> Optional[date]:
         value = None
 
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ITEM_TAG_ITERATOR_SELECTOR):
+        for tag in util.select(self.parsed, self.config.selectors.FIELD_ITEM_RETURN_SELECTOR):
             if "Return" in tag.text:
                 tag_str = tag.text.strip()
                 split_str = "through "
@@ -77,6 +77,7 @@ class Item(Parsable):
                     split_str = "closed on "
                 if split_str in tag_str:
                     date_str = tag_str.split(split_str)[1]
-                    value = datetime.strptime(date_str, "%b %d, %Y").date()
+                    value = self.to_date(date_str)
+                    break
 
         return value

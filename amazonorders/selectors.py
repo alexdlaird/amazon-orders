@@ -38,7 +38,8 @@ class Selectors:
     ORDER_HISTORY_ENTITY_SELECTOR = ["div.order", "div.order-card"]
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails", "div#ordersContainer", "[data-component='orderCard']"]
     ITEM_ENTITY_SELECTOR = ["div:has(> div.yohtmlc-item)", ".item-box", "[data-component='purchasedItems']"]
-    SHIPMENT_ENTITY_SELECTOR = ["div.shipment", "div.delivery-box", "[data-component='shipments']"]
+    SHIPMENT_ENTITY_SELECTOR = ["div.shipment", "div.delivery-box",
+                                "[data-component='orderCard'] [data-component='shipments']"]
 
     #####################################
     # CSS selectors for Item fields
@@ -48,7 +49,10 @@ class Selectors:
     FIELD_ITEM_QUANTITY_SELECTOR = ["span.item-view-qty", "span.product-image__qty", "[data-component='itemQuantity']"]
     FIELD_ITEM_TITLE_SELECTOR = [".yohtmlc-item a", ".yohtmlc-product-title", "[data-component='itemTitle']"]
     FIELD_ITEM_LINK_SELECTOR = [".yohtmlc-item a", "a:has(> .yohtmlc-product-title)", "[data-component='itemTitle'] a"]
-    FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div", "[data-component='purchasedItemsRightGrid']"]
+    FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div"]
+    FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
+    FIELD_ITEM_SELLER_SELECTOR = ["[data-component='orderedMerchantName']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
+    FIELD_ITEM_RETURN_SELECTOR = ["[data-component='itemReturnEligibility']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
 
     #####################################
     # CSS selectors for Order fields

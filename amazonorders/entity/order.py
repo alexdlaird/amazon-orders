@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import json
 import logging
-from datetime import date, datetime
+from datetime import date
 from typing import Any, List, Optional, TypeVar, Union
 
 from bs4 import BeautifulSoup, Tag
@@ -137,8 +137,8 @@ class Order(Parsable):
         else:
             split_str = "Order placed"
 
-        value = value.split(split_str)[1].strip()
-        value = datetime.strptime(value, "%B %d, %Y").date()
+        date_str = value.split(split_str)[1].strip()
+        value = self.to_date(date_str)
 
         return value
 
@@ -149,7 +149,7 @@ class Order(Parsable):
             value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
             if value:
-                data_popover = value.get("data-a-popover", {})  # type: ignore[arg-type]
+                data_popover = value.get("data-a-popover", {})  # type: ignore[arg-type, var-annotated]
                 inline_content = data_popover.get("inlineContent")  # type: ignore[union-attr]
                 if inline_content:
                     value = BeautifulSoup(json.loads(inline_content), "html.parser")
@@ -272,7 +272,7 @@ class Order(Parsable):
 
         if value:
             date_str = value.split("-")[0].strip()
-            value = datetime.strptime(date_str, "%B %d, %Y").date()
+            value = self.to_date(date_str)
 
         return value
 
@@ -282,7 +282,7 @@ class Order(Parsable):
 
         if value:
             date_str = value.split("-")[0].strip()
-            value = datetime.strptime(date_str, "%B %d, %Y").date()
+            value = self.to_date(date_str)
 
         return value
 
