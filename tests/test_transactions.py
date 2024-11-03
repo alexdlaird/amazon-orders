@@ -1,14 +1,57 @@
 __copyright__ = "Copyright (c) 2024 Jeff Sawatzky"
 __license__ = "MIT"
 
+import os
 
+import responses
 from bs4 import BeautifulSoup
+from freezegun import freeze_time
 
-from amazonorders.lib.transactions import parse_transaction_form_tag
+from amazonorders.session import AmazonSession
+from amazonorders.transactions import AmazonTransactions, _parse_transaction_form_tag
 from tests.unittestcase import UnitTestCase
 
 
-class TestTransactions(UnitTestCase):
+class TestOrders(UnitTestCase):
+    temp_order_history_file_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), "output", "temp-order-history.html"
+    )
+    temp_order_details_file_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), "output", "temp-order-details.html"
+    )
+
+    def setUp(self):
+        super().setUp()
+
+        self.amazon_session = AmazonSession(
+            "some-username", "some-password", config=self.test_config
+        )
+
+        self.amazon_transactions = AmazonTransactions(self.amazon_session)
+
+    @freeze_time("2024-10-11")
+    @responses.activate
+    def test_transactions_command(self):
+        # GIVEN
+        days = 1
+        self.amazon_session.is_authenticated = True
+        with open(
+            os.path.join(self.RESOURCES_DIR, "get-transactions.html"),
+            "r",
+            encoding="utf-8",
+        ) as f:
+            responses.add(
+                responses.GET,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        transactions = self.amazon_transactions.get_transactions(days=days)
+
+        # THEN
+        self.assertEqual(1, len(transactions))
 
     def test_parse_transaction_form_tag(self):
         # GIVEN
@@ -16,11 +59,15 @@ class TestTransactions(UnitTestCase):
         form_tag = parsed.select_one("form")
 
         # WHEN
-        transactions, next_page_url, next_page_data = parse_transaction_form_tag(form_tag, self.test_config)
+        transactions, next_page_url, next_page_data = _parse_transaction_form_tag(
+            form_tag, self.test_config
+        )
 
         # THEN
         self.assertEqual(len(transactions), 2)
-        self.assertEqual(next_page_url, "https://www.amazon.com:443/cpe/yourpayments/transactions")
+        self.assertEqual(
+            next_page_url, "https://www.amazon.com:443/cpe/yourpayments/transactions"
+        )
         self.assertEqual(
             next_page_data,
             {

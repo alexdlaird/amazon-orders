@@ -48,6 +48,7 @@ class TestTransaction(UnitTestCase):
         self.assertEqual(transaction.completed_date, date(2024, 1, 1))
         self.assertEqual(transaction.payment_method, "My Payment Method")
         self.assertEqual(transaction.order_number, "123-4567890-1234567")
+        self.assertEqual(transaction.order_details_link, "https://www.amazon.com/gp/css/summary/edit.html?orderID=123-4567890-1234567")  # noqa
         self.assertEqual(transaction.seller, "AMZN Mktp COM")
         self.assertEqual(transaction.grand_total, -12.34)
         self.assertEqual(transaction.is_refund, False)
@@ -94,6 +95,7 @@ class TestTransaction(UnitTestCase):
         self.assertEqual(transaction.completed_date, date(2024, 1, 1))
         self.assertEqual(transaction.payment_method, "My Payment Method")
         self.assertEqual(transaction.order_number, "123-4567890-1234567")
+        self.assertEqual(transaction.order_details_link, "https://www.amazon.com/gp/css/summary/edit.html?orderID=123-4567890-1234567")  # noqa
         self.assertEqual(transaction.seller, "AMZN Mktp COM")
         self.assertEqual(transaction.grand_total, 12.34)
         self.assertEqual(transaction.is_refund, True)

@@ -1,8 +1,6 @@
 __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
-from amazonorders.constants import Constants
-
 
 class Selectors:
     """
@@ -117,7 +115,7 @@ class Selectors:
     # CSS selectors for Transaction fields
     #####################################
 
-    TRANSACTION_HISTORY_FORM_SELECTOR = f"form[method='post'][action$='{Constants.TRANSACTION_HISTORY_LANDING_ROUTE}']"
+    TRANSACTION_HISTORY_FORM_SELECTOR = "form:has(input[name='ppw-widgetState'])"
     TRANSACTION_DATE_CONTAINERS_SELECTOR = "div.apx-transaction-date-container"
     TRANSACTIONS_CONTAINER_SELECTOR = "div"
     TRANSACTIONS_SELECTOR = "div.apx-transactions-line-item-component-container"
@@ -136,6 +134,9 @@ class Selectors:
         "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base-plus"
     )
     FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR = (
+        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal"
+    )
+    FIELD_TRANSACTION_ORDER_LINK_SELECTOR = (
         "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal"
     )
     FIELD_TRANSACTION_SELLER_NAME_SELECTOR = (

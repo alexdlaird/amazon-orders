@@ -5,7 +5,6 @@ import os
 import unittest
 
 import responses
-from freezegun import freeze_time
 
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
@@ -379,23 +378,3 @@ class TestOrders(UnitTestCase):
         self.assertIsNotNone(order.items[0].link)
         self.assertIsNotNone(order.items[0].price)
         self.assertTrue(len(order.shipments) > 0)
-
-    @freeze_time("2024-10-11")
-    @responses.activate
-    def test_transactions_command(self):
-        # GIVEN
-        days = 1
-        self.amazon_session.is_authenticated = True
-        with open(os.path.join(self.RESOURCES_DIR, "get-transactions.html"), "r", encoding="utf-8") as f:
-            responses.add(
-                responses.GET,
-                f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
-                body=f.read(),
-                status=200,
-            )
-
-        # WHEN
-        transactions = self.amazon_orders.get_transactions(days=days)
-
-        # THEN
-        self.assertEqual(1, len(transactions))

@@ -18,6 +18,7 @@ from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
+from amazonorders.transactions import AmazonTransactions
 
 logger = logging.getLogger("amazonorders")
 
@@ -205,7 +206,7 @@ Transaction History for {days} days
         )
         click.echo("Info: Fetching transaction history, this might take a minute ...")
 
-        amazon_transactions = AmazonOrders(amazon_session, config=ctx.obj["conf"])
+        amazon_transactions = AmazonTransactions(amazon_session, config=ctx.obj["conf"])
 
         transactions = amazon_transactions.get_transactions(days=days)
 
