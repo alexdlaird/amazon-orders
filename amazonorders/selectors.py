@@ -80,6 +80,7 @@ class Selectors:
     FIELD_ORDER_ADDRESS_SELECTOR = "div.displayAddressDiv"
     FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR = "div.recipient span.a-declarative"
     FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR = "script[id^='shipToData']"
+    FIELD_ORDER_GIFT_CARD_INSTANCE_SELECTOR = ".gift-card-instance"
 
     #####################################
     # CSS selectors for Shipment fields

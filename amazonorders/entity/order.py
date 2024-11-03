@@ -139,6 +139,10 @@ class Order(Parsable):
         return value
 
     def _parse_recipient(self) -> Optional[Recipient]:
+        # At least for now, we don't populate Recipient data for digital orders
+        if util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_GIFT_CARD_INSTANCE_SELECTOR):
+            return None
+
         value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_SELECTOR)
 
         if not value:

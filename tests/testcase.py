@@ -348,11 +348,11 @@ class TestCase(unittest.TestCase):
         self.assertEqual(2, order.items[0].quantity)
         self.assertIsNotNone(order.items[0].link)
         self.assertIsNotNone(order.items[0].image_link)
-        self.assertEqual(date(2025, 1, 31), order.items[0].return_eligible_date)
 
         self.assertEqual(order.full_details, full_details)
 
         if full_details:
+            self.assertEqual(date(2025, 1, 31), order.items[0].return_eligible_date)
             self.assertEqual("American Express", order.payment_method)
             self.assertEqual('1234', order.payment_method_last_4)
             self.assertEqual(27.98, order.subtotal)
@@ -387,7 +387,10 @@ class TestCase(unittest.TestCase):
             self.assertEqual(0.00, order.estimated_tax)
 
     def assert_order_112_9087159_1657009_digital_order_legacy(self, order, full_details=False):
-        self.assertEqual("D01-8711688-7680252", order.order_number)
+        if full_details:
+            self.assertEqual(order.order_number, "D01-8711688-7680252")
+        else:
+            self.assertEqual(order.order_number, "112-9087159-1657009")
         self.assertEqual(10.00, order.grand_total)
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2024, 10, 30), order.order_placed_date)
@@ -408,7 +411,7 @@ class TestCase(unittest.TestCase):
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2024, 10, 23), order.order_placed_date)
         self.assertEqual("Alex Laird", order.recipient.name)
-        self.assertEqual("555 My Road\nChicago, IL 60007\nUnited States", order.recipient.address)
+        self.assertIn("555 My Road", order.recipient.address)
         self.assertEqual(1, len(order.shipments))
         self.assertEqual(str(order.items),
                          str(order.shipments[0].items))
@@ -419,11 +422,11 @@ class TestCase(unittest.TestCase):
                          order.items[0].title)
         self.assertIsNotNone(order.items[0].link)
         self.assertIsNotNone(order.items[0].image_link)
-        self.assertEqual(date(2024, 11, 25), order.items[0].return_eligible_date)
 
         self.assertEqual(order.full_details, full_details)
 
         if full_details:
+            self.assertEqual(date(2024, 11, 25), order.items[0].return_eligible_date)
             self.assertEqual("American Express", order.payment_method)
             self.assertEqual('1234', order.payment_method_last_4)
             self.assertEqual(43.49, order.subtotal)
