@@ -4,7 +4,55 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/2.0.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.0.0...HEAD)
+
+## [3.0.0](https://github.com/alexdlaird/amazon-orders/compare/2.0.3...3.0.0) - 2024-11-03
+
+### Added
+
+- Retry support to CLI when stale session fails to authenticate the first time.
+- Improvements to exception messages on auth failures.
+- Documentation improvements.
+
+### Fixed
+
+- Several parsing issues with the implementation of Amazon's new `data-component` tag.
+
+### Removed
+
+- `Order.order_shipped_date`, this cannot be consistently parsed from Amazon.
+- `Order.refund_completed_date`, this cannot be consistently parsed from Amazon.
+
+## [2.0.3](https://github.com/alexdlaird/amazon-orders/compare/2.0.2...2.0.3) - 2024-11-01
+
+### Added
+
+- Further support for Amazon's new `data-component` tag on order price, seller, and return eligibility, and fixing an issue with `Shipment` parsing.
+- [`Parsable.to_date()`](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.parsable.Parsable.to_date) attempts multiple date formats.
+
+### Fixed
+
+- An issue with `Shipment`s parsing with Amazon's new `data-component`.
+
+## [2.0.2](https://github.com/alexdlaird/amazon-orders/compare/2.0.1...2.0.2) - 2024-10-30
+
+### Added
+
+- `item_class` to the config file, which allows for overriding the `Item` class.
+- Support for Amazon's new `data-component` tag on order subtotals.
+- Build and stability improvements.
+
+### Fixed
+
+- The return value of `Order._parse_recipient()` is now optional, so parsing doesn't break digital goods without a shipping address.
+- Redundant order ID logic to parse from the URI, simplified to consistently fetch from page.
+- Support for order details selector on Amazon's legacy digital orders page.
+
+## [2.0.1](https://github.com/alexdlaird/amazon-orders/compare/2.0.0...2.0.1) - 2024-10-27
+
+### Added
+
+Build and stability improvements.
 
 ## [2.0.0](https://github.com/alexdlaird/amazon-orders/compare/1.1.4...2.0.0) - 2024-10-26
 
@@ -18,11 +66,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- Removed global constants in `amazonorders.constants`. Now `amazonorders.constants.Constants` and `amazonorders.selectors.Selectors` classes are used, can be overridden with `constants_class` and `selectors_class` in the config file.
+- Removed global constants in `amazonorders.constants`. Now [`amazonorders.constants.Constants`](https://amazon-orders.readthedocs.io/api.html#amazonorders.constants.Constants) and [`amazonorders.selectors.Selectors`](https://amazon-orders.readthedocs.io/api.html#amazonorders.selectors.Selectors) classes are used, can be overridden with `constants_class` and `selectors_class` in the config file.
 
 ### Removed
 
-- `session.AUTH_FORMS`. Pass `auth_forms` when instantiating `AmazonSession` instead.
+- `session.AUTH_FORMS`. Pass [`auth_forms` when instantiating `AmazonSession`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession) instead.
 
 ## [1.1.4](https://github.com/alexdlaird/amazon-orders/compare/1.1.3...1.1.4) - 2024-06-07
 

@@ -5,6 +5,16 @@ import os
 
 
 class Constants:
+    """
+    A class containing useful constants. Extend and override with `constants_class` in the config:
+
+    .. code-block:: python
+
+        from amazonorders.conf import AmazonOrdersConfig
+
+        config = AmazonOrdersConfig(data={"constants_class": "my_module.MyConstants"})
+    """
+
     ##########################################################################
     # General URL
     ##########################################################################
@@ -62,3 +72,9 @@ class Constants:
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/120.0.0.0 Safari/537.36",
     }
+
+    ##########################################################################
+    # Formats
+    ##########################################################################
+
+    VALID_DATE_FORMATS = ["%b %d, %Y", "%B %d, %Y"]

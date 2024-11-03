@@ -36,9 +36,6 @@ class TestCase(unittest.TestCase):
             self.assertIsNone(order.subscription_discount)
             self.assertEqual(30.99, order.total_before_tax)
             self.assertEqual(3.02, order.estimated_tax)
-            self.assertEqual(date(2018, 12, 28), order.order_shipped_date)
-            # As of April 2024, this is no longer shown in Order History
-            # self.assertEqual("New", order.items[0].condition)
             self.assertEqual(30.99, order.items[0].price)
             self.assertEqual("Amazon.com Services, Inc",
                              order.items[0].seller.name)
@@ -73,9 +70,6 @@ class TestCase(unittest.TestCase):
             self.assertEqual(-5.83, order.subscription_discount)
             self.assertEqual(33.01, order.total_before_tax)
             self.assertEqual(2.89, order.estimated_tax)
-            self.assertEqual(date(2020, 10, 28), order.order_shipped_date)
-            # As of April 2024, this is no longer shown in Order History
-            # self.assertEqual("New", order.items[0].condition)
             self.assertEqual(38.84, order.items[0].price)
             self.assertEqual("Amazon.com Services, Inc",
                              order.items[0].seller.name)
@@ -111,10 +105,6 @@ class TestCase(unittest.TestCase):
             self.assertEqual(69.99, order.total_before_tax)
             self.assertEqual(6.12, order.estimated_tax)
             self.assertEqual(76.11, order.refund_total)
-            self.assertEqual(date(2020, 10, 19), order.order_shipped_date)
-            self.assertTrue(date(2020, 11, 2), order.refund_completed_date)
-            # As of April 2024, this is no longer shown in Order History
-            # self.assertEqual("New", order.items[0].condition)
             self.assertEqual(69.99, order.items[0].price)
             self.assertEqual("Amazon.com Services, Inc",
                              order.items[0].seller.name)
@@ -184,12 +174,7 @@ class TestCase(unittest.TestCase):
             self.assertIsNone(order.subscription_discount)
             self.assertEqual(43.23, order.total_before_tax)
             self.assertEqual(3.38, order.estimated_tax)
-            self.assertEqual(date(2023, 12, 7), order.order_shipped_date)
-            # As of April 2024, this is no longer shown in Order History
-            # self.assertEqual("New", order.items[0].condition)
             self.assertEqual(14.99, order.items[0].price)
-            # As of April 2024, this is no longer shown in Order History
-            # self.assertEqual("New", order.items[1].condition)
             self.assertEqual(28.24, order.items[1].price)
             found_cadeya = False
             found_amazon = False
@@ -266,12 +251,7 @@ class TestCase(unittest.TestCase):
             self.assertIsNone(order.subscription_discount)
             self.assertEqual(42.29, order.total_before_tax)
             self.assertEqual(2.96, order.estimated_tax)
-            self.assertEqual(date(2024, 5, 16), order.order_shipped_date)
-            # As of April 2024, this is no longer shown in Order History
-            # self.assertEqual("New", order.items[0].condition)
             self.assertEqual(12.30, order.items[0].price)
-            # As of April 2024, this is no longer shown in Order History
-            # self.assertEqual("New", order.items[1].condition)
             self.assertEqual(29.99, order.items[1].price)
             found_kimoe = False
             found_amazon = False
@@ -330,22 +310,17 @@ class TestCase(unittest.TestCase):
             self.assertIsNone(order.subscription_discount)
             self.assertEqual(26.48, order.total_before_tax)
             self.assertEqual(2.32, order.estimated_tax)
-            self.assertEqual(date(2020, 10, 27), order.order_shipped_date)
             found_aa = False
             found_aaa = False
             for item in order.items:
                 if "AAA" in item.title:
                     found_aa = True
-                    # As of April 2024, this is no longer shown in Order History
-                    # self.assertEqual("New", item.condition)
                     self.assertEqual(10.99, item.price)
                     self.assertEqual("Amazon.com Services, Inc",
                                      item.seller.name)
                     self.assertIsNone(item.seller.link)
                 else:
                     found_aaa = True
-                    # As of April 2024, this is no longer shown in Order History
-                    # self.assertEqual("New", item.condition)
                     self.assertEqual(15.49, item.price)
                     self.assertEqual("Amazon.com Services, Inc",
                                      item.seller.name)
@@ -353,15 +328,127 @@ class TestCase(unittest.TestCase):
             self.assertTrue(found_aa)
             self.assertTrue(found_aaa)
 
+    def assert_order_112_5939971_8962610_data_component(self, order, full_details=False):
+        self.assertEqual("112-5939971-8962610", order.order_number)
+        self.assertEqual(28.50, order.grand_total)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2024, 11, 1), order.order_placed_date)
+        self.assertEqual("Alex Laird", order.recipient.name)
+        self.assertIn("555 My Road", order.recipient.address)
+        self.assertEqual(1, len(order.shipments))
+        self.assertEqual(str(order.items),
+                         str(order.shipments[0].items))
+        self.assertIsNotNone(order.shipments[0].tracking_link)
+        self.assertEqual("Delivered November 2", order.shipments[0].delivery_status)
+        self.assertEqual(1, len(order.items))
+        self.assertEqual("2 Set Replacement Parts Roller Brushes Compatible for iRobot Roomba E I and J Series, "
+                         "Brush Replacement for iRobot Roomba i3 i3+ i6 i6+ i7 i7+ i8 i8+Plus E5 E6 E7 j7 j7+ evo "
+                         "Vacuum Cleaner Accessories",
+                         order.items[0].title)
+        self.assertEqual(2, order.items[0].quantity)
+        self.assertIsNotNone(order.items[0].link)
+        self.assertIsNotNone(order.items[0].image_link)
+
+        self.assertEqual(order.full_details, full_details)
+
+        if full_details:
+            self.assertEqual(date(2025, 1, 31), order.items[0].return_eligible_date)
+            self.assertEqual("American Express", order.payment_method)
+            self.assertEqual('1234', order.payment_method_last_4)
+            self.assertEqual(27.98, order.subtotal)
+            self.assertEqual(0.00, order.shipping_total)
+            self.assertEqual(26.58, order.total_before_tax)
+            self.assertEqual(1.92, order.estimated_tax)
+            self.assertEqual(13.99, order.items[0].price)
+            self.assertEqual("xianbaikeshang",
+                             order.items[0].seller.name)
+            self.assertIsNotNone(order.items[0].seller.link)
+
+    def assert_order_112_4482432_2955442_gift_card(self, order, full_details=False):
+        self.assertEqual("112-4482432-2955442", order.order_number)
+        self.assertEqual(10.00, order.grand_total)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2024, 10, 30), order.order_placed_date)
+        self.assertIsNone(order.recipient)
+        self.assertEqual(0, len(order.shipments))
+        self.assertEqual(1, len(order.items))
+        self.assertEqual("Amazon eGift Card - Amazon Logo (Animated)",
+                         order.items[0].title)
+        self.assertIsNotNone(order.items[0].link)
+        self.assertIsNotNone(order.items[0].image_link)
+
+        self.assertEqual(order.full_details, full_details)
+
+        if full_details:
+            self.assertEqual("American Express", order.payment_method)
+            self.assertEqual('1234', order.payment_method_last_4)
+            self.assertEqual(10.00, order.subtotal)
+            self.assertEqual(10.00, order.total_before_tax)
+            self.assertEqual(0.00, order.estimated_tax)
+
+    def assert_order_112_9087159_1657009_digital_order_legacy(self, order, full_details=False):
+        if full_details:
+            self.assertEqual(order.order_number, "D01-8711688-7680252")
+        else:
+            self.assertEqual(order.order_number, "112-9087159-1657009")
+        self.assertEqual(10.00, order.grand_total)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2024, 10, 30), order.order_placed_date)
+        self.assertEqual(0, len(order.shipments))
+        self.assertEqual(1, len(order.items))
+        self.assertEqual("$10 -PlayStation Store Gift Card [Digital Code]",
+                         order.items[0].title)
+        self.assertIsNotNone(order.items[0].link)
+        self.assertIsNotNone(order.items[0].image_link)
+
+        self.assertEqual(order.full_details, full_details)
+
+        # We cannot parse full details for digital orders, so nothing to assert
+
+    def assert_order_114_8722141_6545058_data_component_subscription(self, order, full_details=False):
+        self.assertEqual("114-8722141-6545058", order.order_number)
+        self.assertEqual(44.46, order.grand_total)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2024, 10, 23), order.order_placed_date)
+        self.assertEqual("Alex Laird", order.recipient.name)
+        self.assertIn("555 My Road", order.recipient.address)
+        self.assertEqual(1, len(order.shipments))
+        self.assertEqual(str(order.items),
+                         str(order.shipments[0].items))
+        self.assertIsNotNone(order.shipments[0].tracking_link)
+        self.assertEqual("Delivered October 26", order.shipments[0].delivery_status)
+        self.assertEqual(1, len(order.items))
+        self.assertEqual("Bounty Paper Towels Quick Size, White, 16 Family Rolls = 40 Regular Rolls",
+                         order.items[0].title)
+        self.assertIsNotNone(order.items[0].link)
+        self.assertIsNotNone(order.items[0].image_link)
+
+        self.assertEqual(order.full_details, full_details)
+
+        if full_details:
+            self.assertEqual(date(2024, 11, 25), order.items[0].return_eligible_date)
+            self.assertEqual("American Express", order.payment_method)
+            self.assertEqual('1234', order.payment_method_last_4)
+            self.assertEqual(43.49, order.subtotal)
+            self.assertEqual(0.00, order.shipping_total)
+            self.assertEqual(-2.17, order.subscription_discount)
+            self.assertEqual(41.32, order.total_before_tax)
+            self.assertEqual(3.14, order.estimated_tax)
+            self.assertEqual(43.49, order.items[0].price)
+            self.assertEqual("Amazon.com",
+                             order.items[0].seller.name)
+            self.assertIsNone(order.items[0].seller.link)
+
     def assert_populated_generic(self, order, full_details):
         self.assertIsNotNone(order.order_number)
         self.assertIsNotNone(order.grand_total)
         self.assertIsNotNone(order.order_details_link)
         self.assertIsNotNone(order.order_placed_date)
-        self.assertIsNotNone(order.recipient.name)
-        self.assertIsNotNone(order.recipient.address)
-        self.assertGreaterEqual(len(order.shipments), 1)
-        self.assertEqual(str(order.items), str(order.shipments[0].items))
+        if order.recipient:
+            self.assertIsNotNone(order.recipient.name)
+            self.assertIsNotNone(order.recipient.address)
+            self.assertGreaterEqual(len(order.shipments), 1)
+            self.assertEqual(str(order.items), str(order.shipments[0].items))
         self.assertGreaterEqual(len(order.items), 1)
         self.assertIsNotNone(order.items[0].title)
         self.assertIsNotNone(order.items[0].link)
@@ -372,10 +459,10 @@ class TestCase(unittest.TestCase):
             self.assertIsNotNone(order.payment_method)
             self.assertEqual(4, len(order.payment_method_last_4))
             self.assertIsNotNone(order.subtotal)
-            self.assertIsNotNone(order.shipping_total)
+            if order.recipient:
+                self.assertIsNotNone(order.shipping_total)
             self.assertIsNotNone(order.total_before_tax)
             self.assertIsNotNone(order.estimated_tax)
-            # As of April 2024, this is no longer shown in Order History
-            # self.assertIsNotNone(order.items[0].condition)
-            self.assertIsNotNone(order.items[0].price)
-            self.assertIsNotNone(order.items[0].seller.name)
+            if order.recipient:
+                self.assertIsNotNone(order.items[0].price)
+                self.assertIsNotNone(order.items[0].seller.name)

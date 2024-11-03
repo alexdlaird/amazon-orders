@@ -15,7 +15,7 @@ from click.core import Context
 from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
 
@@ -291,21 +291,34 @@ def _print_banner() -> None:
     click.echo(banner.format(version=__version__))
 
 
-def _authenticate(amazon_session: AmazonSession) -> None:
-    if amazon_session.auth_cookies_stored():
-        if amazon_session.username or amazon_session.password:
-            click.echo(
-                "Info: The --username and --password flags are ignored because a previous session "
-                "still exists. If you would like to reauthenticate, call the `logout` command "
-                "first.\n")
-    else:
-        if not amazon_session.username:
-            amazon_session.username = click.prompt("Username")
-        if not amazon_session.password:
-            amazon_session.password = click.prompt("Password", hide_input=True)
-            click.echo("")
+def _authenticate(amazon_session: AmazonSession,
+                  retries: int = 0) -> None:
+    try:
+        if amazon_session.auth_cookies_stored():
+            if amazon_session.username or amazon_session.password:
+                click.echo(
+                    "Info: The --username and --password flags are ignored because a previous session "
+                    "still exists. If you would like to reauthenticate, call the `logout` command "
+                    "first.\n")
+        else:
+            if not amazon_session.username:
+                amazon_session.username = click.prompt("Username")
+            if not amazon_session.password:
+                amazon_session.password = click.prompt("Password", hide_input=True)
+                click.echo("")
 
-    amazon_session.login()
+        amazon_session.login()
+    except AmazonOrdersAuthError as e:
+        if retries < 1:
+            if amazon_session.username:
+                click.echo(
+                    f"Info: Authenticating '{amazon_session.username}' failed, retrying ...\n")
+
+            amazon_session.password = None
+
+            _authenticate(amazon_session, retries=retries + 1)
+        else:
+            raise e
 
 
 def _order_output(order: Order) -> str:
@@ -318,7 +331,11 @@ Order #{}
     order_str += f"\n  Order Details Link: {order.order_details_link}"
     order_str += f"\n  Grand Total: ${order.grand_total:,.2f}"
     order_str += f"\n  Order Placed Date: {order.order_placed_date}"
-    order_str += f"\n  {order.recipient}"
+    if order.recipient:
+        order_str += f"\n  {order.recipient}"
+    else:
+        order_str += "\n  Recipient: None"
+
     if order.payment_method:
         order_str += f"\n  Payment Method: {order.payment_method}"
     if order.payment_method_last_4:
@@ -335,10 +352,6 @@ Order #{}
         order_str += f"\n  Estimated Tax: ${order.estimated_tax:,.2f}"
     if order.refund_total:
         order_str += f"\n  Refund Total: ${order.refund_total:,.2f}"
-    if order.order_shipped_date:
-        order_str += f"\n  Order Shipped Date: {order.order_shipped_date}"
-    if order.refund_completed_date:
-        order_str += f"\n  Refund Completed Date: {order.refund_completed_date}"
 
     order_str += "\n-----------------------------------------------------------------------"
 

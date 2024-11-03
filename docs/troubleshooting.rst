@@ -51,8 +51,7 @@ To see what the effected page looks like, `enable debug mode`_, then rerun your 
 ``debug`` mode saves parsed HTML files locally for you so you can inspect the DOM and compare it to
 the parsing code within ``amazon-orders``. This may give you some insight in to what changed.
 In ``amazon-orders``, look for code that uses `BeautifulSoup's CSS select() methods <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_.
-CSS selector strings used by ``amazon-orders`` are defined in variables in :class:`~amazonorders.selectors.Selectors`
-and can be easily overridden.
+CSS selector strings used by ``amazon-orders`` are defined in variables in :class:`~amazonorders.selectors.Selectors`.
 
 If you identify the issue, please `submit a bug report <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_.
 If you're able to resolve the issue, please `also submit a PR <https://github.com/alexdlaird/amazon-orders/compare>`_
@@ -72,8 +71,8 @@ and inspect.
 
 Have a look at the HTML source of the new page, specifically the ``<form>`` tag, and look in ``forms.py`` to see how
 other auth forms are implemented. You'll need to create a new class that inherits from
-:class:`~amazonorders.forms.AuthForm`, override :func:`~amazonorders.forms.AuthForm.fill_form`, and add your new form's
-class to the ``list`` ``session.AUTH_FORMS``.
+:class:`~amazonorders.forms.AuthForm`, override :func:`~amazonorders.forms.AuthForm.fill_form`, and manually pass
+a list to :func:`~amazonorders.session.AmazonSession.auth_forms` that includes the new form.
 
 Once you've implemented and tested the new form, `submit a PR <https://github.com/alexdlaird/amazon-orders/compare>`_
 for maximum karma!

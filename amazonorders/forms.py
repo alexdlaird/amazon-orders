@@ -196,7 +196,8 @@ class SignInForm(AuthForm):
         super().fill_form()
         if not self.data:
             raise AmazonOrdersError(
-                "AuthForm did not populate. Check if Amazon changed the expected HTML."
+                "SignInForm data did not populate, but it's required. "
+                "Check if Amazon changed their login flow."
             )  # pragma: no cover
 
         additional_attrs.update({self.solution_attr_key: self.amazon_session.username,
@@ -236,7 +237,8 @@ class MfaDeviceSelectForm(AuthForm):
         super().fill_form()
         if not self.data:
             raise AmazonOrdersError(
-                "AuthForm did not populate. Check if Amazon changed the expected HTML."
+                "MfaDeviceSelectForm data did not populate, but it's required. "
+                "Check if Amazon changed their MFA flow."
             )  # pragma: no cover
 
         contexts = util.select(self.form, self.config.selectors.MFA_DEVICE_SELECT_INPUT_SELECTOR)
@@ -281,8 +283,8 @@ class MfaForm(AuthForm):
         super().fill_form()
         if not self.data:
             raise AmazonOrdersError(
-                "AuthForm did not populate, but it's required. "
-                "Check if Amazon changed the expected HTML."
+                "MfaForm data did not populate, but it's required. "
+                "Check if Amazon changed their MFA flow."
             )  # pragma: no cover
 
         otp = self.amazon_session.io.prompt("Enter the one-time passcode sent to your device")
@@ -320,22 +322,23 @@ class CaptchaForm(AuthForm):
         super().fill_form(additional_attrs)
         if not self.data:
             raise AmazonOrdersError(
-                "AuthForm did not populate. Check if Amazon changed the expected HTML."
+                "CaptchaForm data did not populate, but it's required. "
+                "Check if Amazon changed their Captcha flow."
             )  # pragma: no cover
 
         # TODO: eliminate the use of find_parent() here
         form_parent = self.form.find_parent()
         if not form_parent:
             raise AmazonOrdersError(
-                "AuthForm parent not found, but it's required. "
-                "Check if Amazon changed the expected HTML."
+                "CaptchaForm parent not found, but it's required. "
+                "Check if Amazon changed their Captcha flow."
             )  # pragma: no cover
 
         img_tag = form_parent.select_one("img")
         if not img_tag:
             raise AmazonOrdersError(
-                "AuthForm <img> tag not found, but it's required. "
-                "Check if Amazon changed the expected HTML."
+                "CaptchaForm <img> tag not found, but it's required. "
+                "Check if Amazon changed their Captcha flow."
             )  # pragma: no cover
 
         img_url = str(img_tag["src"])

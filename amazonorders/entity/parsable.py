@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 import re
+from datetime import datetime, date
 from typing import Any, Callable, Optional, Type, Union, Dict
 
 from bs4 import Tag
@@ -170,3 +171,26 @@ class Parsable:
             return None
 
         return currency
+
+    def to_date(self,
+                date_str: str) -> Optional[date]:
+        """
+        Return the given date string as a date object.
+
+        :param date_str: The date string to parse to a date object.
+        :return: The parsed date.
+        """
+        value = None
+
+        for fmt in self.config.constants.VALID_DATE_FORMATS:
+            try:
+                value = datetime.strptime(date_str, fmt).date()
+            except ValueError:
+                pass
+
+        if value is None:
+            logger.warning(
+                f"ValueError: time data '{date_str}' does not match any format in "
+                f"{self.config.constants.VALID_DATE_FORMATS}")
+
+        return value

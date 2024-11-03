@@ -3,9 +3,8 @@ __license__ = "MIT"
 
 import json
 import logging
-from datetime import date, datetime
-from typing import List, Optional, TypeVar, Union, Any
-from urllib.parse import parse_qs, urlparse
+from datetime import date
+from typing import Any, List, Optional, TypeVar, Union
 
 from bs4 import BeautifulSoup, Tag
 
@@ -15,7 +14,6 @@ from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
-from amazonorders.exception import AmazonOrdersError
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +40,9 @@ class Order(Parsable):
         #: The Order Items.
         self.items: List[Item] = clone.items if clone and not full_details else self._parse_items()
         #: The Order number.
-        self.order_number: str = clone.order_number if clone else self.safe_parse(self._parse_order_number)
+        self.order_number: str = clone.order_number if clone else self.safe_simple_parse(
+            selector=self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR,
+            required=True)
         #: The Order details link.
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
             self._parse_order_details_link)
@@ -72,10 +72,6 @@ class Order(Parsable):
         self.estimated_tax: Optional[float] = self._if_full_details(self._parse_estimated_tax())
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
         self.refund_total: Optional[float] = self._if_full_details(self._parse_refund_total())
-        #: The Order shipped date. Only populated when ``full_details`` is ``True``.
-        self.order_shipped_date: Optional[date] = self._if_full_details(self._parse_order_shipping_date())
-        #: The Order refund total. Only populated when ``full_details`` is ``True``.
-        self.refund_completed_date: Optional[date] = self._if_full_details(self._parse_refund_completed_date())
 
     def __repr__(self) -> str:
         return f"<Order #{self.order_number}: \"{self.items}\">"
@@ -84,6 +80,9 @@ class Order(Parsable):
         return f"Order #{self.order_number}: {self.items}"
 
     def _parse_shipments(self) -> List[Shipment]:
+        if not self.parsed:
+            return []
+
         shipments: List[Shipment] = [self.config.shipment_cls(x, self.config)
                                      for x in util.select(self.parsed,
                                                           self.config.selectors.SHIPMENT_ENTITY_SELECTOR)]
@@ -91,8 +90,12 @@ class Order(Parsable):
         return shipments
 
     def _parse_items(self) -> List[Item]:
-        items = [Item(x, self.config)
-                 for x in util.select(self.parsed, self.config.selectors.ITEM_ENTITY_SELECTOR)]
+        if not self.parsed:
+            return []
+
+        items: List[Item] = [self.config.item_cls(x, self.config)
+                             for x in util.select(self.parsed,
+                                                  self.config.selectors.ITEM_ENTITY_SELECTOR)]
         items.sort()
         return items
 
@@ -101,21 +104,6 @@ class Order(Parsable):
 
         if not value and self.order_number:
             value = f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
-
-        return value
-
-    def _parse_order_number(self) -> str:
-        try:
-            order_details_link = self._parse_order_details_link()
-        except Exception:
-            # We're not using safe_parse here because it's fine if this fails, no need for noise
-            order_details_link = None
-
-        if order_details_link:
-            parsed_url = urlparse(order_details_link)
-            value = parse_qs(parsed_url.query)["orderID"][0]
-        else:
-            value = self.simple_parse(self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR, required=True)
 
         return value
 
@@ -145,19 +133,23 @@ class Order(Parsable):
         else:
             split_str = "Order placed"
 
-        value = value.split(split_str)[1].strip()
-        value = datetime.strptime(value, "%B %d, %Y").date()
+        date_str = value.split(split_str)[1].strip()
+        value = self.to_date(date_str)
 
         return value
 
-    def _parse_recipient(self) -> Recipient:
+    def _parse_recipient(self) -> Optional[Recipient]:
+        # At least for now, we don't populate Recipient data for digital orders
+        if util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_GIFT_CARD_INSTANCE_SELECTOR):
+            return None
+
         value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_SELECTOR)
 
         if not value:
             value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
             if value:
-                data_popover = value.get("data-a-popover", {})  # type: ignore[var-annotated]
+                data_popover = value.get("data-a-popover", {})  # type: ignore[arg-type, var-annotated]
                 inline_content = data_popover.get("inlineContent")  # type: ignore[union-attr]
                 if inline_content:
                     value = BeautifulSoup(json.loads(inline_content), "html.parser")
@@ -172,13 +164,12 @@ class Order(Parsable):
                 parsed_parent,
                 self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR
             )
-            if not parent_tag:
-                raise AmazonOrdersError(
-                    "FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR resulted in None, but it's required. "
-                    "Check if Amazon changed the expected HTML."
-                )  # pragma: no cover
 
-            value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
+            if parent_tag:
+                value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
+
+        if not value:
+            return None
 
         return Recipient(value, self.config)
 
@@ -272,26 +263,6 @@ class Order(Parsable):
                 if inner_tag:
                     value = self.to_currency(inner_tag.text)
                     break
-
-        return value
-
-    def _parse_order_shipping_date(self) -> Optional[date]:
-        value = self.simple_parse(self.config.selectors.FIELD_ORDER_SHIPPED_DATE_SELECTOR,
-                                  prefix_split="Items shipped:")
-
-        if value:
-            date_str = value.split("-")[0].strip()
-            value = datetime.strptime(date_str, "%B %d, %Y").date()
-
-        return value
-
-    def _parse_refund_completed_date(self) -> Optional[date]:
-        value = self.simple_parse(self.config.selectors.FIELD_ORDER_REFUND_COMPLETED_DATE,
-                                  prefix_split="Refund: Completed")
-
-        if value:
-            date_str = value.split("-")[0].strip()
-            value = datetime.strptime(date_str, "%B %d, %Y").date()
 
         return value
 

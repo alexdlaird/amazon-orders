@@ -50,6 +50,7 @@ class TestConf(TestCase):
         with open(config.config_path, "r") as f:
             self.assertEqual("""constants_class: amazonorders.constants.Constants
 cookie_jar_path: {}
+item_class: amazonorders.entity.item.Item
 max_auth_attempts: 10
 order_class: amazonorders.entity.order.Order
 output_dir: {}
