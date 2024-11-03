@@ -270,8 +270,9 @@ def _authenticate(amazon_session: AmazonSession,
         amazon_session.login()
     except AmazonOrdersAuthError as e:
         if retries < 1:
-            click.echo(
-                f"Info: Authentication '{amazon_session.username}' failed, retrying ...\n")
+            if amazon_session.username:
+                click.echo(
+                    f"Info: Authenticating '{amazon_session.username}' failed, retrying ...\n")
 
             amazon_session.password = None
 
@@ -311,10 +312,6 @@ Order #{}
         order_str += f"\n  Estimated Tax: ${order.estimated_tax:,.2f}"
     if order.refund_total:
         order_str += f"\n  Refund Total: ${order.refund_total:,.2f}"
-    if order.order_shipped_date:
-        order_str += f"\n  Order Shipped Date: {order.order_shipped_date}"
-    if order.refund_completed_date:
-        order_str += f"\n  Refund Completed Date: {order.refund_completed_date}"
 
     order_str += "\n-----------------------------------------------------------------------"
 

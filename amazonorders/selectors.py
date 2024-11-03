@@ -45,8 +45,8 @@ class Selectors:
     # is passed.
     ##########################################################################
 
-    ORDER_HISTORY_ENTITY_SELECTOR = ["div.order", "div.order-card"]
-    ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails", "div#ordersContainer", "[data-component='orderCard']"]
+    ORDER_HISTORY_ENTITY_SELECTOR = ["div.order-card", "div.order"]
+    ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails", "div#ordersContainer"]
     ITEM_ENTITY_SELECTOR = ["div:has(> div.yohtmlc-item)", ".item-box", "[data-component='purchasedItems']"]
     SHIPMENT_ENTITY_SELECTOR = ["div.shipment", "div.delivery-box",
                                 "[data-component='orderCard'] [data-component='shipments']"]
@@ -56,12 +56,12 @@ class Selectors:
     #####################################
 
     FIELD_ITEM_IMG_LINK_SELECTOR = "a img"
-    FIELD_ITEM_QUANTITY_SELECTOR = ["span.item-view-qty", "span.product-image__qty", "[data-component='itemQuantity']"]
-    FIELD_ITEM_TITLE_SELECTOR = [".yohtmlc-item a", ".yohtmlc-product-title", "[data-component='itemTitle']"]
-    FIELD_ITEM_LINK_SELECTOR = [".yohtmlc-item a", "a:has(> .yohtmlc-product-title)", "[data-component='itemTitle'] a"]
+    FIELD_ITEM_QUANTITY_SELECTOR = [".od-item-view-qty", "span.item-view-qty", "span.product-image__qty"]
+    FIELD_ITEM_TITLE_SELECTOR = ["[data-component='itemTitle']", ".yohtmlc-item a", ".yohtmlc-product-title"]
+    FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a", ".yohtmlc-item a", "a:has(> .yohtmlc-product-title)"]
     FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div"]
     FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
-    FIELD_ITEM_SELLER_SELECTOR = ["[data-component='orderedMerchantName']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
+    FIELD_ITEM_SELLER_SELECTOR = ["[data-component='orderedMerchant']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
     FIELD_ITEM_RETURN_SELECTOR = ["[data-component='itemReturnEligibility']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
 
     #####################################
@@ -69,27 +69,27 @@ class Selectors:
     #####################################
 
     FIELD_ORDER_DETAILS_LINK_SELECTOR = "a.yohtmlc-order-details-link"
-    FIELD_ORDER_NUMBER_SELECTOR = ["bdi[dir='ltr']", "span[dir='ltr']"]
+    FIELD_ORDER_NUMBER_SELECTOR = [".order-date-invoice-item bdi[dir='ltr']", "bdi[dir='ltr']", "span[dir='ltr']"]
     FIELD_ORDER_GRAND_TOTAL_SELECTOR = ["div.yohtmlc-order-total span.value", "div.order-header div.a-column.a-span2"]
-    FIELD_ORDER_PLACED_DATE_SELECTOR = ["span.order-date-invoice-item",
-                                        "div.a-span3"]
+    FIELD_ORDER_PLACED_DATE_SELECTOR = ["span.order-date-invoice-item", "div.a-span3"]
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
-    FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["div#od-subtotals div.a-row", "[data-component='orderSubtotals']"]
+    FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["[data-component='orderSubtotals'] div.a-row",
+                                                   "div#od-subtotals div.a-row"]
     FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR = "div.a-span-last"
     FIELD_ORDER_ADDRESS_SELECTOR = "div.displayAddressDiv"
     FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR = "div.recipient span.a-declarative"
     FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR = "script[id^='shipToData']"
-    FIELD_ORDER_SHIPPED_DATE_SELECTOR = "#orderDetails div.a-box.a-last div div div.a-row:not(.a-color-success)"
-    FIELD_ORDER_REFUND_COMPLETED_DATE = "#orderDetails div.a-box.a-last div div div.a-row.a-color-success"
 
     #####################################
     # CSS selectors for Shipment fields
     #####################################
 
-    FIELD_SHIPMENT_TRACKING_LINK_SELECTOR = "span.track-package-button a"
+    FIELD_SHIPMENT_TRACKING_LINK_SELECTOR = ["span.track-package-button a", "a[href*='ship-track?itemId=']"]
     FIELD_SHIPMENT_DELIVERY_STATUS_SELECTOR = ["div.js-shipment-info-container div.a-row",
-                                               "span.delivery-box__primary-text"]
+                                               "span.delivery-box__primary-text",
+                                               ".yohtmlc-shipment-status-primaryText",
+                                               ".od-status-message"]
 
     #####################################
     # CSS selectors for Recipient fields

@@ -52,6 +52,33 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
 
     @responses.activate
+    def test_get_order_history_2024_data_component(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2024
+        start_index = 0
+        resp1 = self.given_order_history_landing_exists()
+        resp2 = self.given_order_history_exists(year, start_index)
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+        # THEN
+        # Giving start_index=0 means we only got the first page, so just 10 results
+        self.assertEqual(10, len(orders))
+        # TODO: these assertions work from order details but not from history, troubleshoot
+        # Regular order with new `data-component` fields
+        # self.assert_order_112_5939971_8962610_data_component(orders[0], False)
+        # Gift card order
+        # self.assert_order_112_4482432_2955442_gift_card(orders[2], False)
+        # Digital order (legacy)
+        # self.assert_order_112_9087159_1657009_digital_order(orders[3], False)
+        # Subscription order
+        # self.assert_order_114_8722141_6545058_data_component_subscription(orders[6], False)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+
+    @responses.activate
     def test_get_order_history_paginated(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
@@ -196,6 +223,90 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
+        self.assertEqual(1, resp1.call_count)
+
+    @responses.activate
+    def test_get_order_2024_data_component(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "112-5939971-8962610"
+        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assert_order_112_5939971_8962610_data_component(order, True)
+        self.assertEqual(1, resp1.call_count)
+
+    @responses.activate
+    def test_get_order_2024_gift_card(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "112-4482432-2955442"
+        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assert_order_112_4482432_2955442_gift_card(order, True)
+        self.assertEqual(1, resp1.call_count)
+
+    @responses.activate
+    def test_get_order_2024_digital_order_legacy(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "112-9087159-1657009"
+        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assert_order_112_9087159_1657009_digital_order(order, True)
+        self.assertEqual(1, resp1.call_count)
+
+    @responses.activate
+    def test_get_order_2024_data_component_subscription(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "114-8722141-6545058"
+        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assert_order_114_8722141_6545058_data_component_subscription(order, True)
         self.assertEqual(1, resp1.call_count)
 
     @unittest.skipIf(not os.path.exists(temp_order_history_file_path),

@@ -15,7 +15,6 @@
     "subscription_discount": "isNone",
     "total_before_tax": 42.29,
     "estimated_tax": 2.96,
-    "order_shipped_date": "2024-05-16",
     "shipments": [
         {
             "items": [

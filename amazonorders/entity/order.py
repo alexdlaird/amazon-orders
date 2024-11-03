@@ -72,10 +72,6 @@ class Order(Parsable):
         self.estimated_tax: Optional[float] = self._if_full_details(self._parse_estimated_tax())
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
         self.refund_total: Optional[float] = self._if_full_details(self._parse_refund_total())
-        #: The Order shipped date. Only populated when ``full_details`` is ``True``.
-        self.order_shipped_date: Optional[date] = self._if_full_details(self._parse_order_shipping_date())
-        #: The Order refund total. Only populated when ``full_details`` is ``True``.
-        self.refund_completed_date: Optional[date] = self._if_full_details(self._parse_refund_completed_date())
 
     def __repr__(self) -> str:
         return f"<Order #{self.order_number}: \"{self.items}\">"
@@ -263,26 +259,6 @@ class Order(Parsable):
                 if inner_tag:
                     value = self.to_currency(inner_tag.text)
                     break
-
-        return value
-
-    def _parse_order_shipping_date(self) -> Optional[date]:
-        value = self.simple_parse(self.config.selectors.FIELD_ORDER_SHIPPED_DATE_SELECTOR,
-                                  prefix_split="Items shipped:")
-
-        if value:
-            date_str = value.split("-")[0].strip()
-            value = self.to_date(date_str)
-
-        return value
-
-    def _parse_refund_completed_date(self) -> Optional[date]:
-        value = self.simple_parse(self.config.selectors.FIELD_ORDER_REFUND_COMPLETED_DATE,
-                                  prefix_split="Refund: Completed")
-
-        if value:
-            date_str = value.split("-")[0].strip()
-            value = self.to_date(date_str)
 
         return value
 
