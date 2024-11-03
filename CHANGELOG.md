@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.0.0...HEAD)
 
+### Added
+
+- `python-dateutil` as a dependency is now used to parse dates, increasing the types of dates supported and eliminating manually splittings strings apart to find the date.
+
 ## [3.0.0](https://github.com/alexdlaird/amazon-orders/compare/2.0.3...3.0.0) - 2024-11-03
 
 ### Added
