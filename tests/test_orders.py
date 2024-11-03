@@ -66,15 +66,14 @@ class TestOrders(UnitTestCase):
         # THEN
         # Giving start_index=0 means we only got the first page, so just 10 results
         self.assertEqual(10, len(orders))
-        # TODO: these assertions work from order details but not from history, troubleshoot
         # Regular order with new `data-component` fields
-        # self.assert_order_112_5939971_8962610_data_component(orders[0], False)
+        self.assert_order_112_5939971_8962610_data_component(orders[0], False)
         # Gift card order
-        # self.assert_order_112_4482432_2955442_gift_card(orders[2], False)
+        self.assert_order_112_4482432_2955442_gift_card(orders[2], False)
         # Digital order (legacy)
-        # self.assert_order_112_9087159_1657009_digital_order(orders[3], False)
+        self.assert_order_112_9087159_1657009_digital_order_legacy(orders[3], False)
         # Subscription order
-        # self.assert_order_114_8722141_6545058_data_component_subscription(orders[6], False)
+        self.assert_order_114_8722141_6545058_data_component_subscription(orders[6], False)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
 
@@ -285,7 +284,7 @@ class TestOrders(UnitTestCase):
         order = self.amazon_orders.get_order(order_id)
 
         # THEN
-        self.assert_order_112_9087159_1657009_digital_order(order, True)
+        self.assert_order_112_9087159_1657009_digital_order_legacy(order, True)
         self.assertEqual(1, resp1.call_count)
 
     @responses.activate

@@ -386,7 +386,7 @@ class TestCase(unittest.TestCase):
             self.assertEqual(10.00, order.total_before_tax)
             self.assertEqual(0.00, order.estimated_tax)
 
-    def assert_order_112_9087159_1657009_digital_order(self, order, full_details=False):
+    def assert_order_112_9087159_1657009_digital_order_legacy(self, order, full_details=False):
         self.assertEqual("D01-8711688-7680252", order.order_number)
         self.assertEqual(10.00, order.grand_total)
         self.assertIsNotNone(order.order_details_link)

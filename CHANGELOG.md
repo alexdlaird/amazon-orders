@@ -4,13 +4,24 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/2.0.3...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/2.0.4...HEAD)
+
+## [2.0.4](https://github.com/alexdlaird/amazon-orders/compare/2.0.3...2.0.4) - 2024-11-03
 
 ### Added
 
 - Retry support to CLI when stale session fails to authenticate the first time.
 - Improvements to exception messages on auth failures.
 - Documentation improvements.
+
+### Fixed
+
+- Several parsing issues with the implementation of Amazon's new `data-component` tag.
+
+### Removed
+
+- `Order.order_shipped_date`, this cannot be consistently parsed from Amazon.
+- `Order.refund_completed_date`, this cannot be consistently parsed from Amazon.
 
 ## [2.0.3](https://github.com/alexdlaird/amazon-orders/compare/2.0.2...2.0.3) - 2024-11-01
 
