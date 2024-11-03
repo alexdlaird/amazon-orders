@@ -7,6 +7,7 @@ from datetime import date
 from typing import Any, List, Optional, TypeVar, Union
 
 from bs4 import BeautifulSoup, Tag
+from dateutil import parser
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
@@ -128,15 +129,7 @@ class Order(Parsable):
     def _parse_order_placed_date(self) -> date:
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR)
 
-        if value and "Ordered on" in value:
-            split_str = "Ordered on"
-        else:
-            split_str = "Order placed"
-
-        date_str = value.split(split_str)[1].strip()
-        value = self.to_date(date_str)
-
-        return value
+        return parser.parse(value, fuzzy=True).date()
 
     def _parse_recipient(self) -> Optional[Recipient]:
         # At least for now, we don't populate Recipient data for digital orders

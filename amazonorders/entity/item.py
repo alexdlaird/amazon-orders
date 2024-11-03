@@ -6,6 +6,7 @@ from datetime import date
 from typing import Optional, TypeVar
 
 from bs4 import Tag
+from dateutil import parser
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
@@ -71,13 +72,7 @@ class Item(Parsable):
 
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ITEM_RETURN_SELECTOR):
             if "Return" in tag.text:
-                tag_str = tag.text.strip()
-                split_str = "through "
-                if "closed on " in tag.text:
-                    split_str = "closed on "
-                if split_str in tag_str:
-                    date_str = tag_str.split(split_str)[1]
-                    value = self.to_date(date_str)
-                    break
+                value = parser.parse(tag.text, fuzzy=True).date()
+                break
 
         return value

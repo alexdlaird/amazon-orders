@@ -11,7 +11,8 @@ dependencies = [
     "requests>=2.23",
     "amazoncaptcha>=0.4",
     "beautifulsoup4>=4.8",
-    "PyYAML>=5.1"
+    "PyYAML>=5.1",
+    "python-dateutil>=2.8.2"
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
