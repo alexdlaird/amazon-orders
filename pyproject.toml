@@ -52,6 +52,7 @@ docs = [
     "types-beautifulsoup4",
     "types-Pillow",
     "types-PyYAML",
+    "types-python-dateutil",
 ]
 
 [project.scripts]
