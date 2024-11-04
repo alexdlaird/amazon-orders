@@ -15,6 +15,10 @@ from amazonorders.session import AmazonSession
 logger = logging.getLogger(__name__)
 
 
+def _get_today() -> datetime.date:
+    return datetime.date.today()
+
+
 def _parse_transaction_form_tag(
     form_tag: Tag, config: AmazonOrdersConfig
 ) -> Tuple[List[Transaction], Optional[str], Optional[Dict[str, str]]]:
@@ -113,7 +117,7 @@ class AmazonTransactions:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        min_date = datetime.date.today() - datetime.timedelta(days=days)
+        min_date = _get_today() - datetime.timedelta(days=days)
 
         self.amazon_session.get(self.config.constants.TRANSACTION_HISTORY_LANDING_URL)
         if not self.amazon_session.last_response_parsed:

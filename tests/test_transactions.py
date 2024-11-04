@@ -1,11 +1,12 @@
 __copyright__ = "Copyright (c) 2024 Jeff Sawatzky"
 __license__ = "MIT"
 
+import datetime
 import os
+from unittest.mock import Mock, patch
 
 import responses
 from bs4 import BeautifulSoup
-from freezegun import freeze_time
 
 from amazonorders.session import AmazonSession
 from amazonorders.transactions import AmazonTransactions, _parse_transaction_form_tag
@@ -29,10 +30,11 @@ class TestOrders(UnitTestCase):
 
         self.amazon_transactions = AmazonTransactions(self.amazon_session)
 
-    @freeze_time("2024-10-11")
     @responses.activate
-    def test_transactions_command(self):
+    @patch("amazonorders.transactions._get_today")
+    def test_transactions_command(self, mock_get_today: Mock):
         # GIVEN
+        mock_get_today.return_value = datetime.date(2024, 10, 11)
         days = 1
         self.amazon_session.is_authenticated = True
         with open(

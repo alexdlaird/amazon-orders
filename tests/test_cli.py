@@ -1,11 +1,12 @@
 __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
+import datetime
 import os
+from unittest.mock import Mock, patch
 
 import responses
 from click.testing import CliRunner
-from freezegun import freeze_time
 
 from amazonorders.cli import amazon_orders_cli
 from tests.unittestcase import UnitTestCase
@@ -84,10 +85,11 @@ class TestCli(UnitTestCase):
         self.assertEqual(1, resp1.call_count)
         self.assertIn("Order #112-2961628-4757846", response.output)
 
-    @freeze_time("2024-10-11")
     @responses.activate
-    def test_transactions_command(self):
+    @patch("amazonorders.transactions._get_today")
+    def test_transactions_command(self, mock_get_today: Mock):
         # GIVEN
+        mock_get_today.return_value = datetime.date(2024, 10, 11)
         days = 1
         self.given_login_responses_success()
         with open(os.path.join(self.RESOURCES_DIR, "get-transactions.html"), "r", encoding="utf-8") as f:
