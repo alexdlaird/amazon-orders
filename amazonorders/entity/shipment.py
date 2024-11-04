@@ -34,7 +34,7 @@ class Shipment(Parsable):
         #: The Shipment tracking link.
         self.tracking_link: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_SHIPMENT_TRACKING_LINK_SELECTOR,
-            link=True)
+            attr_name="href")
 
     def __repr__(self) -> str:
         return f"<Shipment: \"{self.items}\">"

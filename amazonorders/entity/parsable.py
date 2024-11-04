@@ -59,7 +59,7 @@ class Parsable:
 
     def simple_parse(self,
                      selector: Union[str, list],
-                     link: bool = False,
+                     attr_name: Optional[str] = None,
                      text_contains: Optional[str] = None,
                      required: bool = False,
                      prefix_split: Optional[str] = None,
@@ -75,7 +75,7 @@ class Parsable:
         tag itself (wrapped in the class) will be returned.
 
         :param selector: The CSS selector(s) for the field.
-        :param link: If a link, the value of ``src`` or ``href`` will be returned.
+        :param attr_name: If provided, return the value of this attribute on the selected field.
         :param text_contains: Only select the field if this value is found in its text content.
         :param required: If required, an exception will be thrown instead of returning ``None``.
         :param prefix_split: Only select the field with the given prefix, returning the right side of the split if so.
@@ -90,12 +90,13 @@ class Parsable:
         for s in selector:
             for tag in self.parsed.select(s):
                 if tag:
-                    if link:
-                        key = "href"
-                        # Check if the link is being pulled from an <img> tag
-                        if "src" in tag.attrs:
-                            key = "src"
-                        value = self.with_base_url(tag.attrs[key])
+                    if attr_name:
+                        value = tag.attrs[attr_name]
+
+                        if attr_name == "href" or attr_name == "src":
+                            value = self.with_base_url(value)
+
+                        return value
                     else:
                         if text_contains and text_contains not in tag.text:
                             continue

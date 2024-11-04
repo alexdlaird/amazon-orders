@@ -15,6 +15,7 @@ from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
+from amazonorders.exception import AmazonOrdersError
 
 logger = logging.getLogger(__name__)
 
@@ -58,19 +59,21 @@ class Order(Parsable):
         # Fields below this point are only populated if `full_details` is True
 
         #: The Order payment method. Only populated when ``full_details`` is ``True``.
-        self.payment_method: Optional[str] = self._if_full_details(self._parse_payment_method())
+        self.payment_method: Optional[str] = self._if_full_details(
+            self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR,
+                                   attr_name="alt"))
         #: The Order payment method's last 4 digits. Only populated when ``full_details`` is ``True``.
         self.payment_method_last_4: Optional[str] = self._if_full_details(self._parse_payment_method_last_4())
         #: The Order subtotal. Only populated when ``full_details`` is ``True``.
-        self.subtotal: Optional[float] = self._if_full_details(self._parse_subtotal())
+        self.subtotal: Optional[float] = self._if_full_details(self._parse_total("subtotal"))
         #: The Order shipping total. Only populated when ``full_details`` is ``True``.
-        self.shipping_total: Optional[float] = self._if_full_details(self._parse_shipping_total())
+        self.shipping_total: Optional[float] = self._if_full_details(self._parse_total("shipping"))
         #: The Order Subscribe & Save discount. Only populated when ``full_details`` is ``True``.
-        self.subscription_discount: Optional[float] = self._if_full_details(self._parse_subscription_discount())
+        self.subscription_discount: Optional[float] = self._if_full_details(self._parse_total("subscribe"))
         #: The Order total before tax. Only populated when ``full_details`` is ``True``.
-        self.total_before_tax: Optional[float] = self._if_full_details(self._parse_total_before_tax())
+        self.total_before_tax: Optional[float] = self._if_full_details(self._parse_total("before tax"))
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
-        self.estimated_tax: Optional[float] = self._if_full_details(self._parse_estimated_tax())
+        self.estimated_tax: Optional[float] = self._if_full_details(self._parse_total("estimated tax"))
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
         self.refund_total: Optional[float] = self._if_full_details(self._parse_refund_total())
 
@@ -101,7 +104,7 @@ class Order(Parsable):
         return items
 
     def _parse_order_details_link(self) -> Optional[str]:
-        value = self.simple_parse(self.config.selectors.FIELD_ORDER_DETAILS_LINK_SELECTOR, link=True)
+        value = self.simple_parse(self.config.selectors.FIELD_ORDER_DETAILS_LINK_SELECTOR, attr_name="href")
 
         if not value and self.order_number:
             value = f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
@@ -111,20 +114,14 @@ class Order(Parsable):
     def _parse_grand_total(self) -> float:
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
 
+        total_str = "total"
+
         if not value:
-            for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
-                if "grand total" in tag.text.lower():
-                    inner_tag = util.select_one(tag, self.config.selectors.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
-                    if inner_tag:
-                        value = inner_tag.text.strip()
-                        break
-        else:
-            if value.lower().startswith("total"):
-                value = value[5:].strip()
+            value = self._parse_total("grand total")
+        elif value.lower().startswith(total_str):
+            value = value[len(total_str):].strip()
 
-        value = self.to_currency(value)
-
-        return value
+        return self.to_currency(value)
 
     def _parse_order_placed_date(self) -> date:
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR)
@@ -151,7 +148,12 @@ class Order(Parsable):
             # TODO: there are multiple shipToData tags, we should double check we're picking the right one
             #  associated with the order
             parsed_parent = self.parsed.find_parent()
-            assert parsed_parent is not None
+
+            if parsed_parent is None:
+                raise AmazonOrdersError(
+                    "Recipient parent not found, but it's required. "
+                    "Check if Amazon changed the HTML."
+                )  # pragma: no cover
 
             parent_tag = util.select_one(
                 parsed_parent,
@@ -166,15 +168,6 @@ class Order(Parsable):
 
         return Recipient(value, self.config)
 
-    def _parse_payment_method(self) -> Optional[str]:
-        value = None
-
-        tag = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR)
-        if tag:
-            value = str(tag["alt"])
-
-        return value
-
     def _parse_payment_method_last_4(self) -> Optional[str]:
         value = None
 
@@ -187,59 +180,11 @@ class Order(Parsable):
 
         return value
 
-    def _parse_subtotal(self) -> Optional[float]:
+    def _parse_total(self, contains) -> Optional[float]:
         value = None
 
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
-            if "subtotal" in tag.text.lower():
-                inner_tag = util.select_one(tag, self.config.selectors.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
-                if inner_tag:
-                    value = self.to_currency(inner_tag.text)
-                    break
-
-        return value
-
-    def _parse_shipping_total(self) -> Optional[float]:
-        value = None
-
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
-            if "shipping" in tag.text.lower():
-                inner_tag = util.select_one(tag, self.config.selectors.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
-                if inner_tag:
-                    value = self.to_currency(inner_tag.text)
-                    break
-
-        return value
-
-    def _parse_subscription_discount(self) -> Optional[float]:
-        value = None
-
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
-            if "subscribe" in tag.text.lower():
-                inner_tag = util.select_one(tag, self.config.selectors.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
-                if inner_tag:
-                    value = self.to_currency(inner_tag.text)
-                    break
-
-        return value
-
-    def _parse_total_before_tax(self) -> Optional[float]:
-        value = None
-
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
-            if "before tax" in tag.text.lower():
-                inner_tag = util.select_one(tag, self.config.selectors.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
-                if inner_tag:
-                    value = self.to_currency(inner_tag.text)
-                    break
-
-        return value
-
-    def _parse_estimated_tax(self) -> Optional[float]:
-        value = None
-
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
-            if "estimated tax" in tag.text.lower():
+            if contains in tag.text.lower():
                 inner_tag = util.select_one(tag, self.config.selectors.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
                     value = self.to_currency(inner_tag.text)

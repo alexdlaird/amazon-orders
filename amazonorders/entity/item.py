@@ -33,7 +33,7 @@ class Item(Parsable):
                                                  required=True)
         #: The Item link.
         self.link: str = self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_LINK_SELECTOR,
-                                                link=True, required=True)
+                                                attr_name="href", required=True)
         #: The Item price.
         self.price: Optional[float] = self.to_currency(
             self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_PRICE_SELECTOR,
@@ -52,7 +52,7 @@ class Item(Parsable):
         #: The Item image URL.
         self.image_link: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_IMG_LINK_SELECTOR,
-            link=True)
+            attr_name="src")
         #: The Item quantity.
         self.quantity: Optional[int] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_QUANTITY_SELECTOR)
