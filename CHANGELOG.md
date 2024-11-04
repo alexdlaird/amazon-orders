@@ -11,6 +11,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - Support for [Transactions](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.transaction.Transactions).
+- Improvements for currency parsing.
+
+### Changed
+
+- Renamed `AmazonOrderError` to [`AmazonOrdersError`](https://amazon-orders.readthedocs.io/api.html#amazonorders.exception.AmazonOrdersEntityError).
 
 ## [3.1.0](https://github.com/alexdlaird/amazon-orders/compare/3.0.0...3.1.0) - 2024-11-04
 
