@@ -2,9 +2,11 @@ __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import logging
+from datetime import date
 from typing import Any, Callable, Optional, Type, Union, Dict
 
 from bs4 import Tag
+from dateutil import parser
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
@@ -63,7 +65,8 @@ class Parsable:
                      text_contains: Optional[str] = None,
                      required: bool = False,
                      prefix_split: Optional[str] = None,
-                     wrap_tag: Optional[Type] = None) -> Any:
+                     wrap_tag: Optional[Type] = None,
+                     parse_date: bool = False) -> Any:
         """
         Will attempt to extract the text value of the given CSS selector(s) for a field, and
         is suitable for most basic functionality on a well-formed page.
@@ -80,12 +83,14 @@ class Parsable:
         :param required: If required, an exception will be thrown instead of returning ``None``.
         :param prefix_split: Only select the field with the given prefix, returning the right side of the split if so.
         :param wrap_tag: Wrap the selected tag in this class before returning.
+        :param parse_date: ``True`` if the resulting value should be fuzzy parsed in to a date (returning ``None`` if
+            parsing fails).
         :return: The cleaned up return value from the parsed ``selector``.
         """
         if isinstance(selector, str):
             selector = [selector]
 
-        value: Union[int, float, bool, str, None] = None
+        value: Union[int, float, bool, date, str, None] = None
 
         for s in selector:
             for tag in self.parsed.select(s):
@@ -113,6 +118,12 @@ class Parsable:
                             value = wrap_tag(tag, self.config)
                         else:
                             value = util.to_type(value.strip())
+
+                        if parse_date and isinstance(value, str):
+                            try:
+                                value = parser.parse(value, fuzzy=True).date()
+                            except ValueError:
+                                value = None
                     break
             if value:
                 break

@@ -6,9 +6,7 @@ from datetime import date
 from typing import Optional, TypeVar
 
 from bs4 import Tag
-from dateutil import parser
 
-from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.seller import Seller
@@ -48,7 +46,10 @@ class Item(Parsable):
             selector=self.config.selectors.FIELD_ITEM_TAG_ITERATOR_SELECTOR,
             prefix_split="Condition:")
         #: The Item return eligible date.
-        self.return_eligible_date: Optional[date] = self.safe_parse(self._parse_return_eligible_date)
+        self.return_eligible_date: Optional[date] = self.safe_simple_parse(
+            selector=self.config.selectors.FIELD_ITEM_RETURN_SELECTOR,
+            text_contains="Return",
+            parse_date=True)
         #: The Item image URL.
         self.image_link: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_IMG_LINK_SELECTOR,
@@ -66,13 +67,3 @@ class Item(Parsable):
     def __lt__(self,
                other: ItemEntity) -> bool:
         return self.title < other.title
-
-    def _parse_return_eligible_date(self) -> Optional[date]:
-        value = None
-
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ITEM_RETURN_SELECTOR):
-            if "Return" in tag.text:
-                value = parser.parse(tag.text, fuzzy=True).date()
-                break
-
-        return value
