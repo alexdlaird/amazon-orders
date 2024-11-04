@@ -67,7 +67,7 @@ class Transaction(Parsable):
 
     def _parse_order_details_link(self) -> str:
         value = self.simple_parse(
-            self.config.selectors.FIELD_TRANSACTION_ORDER_LINK_SELECTOR, link=True
+            self.config.selectors.FIELD_TRANSACTION_ORDER_LINK_SELECTOR, attr_name="href"
         )
 
         if not value and self.order_number:
