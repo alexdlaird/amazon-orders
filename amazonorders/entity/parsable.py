@@ -175,7 +175,7 @@ class Parsable:
             return None
 
         value = value.strip()
-        value = re.sub("[a-zA-Z$,]+", "", value)
+        value = re.sub("[a-zA-Z$£€,]+", "", value)
         currency = util.to_type(value)
 
         if isinstance(currency, str):
