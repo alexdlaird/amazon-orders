@@ -124,7 +124,7 @@ class Order(Parsable):
 
         value = self.to_currency(value)
 
-        if not value:
+        if value is None:
             raise AmazonOrdersError(
                 "Order.grand_total did not populate, but it's required. "
                 "Check if Amazon changed the HTML."

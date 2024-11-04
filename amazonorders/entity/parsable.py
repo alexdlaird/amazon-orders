@@ -128,7 +128,7 @@ class Parsable:
             if value:
                 break
 
-        if not value and required:
+        if value is None and required:
             raise AmazonOrderEntityError(
                 "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
                     name=self.__class__.__name__, selector=selector))
