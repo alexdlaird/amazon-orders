@@ -3,10 +3,11 @@ __license__ = "MIT"
 
 import logging
 import re
-from datetime import datetime, date
-from typing import Any, Callable, Optional, Type, Union, Dict
+from datetime import date
+from typing import Any, Callable, Dict, Optional, Type, Union
 
 from bs4 import Tag
+from dateutil import parser
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
@@ -61,11 +62,12 @@ class Parsable:
 
     def simple_parse(self,
                      selector: Union[str, list],
-                     link: bool = False,
+                     attr_name: Optional[str] = None,
                      text_contains: Optional[str] = None,
                      required: bool = False,
                      prefix_split: Optional[str] = None,
-                     wrap_tag: Optional[Type] = None) -> Any:
+                     wrap_tag: Optional[Type] = None,
+                     parse_date: bool = False) -> Any:
         """
         Will attempt to extract the text value of the given CSS selector(s) for a field, and
         is suitable for most basic functionality on a well-formed page.
@@ -77,27 +79,30 @@ class Parsable:
         tag itself (wrapped in the class) will be returned.
 
         :param selector: The CSS selector(s) for the field.
-        :param link: If a link, the value of ``src`` or ``href`` will be returned.
+        :param attr_name: If provided, return the value of this attribute on the selected field.
         :param text_contains: Only select the field if this value is found in its text content.
         :param required: If required, an exception will be thrown instead of returning ``None``.
         :param prefix_split: Only select the field with the given prefix, returning the right side of the split if so.
         :param wrap_tag: Wrap the selected tag in this class before returning.
+        :param parse_date: ``True`` if the resulting value should be fuzzy parsed in to a date (returning ``None`` if
+            parsing fails).
         :return: The cleaned up return value from the parsed ``selector``.
         """
         if isinstance(selector, str):
             selector = [selector]
 
-        value: Union[int, float, bool, str, None] = None
+        value: Union[int, float, bool, date, str, None] = None
 
         for s in selector:
             for tag in self.parsed.select(s):
                 if tag:
-                    if link:
-                        key = "href"
-                        # Check if the link is being pulled from an <img> tag
-                        if "src" in tag.attrs:
-                            key = "src"
-                        value = self.with_base_url(tag.attrs[key])
+                    if attr_name:
+                        value = tag.attrs[attr_name]
+
+                        if attr_name == "href" or attr_name == "src":
+                            value = self.with_base_url(value)
+
+                        return value
                     else:
                         if text_contains and text_contains not in tag.text:
                             continue
@@ -114,11 +119,17 @@ class Parsable:
                             value = wrap_tag(tag, self.config)
                         else:
                             value = util.to_type(value.strip())
+
+                        if parse_date and isinstance(value, str):
+                            try:
+                                value = parser.parse(value, fuzzy=True).date()
+                            except ValueError:
+                                value = None
                     break
             if value:
                 break
 
-        if not value and required:
+        if value is None and required:
             raise AmazonOrdersEntityError(
                 "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
                     name=self.__class__.__name__, selector=selector))
@@ -171,26 +182,3 @@ class Parsable:
             return None
 
         return currency
-
-    def to_date(self,
-                date_str: str) -> Optional[date]:
-        """
-        Return the given date string as a date object.
-
-        :param date_str: The date string to parse to a date object.
-        :return: The parsed date.
-        """
-        value = None
-
-        for fmt in self.config.constants.VALID_DATE_FORMATS:
-            try:
-                value = datetime.strptime(date_str, fmt).date()
-            except ValueError:
-                pass
-
-        if value is None:
-            logger.warning(
-                f"ValueError: time data '{date_str}' does not match any format in "
-                f"{self.config.constants.VALID_DATE_FORMATS}")
-
-        return value

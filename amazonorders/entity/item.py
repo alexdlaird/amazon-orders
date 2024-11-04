@@ -7,7 +7,6 @@ from typing import Optional, TypeVar
 
 from bs4 import Tag
 
-from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.seller import Seller
@@ -32,7 +31,7 @@ class Item(Parsable):
                                                  required=True)
         #: The Item link.
         self.link: str = self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_LINK_SELECTOR,
-                                                link=True, required=True)
+                                                attr_name="href", required=True)
         #: The Item price.
         self.price: Optional[float] = self.to_currency(
             self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_PRICE_SELECTOR,
@@ -47,11 +46,14 @@ class Item(Parsable):
             selector=self.config.selectors.FIELD_ITEM_TAG_ITERATOR_SELECTOR,
             prefix_split="Condition:")
         #: The Item return eligible date.
-        self.return_eligible_date: Optional[date] = self.safe_parse(self._parse_return_eligible_date)
+        self.return_eligible_date: Optional[date] = self.safe_simple_parse(
+            selector=self.config.selectors.FIELD_ITEM_RETURN_SELECTOR,
+            text_contains="Return",
+            parse_date=True)
         #: The Item image URL.
         self.image_link: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_IMG_LINK_SELECTOR,
-            link=True)
+            attr_name="src")
         #: The Item quantity.
         self.quantity: Optional[int] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_QUANTITY_SELECTOR)
@@ -65,19 +67,3 @@ class Item(Parsable):
     def __lt__(self,
                other: ItemEntity) -> bool:
         return self.title < other.title
-
-    def _parse_return_eligible_date(self) -> Optional[date]:
-        value = None
-
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ITEM_RETURN_SELECTOR):
-            if "Return" in tag.text:
-                tag_str = tag.text.strip()
-                split_str = "through "
-                if "closed on " in tag.text:
-                    split_str = "closed on "
-                if split_str in tag_str:
-                    date_str = tag_str.split(split_str)[1]
-                    value = self.to_date(date_str)
-                    break
-
-        return value

@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.0.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.1.0...HEAD)
+
+## [3.1.0](https://github.com/alexdlaird/amazon-orders/compare/3.0.0...3.1.0) - 2024-11-04
+
+### Added
+
+- `python-dateutil` as a dependency is now used to parse dates, increasing the types of dates supported and eliminating manually splittings strings apart to find the date.
+- `parse_date` to [`simple_parse`](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.parsable.Parsable.simple_parse).
+- Cleanup for parsing payment method.
+- Cleanup for parsing currency totals.
+- Stability improvements.
+
+### Changed
+
+- Replaced `simple_parse`'s `link` arg with a more generic [`attr_name`](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.parsable.Parsable.simple_parse) (pass "href" or "src" as the value for the same behavior).
+- `Order.payment_method_last_4` parses to an `int`, and now uses `safe_simple_parse`.
 
 ## [3.0.0](https://github.com/alexdlaird/amazon-orders/compare/2.0.3...3.0.0) - 2024-11-03
 

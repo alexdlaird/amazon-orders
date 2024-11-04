@@ -30,7 +30,7 @@ class TestCase(unittest.TestCase):
 
         if full_details:
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual(4, len(order.payment_method_last_4))
+            self.assertEqual(4, len(str(order.payment_method_last_4)))
             self.assertEqual(30.99, order.subtotal)
             self.assertEqual(0.00, order.shipping_total)
             self.assertIsNone(order.subscription_discount)
@@ -64,7 +64,7 @@ class TestCase(unittest.TestCase):
 
         if full_details:
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual(4, len(order.payment_method_last_4))
+            self.assertEqual(4, len(str(order.payment_method_last_4)))
             self.assertEqual(38.84, order.subtotal)
             self.assertEqual(0.00, order.shipping_total)
             self.assertEqual(-5.83, order.subscription_discount)
@@ -98,7 +98,7 @@ class TestCase(unittest.TestCase):
 
         if full_details:
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual(4, len(order.payment_method_last_4))
+            self.assertEqual(4, len(str(order.payment_method_last_4)))
             self.assertEqual(69.99, order.subtotal)
             self.assertEqual(0.00, order.shipping_total)
             self.assertIsNone(order.subscription_discount)
@@ -168,7 +168,7 @@ class TestCase(unittest.TestCase):
 
         if full_details:
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual(4, len(order.payment_method_last_4))
+            self.assertEqual(4, len(str(order.payment_method_last_4)))
             self.assertEqual(43.23, order.subtotal)
             self.assertEqual(0.00, order.shipping_total)
             self.assertIsNone(order.subscription_discount)
@@ -245,7 +245,7 @@ class TestCase(unittest.TestCase):
 
         if full_details:
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual(4, len(order.payment_method_last_4))
+            self.assertEqual(4, len(str(order.payment_method_last_4)))
             self.assertEqual(42.29, order.subtotal)
             self.assertEqual(0.00, order.shipping_total)
             self.assertIsNone(order.subscription_discount)
@@ -304,7 +304,7 @@ class TestCase(unittest.TestCase):
 
         if full_details:
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual(4, len(order.payment_method_last_4))
+            self.assertEqual(4, len(str(order.payment_method_last_4)))
             self.assertEqual(26.48, order.subtotal)
             self.assertEqual(0.00, order.shipping_total)
             self.assertIsNone(order.subscription_discount)
@@ -354,7 +354,7 @@ class TestCase(unittest.TestCase):
         if full_details:
             self.assertEqual(date(2025, 1, 31), order.items[0].return_eligible_date)
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual('1234', order.payment_method_last_4)
+            self.assertEqual(1234, order.payment_method_last_4)
             self.assertEqual(27.98, order.subtotal)
             self.assertEqual(0.00, order.shipping_total)
             self.assertEqual(26.58, order.total_before_tax)
@@ -381,7 +381,7 @@ class TestCase(unittest.TestCase):
 
         if full_details:
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual('1234', order.payment_method_last_4)
+            self.assertEqual(1234, order.payment_method_last_4)
             self.assertEqual(10.00, order.subtotal)
             self.assertEqual(10.00, order.total_before_tax)
             self.assertEqual(0.00, order.estimated_tax)
@@ -428,7 +428,7 @@ class TestCase(unittest.TestCase):
         if full_details:
             self.assertEqual(date(2024, 11, 25), order.items[0].return_eligible_date)
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual('1234', order.payment_method_last_4)
+            self.assertEqual(1234, order.payment_method_last_4)
             self.assertEqual(43.49, order.subtotal)
             self.assertEqual(0.00, order.shipping_total)
             self.assertEqual(-2.17, order.subscription_discount)
@@ -457,7 +457,7 @@ class TestCase(unittest.TestCase):
 
         if full_details:
             self.assertIsNotNone(order.payment_method)
-            self.assertEqual(4, len(order.payment_method_last_4))
+            self.assertEqual(4, len(str(order.payment_method_last_4)))
             self.assertIsNotNone(order.subtotal)
             if order.recipient:
                 self.assertIsNotNone(order.shipping_total)

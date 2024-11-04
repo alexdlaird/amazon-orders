@@ -27,7 +27,7 @@ class Seller(Parsable):
                                                 prefix_split="Sold by:")
         #: The Seller link.
         self.link: Optional[str] = self.safe_simple_parse(selector=self.config.selectors.FIELD_SELLER_LINK_SELECTOR,
-                                                          link=True)
+                                                          attr_name="href")
 
     def __repr__(self) -> str:
         return f"<Seller: \"{self.name}\">"
