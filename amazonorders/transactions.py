@@ -6,6 +6,7 @@ import logging
 from typing import Dict, List, Optional, Tuple
 
 from bs4 import Tag
+from dateutil import parser
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.transaction import Transaction
@@ -20,7 +21,7 @@ def _get_today() -> datetime.date:
 
 
 def _parse_transaction_form_tag(
-    form_tag: Tag, config: AmazonOrdersConfig
+        form_tag: Tag, config: AmazonOrdersConfig
 ) -> Tuple[List[Transaction], Optional[str], Optional[Dict[str, str]]]:
     transactions = []
     date_container_tags = form_tag.select(
@@ -35,9 +36,7 @@ def _parse_transaction_form_tag(
             continue
 
         date_str = date_tag.text
-        date = datetime.datetime.strptime(
-            date_str, config.constants.TRANSACTION_DATE_FORMAT
-        ).date()
+        date = parser.parse(date_str).date()
 
         transactions_container_tag = date_container_tag.find_next_sibling(
             config.selectors.TRANSACTIONS_CONTAINER_SELECTOR
@@ -83,12 +82,10 @@ class AmazonTransactions:
     for Transaction details and history.
     """
 
-    def __init__(
-        self,
-        amazon_session: AmazonSession,
-        debug: Optional[bool] = None,
-        config: Optional[AmazonOrdersConfig] = None,
-    ) -> None:
+    def __init__(self,
+                 amazon_session: AmazonSession,
+                 debug: Optional[bool] = None,
+                 config: Optional[AmazonOrdersConfig] = None) -> None:
         if not debug:
             debug = amazon_session.debug
         if not config:
@@ -104,12 +101,10 @@ class AmazonTransactions:
         if self.debug:
             logger.setLevel(logging.DEBUG)
 
-    def get_transactions(
-        self,
-        days: int = 365,
-    ) -> List[Transaction]:
+    def get_transactions(self,
+                         days: int = 365) -> List[Transaction]:
         """
-        Get the Amazon transactions for the given number of days.
+        Get the Amazon Transactions for the given number of days.
 
         :param days: The number of days worth of transactions to get.
         :return: A list of the requested Transactions.

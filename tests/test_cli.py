@@ -120,7 +120,7 @@ class TestCli(UnitTestCase):
         self.assertEqual(0, response.exit_code)
         self.assertEqual(1, resp.call_count)
         self.assertIn("1 transactions parsed", response.output)
-        self.assertIn("Transaction 2024-10-11: Order #123-4567890-1234567, Grand Total -45.19", response.output)
+        self.assertIn("Transaction: 2024-10-11\n  Order #123-4567890-1234567\n  Grand Total: -$45.19", response.output)
 
     def test_update_config(self):
         # GIVEN

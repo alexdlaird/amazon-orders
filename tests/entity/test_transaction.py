@@ -52,9 +52,9 @@ class TestTransaction(UnitTestCase):
         self.assertEqual(transaction.seller, "AMZN Mktp COM")
         self.assertEqual(transaction.grand_total, -12.34)
         self.assertEqual(transaction.is_refund, False)
-        self.assertEqual(str(transaction), "Transaction 2024-01-01: Order #123-4567890-1234567, Grand Total -12.34")
+        self.assertEqual(str(transaction), "Transaction 2024-01-01: Order #123-4567890-1234567, Grand Total: -12.34")
         self.assertEqual(
-            repr(transaction), '<Transaction 2024-01-01: "Order #123-4567890-1234567", "Grand Total -12.34">'
+            repr(transaction), '<Transaction 2024-01-01: "Order #123-4567890-1234567, Grand Total: -12.34">'
         )
 
     def test_parse_refund(self):
@@ -99,7 +99,7 @@ class TestTransaction(UnitTestCase):
         self.assertEqual(transaction.seller, "AMZN Mktp COM")
         self.assertEqual(transaction.grand_total, 12.34)
         self.assertEqual(transaction.is_refund, True)
-        self.assertEqual(str(transaction), "Transaction 2024-01-01: Order #123-4567890-1234567, Grand Total 12.34")
+        self.assertEqual(str(transaction), "Transaction 2024-01-01: Order #123-4567890-1234567, Grand Total: 12.34")
         self.assertEqual(
-            repr(transaction), '<Transaction 2024-01-01: "Order #123-4567890-1234567", "Grand Total 12.34">'
+            repr(transaction), '<Transaction 2024-01-01: "Order #123-4567890-1234567, Grand Total: 12.34">'
         )

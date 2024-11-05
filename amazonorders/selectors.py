@@ -60,7 +60,8 @@ class Selectors:
     FIELD_ITEM_TITLE_SELECTOR = ["[data-component='itemTitle']", ".yohtmlc-item a", ".yohtmlc-product-title"]
     FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a", ".yohtmlc-item a", "a:has(> .yohtmlc-product-title)"]
     FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div"]
-    FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
+    FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice'] .a-text-price :not(.a-offscreen)",
+                                 ".yohtmlc-item .a-color-price"]
     FIELD_ITEM_SELLER_SELECTOR = ["[data-component='orderedMerchant']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
     FIELD_ITEM_RETURN_SELECTOR = ["[data-component='itemReturnEligibility']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
 

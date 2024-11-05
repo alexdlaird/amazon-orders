@@ -34,8 +34,8 @@ class Item(Parsable):
                                                 attr_name="href", required=True)
         #: The Item price.
         self.price: Optional[float] = self.to_currency(
-            self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_PRICE_SELECTOR,
-                                   prefix_split="$"))
+            self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_PRICE_SELECTOR)
+        )
         #: The Item Seller.
         self.seller: Optional[Seller] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_SELLER_SELECTOR,

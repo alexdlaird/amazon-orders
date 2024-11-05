@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class IODefault:
     """
     Handles input/output from the application. By default, this uses console commands, but
-    this class exists so that it can be overriden when constructing an :class:`AmazonSession`
+    this class exists so that it can be overridden when constructing an :class:`AmazonSession`
     if input/output should be handled another way.
     """
 

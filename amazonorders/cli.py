@@ -15,6 +15,7 @@ from click.core import Context
 from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
+from amazonorders.entity.transaction import Transaction
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
@@ -149,7 +150,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
         click.echo("... {} orders parsed.\n".format(len(orders)))
 
         for order in orders:
-            click.echo(f"{_order_output(order)}\n")
+            click.echo(f"{_order_output(order, ctx.obj["conf"])}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -173,7 +174,7 @@ def order(ctx: Context,
 
         order = amazon_orders.get_order(order_id)
 
-        click.echo(f"{_order_output(order)}\n")
+        click.echo(f"{_order_output(order, ctx.obj["conf"])}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -181,11 +182,8 @@ def order(ctx: Context,
 
 @amazon_orders_cli.command()
 @click.pass_context
-@click.option(
-    "--days",
-    default=365,
-    help="The number of days of transactions to get.",
-)
+@click.option("--days", default=365,
+              help="The number of days of transactions to get.")
 def transactions(ctx: Context, **kwargs: Any):
     """
     Retrieve Amazon order history for a given year.
@@ -213,7 +211,7 @@ Transaction History for {days} days
         click.echo("... {} transactions parsed.\n".format(len(transactions)))
 
         for transaction in transactions:
-            click.echo(f"{transaction}\n")
+            click.echo(f"{_transaction_output(transaction, ctx.obj["conf"])}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -322,7 +320,8 @@ def _authenticate(amazon_session: AmazonSession,
             raise e
 
 
-def _order_output(order: Order) -> str:
+def _order_output(order: Order,
+                  config: AmazonOrdersConfig) -> str:
     order_str = """-----------------------------------------------------------------------
 Order #{}
 -----------------------------------------------------------------------""".format(
@@ -330,7 +329,7 @@ Order #{}
 
     order_str += f"\n  Shipments: {order.shipments}"
     order_str += f"\n  Order Details Link: {order.order_details_link}"
-    order_str += f"\n  Grand Total: ${order.grand_total:,.2f}"
+    order_str += f"\n  Grand Total: {order.grand_total:,.2f}"
     order_str += f"\n  Order Placed Date: {order.order_placed_date}"
     if order.recipient:
         order_str += f"\n  {order.recipient}"
@@ -342,21 +341,31 @@ Order #{}
     if order.payment_method_last_4:
         order_str += f"\n  Payment Method Last 4: {order.payment_method_last_4}"
     if order.subtotal:
-        order_str += f"\n  Subtotal: ${order.subtotal:,.2f}"
+        order_str += f"\n  Subtotal: {config.constants.format_currency(order.subtotal)}"
     if order.shipping_total:
-        order_str += f"\n  Shipping Total: ${order.shipping_total:,.2f}"
+        order_str += f"\n  Shipping Total: ${config.constants.format_currency(order.shipping_total)}"
     if order.subscription_discount:
-        order_str += f"\n  Subscription Discount: ${order.subscription_discount:,.2f}"
+        order_str += f"\n  Subscription Discount: ${config.constants.format_currency(order.subscription_discount)}"
     if order.total_before_tax:
-        order_str += f"\n  Total Before Tax: ${order.total_before_tax:,.2f}"
+        order_str += f"\n  Total Before Tax: ${config.constants.format_currency(order.total_before_tax)}"
     if order.estimated_tax:
-        order_str += f"\n  Estimated Tax: ${order.estimated_tax:,.2f}"
+        order_str += f"\n  Estimated Tax: ${config.constants.format_currency(order.estimated_tax)}"
     if order.refund_total:
-        order_str += f"\n  Refund Total: ${order.refund_total:,.2f}"
+        order_str += f"\n  Refund Total: ${config.constants.format_currency(order.refund_total)}"
 
     order_str += "\n-----------------------------------------------------------------------"
 
     return order_str
+
+
+def _transaction_output(transaction: Transaction,
+                        config: AmazonOrdersConfig) -> str:
+    transaction_str = f"Transaction: {transaction.completed_date}"
+    transaction_str += f"\n  Order #{transaction.order_number}"
+    transaction_str += f"\n  Grand Total: {config.constants.format_currency(transaction.grand_total)}"
+    transaction_str += f"\n  Order Details Link: ${transaction.order_details_link}"
+
+    return transaction_str
 
 
 if __name__ == "__main__":
