@@ -206,14 +206,16 @@ Transaction History for {days} days
         )
         click.echo("Info: Fetching transaction history, this might take a minute ...")
 
-        amazon_transactions = AmazonTransactions(amazon_session, config=ctx.obj["conf"])
+        config = ctx.obj["conf"]
+        amazon_transactions = AmazonTransactions(amazon_session,
+                                                 onfig=config)
 
         transactions = amazon_transactions.get_transactions(days=days)
 
         click.echo("... {} transactions parsed.\n".format(len(transactions)))
 
         for transaction in transactions:
-            click.echo(f"{_transaction_output(transaction, ctx.obj["conf"])}\n")
+            click.echo(f"{_transaction_output(transaction, config)}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
