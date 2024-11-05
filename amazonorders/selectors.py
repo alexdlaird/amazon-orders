@@ -60,7 +60,8 @@ class Selectors:
     FIELD_ITEM_TITLE_SELECTOR = ["[data-component='itemTitle']", ".yohtmlc-item a", ".yohtmlc-product-title"]
     FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a", ".yohtmlc-item a", "a:has(> .yohtmlc-product-title)"]
     FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div"]
-    FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
+    FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice'] .a-text-price :not(.a-offscreen)",
+                                 ".yohtmlc-item .a-color-price"]
     FIELD_ITEM_SELLER_SELECTOR = ["[data-component='orderedMerchant']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
     FIELD_ITEM_RETURN_SELECTOR = ["[data-component='itemReturnEligibility']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
 
@@ -111,3 +112,35 @@ class Selectors:
 
     FIELD_SELLER_NAME_SELECTOR = ["a", "span"]
     FIELD_SELLER_LINK_SELECTOR = "a"
+
+    #####################################
+    # CSS selectors for Transaction fields
+    #####################################
+
+    TRANSACTION_HISTORY_FORM_SELECTOR = "form:has(input[name='ppw-widgetState'])"
+    TRANSACTION_DATE_CONTAINERS_SELECTOR = "div.apx-transaction-date-container"
+    TRANSACTIONS_CONTAINER_SELECTOR = "div"
+    TRANSACTIONS_SELECTOR = "div.apx-transactions-line-item-component-container"
+
+    TRANSACTIONS_NEXT_PAGE_INPUT_SELECTOR = (
+        "input[type='submit'][name^='ppw-widgetEvent:DefaultNextPageNavigationEvent']"
+    )
+    TRANSACTIONS_NEXT_PAGE_INPUT_STATE_SELECTOR = "input[name='ppw-widgetState']"
+    TRANSACTIONS_NEXT_PAGE_INPUT_IE_SELECTOR = "input[name='ie']"
+
+    FIELD_TRANSACTION_COMPLETED_DATE_SELECTOR = "span"
+    FIELD_TRANSACTION_PAYMENT_METHOD_SELECTOR = (
+        "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base"
+    )
+    FIELD_TRANSACTION_GRAND_TOTAL_SELECTOR = (
+        "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base-plus"
+    )
+    FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR = (
+        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal"
+    )
+    FIELD_TRANSACTION_ORDER_LINK_SELECTOR = (
+        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal"
+    )
+    FIELD_TRANSACTION_SELLER_NAME_SELECTOR = (
+        "div.apx-transactions-line-item-component-container > div:nth-child(3) span.a-size-base"
+    )

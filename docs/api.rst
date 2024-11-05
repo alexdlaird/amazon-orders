@@ -75,6 +75,11 @@ Entities
     :private-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.entity.transaction
+    :members:
+    :private-members:
+    :show-inheritance:
+
 Exceptions
 ----------
 

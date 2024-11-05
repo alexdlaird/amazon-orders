@@ -30,13 +30,20 @@ class Constants:
     SIGN_OUT_URL = f"{BASE_URL}/gp/sign-out.html"
 
     ##########################################################################
-    # URLs for AmazonOrders
+    # URLs for orders
     ##########################################################################
 
     ORDER_HISTORY_LANDING_URL = f"{BASE_URL}/gp/css/order-history"
     ORDER_HISTORY_URL = f"{BASE_URL}/your-orders/orders"
     ORDER_DETAILS_URL = f"{BASE_URL}/gp/your-account/order-details"
     HISTORY_FILTER_QUERY_PARAM = "timeFilter"
+
+    ##########################################################################
+    # URLs for transactions
+    ##########################################################################
+
+    TRANSACTION_HISTORY_LANDING_ROUTE = "/cpe/yourpayments/transactions"
+    TRANSACTION_HISTORY_LANDING_URL = f"{BASE_URL}{TRANSACTION_HISTORY_LANDING_ROUTE}"
 
     ##########################################################################
     # Headers
@@ -63,3 +70,9 @@ class Constants:
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
                       "Chrome/130.0.0.0 Safari/537.36",
     }
+
+    def format_currency(self, amount):
+        formatted_amt = '${:,.2f}'.format(abs(amount))
+        if round(amount, 2) < 0:
+            return f'-{formatted_amt}'
+        return formatted_amt

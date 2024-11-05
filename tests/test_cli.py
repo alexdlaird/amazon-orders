@@ -1,7 +1,9 @@
 __copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
+import datetime
 import os
+from unittest.mock import Mock, patch
 
 import responses
 from click.testing import CliRunner
@@ -82,6 +84,43 @@ class TestCli(UnitTestCase):
         self.assertEqual(0, response.exit_code)
         self.assertEqual(1, resp1.call_count)
         self.assertIn("Order #112-2961628-4757846", response.output)
+
+    @responses.activate
+    @patch("amazonorders.transactions._get_today")
+    def test_transactions_command(self, mock_get_today: Mock):
+        # GIVEN
+        mock_get_today.return_value = datetime.date(2024, 10, 11)
+        days = 1
+        self.given_login_responses_success()
+        with open(os.path.join(self.RESOURCES_DIR, "get-transactions.html"), "r", encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(
+            amazon_orders_cli,
+            [
+                "--config-path",
+                self.test_config.config_path,
+                "--username",
+                "some-username",
+                "--password",
+                "some-password",
+                "transactions",
+                "--days",
+                days,
+            ],
+        )
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("1 transactions parsed", response.output)
+        self.assertIn("Transaction: 2024-10-11\n  Order #123-4567890-1234567\n  Grand Total: -$45.19", response.output)
 
     def test_update_config(self):
         # GIVEN

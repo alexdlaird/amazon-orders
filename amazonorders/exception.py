@@ -23,7 +23,7 @@ class AmazonOrdersAuthError(AmazonOrdersError):
     pass
 
 
-class AmazonOrderEntityError(AmazonOrdersError):
+class AmazonOrdersEntityError(AmazonOrdersError):
     """
     Raised when an ``amazon-orders`` entity parsing error has occurred.
     """
