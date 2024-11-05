@@ -208,7 +208,7 @@ Transaction History for {days} days
 
         config = ctx.obj["conf"]
         amazon_transactions = AmazonTransactions(amazon_session,
-                                                 onfig=config)
+                                                 config=config)
 
         transactions = amazon_transactions.get_transactions(days=days)
 
