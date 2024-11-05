@@ -138,8 +138,9 @@ Order History for {year}{optional_start_index}{optional_full_details}
                            optional_full_details=optional_full_details))
         click.echo("Info: Fetching order history, this might take a minute ...")
 
+        config = ctx.obj["conf"]
         amazon_orders = AmazonOrders(amazon_session,
-                                     config=ctx.obj["conf"])
+                                     config=config)
 
         orders = amazon_orders.get_order_history(year=kwargs["year"],
                                                  start_index=kwargs[
@@ -150,7 +151,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
         click.echo("... {} orders parsed.\n".format(len(orders)))
 
         for order in orders:
-            click.echo(f"{_order_output(order, ctx.obj["conf"])}\n")
+            click.echo(f"{_order_output(order, config)}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -169,12 +170,13 @@ def order(ctx: Context,
     try:
         _authenticate(amazon_session)
 
+        config = ctx.obj["conf"]
         amazon_orders = AmazonOrders(amazon_session,
-                                     config=ctx.obj["conf"])
+                                     config=config)
 
         order = amazon_orders.get_order(order_id)
 
-        click.echo(f"{_order_output(order, ctx.obj["conf"])}\n")
+        click.echo(f"{_order_output(order, config)}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
