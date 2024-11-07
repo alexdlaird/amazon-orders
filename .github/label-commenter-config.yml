@@ -9,3 +9,14 @@ labels:
 
           If you [support the project](https://github.com/sponsors/alexdlaird), contact me directly and I'd be happy to help you troubleshoot.
         action: close
+  - name: more-info-needed
+    labeled:
+      issue:
+        body: |
+          Thanks for submitting your issue! It looks like there is not enough detail given for us to be able to troubleshoot.
+
+          Because Amazon can render slightly different versions of its pages to each user, we rely extensively on users troubleshooting their own issues and [submitting fixes via PRs](https://github.com/alexdlaird/amazon-orders/blob/main/CONTRIBUTING.rst). There is simply no way for us to resolve many of these edge case issues ourselves, since one Amazon account cannot necessarily replicate another Amazon account's exact same experience. We hope you'll start working on a PR for us to evaluate!
+
+          If you want us to troubleshoot the issue, we need more information. To investigate issues, we rely on user-submitted examples of the HTML rendered for pages from your account. Follow the steps in the docs to [enable debug mode](https://amazon-orders.readthedocs.io/troubleshooting.html#enable-debug-mode), attach relevant console logs, and upload relevant HTML files to this ticket (remember to obfuscate any sensitive data first).
+
+          Once we have more information, or a PR to evaluate, we will follow up further on this ticket. Thanks!
