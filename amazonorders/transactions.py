@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 from bs4 import Tag
 from dateutil import parser
 
+from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.transaction import Transaction
 from amazonorders.exception import AmazonOrdersError
@@ -24,13 +25,9 @@ def _parse_transaction_form_tag(
         form_tag: Tag, config: AmazonOrdersConfig
 ) -> Tuple[List[Transaction], Optional[str], Optional[Dict[str, str]]]:
     transactions = []
-    date_container_tags = form_tag.select(
-        config.selectors.TRANSACTION_DATE_CONTAINERS_SELECTOR
-    )
+    date_container_tags = util.select(form_tag, config.selectors.TRANSACTION_DATE_CONTAINERS_SELECTOR)
     for date_container_tag in date_container_tags:
-        date_tag = date_container_tag.select_one(
-            config.selectors.FIELD_TRANSACTION_COMPLETED_DATE_SELECTOR
-        )
+        date_tag = util.select_one(date_container_tag, config.selectors.FIELD_TRANSACTION_COMPLETED_DATE_SELECTOR)
         if not date_tag:
             logger.warning("Could not find date tag in transaction form.")
             continue
@@ -39,30 +36,21 @@ def _parse_transaction_form_tag(
         date = parser.parse(date_str).date()
 
         transactions_container_tag = date_container_tag.find_next_sibling(
-            config.selectors.TRANSACTIONS_CONTAINER_SELECTOR
-        )
+            config.selectors.TRANSACTIONS_CONTAINER_SELECTOR)
         if not isinstance(transactions_container_tag, Tag):
             logger.warning(
                 "Could not find transactions container tag in transaction form."
             )
             continue
 
-        transaction_tags = transactions_container_tag.select(
-            config.selectors.TRANSACTIONS_SELECTOR
-        )
+        transaction_tags = util.select(transactions_container_tag, config.selectors.TRANSACTIONS_SELECTOR)
         for transaction_tag in transaction_tags:
             transaction = Transaction(transaction_tag, config, date)
             transactions.append(transaction)
 
-    form_state_input = form_tag.select_one(
-        config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_STATE_SELECTOR
-    )
-    form_ie_input = form_tag.select_one(
-        config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_IE_SELECTOR
-    )
-    next_page_input = form_tag.select_one(
-        config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_SELECTOR
-    )
+    form_state_input = util.select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_STATE_SELECTOR)
+    form_ie_input = util.select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_IE_SELECTOR)
+    next_page_input = util.select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_SELECTOR)
     if not next_page_input or not form_state_input or not form_ie_input:
         return (transactions, None, None)
 
@@ -118,9 +106,8 @@ class AmazonTransactions:
         if not self.amazon_session.last_response_parsed:
             raise AmazonOrdersError("Could not get transaction history landing page.")
 
-        form_tag = self.amazon_session.last_response_parsed.select_one(
-            self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR
-        )
+        form_tag = util.select_one(self.amazon_session.last_response_parsed,
+                                   self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
 
         transactions: List[Transaction] = []
         while form_tag:
@@ -140,8 +127,7 @@ class AmazonTransactions:
             if not self.amazon_session.last_response_parsed:
                 raise AmazonOrdersError("Could not get next transaction history page.")
 
-            form_tag = self.amazon_session.last_response_parsed.select_one(
-                self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR
-            )
+            form_tag = util.select_one(self.amazon_session.last_response_parsed,
+                                       self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
 
         return transactions

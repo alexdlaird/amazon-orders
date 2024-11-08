@@ -137,19 +137,19 @@ class Selectors:
     TRANSACTIONS_CONTAINER_SELECTOR = "div"
     TRANSACTIONS_SELECTOR = "div.apx-transactions-line-item-component-container"
 
-    TRANSACTIONS_NEXT_PAGE_INPUT_SELECTOR = (
-        "input[type='submit'][name^='ppw-widgetEvent:DefaultNextPageNavigationEvent']")
+    TRANSACTIONS_NEXT_PAGE_INPUT_SELECTOR = [
+        "input[type='submit'][name^='ppw-widgetEvent:DefaultNextPageNavigationEvent']"]
     TRANSACTIONS_NEXT_PAGE_INPUT_STATE_SELECTOR = "input[name='ppw-widgetState']"
     TRANSACTIONS_NEXT_PAGE_INPUT_IE_SELECTOR = "input[name='ie']"
 
     FIELD_TRANSACTION_COMPLETED_DATE_SELECTOR = "span"
-    FIELD_TRANSACTION_PAYMENT_METHOD_SELECTOR = (
-        "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base")
-    FIELD_TRANSACTION_GRAND_TOTAL_SELECTOR = (
-        "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base-plus")
-    FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR = (
-        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal")
-    FIELD_TRANSACTION_ORDER_LINK_SELECTOR = (
-        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal")
-    FIELD_TRANSACTION_SELLER_NAME_SELECTOR = (
-        "div.apx-transactions-line-item-component-container > div:nth-child(3) span.a-size-base")
+    FIELD_TRANSACTION_PAYMENT_METHOD_SELECTOR = [
+        "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base"]
+    FIELD_TRANSACTION_GRAND_TOTAL_SELECTOR = [
+        "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base-plus"]
+    FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR = [
+        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal"]
+    FIELD_TRANSACTION_ORDER_LINK_SELECTOR = [
+        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal"]
+    FIELD_TRANSACTION_SELLER_NAME_SELECTOR = [
+        "div.apx-transactions-line-item-component-container > div:nth-child(3) span.a-size-base"]
