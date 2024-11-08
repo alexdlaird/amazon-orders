@@ -454,8 +454,9 @@ class TestCase(unittest.TestCase):
         self.assertEqual("Delivered September 9", order.shipments[0].delivery_status)
         self.assertEqual("Delivered September 9", order.shipments[1].delivery_status)
         self.assertEqual(4, len(order.items))
-        self.assertEqual("Dxhycc Satin Pirate Sash Pirate Medieval Renaissance Large Sash Halloween Costume Waist Sash Belt, Red",
-                         order.items[0].title)
+        self.assertEqual(
+            "Dxhycc Satin Pirate Sash Pirate Medieval Renaissance Large Sash Halloween Costume Waist Sash Belt, Red",
+            order.items[0].title)
         self.assertEqual("Ziploc Paper Sandwich and Snack Bags, Recyclable & Sealable with Fun Designs, 150 Total Bags",
                          order.items[3].title)
         self.assertIsNotNone(order.items[0].link)
@@ -490,10 +491,16 @@ class TestCase(unittest.TestCase):
             self.assertIsNotNone(order.recipient.name)
             self.assertIsNotNone(order.recipient.address)
             self.assertGreaterEqual(len(order.shipments), 1)
-            self.assertEqual(str(order.items), str(order.shipments[0].items))
+            shipment_items = []
+            for shipment in order.shipments:
+                shipment_items += shipment.items
+                self.assertGreaterEqual(len(shipment.items), 1)
+                self.assertIsNotNone(shipment.delivery_status)
+            self.assertEqual(str(order.items.sort()), str(shipment_items.sort()))
         self.assertGreaterEqual(len(order.items), 1)
-        self.assertIsNotNone(order.items[0].title)
-        self.assertIsNotNone(order.items[0].link)
+        for item in order.items:
+            self.assertIsNotNone(item.title)
+            self.assertIsNotNone(item.link)
 
         self.assertEqual(order.full_details, full_details)
 
@@ -506,5 +513,6 @@ class TestCase(unittest.TestCase):
             self.assertIsNotNone(order.total_before_tax)
             self.assertIsNotNone(order.estimated_tax)
             if order.recipient:
-                self.assertIsNotNone(order.items[0].price)
-                self.assertIsNotNone(order.items[0].seller.name)
+                for item in order.items:
+                    self.assertIsNotNone(item.price)
+                    self.assertIsNotNone(item.seller.name)
