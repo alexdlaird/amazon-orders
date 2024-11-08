@@ -455,9 +455,11 @@ class TestCase(unittest.TestCase):
         self.assertEqual("Delivered September 9", order.shipments[1].delivery_status)
         self.assertEqual(4, len(order.items))
         self.assertEqual(
-            "Dxhycc Satin Pirate Sash Pirate Medieval Renaissance Large Sash Halloween Costume Waist Sash Belt, Red",
+            "Dxhycc Satin Pirate Sash Pirate Medieval Renaissance Large Sash Halloween Costume Waist "
+            "Sash Belt, Red",
             order.items[0].title)
-        self.assertEqual("Ziploc Paper Sandwich and Snack Bags, Recyclable & Sealable with Fun Designs, 150 Total Bags",
+        self.assertEqual("Ziploc Paper Sandwich and Snack Bags, Recyclable & Sealable with Fun Designs, "
+                         "150 Total Bags",
                          order.items[3].title)
         self.assertIsNotNone(order.items[0].link)
         self.assertIsNotNone(order.items[0].image_link)
