@@ -308,6 +308,27 @@ class TestOrders(UnitTestCase):
         self.assert_order_114_8722141_6545058_data_component_subscription(order, True)
         self.assertEqual(1, resp1.call_count)
 
+    @responses.activate
+    def test_get_order_2024_data_component_multiple_shipments(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "111-6778632-7354601"
+        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assert_order_111_6778632_7354601_data_component_subscription(order, True)
+        self.assertEqual(1, resp1.call_count)
+
     @unittest.skipIf(not os.path.exists(temp_order_history_file_path),
                      reason="Skipped, to debug an order history page, "
                             "place it at tests/output/temp-order-history.html")

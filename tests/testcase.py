@@ -439,6 +439,47 @@ class TestCase(unittest.TestCase):
                              order.items[0].seller.name)
             self.assertIsNone(order.items[0].seller.link)
 
+    def assert_order_111_6778632_7354601_data_component_subscription(self, order, full_details=False):
+        self.assertEqual("111-6778632-7354601", order.order_number)
+        self.assertEqual(60.88, order.grand_total)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2024, 9, 8), order.order_placed_date)
+        self.assertEqual("Name1 & Name2", order.recipient.name)
+        self.assertIn("Address2", order.recipient.address)
+        self.assertEqual(2, len(order.shipments))
+        self.assertEqual(str(order.items),
+                         str(order.shipments[0].items) + str(order.shipments[1].items))
+        self.assertEqual(3, len(order.shipments[0].items))
+        self.assertEqual(1, len(order.shipments[1].items))
+        self.assertEqual("Delivered September  9", order.shipments[0].delivery_status)
+        self.assertEqual("Delivered September  9", order.shipments[1].delivery_status)
+        self.assertEqual(4, len(order.items))
+        self.assertEqual("Bounty Paper Towels Quick Size, White, 16 Family Rolls = 40 Regular Rolls",
+                         order.items[0].title)
+        self.assertIsNotNone(order.items[0].link)
+        self.assertIsNotNone(order.items[0].image_link)
+        self.assertIsNotNone(order.items[3].link)
+        self.assertIsNotNone(order.items[3].image_link)
+
+        self.assertEqual(order.full_details, full_details)
+
+        if full_details:
+            self.assertEqual("American Express", order.payment_method)
+            self.assertEqual(1111, order.payment_method_last_4)
+            self.assertEqual(57.69, order.subtotal)
+            self.assertEqual(2.99, order.shipping_total)
+            self.assertEqual(-2.17, order.subscription_discount)
+            self.assertEqual(57.69, order.total_before_tax)
+            self.assertEqual(3.19, order.estimated_tax)
+            self.assertEqual(date(2024, 10, 9), order.items[0].return_eligible_date)
+            self.assertEqual(date(2024, 10, 9), order.items[1].return_eligible_date)
+            self.assertEqual(date(2024, 10, 9), order.items[2].return_eligible_date)
+            self.assertEqual(date(2024, 10, 9), order.items[3].return_eligible_date)
+            self.assertEqual(7.49, order.items[0].price)
+            self.assertEqual(21.27, order.items[1].price)
+            self.assertEqual(18.95, order.items[2].price)
+            self.assertEqual(9.98, order.items[3].price)
+
     def assert_populated_generic(self, order, full_details):
         self.assertIsNotNone(order.order_number)
         self.assertIsNotNone(order.grand_total)
