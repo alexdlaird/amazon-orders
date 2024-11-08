@@ -45,20 +45,30 @@ class Selectors:
     # is passed.
     ##########################################################################
 
-    ORDER_HISTORY_ENTITY_SELECTOR = ["div.order-card", "div.order"]
-    ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails", "div#ordersContainer"]
-    ITEM_ENTITY_SELECTOR = ["div:has(> div.yohtmlc-item)", ".item-box", "[data-component='purchasedItems']"]
-    SHIPMENT_ENTITY_SELECTOR = ["div.shipment", "div.delivery-box",
-                                "[data-component='orderCard'] [data-component='shipments']"]
+    ORDER_HISTORY_ENTITY_SELECTOR = ["div.order-card",
+                                     "div.order"]
+    ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
+                                     "div#ordersContainer"]
+    ITEM_ENTITY_SELECTOR = ["[data-component='purchasedItems'] .a-fixed-left-grid",
+                            "div:has(> div.yohtmlc-item)",
+                            ".item-box"]
+    SHIPMENT_ENTITY_SELECTOR = ["[data-component='orderCard'] [data-component='shipments'] .a-box",
+                                "div.shipment",
+                                "div.delivery-box"]
 
     #####################################
     # CSS selectors for Item fields
     #####################################
 
     FIELD_ITEM_IMG_LINK_SELECTOR = "a img"
-    FIELD_ITEM_QUANTITY_SELECTOR = [".od-item-view-qty", "span.item-view-qty", "span.product-image__qty"]
-    FIELD_ITEM_TITLE_SELECTOR = ["[data-component='itemTitle']", ".yohtmlc-item a", ".yohtmlc-product-title"]
-    FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a", ".yohtmlc-item a", "a:has(> .yohtmlc-product-title)"]
+    FIELD_ITEM_QUANTITY_SELECTOR = [".od-item-view-qty",
+                                    "span.item-view-qty",
+                                    "span.product-image__qty"]
+    FIELD_ITEM_TITLE_SELECTOR = ["[data-component='itemTitle']",
+                                 ".yohtmlc-item a", ".yohtmlc-product-title"]
+    FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a",
+                                ".yohtmlc-item a",
+                                "a:has(> .yohtmlc-product-title)"]
     FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div"]
     FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice'] .a-text-price :not(.a-offscreen)",
                                  ".yohtmlc-item .a-color-price"]
@@ -70,9 +80,13 @@ class Selectors:
     #####################################
 
     FIELD_ORDER_DETAILS_LINK_SELECTOR = "a.yohtmlc-order-details-link"
-    FIELD_ORDER_NUMBER_SELECTOR = [".order-date-invoice-item bdi[dir='ltr']", "bdi[dir='ltr']", "span[dir='ltr']"]
-    FIELD_ORDER_GRAND_TOTAL_SELECTOR = ["div.yohtmlc-order-total span.value", "div.order-header div.a-column.a-span2"]
-    FIELD_ORDER_PLACED_DATE_SELECTOR = ["span.order-date-invoice-item", "div.a-span3"]
+    FIELD_ORDER_NUMBER_SELECTOR = [".order-date-invoice-item bdi[dir='ltr']",
+                                   "bdi[dir='ltr']",
+                                   "span[dir='ltr']"]
+    FIELD_ORDER_GRAND_TOTAL_SELECTOR = ["div.yohtmlc-order-total span.value",
+                                        "div.order-header div.a-column.a-span2"]
+    FIELD_ORDER_PLACED_DATE_SELECTOR = ["span.order-date-invoice-item",
+                                        "div.a-span3"]
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"
     FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["[data-component='orderSubtotals'] div.a-row",
@@ -88,7 +102,8 @@ class Selectors:
     # CSS selectors for Shipment fields
     #####################################
 
-    FIELD_SHIPMENT_TRACKING_LINK_SELECTOR = ["span.track-package-button a", "a[href*='ship-track?itemId=']"]
+    FIELD_SHIPMENT_TRACKING_LINK_SELECTOR = ["span.track-package-button a",
+                                             "a[href*='ship-track?itemId=']"]
     FIELD_SHIPMENT_DELIVERY_STATUS_SELECTOR = ["div.js-shipment-info-container div.a-row",
                                                "span.delivery-box__primary-text",
                                                ".yohtmlc-shipment-status-primaryText",
@@ -123,24 +138,18 @@ class Selectors:
     TRANSACTIONS_SELECTOR = "div.apx-transactions-line-item-component-container"
 
     TRANSACTIONS_NEXT_PAGE_INPUT_SELECTOR = (
-        "input[type='submit'][name^='ppw-widgetEvent:DefaultNextPageNavigationEvent']"
-    )
+        "input[type='submit'][name^='ppw-widgetEvent:DefaultNextPageNavigationEvent']")
     TRANSACTIONS_NEXT_PAGE_INPUT_STATE_SELECTOR = "input[name='ppw-widgetState']"
     TRANSACTIONS_NEXT_PAGE_INPUT_IE_SELECTOR = "input[name='ie']"
 
     FIELD_TRANSACTION_COMPLETED_DATE_SELECTOR = "span"
     FIELD_TRANSACTION_PAYMENT_METHOD_SELECTOR = (
-        "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base"
-    )
+        "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base")
     FIELD_TRANSACTION_GRAND_TOTAL_SELECTOR = (
-        "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base-plus"
-    )
+        "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base-plus")
     FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR = (
-        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal"
-    )
+        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal")
     FIELD_TRANSACTION_ORDER_LINK_SELECTOR = (
-        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal"
-    )
+        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal")
     FIELD_TRANSACTION_SELLER_NAME_SELECTOR = (
-        "div.apx-transactions-line-item-component-container > div:nth-child(3) span.a-size-base"
-    )
+        "div.apx-transactions-line-item-component-container > div:nth-child(3) span.a-size-base")

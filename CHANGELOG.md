@@ -6,6 +6,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.0...HEAD)
 
+## [3.2.1](https://github.com/alexdlaird/amazon-orders/compare/3.2.0...3.2.1) - 2024-11-08
+
+### Fixed
+
+- Issues with parsing Items and Shipments using the new `data-component`, selectors made more precise.
+
 ## [3.2.0](https://github.com/alexdlaird/amazon-orders/compare/3.1.0...3.2.0) - 2024-11-07
 
 ### Added
