@@ -17,19 +17,15 @@ from amazonorders.session import AmazonSession
 logger = logging.getLogger(__name__)
 
 
-def _get_today() -> datetime.date:
-    return datetime.date.today()
-
-
-def _parse_transaction_form_tag(
-        form_tag: Tag, config: AmazonOrdersConfig
-) -> Tuple[List[Transaction], Optional[str], Optional[Dict[str, str]]]:
+def _parse_transaction_form_tag(form_tag: Tag,
+                                config: AmazonOrdersConfig) \
+        -> Tuple[List[Transaction], Optional[str], Optional[Dict[str, str]]]:
     transactions = []
     date_container_tags = util.select(form_tag, config.selectors.TRANSACTION_DATE_CONTAINERS_SELECTOR)
     for date_container_tag in date_container_tags:
         date_tag = util.select_one(date_container_tag, config.selectors.FIELD_TRANSACTION_COMPLETED_DATE_SELECTOR)
         if not date_tag:
-            logger.warning("Could not find date tag in transaction form.")
+            logger.warning("Could not find date tag in Transaction form.")
             continue
 
         date_str = date_tag.text
@@ -38,9 +34,7 @@ def _parse_transaction_form_tag(
         transactions_container_tag = date_container_tag.find_next_sibling(
             config.selectors.TRANSACTIONS_CONTAINER_SELECTOR)
         if not isinstance(transactions_container_tag, Tag):
-            logger.warning(
-                "Could not find transactions container tag in transaction form."
-            )
+            logger.warning("Could not find transactions container tag in Transaction form.")
             continue
 
         transaction_tags = util.select(transactions_container_tag, config.selectors.TRANSACTIONS_SELECTOR)
@@ -52,7 +46,7 @@ def _parse_transaction_form_tag(
     form_ie_input = util.select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_IE_SELECTOR)
     next_page_input = util.select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_SELECTOR)
     if not next_page_input or not form_state_input or not form_ie_input:
-        return (transactions, None, None)
+        return transactions, None, None
 
     next_page_post_url = str(form_tag["action"])
     next_page_post_data = {
@@ -61,7 +55,7 @@ def _parse_transaction_form_tag(
         str(next_page_input["name"]): "",
     }
 
-    return (transactions, next_page_post_url, next_page_post_data)
+    return transactions, next_page_post_url, next_page_post_data
 
 
 class AmazonTransactions:
@@ -100,7 +94,7 @@ class AmazonTransactions:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        min_date = _get_today() - datetime.timedelta(days=days)
+        min_date = datetime.date.today() - datetime.timedelta(days=days)
 
         self.amazon_session.get(self.config.constants.TRANSACTION_HISTORY_LANDING_URL)
         if not self.amazon_session.last_response_parsed:

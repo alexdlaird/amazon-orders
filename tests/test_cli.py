@@ -86,10 +86,10 @@ class TestCli(UnitTestCase):
         self.assertIn("Order #112-2961628-4757846", response.output)
 
     @responses.activate
-    @patch("amazonorders.transactions._get_today")
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_transactions_command(self, mock_get_today: Mock):
         # GIVEN
-        mock_get_today.return_value = datetime.date(2024, 10, 11)
+        mock_get_today.date.today.return_value = datetime.date(2024, 10, 11)
         days = 1
         self.given_login_responses_success()
         with open(os.path.join(self.RESOURCES_DIR, "get-transactions.html"), "r", encoding="utf-8") as f:

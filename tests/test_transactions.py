@@ -31,16 +31,16 @@ class TestOrders(UnitTestCase):
         self.amazon_transactions = AmazonTransactions(self.amazon_session)
 
     @responses.activate
-    @patch("amazonorders.transactions._get_today")
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_transactions_command(self, mock_get_today: Mock):
         # GIVEN
-        mock_get_today.return_value = datetime.date(2024, 10, 11)
+        mock_get_today.date.today.return_value = datetime.date(2024, 10, 11)
         days = 1
         self.amazon_session.is_authenticated = True
         with open(
-            os.path.join(self.RESOURCES_DIR, "get-transactions.html"),
-            "r",
-            encoding="utf-8",
+                os.path.join(self.RESOURCES_DIR, "get-transactions.html"),
+                "r",
+                encoding="utf-8",
         ) as f:
             responses.add(
                 responses.GET,
