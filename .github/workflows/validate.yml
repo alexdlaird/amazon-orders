@@ -18,6 +18,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.12
+      - name: Install jpeg
+        run: sudo apt-get install -y libjpeg-dev zlib1g-dev
       - name: Build test coverage
         run: make install test
       - name: Build docs

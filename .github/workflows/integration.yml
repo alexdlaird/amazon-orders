@@ -21,14 +21,16 @@ jobs:
       TO_PHONE_NUMBER: ${{ secrets.TO_PHONE_NUMBER }}
       NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.12
+      - name: Install jpeg
+        run: sudo apt-get install -y libjpeg-dev zlib1g-dev
       - name: Test
         uses: nick-fields/retry@v3
         with:
