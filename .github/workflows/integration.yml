@@ -21,14 +21,14 @@ jobs:
       TO_PHONE_NUMBER: ${{ secrets.TO_PHONE_NUMBER }}
       NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.12
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: 3.12
+          python-version: 3.11
       - name: Test
         uses: nick-fields/retry@v3
         with:
