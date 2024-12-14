@@ -13,7 +13,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [3.2.1](https://github.com/alexdlaird/amazon-orders/compare/3.2.0...3.2.1) - 2024-11-08
 
 ### Fixed
-
+Test
 - Issues with parsing Items and Shipments using the new `data-component`, selectors made more precise.
 - Transactions use `util` selector methods, so consistent use of trying a list of selectors is maintained.
 
