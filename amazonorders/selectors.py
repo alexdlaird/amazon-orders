@@ -55,6 +55,7 @@ class Selectors:
     SHIPMENT_ENTITY_SELECTOR = ["[data-component='orderCard'] [data-component='shipments'] .a-box",
                                 "div.shipment",
                                 "div.delivery-box"]
+    ORDER_HISTORY_BRAND_SELECTOR = ".brand-info-box .brand-logo img"
 
     #####################################
     # CSS selectors for Item fields

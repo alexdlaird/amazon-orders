@@ -73,6 +73,12 @@ class AmazonOrders:
             response_parsed = self.amazon_session.last_response_parsed
 
             for order_tag in util.select(response_parsed, self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
+                # If we find a brand logo (for instance, Amazon Fresh), we don't know how to parse this. If we know how
+                # to do this in the future, we can implement it, but right now we have no reliable way, so skipping
+                # these orders.
+                if util.select(order_tag, self.config.selectors.ORDER_HISTORY_BRAND_SELECTOR):
+                    continue
+
                 order: Order = self.config.order_cls(order_tag, self.config)
 
                 if full_details:

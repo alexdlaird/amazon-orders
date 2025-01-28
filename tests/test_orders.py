@@ -123,7 +123,7 @@ class TestOrders(UnitTestCase):
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
 
         # THEN
-        self.assertEqual(10, len(orders))
+        self.assertEqual(9, len(orders))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
 
