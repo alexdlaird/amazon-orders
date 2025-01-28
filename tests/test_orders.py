@@ -110,7 +110,7 @@ class TestOrders(UnitTestCase):
         year = 2024
         start_index = 0
         resp1 = self.given_order_history_landing_exists()
-        with open(os.path.join(self.RESOURCES_DIR, f"order-history-fresh.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-fresh.html"), "r",
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.GET,

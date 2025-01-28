@@ -4,11 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.2...HEAD)
+
+## [3.2.2](https://github.com/alexdlaird/amazon-orders/compare/3.2.1...3.2.2) - 2025-01-28
 
 ### Added
 
 - Stability improvements.
+
+### Fixed
+
+- Broken parsing of Amazon Fresh orders, these are now skipped.
 
 ## [3.2.1](https://github.com/alexdlaird/amazon-orders/compare/3.2.0...3.2.1) - 2024-11-08
 
