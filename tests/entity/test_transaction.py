@@ -39,7 +39,7 @@ class TestTransaction(UnitTestCase):
 </div>
 """  # noqa
 
-        parsed = BeautifulSoup(html, "html.parser")
+        parsed = BeautifulSoup(html, self.test_config.bs4_parser)
 
         # WHEN
         transaction = Transaction(parsed, self.test_config, date(2024, 1, 1))
@@ -86,7 +86,7 @@ class TestTransaction(UnitTestCase):
 </div>
 """  # noqa
 
-        parsed = BeautifulSoup(html, "html.parser")
+        parsed = BeautifulSoup(html, self.test_config.bs4_parser)
 
         # WHEN
         transaction = Transaction(parsed, self.test_config, date(2024, 1, 1))

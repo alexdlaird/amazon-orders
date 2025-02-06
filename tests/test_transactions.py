@@ -57,7 +57,7 @@ class TestOrders(UnitTestCase):
 
     def test_parse_transaction_form_tag(self):
         # GIVEN
-        parsed = BeautifulSoup(TEST_PARSE_TRANSACTION_FORM_TAG_HTML, "html.parser")
+        parsed = BeautifulSoup(TEST_PARSE_TRANSACTION_FORM_TAG_HTML, self.test_config.bs4_parser)
         form_tag = parsed.select_one("form")
 
         # WHEN

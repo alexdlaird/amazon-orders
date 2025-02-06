@@ -22,7 +22,7 @@ def _obfuscate(response_parsed, hide_data_rules):
     for rule in hide_data_rules:
         pattern = re.compile(rule["find_pattern"], re.IGNORECASE)
         cleaned = pattern.sub(rule["replace"], cleaned)
-    return BeautifulSoup(cleaned, self.config.bs4_parser)
+    return BeautifulSoup(cleaned, "html.parser")
 
 
 def build_test_resources(args):
@@ -85,7 +85,7 @@ def build_test_resources(args):
         if page["type"] == "order-details":
             url = f"{config.constants.ORDER_DETAILS_URL}?orderID={page['order-id']}"
             response = amazon_session.get(url)
-            response_parsed = BeautifulSoup(response.text, self.config.bs4_parser)
+            response_parsed = BeautifulSoup(response.text, "html.parser")
 
             cleaned_response = _obfuscate(response_parsed, hide_data_rules)
 
@@ -93,7 +93,7 @@ def build_test_resources(args):
         else:
             url = f"{config.constants.ORDER_HISTORY_URL}?timeFilter=year-{page['year']}&startIndex={page['start-index']}"
             response = amazon_session.get(url)
-            response_parsed = BeautifulSoup(response.text, self.config.bs4_parser)
+            response_parsed = BeautifulSoup(response.text, "html.parser")
 
             cleaned_response = _obfuscate(response_parsed, hide_data_rules)
 

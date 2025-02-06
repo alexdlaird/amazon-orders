@@ -11,7 +11,7 @@ class TestItem(UnitTestCase):
     def test_to_currency(self):
         # GIVEN
         html = "<html />"
-        parsed = BeautifulSoup(html, "html.parser")
+        parsed = BeautifulSoup(html, self.test_config.bs4_parser)
 
         # WHEN
         parsable = Parsable(parsed, self.test_config)

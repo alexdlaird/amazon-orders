@@ -19,15 +19,15 @@ class UnitTestCase(TestCase):
 
     def setUp(self):
         conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".config")
-        test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")
-        test_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.json")
+        self.test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")
+        self.test_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.json")
         self.test_config = AmazonOrdersConfig(data={
-            "output_dir": test_output_dir,
-            "cookie_jar_path": test_cookie_jar_path
+            "output_dir": self.test_output_dir,
+            "cookie_jar_path": self.test_cookie_jar_path
         })
 
-        if os.path.exists(test_cookie_jar_path):
-            os.remove(test_cookie_jar_path)
+        if os.path.exists(self.test_cookie_jar_path):
+            os.remove(self.test_cookie_jar_path)
 
     def tearDown(self):
         if os.path.exists(conf.DEFAULT_CONFIG_DIR):

@@ -330,7 +330,7 @@ href="/gp/buyagain/ref=ppx_od_dt_b_bia?ie=UTF8&amp;ats=eyJZXMiOiJCMDdZ%0AUUREOTR
 </link></div>
 </div>
 """
-        parsed = BeautifulSoup(html, "html.parser")
+        parsed = BeautifulSoup(html, self.test_config.bs4_parser)
 
         # WHEN
         order = Order(parsed, self.test_config, full_details=True)

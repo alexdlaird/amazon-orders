@@ -6,6 +6,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.2...HEAD)
 
+## [3.2.3](https://github.com/alexdlaird/amazon-orders/compare/3.2.1...3.2.2) - 2025-02-06
+
+### Added
+
+- `bs4_parser` to the config file, which allows for overriding the parser used by BeautifulSoup, defaulting to the built-in `html.parser`.
+
 ## [3.2.2](https://github.com/alexdlaird/amazon-orders/compare/3.2.1...3.2.2) - 2025-01-28
 
 ### Added

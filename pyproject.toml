@@ -41,7 +41,8 @@ dev = [
     "responses",
     "flask",
     "twilio",
-    "pyngrok"
+    "pyngrok",
+    "lxml"
 ]
 docs = [
     "Sphinx",
