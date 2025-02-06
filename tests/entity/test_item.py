@@ -45,7 +45,7 @@ class TestItem(UnitTestCase):
         lxml_config = AmazonOrdersConfig(data={
             "output_dir": self.test_output_dir,
             "cookie_jar_path": self.test_cookie_jar_path,
-            "parser": "lxml"
+            "bs4_parser": "lxml"
         })
         html = """
 <div class="a-fixed-left-grid-col yohtmlc-item a-col-right" style="padding-left:1.5%;float:left;">
