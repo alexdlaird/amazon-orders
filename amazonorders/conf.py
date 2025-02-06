@@ -36,6 +36,7 @@ class AmazonOrdersConfig:
             "order_class": "amazonorders.entity.order.Order",
             "shipment_class": "amazonorders.entity.shipment.Shipment",
             "item_class": "amazonorders.entity.item.Item",
+            "bs4_parser": "html.parser",
         }
 
         if os.path.exists(self.config_path):

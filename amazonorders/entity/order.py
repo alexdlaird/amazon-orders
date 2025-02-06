@@ -146,7 +146,7 @@ class Order(Parsable):
                 data_popover = value.get("data-a-popover", {})  # type: ignore[arg-type, var-annotated]
                 inline_content = data_popover.get("inlineContent")  # type: ignore[union-attr]
                 if inline_content:
-                    value = BeautifulSoup(json.loads(inline_content), "html.parser")
+                    value = BeautifulSoup(json.loads(inline_content), self.config.bs4_parser)
 
         if not value:
             # TODO: there are multiple shipToData tags, we should double check we're picking the right one
@@ -166,7 +166,7 @@ class Order(Parsable):
             )
 
             if parent_tag:
-                value = BeautifulSoup(str(parent_tag.contents[0]).strip(), "html.parser")
+                value = BeautifulSoup(str(parent_tag.contents[0]).strip(), self.config.bs4_parser)
 
         if not value:
             return None

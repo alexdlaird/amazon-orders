@@ -48,7 +48,8 @@ class TestConf(TestCase):
         # THEN
         self.assertTrue(os.path.exists(config_path))
         with open(config.config_path, "r") as f:
-            self.assertEqual("""constants_class: amazonorders.constants.Constants
+            self.assertEqual("""bs4_parser: html.parser
+constants_class: amazonorders.constants.Constants
 cookie_jar_path: {}
 item_class: amazonorders.entity.item.Item
 max_auth_attempts: 10

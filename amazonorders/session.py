@@ -141,7 +141,7 @@ class AmazonSession:
 
         self.last_response = self.session.request(method, url, **kwargs)
         self.last_response_parsed = BeautifulSoup(self.last_response.text,
-                                                  "html.parser")
+                                                  self.config.bs4_parser)
 
         cookies = dict_from_cookiejar(self.session.cookies)
         if os.path.exists(self.config.cookie_jar_path):
