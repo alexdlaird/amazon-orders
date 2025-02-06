@@ -50,18 +50,7 @@ class TestItem(UnitTestCase):
         html = """
 <div class="a-fixed-left-grid-col yohtmlc-item a-col-right" style="padding-left:1.5%;float:left;">
 <div class="a-row">
-    <a class="a-link-normal" href="/dp/B0CW5Y6PKG?ref_=ppx_hzod_title_dt_b_fed_asin_title_0_0">&And Per Se Lined Journal Notebook, 160 Pages, A5 5.7 x 8 inches College Ruled Thick Paper Notebook Journals for Writing, Hardcover Notebooks for Women Men Office School (1 Pack, Royal Blue)</a>
-</div>
-<div class="a-row">
-<span class="a-size-small">
-<div class="a-row a-size-small">Return window closed on Feb 2, 2019</div>
-</span>
-</div>
-<div class="a-row">
-<span class="a-size-small a-color-price">
-    $1,234.99
-</span>
-</div>
+    <a class="a-link-normal" href="/dp/B0CW5Y6PKG?ref_=ppx_hzod_title_dt_b_fed_asin_title_0_0">&And Per Se Lined</a>
 </div>
 </div>
 """
@@ -71,4 +60,4 @@ class TestItem(UnitTestCase):
         item = Item(parsed, lxml_config)
 
         # THEN
-        self.assertEqual(item.title, "&And Per Se Lined Journal Notebook, 160 Pages, A5 5.7 x 8 inches College Ruled Thick Paper Notebook Journals for Writing, Hardcover Notebooks for Women Men Office School (1 Pack, Royal Blue)")
+        self.assertEqual(item.title, "&And Per Se Lined")
