@@ -69,6 +69,8 @@ class Order(Parsable):
         self.subtotal: Optional[float] = self._if_full_details(self._parse_currency("subtotal"))
         #: The Order shipping total. Only populated when ``full_details`` is ``True``.
         self.shipping_total: Optional[float] = self._if_full_details(self._parse_currency("shipping"))
+        #: The Order promotion applied. Only populated when ``full_details`` is ``True``.
+        self.promotion_applied: Optional[float] = self._if_full_details(self._parse_currency("promotion"))
         #: The Order Subscribe & Save discount. Only populated when ``full_details`` is ``True``.
         self.subscription_discount: Optional[float] = self._if_full_details(self._parse_currency("subscribe"))
         #: The Order total before tax. Only populated when ``full_details`` is ``True``.
