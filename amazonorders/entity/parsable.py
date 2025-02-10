@@ -69,7 +69,7 @@ class Parsable:
                      wrap_tag: Optional[Type] = None,
                      parse_date: bool = False) -> Any:
         """
-        Will attempt to extract the text value of the given CSS selector(s) for a field, and
+        Will attempt to extract the text value of the given selector(s) for a field, and
         is suitable for most basic functionality on a well-formed page.
 
         The ``selector`` can be either a ``str`` or a ``list``. If a ``list`` is given, each
@@ -78,7 +78,7 @@ class Parsable:
         In most cases the selected tag's text will be returned, but if ``wrap_tag`` is given, the
         tag itself (wrapped in the class) will be returned.
 
-        :param selector: The CSS selector(s) for the field.
+        :param selector: The selector(s) for the field.
         :param attr_name: If provided, return the value of this attribute on the selected field.
         :param text_contains: Only select the field if this value is found in its text content.
         :param required: If required, an exception will be thrown instead of returning ``None``.
