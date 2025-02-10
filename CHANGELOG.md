@@ -6,13 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.4...HEAD)
 
-## [3.2.4](https://github.com/alexdlaird/amazon-orders/compare/3.2.4...3.2.3) - 2025-02-10
+## [3.2.4](https://github.com/alexdlaird/amazon-orders/compare/3.2.3...3.2.4) - 2025-02-10
 
 ### Fixed
 
 - Broken parsing of Whole Foods Market orders, these are now skipped.
 
-## [3.2.3](https://github.com/alexdlaird/amazon-orders/compare/3.2.1...3.2.2) - 2025-02-06
+## [3.2.3](https://github.com/alexdlaird/amazon-orders/compare/3.2.2...3.2.3) - 2025-02-06
 
 ### Added
 
