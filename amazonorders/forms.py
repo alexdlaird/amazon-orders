@@ -34,9 +34,9 @@ class AuthForm(ABC):
                  critical: bool = False) -> None:
         #: The AmazonOrdersConfig to use.
         self.config: AmazonOrdersConfig = config
-        #: The CSS selector for the ``<form>``.
+        #: The selector for the ``<form>``.
         self.selector: Optional[str] = selector
-        #: The CSS selector for the error div when form submission fails.
+        #: The selector for the error div when form submission fails.
         self.error_selector: str = error_selector or config.selectors.DEFAULT_ERROR_TAG_SELECTOR
         #: If ``critical``, form submission failures will raise :class:`~amazonorders.exception.AmazonOrdersAuthError`.
         self.critical: bool = critical

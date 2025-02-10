@@ -151,7 +151,7 @@ class Order(Parsable):
         if not value:
             # TODO: there are multiple shipToData tags, we should double check we're picking the right one
             #  associated with the order; should also be able to eliminate the use of find_parent() here with
-            #  a better CSS selector, we just need to make sure we have good test coverage around this path first
+            #  a better selector, we just need to make sure we have good test coverage around this path first
             parsed_parent = self.parsed.find_parent()
 
             if parsed_parent is None:

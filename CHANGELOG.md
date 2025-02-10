@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.2...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.4...HEAD)
+
+## [3.2.4](https://github.com/alexdlaird/amazon-orders/compare/3.2.4...3.2.3) - 2025-02-10
+
+### Fixed
+
+- Broken parsing of Whole Foods Market orders, these are now skipped.
 
 ## [3.2.3](https://github.com/alexdlaird/amazon-orders/compare/3.2.1...3.2.2) - 2025-02-06
 
@@ -263,7 +269,7 @@ Build and stability improvements.
 - [AuthForm](https://amazon-orders.readthedocs.io/api.html#amazonorders.forms.AuthForm) abstract class, and
   migrated all auth flow items to subclasses of this class.
 - [Parsable.simple_parse()](https://amazon-orders.readthedocs.io/api.html#amazonorders.entities.parsable.Parsable.simple_parse),
-  which can handle most basic fields when parised with CSS selectors.
+  which can handle most basic fields when parsed with CSS selectors.
 - Stability improvements.
 - Test improvements.
 

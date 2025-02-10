@@ -18,7 +18,7 @@ def select(parsed: Tag, selector: Union[List[str], str]) -> List[Tag]:
     tried until one is found to return a populated list of ``Tag``'s, and that value will be returned.
 
     :param parsed: The ``Tag`` from which to attempt selection.
-    :param selector: The CSS selector(s) for the field.
+    :param selector: The selector(s) for the field.
     :return: The selected tag.
     """
     if isinstance(selector, str):
@@ -40,7 +40,7 @@ def select_one(parsed: Tag, selector: Union[List[str], str]) -> Optional[Tag]:
     tried until one is found to return a populated ``Tag``, and that value will be returned.
 
     :param parsed: The ``Tag`` from which to attempt selection.
-    :param selector: The CSS selector(s) for the field.
+    :param selector: The selector(s) for the field.
     :return: The selection tag.
     """
     if isinstance(selector, str):

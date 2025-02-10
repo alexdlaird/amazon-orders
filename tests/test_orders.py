@@ -128,6 +128,30 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
 
     @responses.activate
+    def test_get_order_history_skip_wholefoods(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2024
+        start_index = 0
+        resp1 = self.given_order_history_landing_exists()
+        with open(os.path.join(self.RESOURCES_DIR, "order-history-wholefoods.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.GET,
+                self.test_config.constants.ORDER_HISTORY_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+        # THEN
+        self.assertEqual(9, len(orders))
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+
+    @responses.activate
     def test_get_order_history_full_details(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
