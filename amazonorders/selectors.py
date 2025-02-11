@@ -4,7 +4,7 @@ __license__ = "MIT"
 
 class Selectors:
     """
-    A class containing selectors. Extend and override with `selectors_class` in the config:
+    A class containing CSS selectors. Extend and override with `selectors_class` in the config:
 
     .. code-block:: python
 
@@ -14,7 +14,7 @@ class Selectors:
     """
 
     ##########################################################################
-    # Selectors for AuthForms
+    # CSS selectors for AuthForms
     ##########################################################################
 
     SIGN_IN_FORM_SELECTOR = "form[name='signIn']"
@@ -30,13 +30,13 @@ class Selectors:
     CAPTCHA_2_ERROR_SELECTOR = "div.a-alert-info"
 
     ##########################################################################
-    # Selectors for pagination
+    # CSS selectors for pagination
     ##########################################################################
 
     NEXT_PAGE_LINK_SELECTOR = "ul.a-pagination li.a-last a"
 
     ##########################################################################
-    # Selectors for Entities and Fields
+    # CSS selectors for Entities and Fields
     #
     # A ``FIELD_`` selector can be either a ``str`` or a ``list``. If a
     # ``list`` is given, each selector in the list will be tried. The
@@ -55,15 +55,17 @@ class Selectors:
     SHIPMENT_ENTITY_SELECTOR = ["[data-component='orderCard'] [data-component='shipments'] .a-box",
                                 "div.shipment",
                                 "div.delivery-box"]
-    # Selectors defined here, if found in an Order, will cause the Order to be skipped, since it means we currently do
-    # not have a way to support fully parsing its details
-    ORDER_HISTORY_BRAND_SELECTOR = [# Amazon Fresh is not supported
-                                    ".brand-info-box .brand-logo img",
-                                    # Whole Foods Market is not supported
-                                    "a.yohtmlc-order-details-link[href^='/wholefoodsmarket']"]
+    # Selectors defined here, if found in an Order, will cause the Order to be skipped, since it means we currently
+    # do not have a way to support fully parsing its details
+    ORDER_HISTORY_BRAND_SELECTOR = [
+        # Amazon Fresh is not supported
+        ".brand-info-box .brand-logo img",
+        # Whole Foods Market is not supported
+        "a.yohtmlc-order-details-link[href^='/wholefoodsmarket']"
+    ]
 
     #####################################
-    # Selectors for Item fields
+    # CSS selectors for Item fields
     #####################################
 
     FIELD_ITEM_IMG_LINK_SELECTOR = "a img"
@@ -82,16 +84,18 @@ class Selectors:
     FIELD_ITEM_RETURN_SELECTOR = ["[data-component='itemReturnEligibility']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
 
     #####################################
-    # Selectors for Order fields
+    # CSS selectors for Order fields
     #####################################
 
     FIELD_ORDER_DETAILS_LINK_SELECTOR = "a.yohtmlc-order-details-link"
-    FIELD_ORDER_NUMBER_SELECTOR = [".order-date-invoice-item bdi[dir='ltr']",
+    FIELD_ORDER_NUMBER_SELECTOR = ["[data-component='briefOrderInfo'] div.a-column",
+                                   ".order-date-invoice-item bdi[dir='ltr']",
                                    "bdi[dir='ltr']",
                                    "span[dir='ltr']"]
     FIELD_ORDER_GRAND_TOTAL_SELECTOR = ["div.yohtmlc-order-total span.value",
                                         "div.order-header div.a-column.a-span2"]
-    FIELD_ORDER_PLACED_DATE_SELECTOR = ["span.order-date-invoice-item",
+    FIELD_ORDER_PLACED_DATE_SELECTOR = ["[data-component='briefOrderInfo'] div.a-column",
+                                        "span.order-date-invoice-item",
                                         "div.a-span3"]
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"
@@ -105,7 +109,7 @@ class Selectors:
     FIELD_ORDER_GIFT_CARD_INSTANCE_SELECTOR = ".gift-card-instance"
 
     #####################################
-    # Selectors for Shipment fields
+    # CSS selectors for Shipment fields
     #####################################
 
     FIELD_SHIPMENT_TRACKING_LINK_SELECTOR = ["span.track-package-button a",
@@ -116,7 +120,7 @@ class Selectors:
                                                ".od-status-message"]
 
     #####################################
-    # Selectors for Recipient fields
+    # CSS selectors for Recipient fields
     #####################################
 
     FIELD_RECIPIENT_NAME_SELECTOR = ["li.displayAddressFullName",
@@ -128,14 +132,14 @@ class Selectors:
     FIELD_RECIPIENT_ADDRESS_FALLBACK_SELECTOR = "div:nth-child(2)"
 
     #####################################
-    # Selectors for Seller fields
+    # CSS selectors for Seller fields
     #####################################
 
     FIELD_SELLER_NAME_SELECTOR = ["a", "span"]
     FIELD_SELLER_LINK_SELECTOR = "a"
 
     #####################################
-    # Selectors for Transaction fields
+    # CSS selectors for Transaction fields
     #####################################
 
     TRANSACTION_HISTORY_FORM_SELECTOR = "form:has(input[name='ppw-widgetState'])"

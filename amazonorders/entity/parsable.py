@@ -67,9 +67,12 @@ class Parsable:
                      required: bool = False,
                      prefix_split: Optional[str] = None,
                      wrap_tag: Optional[Type] = None,
-                     parse_date: bool = False) -> Any:
+                     parse_date: bool = False,
+                     prefix_split_fuzzy: bool = False,
+                     suffix_split: Optional[str] = None,
+                     suffix_split_fuzzy: bool = False) -> Any:
         """
-        Will attempt to extract the text value of the given selector(s) for a field, and
+        Will attempt to extract the text value of the given CSS selector(s) for a field, and
         is suitable for most basic functionality on a well-formed page.
 
         The ``selector`` can be either a ``str`` or a ``list``. If a ``list`` is given, each
@@ -78,7 +81,7 @@ class Parsable:
         In most cases the selected tag's text will be returned, but if ``wrap_tag`` is given, the
         tag itself (wrapped in the class) will be returned.
 
-        :param selector: The selector(s) for the field.
+        :param selector: The CSS selector(s) for the field.
         :param attr_name: If provided, return the value of this attribute on the selected field.
         :param text_contains: Only select the field if this value is found in its text content.
         :param required: If required, an exception will be thrown instead of returning ``None``.
@@ -86,6 +89,9 @@ class Parsable:
         :param wrap_tag: Wrap the selected tag in this class before returning.
         :param parse_date: ``True`` if the resulting value should be fuzzy parsed in to a date (returning ``None`` if
             parsing fails).
+        :param prefix_split_fuzzy: ``True`` if the value should still be used even if ``prefix_split`` is not found.
+        :param suffix_split: Only select the field with the given suffix, returning the left side of the split if so.
+        :param suffix_split_fuzzy: ``True`` if the value should still be used even if ``suffix_split`` is not found.
         :return: The cleaned up return value from the parsed ``selector``.
         """
         if isinstance(selector, str):
@@ -109,11 +115,23 @@ class Parsable:
 
                         if prefix_split:
                             if prefix_split not in tag.text:
-                                continue
+                                if prefix_split_fuzzy:
+                                    value = tag.text.strip()
+                                else:
+                                    continue
                             else:
                                 value = tag.text.strip().split(prefix_split)[1]
                         else:
                             value = tag.text
+
+                        if suffix_split:
+                            if suffix_split not in value:
+                                if suffix_split_fuzzy:
+                                    value = value.strip()
+                                else:
+                                    continue
+                            else:
+                                value = value.strip().split(suffix_split)[0]
 
                         if wrap_tag:
                             value = wrap_tag(tag, self.config)
@@ -142,7 +160,7 @@ class Parsable:
         """
         A helper function that uses :func:`simple_parse` as the ``parse_function()`` passed to :func:`safe_parse`.
 
-        :param selector: The selector to pass to :func:`simple_parse`.
+        :param selector: The CSS selector to pass to :func:`simple_parse`.
         :param kwargs: The ``kwargs`` will be passed to ``parse_function``.
         :return: The return value from :func:`simple_parse`.
         """

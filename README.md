@@ -12,7 +12,7 @@ be used to interact with Amazon.com's consumer-facing website.
 
 This works by parsing website data from Amazon.com. A periodic build validates functionality to ensure its
 stability, but as Amazon provides no official API to use, this package may break at any time. This
-package only officially supports the English version of the website.
+package only officially supports the English, `.com` version of Amazon.
 
 ## Installation
 

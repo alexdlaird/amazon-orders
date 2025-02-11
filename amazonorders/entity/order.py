@@ -43,7 +43,9 @@ class Order(Parsable):
         #: The Order number.
         self.order_number: str = clone.order_number if clone else self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR,
-            required=True)
+            required=True,
+            prefix_split="#",
+            prefix_split_fuzzy=True)
         #: The Order details link.
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
             self._parse_order_details_link)
@@ -51,7 +53,10 @@ class Order(Parsable):
         self.grand_total: float = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
         #: The Order placed date.
         self.order_placed_date: date = clone.order_placed_date if clone else self.safe_simple_parse(
-            selector=self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR, parse_date=True)
+            selector=self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR,
+            suffix_split="Order #",
+            suffix_split_fuzzy=True,
+            parse_date=True)
         #: The Order Recipients.
         self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient)
 
@@ -153,7 +158,7 @@ class Order(Parsable):
         if not value:
             # TODO: there are multiple shipToData tags, we should double check we're picking the right one
             #  associated with the order; should also be able to eliminate the use of find_parent() here with
-            #  a better selector, we just need to make sure we have good test coverage around this path first
+            #  a better CSS selector, we just need to make sure we have good test coverage around this path first
             parsed_parent = self.parsed.find_parent()
 
             if parsed_parent is None:

@@ -15,6 +15,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - Broken parsing of Whole Foods Market orders, these are now skipped.
+- Parsing issue on `Order.order_number` and `Order.order_placed` due to changes in Amazon.com DOM.
 
 ## [3.2.3](https://github.com/alexdlaird/amazon-orders/compare/3.2.2...3.2.3) - 2025-02-06
 
