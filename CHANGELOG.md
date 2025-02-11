@@ -6,7 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.4...HEAD)
 
-## [3.2.4](https://github.com/alexdlaird/amazon-orders/compare/3.2.3...3.2.4) - 2025-02-10
+## [3.2.4](https://github.com/alexdlaird/amazon-orders/compare/3.2.3...3.2.4) - 2025-02-11
+
+### Added
+
+- `Order.promotion_applied` field, which is now parsed alongside other subtotals.
 
 ### Fixed
 
