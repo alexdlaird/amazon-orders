@@ -76,7 +76,8 @@ class Selectors:
                                  ".yohtmlc-item a", ".yohtmlc-product-title"]
     FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a",
                                 ".yohtmlc-item a",
-                                "a:has(> .yohtmlc-product-title)"]
+                                "a:has(> .yohtmlc-product-title)",
+                                ".yohtmlc-product-title a"]
     FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div"]
     FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice'] .a-text-price :not(.a-offscreen)",
                                  ".yohtmlc-item .a-color-price"]
