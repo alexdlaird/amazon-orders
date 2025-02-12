@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import os
 import unittest
+from datetime import date
 
 import responses
 
@@ -97,9 +98,19 @@ class TestOrders(UnitTestCase):
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
 
         # THEN
-        self.assertEqual(10, len(orders))
+        self.assertEqual(9, len(orders))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
+        order = orders[5]
+        self.assertEqual("112-8022032-9113020", order.order_number)
+        self.assertEqual(150.00, order.grand_total)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2024, 10, 28), order.order_placed_date)
+        self.assertEqual(1, len(order.items))
+        self.assertEqual("Amazon eGift Card - Birthday Candles (Animated)",
+                         order.items[0].title)
+        self.assertIsNotNone(order.items[0].link)
+        self.assertIsNotNone(order.items[0].image_link)
 
     @responses.activate
     def test_get_order_history_paginated(self):

@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.4...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.5...HEAD)
+
+## [3.2.5](https://github.com/alexdlaird/amazon-orders/compare/3.2.4...3.2.5) - 2025-02-12
+
+### Fixed
+
+- Parsing errors on gift cards due to changes in Amazon.com DOM.
 
 ## [3.2.4](https://github.com/alexdlaird/amazon-orders/compare/3.2.3...3.2.4) - 2025-02-11
 
