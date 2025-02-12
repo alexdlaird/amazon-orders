@@ -93,6 +93,7 @@ class Selectors:
                                    "bdi[dir='ltr']",
                                    "span[dir='ltr']"]
     FIELD_ORDER_GRAND_TOTAL_SELECTOR = ["div.yohtmlc-order-total span.value",
+                                        "div.order-header div.a-col-left.a-span-last",
                                         "div.order-header div.a-column.a-span2"]
     FIELD_ORDER_PLACED_DATE_SELECTOR = ["[data-component='briefOrderInfo'] div.a-column",
                                         "span.order-date-invoice-item",
