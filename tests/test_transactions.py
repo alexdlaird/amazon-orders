@@ -60,7 +60,8 @@ class TestOrders(UnitTestCase):
         self.assertEqual(transaction.grand_total, -45.19)
         self.assertFalse(transaction.is_refund)
         self.assertEqual(transaction.order_number, "123-4567890-1234567")
-        self.assertEqual(transaction.order_details_link, "https://www.amazon.ca/gp/css/summary/edit.html?orderID=123-4567890-1234567")
+        self.assertEqual(transaction.order_details_link,
+                         "https://www.amazon.ca/gp/css/summary/edit.html?orderID=123-4567890-1234567")
         self.assertEqual(transaction.seller, "AMZN Mktp CA")
 
     @responses.activate
@@ -93,7 +94,8 @@ class TestOrders(UnitTestCase):
         self.assertEqual(transaction.grand_total, -26.29)
         self.assertFalse(transaction.is_refund)
         self.assertEqual(transaction.order_number, "234-8832881-7100260")
-        self.assertEqual(transaction.order_details_link, "https://www.amazon.com/gp/your-account/order-details?orderID=234-8832881-7100260")
+        self.assertEqual(transaction.order_details_link,
+                         "https://www.amazon.com/gp/your-account/order-details?orderID=234-8832881-7100260")
         self.assertEqual(transaction.seller, None)
         transaction = transactions[1]
         self.assertEqual(transaction.completed_date, datetime.date(2025, 2, 7))
@@ -101,7 +103,8 @@ class TestOrders(UnitTestCase):
         self.assertEqual(transaction.grand_total, 43.94)
         self.assertTrue(transaction.is_refund)
         self.assertEqual(transaction.order_number, "234-3017692-4601031")
-        self.assertEqual(transaction.order_details_link, "https://www.amazon.com/gp/css/summary/edit.html?orderID=234-3017692-4601031")
+        self.assertEqual(transaction.order_details_link,
+                         "https://www.amazon.com/gp/css/summary/edit.html?orderID=234-3017692-4601031")
         self.assertEqual(transaction.seller, "AMZN Mktp US")
 
     def test_parse_transaction_form_tag(self):
