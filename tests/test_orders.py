@@ -98,7 +98,7 @@ class TestOrders(UnitTestCase):
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
 
         # THEN
-        self.assertEqual(9, len(orders))
+        self.assertEqual(10, len(orders))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
         order = orders[5]
@@ -139,7 +139,7 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp3.call_count)
 
     @responses.activate
-    def test_get_order_history_skip_fresh(self):
+    def test_get_order_history_fresh(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         year = 2024
@@ -158,12 +158,18 @@ class TestOrders(UnitTestCase):
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
 
         # THEN
-        self.assertEqual(9, len(orders))
+        self.assertEqual(10, len(orders))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
+        order = orders[4]
+        self.assertEqual("111-2072777-8279433", order.order_number)
+        self.assertEqual(80.27, order.grand_total)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2025, 1, 3), order.order_placed_date)
+        self.assertEqual(0, len(order.items))
 
     @responses.activate
-    def test_get_order_history_skip_wholefoods(self):
+    def test_get_order_history_wholefoods(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         year = 2024
@@ -182,9 +188,15 @@ class TestOrders(UnitTestCase):
         orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
 
         # THEN
-        self.assertEqual(9, len(orders))
+        self.assertEqual(10, len(orders))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
+        order = orders[7]
+        self.assertEqual("113-6307059-7336242", order.order_number)
+        self.assertEqual(62.92, order.grand_total)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2024, 12, 12), order.order_placed_date)
+        self.assertEqual(0, len(order.items))
 
     @responses.activate
     def test_get_order_history_full_details(self):

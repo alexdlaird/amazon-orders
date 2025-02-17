@@ -55,12 +55,12 @@ class Selectors:
     SHIPMENT_ENTITY_SELECTOR = ["[data-component='orderCard'] [data-component='shipments'] .a-box",
                                 "div.shipment",
                                 "div.delivery-box"]
-    # Selectors defined here, if found in an Order, will cause the Order to be skipped, since it means we currently
-    # do not have a way to support fully parsing its details
-    ORDER_HISTORY_BRAND_SELECTOR = [
-        # Amazon Fresh is not supported
+    # Selectors defined here mean we don't have a reliable way to parse all details in an Order, so Items and
+    # Shipments will be skipped
+    ORDER_SKIP_ITEMS = [
+        # Identifies an Amazon Fresh order
         ".brand-info-box .brand-logo img",
-        # Whole Foods Market is not supported
+        # Identifies a Whole Foods Market order
         "a.yohtmlc-order-details-link[href^='/wholefoodsmarket']"
     ]
 

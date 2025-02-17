@@ -92,7 +92,7 @@ class Order(Parsable):
         return f"Order #{self.order_number}: {self.items}"
 
     def _parse_shipments(self) -> List[Shipment]:
-        if not self.parsed:
+        if not self.parsed or len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
             return []
 
         shipments: List[Shipment] = [self.config.shipment_cls(x, self.config)
@@ -102,7 +102,7 @@ class Order(Parsable):
         return shipments
 
     def _parse_items(self) -> List[Item]:
-        if not self.parsed:
+        if not self.parsed or len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
             return []
 
         items: List[Item] = [self.config.item_cls(x, self.config)
