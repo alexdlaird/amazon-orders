@@ -37,11 +37,9 @@ class TestOrders(UnitTestCase):
         mock_get_today.date.today.return_value = datetime.date(2024, 10, 11)
         days = 1
         self.amazon_session.is_authenticated = True
-        with open(
-                os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions.html"),
-                "r",
-                encoding="utf-8",
-        ) as f:
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
             responses.add(
                 responses.GET,
                 f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
@@ -71,11 +69,9 @@ class TestOrders(UnitTestCase):
         mock_get_today.date.today.return_value = datetime.date(2025, 2, 13)
         days = 30
         self.amazon_session.is_authenticated = True
-        with open(
-                os.path.join(self.RESOURCES_DIR, "transactions", "transactions-in-progress.html"),
-                "r",
-                encoding="utf-8",
-        ) as f:
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-in-progress.html"),
+                  "r",
+                  encoding="utf-8") as f:
             responses.add(
                 responses.GET,
                 f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
@@ -109,29 +105,27 @@ class TestOrders(UnitTestCase):
 
     def test_parse_transaction_form_tag(self):
         # GIVEN
-        with open(
-                os.path.join(self.RESOURCES_DIR, "transactions", "transaction-form-tag.html"),
-                "r",
-                encoding="utf-8",
-        ) as f:
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transaction-form-tag.html"),
+                  "r",
+                  encoding="utf-8") as f:
             parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
             form_tag = parsed.select_one("form")
 
-            # WHEN
-            transactions, next_page_url, next_page_data = _parse_transaction_form_tag(
-                form_tag, self.test_config
-            )
+        # WHEN
+        transactions, next_page_url, next_page_data = _parse_transaction_form_tag(
+            form_tag, self.test_config
+        )
 
-            # THEN
-            self.assertEqual(len(transactions), 2)
-            self.assertEqual(
-                next_page_url, "https://www.amazon.com:443/cpe/yourpayments/transactions"
-            )
-            self.assertEqual(
-                next_page_data,
-                {
-                    "ppw-widgetState": "the-ppw-widgetState",
-                    "ie": "UTF-8",
-                    'ppw-widgetEvent:DefaultNextPageNavigationEvent:{"nextPageKey":"key"}': "",
-                },
-            )
+        # THEN
+        self.assertEqual(len(transactions), 2)
+        self.assertEqual(
+            next_page_url, "https://www.amazon.com:443/cpe/yourpayments/transactions"
+        )
+        self.assertEqual(
+            next_page_data,
+            {
+                "ppw-widgetState": "the-ppw-widgetState",
+                "ie": "UTF-8",
+                'ppw-widgetEvent:DefaultNextPageNavigationEvent:{"nextPageKey":"key"}': "",
+            },
+        )

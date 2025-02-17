@@ -92,7 +92,7 @@ class TestCli(UnitTestCase):
         mock_get_today.date.today.return_value = datetime.date(2024, 10, 11)
         days = 1
         self.given_login_responses_success()
-        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions.html"),
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"),
                   "r", encoding="utf-8") as f:
             resp = responses.add(
                 responses.GET,
