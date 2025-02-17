@@ -28,6 +28,10 @@ class TestIntegrationGeneric(IntegrationTestCase):
             cls.start_index_full_history = os.environ.get("START_INDEX_FULL_HISTORY")
         else:
             cls.start_index_full_history = None
+        if os.environ.get("TRANSACTIONS_DAYS"):
+            cls.transactions_days = os.environ.get("TRANSACTIONS_DAYS")
+        else:
+            cls.transactions_days = 90
 
     def test_get_order_history(self):
         # WHEN
@@ -69,3 +73,18 @@ class TestIntegrationGeneric(IntegrationTestCase):
         # WHEN
         with self.assertRaises(AmazonOrdersNotFoundError):
             self.amazon_orders.get_order(order_id)
+
+    def test_get_transactions(self):
+        # WHEN
+        transactions = self.amazon_transactions.get_transactions(self.transactions_days)
+
+        # THEN
+        self.assertGreaterEqual(len(transactions), 1)
+        transaction = transactions[0]
+        self.assertIsNotNone(transaction.completed_date)
+        self.assertIsNotNone(transaction.payment_method)
+        self.assertIsNotNone(transaction.grand_total)
+        self.assertIsNotNone(transaction.is_refund)
+        self.assertIsNotNone(transaction.order_number)
+        self.assertIsNotNone(transaction.order_details_link)
+        self.assertIsNotNone(transaction.seller)

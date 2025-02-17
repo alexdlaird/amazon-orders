@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.5...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.6...HEAD)
+
+## [3.2.6](https://github.com/alexdlaird/amazon-orders/compare/3.2.5...3.2.6) - 2025-02-17
+
+### Added
+
+- Add generic integration tests for Transactions, now in weekly run.
+- Other test improvements.
+
+### Fixed
+
+- Broken parsing when Transaction is pending.
 
 ## [3.2.5](https://github.com/alexdlaird/amazon-orders/compare/3.2.4...3.2.5) - 2025-02-12
 

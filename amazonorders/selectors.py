@@ -160,7 +160,7 @@ class Selectors:
     FIELD_TRANSACTION_GRAND_TOTAL_SELECTOR = [
         "div.apx-transactions-line-item-component-container > div:nth-child(1) span.a-size-base-plus"]
     FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR = [
-        "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal"]
+        "div.apx-transactions-line-item-component-container div .a-span12 a"]
     FIELD_TRANSACTION_ORDER_LINK_SELECTOR = [
         "div.apx-transactions-line-item-component-container > div:nth-child(2) a.a-link-normal"]
     FIELD_TRANSACTION_SELLER_NAME_SELECTOR = [

@@ -1,4 +1,4 @@
-__copyright__ = "Copyright (c) 2024 Jeff Sawatzky"
+__copyright__ = "Copyright (c) 2024 Alex Laird"
 __license__ = "MIT"
 
 import datetime

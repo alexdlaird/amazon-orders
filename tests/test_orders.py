@@ -85,7 +85,7 @@ class TestOrders(UnitTestCase):
         year = 2024
         start_index = 0
         resp1 = self.given_order_history_landing_exists()
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-egift.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-egift.html"), "r",
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.GET,
@@ -119,7 +119,7 @@ class TestOrders(UnitTestCase):
         year = 2010
         resp1 = self.given_order_history_landing_exists()
         resp2 = self.given_order_history_exists(year, 0)
-        with open(os.path.join(self.RESOURCES_DIR, f"order-history-{year}-10.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-history-{year}-10.html"), "r",
                   encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.GET,
@@ -145,7 +145,7 @@ class TestOrders(UnitTestCase):
         year = 2024
         start_index = 0
         resp1 = self.given_order_history_landing_exists()
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-fresh.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-fresh.html"), "r",
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.GET,
@@ -169,7 +169,7 @@ class TestOrders(UnitTestCase):
         year = 2024
         start_index = 0
         resp1 = self.given_order_history_landing_exists()
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-wholefoods.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-wholefoods.html"), "r",
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.GET,
@@ -291,7 +291,7 @@ class TestOrders(UnitTestCase):
         # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "112-9685975-5907428"
-        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -312,7 +312,7 @@ class TestOrders(UnitTestCase):
         # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "112-5939971-8962610"
-        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -333,7 +333,7 @@ class TestOrders(UnitTestCase):
         # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "112-4482432-2955442"
-        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -354,7 +354,7 @@ class TestOrders(UnitTestCase):
         # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "112-9087159-1657009"
-        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -375,7 +375,7 @@ class TestOrders(UnitTestCase):
         # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "114-8722141-6545058"
-        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -396,7 +396,7 @@ class TestOrders(UnitTestCase):
         # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "111-6778632-7354601"
-        with open(os.path.join(self.RESOURCES_DIR, f"order-details-{order_id}.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,

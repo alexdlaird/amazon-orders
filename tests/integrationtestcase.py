@@ -8,6 +8,7 @@ from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
+from amazonorders.transactions import AmazonTransactions
 from tests.testcase import TestCase
 from tests.util.smsprompt import IODefaultWithTextPrompt
 from tests.util.tinyserver import get_tiny_server
@@ -65,6 +66,7 @@ class IntegrationTestCase(TestCase):
         cls.amazon_session.login()
 
         cls.amazon_orders = AmazonOrders(cls.amazon_session)
+        cls.amazon_transactions = AmazonTransactions(cls.amazon_session)
 
     def setUp(self):
         self.assertTrue(self.amazon_session.is_authenticated)

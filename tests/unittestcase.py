@@ -34,7 +34,7 @@ class UnitTestCase(TestCase):
             shutil.rmtree(conf.DEFAULT_CONFIG_DIR)
 
     def given_login_responses_success(self):
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             self.signin_response = responses.add(
                 responses.GET,
                 self.test_config.constants.SIGN_IN_URL,
@@ -58,7 +58,7 @@ class UnitTestCase(TestCase):
             "password": "some-password",
             "rememberMe": "true"
         }
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             self.authenticated_response = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_REDIRECT_URL,
@@ -68,7 +68,7 @@ class UnitTestCase(TestCase):
             )
 
     def given_order_history_landing_exists(self):
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-2023-10.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2023-10.html"), "r",
                   encoding="utf-8") as f:
             return responses.add(
                 responses.GET,
@@ -78,7 +78,7 @@ class UnitTestCase(TestCase):
             )
 
     def given_order_history_exists(self, year, start_index):
-        with open(os.path.join(self.RESOURCES_DIR, f"order-history-{year}-{start_index}.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-history-{year}-{start_index}.html"), "r",
                   encoding="utf-8") as f:
             optional_start_index = f"&startIndex={start_index}" if start_index else ""
             return responses.add(
@@ -92,7 +92,7 @@ class UnitTestCase(TestCase):
             )
 
     def given_any_order_history_exists(self, order_history_html_file):
-        with open(os.path.join(self.RESOURCES_DIR, order_history_html_file), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", order_history_html_file), "r",
                   encoding="utf-8") as f:
             return responses.add(
                 responses.GET,
@@ -102,7 +102,7 @@ class UnitTestCase(TestCase):
             )
 
     def given_any_order_details_exists(self, order_details_html_file):
-        with open(os.path.join(self.RESOURCES_DIR, order_details_html_file), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", order_details_html_file), "r",
                   encoding="utf-8") as f:
             return responses.add(
                 responses.GET,

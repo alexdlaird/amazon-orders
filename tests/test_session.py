@@ -37,14 +37,15 @@ class TestSession(UnitTestCase):
     @responses.activate
     def test_login_invalid_username(self):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-invalid-email.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-invalid-email.html"), "r",
+                  encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_REDIRECT_URL,
@@ -64,14 +65,15 @@ class TestSession(UnitTestCase):
     @responses.activate
     def test_login_invalid_password(self):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-invalid-password.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-invalid-password.html"), "r",
+                  encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_REDIRECT_URL,
@@ -92,21 +94,21 @@ class TestSession(UnitTestCase):
     @patch("builtins.input")
     def test_mfa(self, input_mock):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-mfa.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-mfa.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_REDIRECT_URL,
@@ -128,28 +130,28 @@ class TestSession(UnitTestCase):
     @patch("builtins.input")
     def test_new_otp(self, input_mock):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-new-otp.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-new-otp.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-mfa.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-mfa.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_REDIRECT_URL,
@@ -171,7 +173,7 @@ class TestSession(UnitTestCase):
     @responses.activate
     def test_captcha_1(self):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
@@ -184,14 +186,14 @@ class TestSession(UnitTestCase):
             status=302,
             headers={"Location": f"{self.test_config.constants.BASE_URL}/ap/cvf/request"}
         )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-1.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-1.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/ap/cvf/request",
                 body=f.read(),
                 status=200
             )
-        with open(os.path.join(self.RESOURCES_DIR, "captcha_easy.jpg"), "rb") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "captcha_easy.jpg"), "rb") as f:
             resp4 = responses.add(
                 responses.GET,
                 "https://opfcaptcha-prod.s3.amazonaws.com/d32ff4fa043d4f969a1693adfb5d663a.jpg",
@@ -199,7 +201,7 @@ class TestSession(UnitTestCase):
                 headers={"Content-Type": "image/jpeg"},
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             request_data = {
                 "clientContext": "132-7968344-2156059",
                 "cvf_captcha_captcha_action": "verifyCaptcha",
@@ -242,21 +244,21 @@ class TestSession(UnitTestCase):
     @responses.activate
     def test_captcha_2(self):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-2.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-2.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "captcha_easy.jpg"), "rb") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "captcha_easy.jpg"), "rb") as f:
             resp3 = responses.add(
                 responses.GET,
                 "https://images-na.ssl-images-amazon.com/captcha/ddwwidnf/Captcha_gmwackhtzu.jpg",
@@ -264,7 +266,7 @@ class TestSession(UnitTestCase):
                 headers={"Content-Type": "image/jpeg"},
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/errors/validateCaptcha",
@@ -293,7 +295,7 @@ class TestSession(UnitTestCase):
     @patch("PIL.Image.Image.show")
     def test_captcha_1_hard(self, show_mock, input_mock):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
@@ -306,14 +308,14 @@ class TestSession(UnitTestCase):
             status=302,
             headers={"Location": f"{self.test_config.constants.BASE_URL}/ap/cvf/request"}
         )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-1.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-1.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/ap/cvf/request",
                 body=f.read(),
                 status=200
             )
-        with open(os.path.join(self.RESOURCES_DIR, "captcha_hard.jpg"), "rb") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "captcha_hard.jpg"), "rb") as f:
             resp4 = responses.add(
                 responses.GET,
                 "https://opfcaptcha-prod.s3.amazonaws.com/d32ff4fa043d4f969a1693adfb5d663a.jpg",
@@ -321,7 +323,7 @@ class TestSession(UnitTestCase):
                 headers={"Content-Type": "image/jpeg"},
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp5 = responses.add(
                 responses.POST,
                 f"{self.test_config.constants.BASE_URL}/ap/cvf/verify",
@@ -345,21 +347,23 @@ class TestSession(UnitTestCase):
     @patch("builtins.input")
     def test_captcha_otp(self, input_mock):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "signin.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "post-signin-captcha-otp.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-otp.html"),
+                  "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_REDIRECT_URL,
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"),
+                  "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.POST,
                 f"{self.test_config.constants.BASE_URL}/ap/cvf/approval/verifyOtp",

@@ -65,7 +65,7 @@ class TestCli(UnitTestCase):
         # GIVEN
         order_id = "112-2961628-4757846"
         self.given_login_responses_success()
-        with open(os.path.join(self.RESOURCES_DIR, "order-details-112-2961628-4757846.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-112-2961628-4757846.html"), "r",
                   encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -92,7 +92,8 @@ class TestCli(UnitTestCase):
         mock_get_today.date.today.return_value = datetime.date(2024, 10, 11)
         days = 1
         self.given_login_responses_success()
-        with open(os.path.join(self.RESOURCES_DIR, "get-transactions.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions.html"),
+                  "r", encoding="utf-8") as f:
             resp = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
