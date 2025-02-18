@@ -4,13 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.7...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.8...HEAD)
 
 ## [3.2.8](https://github.com/alexdlaird/amazon-orders/compare/3.2.7...3.2.8) - 2025-02-18
 
 ### Added
 
-- Dependency and documentation improvements (including fixing BeautifulSoup4 documentation references).
+- Dependency and documentation improvements (including fixing links to BeautifulSoup entities).
 
 ## [3.2.7](https://github.com/alexdlaird/amazon-orders/compare/3.2.6...3.2.7) - 2025-02-17
 
