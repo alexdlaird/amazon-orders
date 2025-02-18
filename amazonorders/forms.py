@@ -51,7 +51,7 @@ class AuthForm(ABC):
                     amazon_session: "AmazonSession",
                     parsed: Tag) -> bool:
         """
-        Using the ``selector`` defined on this instance, select the ``<form>`` for the given :class:`~bs4.Tag`.
+        Using the ``selector`` defined on this instance, select the ``<form>`` for the given :class:`~bs4.element.Tag`.
 
         :param amazon_session: The ``AmazonSession`` on which to submit the form.
         :param parsed: The ``Tag`` from which to select the ``<form>``.
