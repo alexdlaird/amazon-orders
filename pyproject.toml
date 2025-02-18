@@ -45,7 +45,7 @@ dev = [
     "lxml"
 ]
 docs = [
-    "Sphinx",
+    "Sphinx<8.2",
     "sphinx-notfound-page",
     "sphinx_autodoc_typehints",
     "mypy",
