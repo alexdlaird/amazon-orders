@@ -10,7 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- Dependency and documentation improvements.
+- Dependency and documentation improvements (including fixing BeautifulSoup4 documentation references).
 
 ## [3.2.7](https://github.com/alexdlaird/amazon-orders/compare/3.2.6...3.2.7) - 2025-02-17
 
