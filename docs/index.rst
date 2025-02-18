@@ -1,11 +1,11 @@
 .. rst-class:: hide-header
 
-*************
-Amazon Orders
-*************
+**********************************************************************************************
+Amazon Orders - A library for interacting with Amazon order history in Python and from the CLI
+**********************************************************************************************
 
 .. image:: _html/logo.png
-   :alt: amazon-orders - a python library
+   :alt: amazon-orders - A library for interacting with Amazon order history in Python and from the CLI
    :align: center
 
 |

@@ -1,7 +1,7 @@
 [project]
 name = "amazon-orders"
 dynamic = ["version"]
-description = "A CLI and library for interacting with Amazon order history."
+description = "A library for interacting with Amazon order history in Python and from the CLI"
 readme = "README.md"
 license = { file = "LICENSE" }
 maintainers = [{ name = "Alex Laird", email = "contact@alexlaird.com" }]

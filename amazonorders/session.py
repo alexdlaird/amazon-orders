@@ -1,4 +1,4 @@
-__copyright__ = "Copyright (c) 2024 Alex Laird"
+__copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import json
