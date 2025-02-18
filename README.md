@@ -11,8 +11,8 @@
 be used to interact with Amazon's consumer-facing website.
 
 This package works by parsing website data from Amazon. A periodic build validates functionality to ensure its
-stability, but as Amazon provides no official API to use, this package may break at any time. Pin the [minor (not
-patch) version](https://semver.org/) (ex. `==1.1.*`, not `==1.1.4`) to ensure you always get the latest stable release.
+stability, but as Amazon provides no official API to use, this package may break at any time. Pin the [minor
+(not patch) version](https://semver.org/) wildcard (ex. `==1.1.*`, not `==1.1.4`) to ensure you always get the latest stable release.
 
 This package only officially supports the English, `.com` version of Amazon.
 
