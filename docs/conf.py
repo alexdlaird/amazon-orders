@@ -205,7 +205,7 @@ epub_exclude_files = ["search.html"]
 intersphinx_mapping = {
     "click": ("https://click.palletsprojects.com/en/latest", None),
     "requests": ("https://requests.readthedocs.io/en/latest/", None),
-    "beautifulsoup4": ("https://beautiful-soup-4.readthedocs.io/en/latest/", None),
+    "beautifulsoup4": ("https://www.crummy.com/software/BeautifulSoup/bs4/doc/", None),
     "amazoncaptcha": ("https://amazoncaptcha.readthedocs.io/en/latest/", None),
     "python": ("https://docs.python.org/3", None)
 }
