@@ -8,8 +8,6 @@ Amazon Orders - A library for interacting with Amazon order history in Python an
    :alt: amazon-orders - A library for interacting with Amazon order history in Python and from the CLI
    :align: center
 
-|
-
 .. image:: https://img.shields.io/pypi/v/amazon-orders
    :target: https://pypi.org/project/amazon-orders
 .. image:: https://img.shields.io/pypi/pyversions/amazon-orders.svg
