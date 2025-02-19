@@ -90,6 +90,7 @@ class Selectors:
 
     FIELD_ORDER_DETAILS_LINK_SELECTOR = "a.yohtmlc-order-details-link"
     FIELD_ORDER_NUMBER_SELECTOR = ["[data-component='briefOrderInfo'] div.a-column",
+                                   "[data-component='orderId']",
                                    ".order-date-invoice-item bdi[dir='ltr']",
                                    "bdi[dir='ltr']",
                                    "span[dir='ltr']"]
@@ -97,8 +98,10 @@ class Selectors:
                                         "div.order-header div.a-column.a-span2",
                                         "div.order-header div.a-col-left .a-span9"]
     FIELD_ORDER_PLACED_DATE_SELECTOR = ["[data-component='briefOrderInfo'] div.a-column",
+                                        "[data-component='orderDate']",
                                         "span.order-date-invoice-item",
                                         "div.a-span3"]
+
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"
     FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["[data-component='orderSubtotals'] div.a-row",
