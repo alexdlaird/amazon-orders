@@ -1,4 +1,4 @@
-<p align="center"><img alt="amazon-orders - A library for interacting with Amazon order history in Python and from the CLI" src="https://amazon-orders.readthedocs.io/_images/logo.png" /></p>
+<p align="center"><img alt="amazon-orders - A Python libray (and CLI) for Amazon order history" src="https://amazon-orders.readthedocs.io/_images/logo.png" /></p>
 
 [![Version](https://img.shields.io/pypi/v/amazon-orders)](https://pypi.org/project/amazon-orders)
 [![Python Versions](https://img.shields.io/pypi/pyversions/amazon-orders.svg)](https://pypi.org/project/amazon-orders)
@@ -7,12 +7,12 @@
 [![Docs](https://img.shields.io/readthedocs/amazon-orders)](https://amazon-orders.readthedocs.io)
 [![GitHub License](https://img.shields.io/github/license/alexdlaird/amazon-orders)](https://github.com/alexdlaird/amazon-orders/blob/main/LICENSE)
 
-`amazon-orders` is an unofficial library that provides a command line interface alongside a programmatic API that can
-be used to interact with Amazon's consumer-facing website.
+`amazon-orders` is an unofficial library that provides a Python API (and CLI) for Amazon order history.
 
-This package works by parsing website data from Amazon. A periodic build validates functionality to ensure its
-stability, but as Amazon provides no official API to use, this package may break at any time. Pin the [minor
-(not patch) version](https://semver.org/) wildcard (ex. `==1.1.*`, not `==1.1.4`) to ensure you always get the latest stable release.
+This package works by parsing data from Amazon's consumer-facing website. A periodic build validates functionality
+to ensure its stability, but as Amazon provides no official API to use, this package may break at any time. Pin
+the [minor (not patch) version](https://semver.org/) wildcard (ex. `==1.1.*`, not `==1.1.4`) to ensure you always get the latest
+stable release.
 
 This package only officially supports the English, `.com` version of Amazon.
 

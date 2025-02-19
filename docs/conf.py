@@ -179,7 +179,7 @@ man_pages = [
 texinfo_documents = [
     (master_doc, "amazonorders", "amazon-orders Documentation",
      author, "amazon-orders",
-     "A library for interacting with Amazon order history in Python and from the CLI",
+     "A Python libray (and CLI) for Amazon order history",
      "Miscellaneous"),
 ]
 
