@@ -88,18 +88,21 @@ class Selectors:
     # CSS selectors for Order fields
     #####################################
 
-    FIELD_ORDER_DETAILS_LINK_SELECTOR = "a.yohtmlc-order-details-link"
-    FIELD_ORDER_NUMBER_SELECTOR = ["[data-component='briefOrderInfo'] div.a-column",
-                                   "[data-component='orderId']",
+    FIELD_ORDER_DETAILS_LINK_SELECTOR = ["a.yohtmlc-order-details-link",
+                                         # Would like to use this or similar, but not yet sure how consisten it is
+                                         #".order-header__header-link-list-item:first-of-type a"
+                                         ]
+    FIELD_ORDER_NUMBER_SELECTOR = ["[data-component='orderId']",
+                                   "[data-component='briefOrderInfo'] div.a-column",
                                    ".order-date-invoice-item bdi[dir='ltr']",
                                    "bdi[dir='ltr']",
                                    "span[dir='ltr']"]
     FIELD_ORDER_GRAND_TOTAL_SELECTOR = ["div.yohtmlc-order-total span.value",
                                         "div.order-header div.a-column.a-span2",
                                         "div.order-header div.a-col-left .a-span9"]
-    FIELD_ORDER_PLACED_DATE_SELECTOR = ["[data-component='briefOrderInfo'] div.a-column",
-                                        "[data-component='orderDate']",
+    FIELD_ORDER_PLACED_DATE_SELECTOR = ["[data-component='orderDate']",
                                         "span.order-date-invoice-item",
+                                        "[data-component='briefOrderInfo'] div.a-column",
                                         "div.a-span3"]
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"
