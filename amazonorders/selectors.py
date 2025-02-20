@@ -90,7 +90,7 @@ class Selectors:
 
     FIELD_ORDER_DETAILS_LINK_SELECTOR = ["a.yohtmlc-order-details-link",
                                          # Would like to use this or similar, but not yet sure how consisten it is
-                                         #".order-header__header-link-list-item:first-of-type a"
+                                         # ".order-header__header-link-list-item:first-of-type a"
                                          ]
     FIELD_ORDER_NUMBER_SELECTOR = ["[data-component='orderId']",
                                    "[data-component='briefOrderInfo'] div.a-column",
