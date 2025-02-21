@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.9...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.10...HEAD)
+
+## [3.2.10](https://github.com/alexdlaird/amazon-orders/compare/3.2.9...3.2.10) - 2025-02-21
+
+### Fixed
+
+- When `full_details=True` is set and an Order's details page can't be parsed, the partial Order will still be returned (along with a warning that it's not fully populated).
+- Broken parsing when Amazon renders a completely empty Transaction div.
 
 ## [3.2.9](https://github.com/alexdlaird/amazon-orders/compare/3.2.8...3.2.9) - 2025-02-19
 
