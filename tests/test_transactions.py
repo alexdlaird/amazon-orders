@@ -103,6 +103,29 @@ class TestOrders(UnitTestCase):
                          "https://www.amazon.com/gp/css/summary/edit.html?orderID=234-3017692-4601031")
         self.assertEqual(transaction.seller, "AMZN Mktp US")
 
+    @responses.activate
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_grand_total_blank(self, mock_get_today: Mock):
+        # GIVEN
+        mock_get_today.date.today.return_value = datetime.date(2025, 2, 19)
+        days = 30
+        self.amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-grand-total-blank.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            responses.add(
+                responses.GET,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        transactions = self.amazon_transactions.get_transactions(days=days)
+
+        # THEN
+        self.assertEqual(19, len(transactions))
+
     def test_parse_transaction_form_tag(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "transaction-form-tag.html"),

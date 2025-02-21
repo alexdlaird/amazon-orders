@@ -152,7 +152,7 @@ class Selectors:
     TRANSACTION_HISTORY_FORM_SELECTOR = "form:has(input[name='ppw-widgetState'])"
     TRANSACTION_DATE_CONTAINERS_SELECTOR = "div.apx-transaction-date-container"
     TRANSACTIONS_CONTAINER_SELECTOR = "div"
-    TRANSACTIONS_SELECTOR = "div.apx-transactions-line-item-component-container"
+    TRANSACTIONS_SELECTOR = "div.apx-transactions-line-item-component-container:has(*)"
 
     TRANSACTIONS_NEXT_PAGE_INPUT_SELECTOR = [
         "input[type='submit'][name^='ppw-widgetEvent:DefaultNextPageNavigationEvent']"]
