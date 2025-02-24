@@ -75,9 +75,11 @@ class Order(Parsable):
         #: The Order shipping total. Only populated when ``full_details`` is ``True``.
         self.shipping_total: Optional[float] = self._if_full_details(self._parse_currency("shipping"))
         #: The Order promotion applied. Only populated when ``full_details`` is ``True``.
-        self.promotion_applied: Optional[float] = self._if_full_details(self._parse_currency("promotion"))
+        self.promotion_applied: Optional[float] = self._if_full_details(
+            self._parse_currency("promotion", combine_multiple=True))
         #: The Order coupon savings. Only populated when ``full_details`` is ``True``.
-        self.coupon_savings: Optional[float] = self._if_full_details(self._parse_currency("coupon"))
+        self.coupon_savings: Optional[float] = self._if_full_details(
+            self._parse_currency("coupon", combine_multiple=True))
         #: The Order Subscribe & Save discount. Only populated when ``full_details`` is ``True``.
         self.subscription_discount: Optional[float] = self._if_full_details(self._parse_currency("subscribe"))
         #: The Order total before tax. Only populated when ``full_details`` is ``True``.
@@ -182,7 +184,7 @@ class Order(Parsable):
 
         return Recipient(value, self.config)
 
-    def _parse_currency(self, contains) -> Optional[float]:
+    def _parse_currency(self, contains, combine_multiple=False) -> Optional[float]:
         value = None
 
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
@@ -191,8 +193,14 @@ class Order(Parsable):
                                         self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_POPOVER_PRELOAD_SELECTOR)):
                 inner_tag = util.select_one(tag, self.config.selectors.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
-                    value = self.to_currency(inner_tag.text)
-                    break
+                    currency = self.to_currency(inner_tag.text)
+                    if currency is not None:
+                        if value is None:
+                            value = 0.0
+                        value += currency
+
+                    if not combine_multiple:
+                        break
 
         return value
 

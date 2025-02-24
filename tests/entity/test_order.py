@@ -54,3 +54,16 @@ class TestOrder(UnitTestCase):
 
         # THEN
         self.assertEqual(order.coupon_savings, -3.89)
+
+    def test_order_coupon_savings_multiple(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-coupon-savings-multiple.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual(order.coupon_savings, -1.29)
