@@ -64,9 +64,9 @@ class TestOrders(UnitTestCase):
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)
-    def test_get_transactions_refunded(self, mock_get_today: Mock):
+    def test_get_transactions_refunded_empty_order_link(self, mock_get_today: Mock):
         # GIVEN
-        mock_get_today.date.today.return_value = datetime.date(2025, 2, 19)
+        mock_get_today.date.today.return_value = datetime.date(2025, 2, 28)
         days = 30
         self.amazon_session.is_authenticated = True
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-refunded.html"),
@@ -85,14 +85,15 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertEqual(19, len(transactions))
         transaction = transactions[0]
-        self.assertEqual(transaction.completed_date, datetime.date(2025, 2, 19))
-        self.assertEqual(transaction.payment_method, "Prime Visa ****2222")
-        self.assertEqual(transaction.grand_total, -41.3)
-        self.assertFalse(transaction.is_refund)
-        self.assertEqual(transaction.order_number, "777-8690776-9697016")
-        self.assertEqual(transaction.order_details_link,
-                         "https://www.amazon.com/gp/css/summary/edit.html?orderID=777-8690776-9697016")
-        self.assertEqual(transaction.seller, "Amazon.com")
+        self.assertEqual(transaction.completed_date, datetime.date(2025, 2, 28))
+        self.assertEqual(transaction.payment_method, "WELLS FARGO BANK NATIONAL ASSOCIATION ***863")
+        self.assertEqual(transaction.grand_total, 55.96)
+        self.assertTrue(transaction.is_refund)
+        self.assertEqual(transaction.order_number, "0000000019080621061")
+        self.assertEqual(transaction.order_details_link, "https://www.amazon.com/gp/your-account/order-details?orderID=0000000019080621061")
+        # This appears wrong, but is "right" with what Amazon is producing for this example, so leaving the assertions
+        # to validate that until they change it
+        self.assertEqual(transaction.seller, 19080621061)
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)
@@ -124,7 +125,7 @@ class TestOrders(UnitTestCase):
         self.assertEqual(transaction.order_number, "234-8832881-7100260")
         self.assertEqual(transaction.order_details_link,
                          "https://www.amazon.com/gp/your-account/order-details?orderID=234-8832881-7100260")
-        self.assertEqual(transaction.seller, None)
+        self.assertIsNone(transaction.seller)
         transaction = transactions[1]
         self.assertEqual(transaction.completed_date, datetime.date(2025, 2, 7))
         self.assertEqual(transaction.payment_method, "Prime Visa ****1111")

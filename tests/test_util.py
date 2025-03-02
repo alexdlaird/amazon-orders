@@ -7,7 +7,7 @@ from tests.unittestcase import UnitTestCase
 
 class TestSession(UnitTestCase):
     def test_to_type(self):
-        self.assertEqual(to_type(None), None)
+        self.assertIsNone(to_type(None))
 
         self.assertEqual(to_type("0.0"), 0.0)
         self.assertEqual(to_type("0.1"), 0.1)
@@ -19,6 +19,6 @@ class TestSession(UnitTestCase):
         self.assertEqual(to_type("True"), True)
         self.assertEqual(to_type("False"), False)
 
-        self.assertEqual(to_type(""), None)
+        self.assertIsNone(to_type(""))
         self.assertEqual(to_type(" "), " ")
         self.assertEqual(to_type("None"), "None")

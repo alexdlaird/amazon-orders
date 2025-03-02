@@ -5,6 +5,7 @@ import logging
 import re
 from datetime import date
 
+from amazonorders.exception import AmazonOrdersError
 from bs4 import Tag
 
 from amazonorders.conf import AmazonOrdersConfig
@@ -54,12 +55,25 @@ class Transaction(Parsable):
 
         value = self.to_currency(value)
 
+        if value is None:
+            raise AmazonOrdersError(
+                "Order.grand_total did not populate, but it's required. "
+                "Check if Amazon changed the HTML."
+            )  # pragma: no cover
+
         return value
 
     def _parse_order_number(self) -> str:
         value = self.simple_parse(
             self.config.selectors.FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR
         )
+
+        if value is None:
+            raise AmazonOrdersError(
+                "Transaction.order_number did not populate, but it's required. "
+                "Check if Amazon changed the HTML."
+            )  # pragma: no cover
+
         match = re.match(".*#([0-9-]+)$", value)
         value = match.group(1) if match else ""
 

@@ -17,10 +17,10 @@ class TestItem(UnitTestCase):
         parsable = Parsable(parsed, self.test_config)
 
         # THEN
-        self.assertEqual(parsable.to_currency(None), None)
-        self.assertEqual(parsable.to_currency(""), None)
+        self.assertIsNone(parsable.to_currency(None))
+        self.assertIsNone(parsable.to_currency(""))
         self.assertEqual(parsable.to_currency(1234.99), 1234.99)
         self.assertEqual(parsable.to_currency(1234), 1234)
         self.assertEqual(parsable.to_currency("1,234.99"), 1234.99)
         self.assertEqual(parsable.to_currency("$1,234.99"), 1234.99)
-        self.assertEqual(parsable.to_currency("not currency"), None)
+        self.assertIsNone(parsable.to_currency("not currency"))
