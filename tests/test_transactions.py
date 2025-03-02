@@ -64,6 +64,38 @@ class TestOrders(UnitTestCase):
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_refunded(self, mock_get_today: Mock):
+        # GIVEN
+        mock_get_today.date.today.return_value = datetime.date(2025, 2, 19)
+        days = 30
+        self.amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-refunded.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            responses.add(
+                responses.GET,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        transactions = self.amazon_transactions.get_transactions(days=days)
+
+        # THEN
+        self.assertEqual(19, len(transactions))
+        transaction = transactions[0]
+        self.assertEqual(transaction.completed_date, datetime.date(2025, 2, 19))
+        self.assertEqual(transaction.payment_method, "Prime Visa ****2222")
+        self.assertEqual(transaction.grand_total, -41.3)
+        self.assertFalse(transaction.is_refund)
+        self.assertEqual(transaction.order_number, "777-8690776-9697016")
+        self.assertEqual(transaction.order_details_link,
+                         "https://www.amazon.com/gp/css/summary/edit.html?orderID=777-8690776-9697016")
+        self.assertEqual(transaction.seller, "Amazon.com")
+
+    @responses.activate
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_get_transactions_with_pending(self, mock_get_today: Mock):
         # GIVEN
         mock_get_today.date.today.return_value = datetime.date(2025, 2, 13)
