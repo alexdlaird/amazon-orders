@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.12...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.13...HEAD)
+
+## [3.2.13](https://github.com/alexdlaird/amazon-orders/compare/3.2.12...3.2.13) - 2025-03-02
+
+### Fixed
+
+- Broken parsing when `Transaction.order_number` is not selected from `<a>` tag.
 
 ## [3.2.12](https://github.com/alexdlaird/amazon-orders/compare/3.2.11...3.2.12) - 2025-02-24
 
