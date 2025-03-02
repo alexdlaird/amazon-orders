@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - Broken parsing when `Transaction.order_number` is not selected from `<a>` tag.
+- Parsing issue with `Transaction.seller` in pending Transactions.
 
 ## [3.2.12](https://github.com/alexdlaird/amazon-orders/compare/3.2.11...3.2.12) - 2025-02-24
 

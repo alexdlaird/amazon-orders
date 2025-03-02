@@ -13,14 +13,7 @@ from amazonorders.transactions import AmazonTransactions, _parse_transaction_for
 from tests.unittestcase import UnitTestCase
 
 
-class TestOrders(UnitTestCase):
-    temp_order_history_file_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), "output", "temp-order-history.html"
-    )
-    temp_order_details_file_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), "output", "temp-order-details.html"
-    )
-
+class TestTransactions(UnitTestCase):
     def setUp(self):
         super().setUp()
 
@@ -90,10 +83,9 @@ class TestOrders(UnitTestCase):
         self.assertEqual(transaction.grand_total, 55.96)
         self.assertTrue(transaction.is_refund)
         self.assertEqual(transaction.order_number, "0000000019080621061")
-        self.assertEqual(transaction.order_details_link, "https://www.amazon.com/gp/your-account/order-details?orderID=0000000019080621061")
-        # This appears wrong, but is "right" with what Amazon is producing for this example, so leaving the assertions
-        # to validate that until they change it
-        self.assertEqual(transaction.seller, 19080621061)
+        self.assertEqual(transaction.order_details_link,
+                         "https://www.amazon.com/gp/your-account/order-details?orderID=0000000019080621061")
+        self.assertIsNone(transaction.seller)
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)
@@ -124,8 +116,8 @@ class TestOrders(UnitTestCase):
         self.assertFalse(transaction.is_refund)
         self.assertEqual(transaction.order_number, "234-8832881-7100260")
         self.assertEqual(transaction.order_details_link,
-                         "https://www.amazon.com/gp/your-account/order-details?orderID=234-8832881-7100260")
-        self.assertIsNone(transaction.seller)
+                         "https://www.amazon.com/gp/css/summary/edit.html?orderID=234-8832881-7100260")
+        self.assertEqual(transaction.seller, "AMZN Mktp US")
         transaction = transactions[1]
         self.assertEqual(transaction.completed_date, datetime.date(2025, 2, 7))
         self.assertEqual(transaction.payment_method, "Prime Visa ****1111")
