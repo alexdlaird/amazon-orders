@@ -347,15 +347,15 @@ Order #{}
     if order.subtotal:
         order_str += f"\n  Subtotal: {config.constants.format_currency(order.subtotal)}"
     if order.shipping_total:
-        order_str += f"\n  Shipping Total: ${config.constants.format_currency(order.shipping_total)}"
+        order_str += f"\n  Shipping Total: {config.constants.format_currency(order.shipping_total)}"
     if order.subscription_discount:
-        order_str += f"\n  Subscription Discount: ${config.constants.format_currency(order.subscription_discount)}"
+        order_str += f"\n  Subscription Discount: {config.constants.format_currency(order.subscription_discount)}"
     if order.total_before_tax:
-        order_str += f"\n  Total Before Tax: ${config.constants.format_currency(order.total_before_tax)}"
+        order_str += f"\n  Total Before Tax: {config.constants.format_currency(order.total_before_tax)}"
     if order.estimated_tax:
-        order_str += f"\n  Estimated Tax: ${config.constants.format_currency(order.estimated_tax)}"
+        order_str += f"\n  Estimated Tax: {config.constants.format_currency(order.estimated_tax)}"
     if order.refund_total:
-        order_str += f"\n  Refund Total: ${config.constants.format_currency(order.refund_total)}"
+        order_str += f"\n  Refund Total: {config.constants.format_currency(order.refund_total)}"
 
     order_str += "\n-----------------------------------------------------------------------"
 
