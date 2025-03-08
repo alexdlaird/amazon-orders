@@ -348,6 +348,8 @@ Order #{}
         order_str += f"\n  Subtotal: {config.constants.format_currency(order.subtotal)}"
     if order.shipping_total:
         order_str += f"\n  Shipping Total: {config.constants.format_currency(order.shipping_total)}"
+    if order.free_shipping:
+        order_str += f"\n  Free Shipping: {config.constants.format_currency(order.free_shipping)}"
     if order.subscription_discount:
         order_str += f"\n  Subscription Discount: {config.constants.format_currency(order.subscription_discount)}"
     if order.total_before_tax:
