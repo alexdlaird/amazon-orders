@@ -72,7 +72,7 @@ class Constants:
     }
 
     def format_currency(self, amount):
-        formatted_amt = '${:,.2f}'.format(abs(amount))
+        formatted_amt = "${:,.2f}".format(abs(amount))
         if round(amount, 2) < 0:
-            return f'-{formatted_amt}'
+            return f"-{formatted_amt}"
         return formatted_amt
