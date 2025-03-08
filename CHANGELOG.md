@@ -6,7 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.14...HEAD)
 
-## [3.2.14](https://github.com/alexdlaird/amazon-orders/compare/3.2.13...3.2.14) - 2025-03-8
+## [3.2.14](https://github.com/alexdlaird/amazon-orders/compare/3.2.13...3.2.14) - 2025-03-08
+
+### Added
+
+- `Order.free_shipping` field.
 
 ### Fixed
 
