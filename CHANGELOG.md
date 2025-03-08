@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.13...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.14...HEAD)
+
+## [3.2.14](https://github.com/alexdlaird/amazon-orders/compare/3.2.13...3.2.14) - 2025-03-8
+
+### Fixed
+
+- Duplicate currency symbol in CLI output for Order details.
 
 ## [3.2.13](https://github.com/alexdlaird/amazon-orders/compare/3.2.12...3.2.13) - 2025-03-02
 

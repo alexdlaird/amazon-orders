@@ -333,7 +333,7 @@ Order #{}
 
     order_str += f"\n  Shipments: {order.shipments}"
     order_str += f"\n  Order Details Link: {order.order_details_link}"
-    order_str += f"\n  Grand Total: {order.grand_total:,.2f}"
+    order_str += f"\n  Grand Total: {config.constants.format_currency(order.grand_total)}"
     order_str += f"\n  Order Placed Date: {order.order_placed_date}"
     if order.recipient:
         order_str += f"\n  {order.recipient}"
