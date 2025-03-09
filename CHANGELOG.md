@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.14...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.15...HEAD)
+
+## [3.2.15](https://github.com/alexdlaird/amazon-orders/compare/3.2.14...3.2.15) - 2025-03-09
+
+### Fixed
+
+- Issue where `AmazonOrdersConfig` could not be pickled. 
 
 ## [3.2.14](https://github.com/alexdlaird/amazon-orders/compare/3.2.13...3.2.14) - 2025-03-08
 
