@@ -51,6 +51,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
         # THEN
         self.assertGreaterEqual(len(orders), 1)
         self.assert_populated_generic(orders[0], True)
+        self.assertIsNotNone(orders[0].index)
 
     def test_get_order(self):
         # GIVEN
@@ -65,6 +66,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
 
         # THEN
         self.assert_populated_generic(order, True)
+        self.assertIsNone(order.index)
 
     def test_get_order_does_not_exist(self):
         # GIVEN

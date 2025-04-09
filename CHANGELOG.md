@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.15...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.16...HEAD)
+
+## [3.2.15](https://github.com/alexdlaird/amazon-orders/compare/3.2.15...3.2.16) - TBD
+
+### Added
+
+- [`Order.index` field](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order.index).
 
 ## [3.2.15](https://github.com/alexdlaird/amazon-orders/compare/3.2.14...3.2.15) - 2025-03-09
 

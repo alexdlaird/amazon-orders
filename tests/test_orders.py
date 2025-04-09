@@ -49,6 +49,7 @@ class TestOrders(UnitTestCase):
         # Giving start_index=0 means we only got the first page, so just 10 results
         self.assertEqual(10, len(orders))
         self.assert_order_112_0399923_3070642(orders[3], False)
+        self.assertEqual(3, orders[3].index)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
 
@@ -163,6 +164,7 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
         order = orders[4]
         self.assertEqual("111-2072777-8279433", order.order_number)
+        self.assertEqual(4, order.index)
         self.assertEqual(80.27, order.grand_total)
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2025, 1, 3), order.order_placed_date)
@@ -240,6 +242,7 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertEqual(10, len(orders))
         self.assert_order_114_9460922_7737063(orders[3], True)
+        self.assertEqual(43, orders[3].index)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
         self.assertEqual(10, resp3.call_count)
@@ -262,6 +265,7 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertEqual(10, len(orders))
         self.assert_order_113_1625648_3437067_multiple_items(orders[6], True)
+        self.assertEqual(43, orders[3].index)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
         self.assertEqual(10, resp3.call_count)
@@ -282,6 +286,7 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertEqual(10, len(orders))
         self.assert_order_112_2961628_4757846_return(orders[1], True)
+        self.assertEqual(53, orders[3].index)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
         self.assertEqual(10, resp3.call_count)
@@ -301,6 +306,7 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertEqual(10, len(orders))
         self.assert_order_112_8888666_5244209_quantity(orders[7])
+        self.assertEqual(53, orders[3].index)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
 
@@ -320,6 +326,7 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertEqual(10, len(orders))
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(orders[3], True)
+        self.assertEqual(13, orders[3].index)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
         self.assertEqual(10, resp3.call_count)
@@ -343,6 +350,7 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
+        self.assertIsNone(order.index)
         self.assertEqual(1, resp1.call_count)
 
     @responses.activate
@@ -364,6 +372,7 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assert_order_112_5939971_8962610_data_component(order, True)
+        self.assertIsNone(order.index)
         self.assertEqual(1, resp1.call_count)
 
     @responses.activate
@@ -385,6 +394,7 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assert_order_112_4482432_2955442_gift_card(order, True)
+        self.assertIsNone(order.index)
         self.assertEqual(1, resp1.call_count)
 
     @responses.activate
@@ -406,6 +416,7 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assert_order_112_9087159_1657009_digital_order_legacy(order, True)
+        self.assertIsNone(order.index)
         self.assertEqual(1, resp1.call_count)
 
     @responses.activate
@@ -427,6 +438,7 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assert_order_114_8722141_6545058_data_component_subscription(order, True)
+        self.assertIsNone(order.index)
         self.assertEqual(1, resp1.call_count)
 
     @responses.activate
@@ -448,6 +460,7 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assert_order_111_6778632_7354601_data_component_subscription(order, True)
+        self.assertIsNone(order.index)
         self.assertEqual(1, resp1.call_count)
 
     @unittest.skipIf(not os.path.exists(temp_order_history_file_path),

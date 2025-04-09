@@ -31,14 +31,16 @@ class Order(Parsable):
                  config: AmazonOrdersConfig,
                  full_details: bool = False,
                  clone: Optional[OrderEntity] = None,
-                 page_index: Optional[int] = None) -> None:
+                 index: Optional[int] = None) -> None:
         super().__init__(parsed, config)
 
         #: If the Orders full details were populated from its details page.
         self.full_details: bool = full_details
 
-        #: The page index on which this Order appeared at the time it was queried.
-        self.page_index = page_index
+        #: The position at which this Order appeared when it was queried, which can be given as the ``start_index``
+        #: when querying further. Only populated when the Order is populated through
+        #: :func:`~amazonorders.orders.AmazonOrders.get_order_history`.
+        self.index: Optional[int] = index
 
         #: The Order Shipments.
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
