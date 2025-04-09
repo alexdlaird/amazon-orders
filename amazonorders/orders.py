@@ -68,12 +68,14 @@ class AmazonOrders:
             optional_start_index=optional_start_index
         )
 
+        current_index = 0
+
         while next_page:
             self.amazon_session.get(next_page)
             response_parsed = self.amazon_session.last_response_parsed
 
             for order_tag in util.select(response_parsed, self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
-                order: Order = self.config.order_cls(order_tag, self.config)
+                order: Order = self.config.order_cls(order_tag, self.config, current_index)
 
                 if full_details:
                     if not order.order_details_link:
@@ -97,6 +99,8 @@ class AmazonOrders:
                     next_page = str(next_page_tag["href"])
                     if not next_page.startswith("http"):
                         next_page = f"{self.config.constants.BASE_URL}{next_page}"
+
+                    current_index += 1
                 else:
                     logger.debug("No next page")
             else:

@@ -30,11 +30,15 @@ class Order(Parsable):
                  parsed: Tag,
                  config: AmazonOrdersConfig,
                  full_details: bool = False,
-                 clone: Optional[OrderEntity] = None) -> None:
+                 clone: Optional[OrderEntity] = None,
+                 page_index: Optional[int] = None) -> None:
         super().__init__(parsed, config)
 
         #: If the Orders full details were populated from its details page.
         self.full_details: bool = full_details
+
+        #: The page index on which this Order appeared at the time it was queried.
+        self.page_index = page_index
 
         #: The Order Shipments.
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
