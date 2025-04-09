@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.16...HEAD)
 
-## [3.2.15](https://github.com/alexdlaird/amazon-orders/compare/3.2.15...3.2.16) - 2025-04-TBD
+## [3.2.15](https://github.com/alexdlaird/amazon-orders/compare/3.2.15...3.2.16) - 2025-04-09
 
 ### Added
 
