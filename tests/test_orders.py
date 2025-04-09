@@ -114,6 +114,36 @@ class TestOrders(UnitTestCase):
         self.assertIsNotNone(order.items[0].image_link)
 
     @responses.activate
+    def test_get_order_history_2025_amazon_store(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2024
+        start_index = 0
+        resp1 = self.given_order_history_landing_exists()
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-amazon-store.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.GET,
+                self.test_config.constants.ORDER_HISTORY_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+        # THEN
+        self.assertEqual(10, len(orders))
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        order = orders[9]
+        self.assertEqual("113-9085096-9353021", order.order_number)
+        self.assertEqual(15.78, order.grand_total)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2025, 2, 28), order.order_placed_date)
+        self.assertEqual(0, len(order.items))
+
+    @responses.activate
     def test_get_order_history_paginated(self):
         # GIVEN
         self.amazon_session.is_authenticated = True

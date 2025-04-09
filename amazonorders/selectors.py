@@ -1,6 +1,23 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+from typing import Optional
+
+
+class Selector:
+    """
+    Can be used to extend the definition of a CSS selector, allowing for programmatic inspection
+    of the selections results before determining the selector matches.
+    """
+
+    def __init__(self,
+                 css_selector: str,
+                 text: Optional[str] = None) -> None:
+        #: The CSS selector
+        self.css_selector: str = css_selector
+        #: The text within the tag that must match
+        self.text = text
+
 
 class Selectors:
     """
@@ -61,7 +78,9 @@ class Selectors:
         # Identifies an Amazon Fresh order
         ".brand-info-box .brand-logo img",
         # Identifies a Whole Foods Market order
-        "a.yohtmlc-order-details-link[href^='/wholefoodsmarket']"
+        "a.yohtmlc-order-details-link[href^='/wholefoodsmarket']",
+        # Identifies an order from a physical Amazon store
+        Selector("div.yohtmlc-shipment-status-primaryText", "Purchased at Amazon")
     ]
 
     #####################################
@@ -89,7 +108,7 @@ class Selectors:
     #####################################
 
     FIELD_ORDER_DETAILS_LINK_SELECTOR = ["a.yohtmlc-order-details-link",
-                                         # Would like to use this or similar, but not yet sure how consisten it is
+                                         # Would like to use this or similar, but not yet sure how consistent it is
                                          # ".order-header__header-link-list-item:first-of-type a"
                                          ]
     FIELD_ORDER_NUMBER_SELECTOR = ["[data-component='orderId']",

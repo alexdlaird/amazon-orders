@@ -7,10 +7,12 @@ from typing import List, Union, Optional, Callable
 
 from bs4 import Tag
 
+from amazonorders.selectors import Selector
+
 logger = logging.getLogger(__name__)
 
 
-def select(parsed: Tag, selector: Union[List[str], str]) -> List[Tag]:
+def select(parsed: Tag, selector: Union[List[Union[str, Selector]], Union[str, Selector]]) -> List[Tag]:
     """
     This is a helper function that extends BeautifulSoup's `select() <https://www.crummy.com/software/
     BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_ method to allow for multiple selectors.
@@ -21,18 +23,28 @@ def select(parsed: Tag, selector: Union[List[str], str]) -> List[Tag]:
     :param selector: The CSS selector(s) for the field.
     :return: The selected tag.
     """
-    if isinstance(selector, str):
+    if isinstance(selector, str) or isinstance(selector, Selector):
         selector = [selector]
 
     for s in selector:
-        tag = parsed.select(s)
+        tag: list = []
+
+        if isinstance(s, Selector):
+            for t in parsed.select(s.css_selector):
+                if t and t.text.strip() == s.text:
+                    tag += t
+        elif isinstance(s, str):
+            tag = parsed.select(s)
+        else:
+            raise TypeError(f"Invalid selector type: {type(s)}")
+
         if tag:
             return tag
 
     return []
 
 
-def select_one(parsed: Tag, selector: Union[List[str], str]) -> Optional[Tag]:
+def select_one(parsed: Tag, selector: Union[List[Union[str, Selector]], Union[str, Selector]]) -> Optional[Tag]:
     """
     This is a helper function that extends BeautifulSoup's `select_one() <https://www.crummy.com/software/
     BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_ method to allow for multiple selectors.
@@ -43,13 +55,24 @@ def select_one(parsed: Tag, selector: Union[List[str], str]) -> Optional[Tag]:
     :param selector: The CSS selector(s) for the field.
     :return: The selection tag.
     """
-    if isinstance(selector, str):
+    if isinstance(selector, str) or isinstance(selector, Selector):
         selector = [selector]
 
     for s in selector:
-        tag = parsed.select_one(s)
+        tag: Optional[Tag] = None
+
+        if isinstance(s, Selector):
+            t = parsed.select_one(s.css_selector)
+            if t and t.text.strip() == s.text:
+                tag = t
+        elif isinstance(s, str):
+            tag = parsed.select_one(s)
+        else:
+            raise TypeError(f"Invalid selector type: {type(s)}")
+
         if tag:
             return tag
+
     return None
 
 

@@ -6,17 +6,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.16...HEAD)
 
-## [3.2.15](https://github.com/alexdlaird/amazon-orders/compare/3.2.15...3.2.16) - TBD
+## [3.2.15](https://github.com/alexdlaird/amazon-orders/compare/3.2.15...3.2.16) - 2025-04-TBD
 
 ### Added
 
 - [`Order.index` field](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order.index).
+- Fixes for parsing issues from orders made at physical Amazon Store.
 
 ## [3.2.15](https://github.com/alexdlaird/amazon-orders/compare/3.2.14...3.2.15) - 2025-03-09
 
 ### Fixed
 
-- Issue where `AmazonOrdersConfig` could not be pickled. 
+- Issue where `AmazonOrdersConfig` could not be pickled.
 
 ## [3.2.14](https://github.com/alexdlaird/amazon-orders/compare/3.2.13...3.2.14) - 2025-03-08
 
