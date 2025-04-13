@@ -39,9 +39,7 @@ dev = [
     "flake8-pyproject",
     "pep8-naming",
     "responses",
-    "flask",
-    "twilio",
-    "pyngrok",
+    "pyotp",
     "lxml"
 ]
 docs = [

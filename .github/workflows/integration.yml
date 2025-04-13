@@ -15,11 +15,7 @@ jobs:
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
       AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
       START_INDEX_FULL_HISTORY: ${{ vars.START_INDEX_FULL_HISTORY }}
-      TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-      TWILIO_PHONE_NUMBER: ${{ secrets.TWILIO_PHONE_NUMBER }}
-      TO_PHONE_NUMBER: ${{ secrets.TO_PHONE_NUMBER }}
-      NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+      OTP_SECRET_KEY: ${{ secrets.OTP_SECRET_KEY }}
 
     runs-on: ubuntu-latest
 
