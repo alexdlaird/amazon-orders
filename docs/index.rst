@@ -73,7 +73,8 @@ Or use ``amazon-orders`` programmatically:
         print(f"{order.order_number} - {order.grand_total}")
 
 If desired fields are populated as ``None``, set ``full_details=True`` (or pass ``--full-details`` to the ``history``
-command), since by default it is ``False``, as it can slow down querying.
+command), since by default it is ``False``, as it can slow down querying. Have a look at `the Order entity's docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order>`_
+to see what fields aren't populated unless this is set.
 
 Dive Deeper
 ===========
