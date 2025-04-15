@@ -18,7 +18,9 @@ ItemEntity = TypeVar("ItemEntity", bound="Item")
 
 class Item(Parsable):
     """
-    An Item in an Amazon :class:`~amazonorders.entity.order.Order`.
+    An Item in an Amazon :class:`~amazonorders.entity.order.Order`. If desired fields are populated as ``None``,
+    ensure ``full_details`` is ``True`` when retrieving the Order (for instance, with
+    :func:`~amazonorders.orders.AmazonOrders.get_order_history`), as it can slow down querying.
     """
 
     def __init__(self,

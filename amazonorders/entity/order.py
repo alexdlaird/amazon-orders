@@ -23,7 +23,9 @@ OrderEntity = TypeVar("OrderEntity", bound="Order")
 
 class Order(Parsable):
     """
-    An Amazon Order.
+    An Amazon Order. If desired fields are populated as ``None``, ensure ``full_details`` is ``True`` when
+    retrieving the Order (for instance, with :func:`~amazonorders.orders.AmazonOrders.get_order_history`), since
+    by default it is ``False``, as it can slow down querying.
     """
 
     def __init__(self,

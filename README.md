@@ -51,6 +51,9 @@ for order in orders:
     print(f"{order.order_number} - {order.grand_total}")
 ```
 
+If desired fields are populated as `None`, set `full_details=True` (or pass `--full-details` to the `history` command),
+since by default it is `False`, as it can slow down querying.
+
 ## Documentation
 
 For more advanced usage, `amazon-orders`'s official documentation is available

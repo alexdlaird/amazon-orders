@@ -49,7 +49,7 @@ class AmazonOrders:
         :param year: The year for which to get history.
         :param start_index: The index to start at within the history.
         :param full_details: Will execute an additional request per Order in the retrieved history to fully
-            populate it.
+            populate all its fields.
         :return: A list of the requested Orders.
         """
         if not self.amazon_session.is_authenticated:
