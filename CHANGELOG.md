@@ -4,14 +4,16 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.16...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.17...HEAD)
+
+## [3.2.17](https://github.com/alexdlaird/amazon-orders/compare/3.2.16...3.2.17) - 2025-04-15
 
 ### Added
 
 - OTP can now be auto-solved if environment variable `OTP_SECRET_KEY` is populated with a time-based secret key. 
 - Documentation improvements.
 
-## [3.2.15](https://github.com/alexdlaird/amazon-orders/compare/3.2.15...3.2.16) - 2025-04-09
+## [3.2.16](https://github.com/alexdlaird/amazon-orders/compare/3.2.15...3.2.16) - 2025-04-09
 
 ### Added
 
