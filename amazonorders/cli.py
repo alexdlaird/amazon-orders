@@ -111,7 +111,7 @@ def amazon_orders_cli(ctx: Context,
 @click.option("--year", default=datetime.date.today().year,
               help="The year for which to get order history, defaults to the current year.")
 @click.option("--start-index",
-              help="Retrieve the single page of history at the given index.")
+              help="Retrieve the single page of history starting from this Order index within the history.")
 @click.option("--full-details", is_flag=True, default=False,
               help="Retrieve the full details for each order in the history.")
 def history(ctx: Context,

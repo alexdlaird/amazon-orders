@@ -47,7 +47,8 @@ class AmazonOrders:
         Get the Amazon order history for the given year.
 
         :param year: The year for which to get history.
-        :param start_index: The index to start at within the history.
+        :param start_index: If not ``None``, retrieve only the single page of history, starting from this Order index
+            within the history.
         :param full_details: Will execute an additional request per Order in the retrieved history to fully
             populate all its fields.
         :return: A list of the requested Orders.
