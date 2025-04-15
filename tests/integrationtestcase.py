@@ -38,7 +38,9 @@ class IntegrationTestCase(TestCase):
             "cookie_jar_path": test_cookie_jar_path
         })
 
-        cls.amazon_session = AmazonSession(os.environ.get("DEBUG", "False") == "True",
+        cls.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
+                                           os.environ.get("AMAZON_PASSWORD"),
+                                           os.environ.get("DEBUG", "False") == "True",
                                            config=cls.test_config)
         cls.amazon_session.login()
 

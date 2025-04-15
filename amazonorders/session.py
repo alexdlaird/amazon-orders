@@ -65,8 +65,8 @@ class AmazonSession:
     """
 
     def __init__(self,
-                 username: Optional[str] = os.environ.get("AMAZON_USERNAME"),
-                 password: Optional[str] = os.environ.get("AMAZON_PASSWORD"),
+                 username: Optional[str],
+                 password: Optional[str],
                  debug: bool = False,
                  io: IODefault = IODefault(),
                  config: Optional[AmazonOrdersConfig] = None,
@@ -86,9 +86,9 @@ class AmazonSession:
                                   config.selectors.CAPTCHA_OTP_FORM_SELECTOR)]
 
         #: An Amazon username.
-        self.username: Optional[str] = username
+        self.username: Optional[str] = username or os.environ.get("AMAZON_USERNAME")
         #: An Amazon password.
-        self.password: Optional[str] = password
+        self.password: Optional[str] = password or os.environ.get("AMAZON_PASSWORD")
 
         #: Set logger ``DEBUG``, send output to ``stderr``, and write an HTML file for requests made on the session.
         self.debug: bool = debug

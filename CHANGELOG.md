@@ -8,7 +8,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- Authentication now pre-populates with environment variables `AMAZON_USERNAME` and `AMAZON_PASSWORD`, if present.
 - OTP can now be auto-solved if environment variable `OTP_SECRET_KEY` is populated with a time-based secret key. 
 - Documentation improvements.
 
