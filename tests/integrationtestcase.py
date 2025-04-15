@@ -7,7 +7,7 @@ import sys
 from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.orders import AmazonOrders
-from amazonorders.session import AmazonSession, IODefault
+from amazonorders.session import AmazonSession
 from amazonorders.transactions import AmazonTransactions
 from tests.testcase import TestCase
 
