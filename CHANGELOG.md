@@ -6,6 +6,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.16...HEAD)
 
+### Added
+
+- Authentication now pre-populates with environment variables `AMAZON_USERNAME` and `AMAZON_PASSWORD`, if present.
+- OTP can now be auto-solved if environment variable `OTP_SECRET_KEY` is populated with a time-based secret key. 
+- Documentation improvements.
+
 ## [3.2.15](https://github.com/alexdlaird/amazon-orders/compare/3.2.15...3.2.16) - 2025-04-09
 
 ### Added

@@ -65,8 +65,8 @@ class AmazonSession:
     """
 
     def __init__(self,
-                 username: Optional[str],
-                 password: Optional[str],
+                 username: Optional[str] = os.environ.get("AMAZON_USERNAME"),
+                 password: Optional[str] = os.environ.get("AMAZON_PASSWORD"),
                  debug: bool = False,
                  io: IODefault = IODefault(),
                  config: Optional[AmazonOrdersConfig] = None,

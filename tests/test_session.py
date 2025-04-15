@@ -94,6 +94,7 @@ class TestSession(UnitTestCase):
     @patch("builtins.input")
     def test_mfa(self, input_mock):
         # GIVEN
+        os.environ.pop("OTP_SECRET_KEY", None)
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -130,6 +131,7 @@ class TestSession(UnitTestCase):
     @patch("builtins.input")
     def test_new_otp(self, input_mock):
         # GIVEN
+        os.environ.pop("OTP_SECRET_KEY", None)
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -347,6 +349,7 @@ class TestSession(UnitTestCase):
     @patch("builtins.input")
     def test_captcha_otp(self, input_mock):
         # GIVEN
+        os.environ.pop("OTP_SECRET_KEY", None)
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,

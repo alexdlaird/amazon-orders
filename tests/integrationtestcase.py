@@ -10,7 +10,6 @@ from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
 from amazonorders.transactions import AmazonTransactions
 from tests.testcase import TestCase
-from tests.util.otpprompt import IODefaultWithOtpSecretKey
 
 
 class IntegrationTestCase(TestCase):
@@ -31,12 +30,6 @@ class IntegrationTestCase(TestCase):
 
             sys.exit(1)
 
-        otp_secret_key = os.environ.get("OTP_SECRET_KEY")
-        if otp_secret_key:
-            io = IODefaultWithOtpSecretKey(otp_secret_key)
-        else:
-            io = IODefault()
-
         conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".integration-config")
         test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")
         test_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.json")
@@ -45,10 +38,7 @@ class IntegrationTestCase(TestCase):
             "cookie_jar_path": test_cookie_jar_path
         })
 
-        cls.amazon_session = AmazonSession(os.environ.get("AMAZON_USERNAME"),
-                                           os.environ.get("AMAZON_PASSWORD"),
-                                           os.environ.get("DEBUG", "False") == "True",
-                                           io=io,
+        cls.amazon_session = AmazonSession(os.environ.get("DEBUG", "False") == "True",
                                            config=cls.test_config)
         cls.amazon_session.login()
 

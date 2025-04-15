@@ -16,11 +16,13 @@ body:
     options:
     - label: I have written a descriptive issue title
       required: true
+    - label: I have searched [`amazon-orders`'s documentation](https://amazon-orders.readthedocs.io/en/latest/) for an answer
+      required: true
     - label: I have searched [Issues](issues?q=is%3Aissue) to see if the bug has already been reported
       required: true
     - label: I have searched [Stack Overflow](https://stackoverflow.com/questions/) to ensure the issue I'm experiencing has not already been discussed
       required: true
-    - label: If possible, I have [enabled `debug` mode](https://amazon-orders.readthedocs.io/troubleshooting.html#enable-debug-mode) and am attaching relevant console logs and HTML files
+    - label: I have [enabled `debug` mode](https://amazon-orders.readthedocs.io/troubleshooting.html#enable-debug-mode) and am attaching relevant console logs and HTML files
 
 - type: input
   id: os-version

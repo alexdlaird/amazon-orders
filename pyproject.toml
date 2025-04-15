@@ -12,7 +12,8 @@ dependencies = [
     "amazoncaptcha>=0.4",
     "beautifulsoup4>=4.12",
     "PyYAML>=5.1",
-    "python-dateutil>=2.8"
+    "python-dateutil>=2.8",
+    "pyotp>=2.9",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -39,7 +40,6 @@ dev = [
     "flake8-pyproject",
     "pep8-naming",
     "responses",
-    "pyotp",
     "lxml"
 ]
 docs = [

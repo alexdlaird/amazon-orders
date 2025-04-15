@@ -1,11 +1,13 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import os
 from abc import ABC
 from io import BytesIO
 from typing import Any, Dict, Optional, TYPE_CHECKING
 from urllib.parse import urlparse
 
+import pyotp
 from PIL import Image
 from amazoncaptcha import AmazonCaptcha
 from bs4 import Tag
@@ -287,8 +289,12 @@ class MfaForm(AuthForm):
                 "Check if Amazon changed their MFA flow."
             )  # pragma: no cover
 
-        otp = self.amazon_session.io.prompt("Enter the one-time passcode sent to your device")
-        self.amazon_session.io.echo("")
+        otp_secret_key = os.environ.get("OTP_SECRET_KEY")
+        if otp_secret_key:
+            otp = pyotp.TOTP(otp_secret_key.replace(" ", ""))
+        else:
+            otp = self.amazon_session.io.prompt("Enter the one-time passcode sent to your device")
+            self.amazon_session.io.echo("")
 
         additional_attrs.update({self.solution_attr_key: otp,
                                  "rememberDevice": ""})
