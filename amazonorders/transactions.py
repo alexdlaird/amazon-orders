@@ -86,7 +86,7 @@ class AmazonTransactions:
     def get_transactions(self,
                          days: int = 365) -> List[Transaction]:
         """
-        Get the Amazon Transactions for the given number of days.
+        Get Amazon transaction history for a given number of days.
 
         :param days: The number of days worth of transactions to get.
         :return: A list of the requested Transactions.

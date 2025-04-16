@@ -111,13 +111,15 @@ def amazon_orders_cli(ctx: Context,
 @click.option("--year", default=datetime.date.today().year,
               help="The year for which to get order history, defaults to the current year.")
 @click.option("--start-index",
-              help="Retrieve the single page of history starting from this Order index within the history.")
+              help="Get only a single page of history starting from this Order index. "
+                   "If this is 0 or not given, the full history will be fetched.")
 @click.option("--full-details", is_flag=True, default=False,
-              help="Retrieve the full details for each order in the history.")
+              help="Get the full details for each order in the history. "
+                   "This will execute an additional request per Order.")
 def history(ctx: Context,
             **kwargs: Any) -> None:
     """
-    Retrieve Amazon order history for a given year.
+    Get the Amazon order history for a given year.
     """
     amazon_session = ctx.obj["amazon_session"]
 
@@ -163,7 +165,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
 def order(ctx: Context,
           order_id: str) -> None:
     """
-    Retrieve the full details for the given Amazon order ID.
+    Get the full details for a given Amazon order ID.
     """
     amazon_session = ctx.obj["amazon_session"]
 
@@ -188,7 +190,7 @@ def order(ctx: Context,
               help="The number of days of transactions to get.")
 def transactions(ctx: Context, **kwargs: Any):
     """
-    Retrieve Amazon order history for a given year.
+    Get Amazon transaction history for a given number of days.
     """
     amazon_session = ctx.obj["amazon_session"]
 
