@@ -27,8 +27,8 @@ Amazon Orders - A Python libray (and CLI) for Amazon order history
 
 This package works by parsing data from Amazon's consumer-facing website. A periodic build validates
 functionality to ensure its stability, but as Amazon provides no official API to use, this package may
-break at any time. Pin the `minor (not patch) version <https://semver.org/>`_ wildcard (ex. ``==1.1.*``,
-not ``==1.1.4``) to ensure you always get the latest stable release.
+break at any time. Pin the `minor (not patch) version <https://semver.org/>`_ wildcard (ex. ``==3.2.*``,
+not ``==3.2.18``) to ensure you always get the latest stable release.
 
 This package only officially supports the English, ``.com`` version of Amazon.
 
