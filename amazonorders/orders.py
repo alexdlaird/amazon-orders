@@ -47,8 +47,9 @@ class AmazonOrders:
         Get the Amazon order history for the given year.
 
         :param year: The year for which to get history.
-        :param start_index: If not ``None``, retrieve only the single page of history, starting from this Order index
-            within the history.
+        :param start_index: If set, retrieve only the single page of history starting from this Order index. If this
+            is 0 or ``None``, the full history will be retrieved. Also see
+            Order's :attr:`~amazonorders.entity.order.Order.index`.
         :param full_details: Will execute an additional request per Order in the retrieved history to fully
             populate all its fields.
         :return: A list of the requested Orders.
@@ -113,7 +114,7 @@ class AmazonOrders:
     def get_order(self,
                   order_id: str) -> Order:
         """
-        Get the Amazon order represented by the ID.
+        Get the full details of the Amazon order represented by the ID.
 
         :param order_id: The Amazon Order ID to lookup.
         :return: The requested Order.

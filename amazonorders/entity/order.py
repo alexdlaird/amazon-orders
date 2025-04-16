@@ -40,7 +40,7 @@ class Order(Parsable):
         self.full_details: bool = full_details
 
         #: The position at which this Order appeared when it was queried, which can be given as the ``start_index``
-        #: when querying further. Only populated when the Order is populated through
+        #: when querying further. Only set when the Order is populated through
         #: :func:`~amazonorders.orders.AmazonOrders.get_order_history`.
         self.index: Optional[int] = index
 
