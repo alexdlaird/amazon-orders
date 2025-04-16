@@ -77,7 +77,7 @@ class UnitTestCase(TestCase):
                 status=200,
             )
 
-    def given_order_history_exists(self, year, start_index):
+    def given_order_history_exists(self, year, start_index=0):
         with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-history-{year}-{start_index}.html"), "r",
                   encoding="utf-8") as f:
             optional_start_index = f"&startIndex={start_index}" if start_index else ""

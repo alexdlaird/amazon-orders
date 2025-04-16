@@ -42,7 +42,7 @@ class TestCli(UnitTestCase):
                                       ["--config-path", self.test_config.config_path,
                                        "--username", "some-username", "--password",
                                        "some-password", "history", "--year",
-                                       year, "--start-index", start_index])
+                                       year, "--start-index", start_index, "--single-page"])
 
         # THEN
         self.assertEqual(0, response.exit_code)

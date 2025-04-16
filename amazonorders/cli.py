@@ -111,8 +111,9 @@ def amazon_orders_cli(ctx: Context,
 @click.option("--year", default=datetime.date.today().year,
               help="The year for which to get order history, defaults to the current year.")
 @click.option("--start-index",
-              help="Get only a single page of history starting from this Order index. "
-                   "If this is 0 or not given, the full history will be fetched.")
+              help="The index of the Order from which to start fetching in the history.")
+@click.option("--single-page", is_flag=True, default=False,
+              help="Only one page should be fetched.")
 @click.option("--full-details", is_flag=True, default=False,
               help="Get the full details for each order in the history. "
                    "This will execute an additional request per Order.")
@@ -128,9 +129,10 @@ def history(ctx: Context,
 
         year = kwargs["year"]
         start_index = kwargs["start_index"]
+        single_page = kwargs["single_page"]
         full_details = kwargs["full_details"]
 
-        optional_start_index = f", startIndex={start_index}, one page" if start_index else ", all pages"
+        optional_start_index = f", startIndex={start_index}, one page" if single_page else ", all pages"
         optional_full_details = ", with full details" if full_details else ""
         click.echo("""-----------------------------------------------------------------------
 Order History for {year}{optional_start_index}{optional_full_details}
@@ -145,15 +147,14 @@ Order History for {year}{optional_start_index}{optional_full_details}
                                      config=config)
 
         orders = amazon_orders.get_order_history(year=kwargs["year"],
-                                                 start_index=kwargs[
-                                                     "start_index"],
-                                                 full_details=kwargs[
-                                                     "full_details"], )
+                                                 start_index=kwargs["start_index"],
+                                                 full_details=kwargs["full_details"],
+                                                 keep_paging=not kwargs["single_page"])
 
         click.echo("... {} orders parsed.\n".format(len(orders)))
 
-        for order in orders:
-            click.echo(f"{_order_output(order, config)}\n")
+        for o in orders:
+            click.echo(f"{_order_output(o, config)}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -176,9 +177,9 @@ def order(ctx: Context,
         amazon_orders = AmazonOrders(amazon_session,
                                      config=config)
 
-        order = amazon_orders.get_order(order_id)
+        o = amazon_orders.get_order(order_id)
 
-        click.echo(f"{_order_output(order, config)}\n")
+        click.echo(f"{_order_output(o, config)}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -212,12 +213,12 @@ Transaction History for {days} days
         amazon_transactions = AmazonTransactions(amazon_session,
                                                  config=config)
 
-        transactions = amazon_transactions.get_transactions(days=days)
+        trxns = amazon_transactions.get_transactions(days=days)
 
-        click.echo("... {} transactions parsed.\n".format(len(transactions)))
+        click.echo("... {} transactions parsed.\n".format(len(trxns)))
 
-        for transaction in transactions:
-            click.echo(f"{_transaction_output(transaction, config)}\n")
+        for t in trxns:
+            click.echo(f"{_transaction_output(t, config)}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))

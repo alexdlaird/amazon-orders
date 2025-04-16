@@ -42,16 +42,17 @@ class AmazonOrders:
     def get_order_history(self,
                           year: int = datetime.date.today().year,
                           start_index: Optional[int] = None,
-                          full_details: bool = False) -> List[Order]:
+                          full_details: bool = False,
+                          keep_paging: bool = True) -> List[Order]:
         """
         Get the Amazon order history for a given year.
 
         :param year: The year for which to get history.
-        :param start_index: Get only a single page of history starting from this Order index. If this
-            is 0 or ``None``, the full history will be fetched. Also see
+        :param start_index: The index of the Order from which to start fetching in the history. Also see
             Order's :attr:`~amazonorders.entity.order.Order.index`.
         :param full_details: Get the full details for each order in the history. This will execute an additional
             request per Order.
+        :param keep_paging: ``False`` if only one page should be fetched.
         :return: A list of the requested Orders.
         """
         if not self.amazon_session.is_authenticated:
@@ -98,7 +99,7 @@ class AmazonOrders:
                 current_index += 1
 
             next_page = None
-            if start_index is None:
+            if keep_paging:
                 next_page_tag = util.select_one(response_parsed, self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
                     next_page = str(next_page_tag["href"])
@@ -107,7 +108,7 @@ class AmazonOrders:
                 else:
                     logger.debug("No next page")
             else:
-                logger.debug("start_index is given, not paging")
+                logger.debug("keep_paging is False, not paging")
 
         return orders
 

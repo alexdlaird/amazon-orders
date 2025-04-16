@@ -4,11 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.17...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.18...HEAD)
+
+## [3.2.18](https://github.com/alexdlaird/amazon-orders/compare/3.2.17...3.2.18) - 2025-04-16
 
 ### Added
 
 - Documentation improvements.
+
+### Changed
+
+- Paging is more clear now, based on [the value of `keep_paging`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order_history) (`--single-page` from the CLI) rather than evaluating `start_index`.
 
 ## [3.2.17](https://github.com/alexdlaird/amazon-orders/compare/3.2.16...3.2.17) - 2025-04-15
 
