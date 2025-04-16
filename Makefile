@@ -73,6 +73,7 @@ validate-release:
 
 	@if [[ $$(grep "__version__ = \"${VERSION}\"" amazonorders/__init__.py) == "" ]] ; then echo "Version not bumped in amazonorders/__init__.py" & exit 1 ; fi
 	@if [[ $$(grep "``==${VERSION}``" docs/index.rst) == "" ]] ; then echo "Version not bumped in docs/index.rst" & exit 1 ; fi
+	@if [[ $$(grep "``==${VERSION}``" README.md) == "" ]] ; then echo "Version not bumped in README.md" & exit 1 ; fi
 
 upload: local
 	@( \
