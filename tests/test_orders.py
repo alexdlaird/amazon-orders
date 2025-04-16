@@ -524,14 +524,8 @@ class TestOrders(UnitTestCase):
 
         # THEN, assert the primary fields are populated without regression
         for order in orders:
-            self.assertIsNotNone(order.order_number)
-            self.assertIsNotNone(order.grand_total)
-            self.assertIsNotNone(order.order_placed_date)
-            self.assertIsNotNone(order.order_details_link)
-            self.assertTrue(len(order.items) > 0)
-            self.assertIsNotNone(order.items[0].title)
-            self.assertIsNotNone(order.items[0].link)
-            self.assertTrue(len(order.shipments) > 0)
+            self.assert_populated_generic(order, full_details=False)
+            self.assertIsNotNone(order.index)
 
     @unittest.skipIf(not os.path.exists(temp_order_details_file_path),
                      reason="Skipped, to debug an order details page, "
@@ -557,12 +551,5 @@ class TestOrders(UnitTestCase):
         order = self.amazon_orders.get_order(order_id)
 
         # THEN, assert the primary fields are populated without regression
-        self.assertIsNotNone(order.order_number)
-        self.assertIsNotNone(order.grand_total)
-        self.assertIsNotNone(order.order_placed_date)
-        self.assertIsNotNone(order.order_details_link)
-        self.assertTrue(len(order.items) > 0)
-        self.assertIsNotNone(order.items[0].title)
-        self.assertIsNotNone(order.items[0].link)
-        self.assertIsNotNone(order.items[0].price)
-        self.assertTrue(len(order.shipments) > 0)
+        self.assert_populated_generic(order, full_details=False)
+        self.assertIsNone(order.index)

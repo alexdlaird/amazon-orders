@@ -12,7 +12,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
     """
     These integration tests run generically against any Amazon account. The only requirement is that the
     account in question has at least one order in the year ``INTEGRATION_TEST_YEAR`` (defaults to the
-    current year). The only assertions done on the fields populated are ``isNotNoneNone``.
+    current year). The only assertions done on the fields populated are ``isNotNone``.
     """
 
     @classmethod
@@ -32,16 +32,17 @@ class TestIntegrationGeneric(IntegrationTestCase):
     def test_get_order_history(self):
         # WHEN
         orders = self.amazon_orders.get_order_history(year=self.year,
-                                                      start_index=self.start_index,
-                                                      keep_paging=False)
+                                                      start_index=self.start_index)
 
         # THEN
         self.assertGreaterEqual(len(orders), 1)
         self.assert_populated_generic(orders[0], False)
+        self.assertIsNotNone(orders[0].index)
 
     def test_get_order_history_full_details(self):
         # WHEN
         orders = self.amazon_orders.get_order_history(year=self.year,
+                                                      start_index=self.start_index,
                                                       full_details=True)
 
         # THEN
@@ -49,10 +50,19 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assert_populated_generic(orders[0], True)
         self.assertIsNotNone(orders[0].index)
 
+    def test_get_order_history_single_page(self):
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=self.year,
+                                                      keep_paging=False)
+
+        # THEN
+        self.assertLessEqual(len(orders), 10)
+
     def test_get_order(self):
         # GIVEN
         orders = self.amazon_orders.get_order_history(year=self.year,
-                                                      start_index=self.start_index)
+                                                      start_index=self.start_index,
+                                                      keep_paging=False)
         self.assertGreaterEqual(len(orders), 1)
         self.assertIsNotNone(orders[0].order_number)
         order_id = orders[0].order_number
