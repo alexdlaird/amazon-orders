@@ -24,10 +24,6 @@ class TestIntegrationGeneric(IntegrationTestCase):
             cls.start_index = os.environ.get("START_INDEX")
         else:
             cls.start_index = None
-        if os.environ.get("START_INDEX_FULL_HISTORY"):
-            cls.start_index_full_history = os.environ.get("START_INDEX_FULL_HISTORY")
-        else:
-            cls.start_index_full_history = None
         if os.environ.get("TRANSACTIONS_DAYS"):
             cls.transactions_days = os.environ.get("TRANSACTIONS_DAYS")
         else:
@@ -36,7 +32,8 @@ class TestIntegrationGeneric(IntegrationTestCase):
     def test_get_order_history(self):
         # WHEN
         orders = self.amazon_orders.get_order_history(year=self.year,
-                                                      start_index=self.start_index)
+                                                      start_index=self.start_index,
+                                                      keep_paging=False)
 
         # THEN
         self.assertGreaterEqual(len(orders), 1)
@@ -45,7 +42,6 @@ class TestIntegrationGeneric(IntegrationTestCase):
     def test_get_order_history_full_details(self):
         # WHEN
         orders = self.amazon_orders.get_order_history(year=self.year,
-                                                      start_index=self.start_index_full_history,
                                                       full_details=True)
 
         # THEN
