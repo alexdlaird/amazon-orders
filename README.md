@@ -34,7 +34,9 @@ Execute `amazon-orders` from the command line with:
 amazon-orders --username <AMAZON_EMAIL> --password <AMAZON_PASSWORD> history
 ```
 
-Or use `amazon-orders` programmatically:
+Or to use `amazon-orders` programmatically, [`get_order_history()`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order_history)
+and [`get_order()`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order) are good
+places to start:
 
 ```python
 from amazonorders.session import AmazonSession
