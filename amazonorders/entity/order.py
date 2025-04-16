@@ -42,7 +42,7 @@ class Order(Parsable):
         #: Where the Order appeared in the history when it was queried. This will inevitably change (ex. when a new
         #: order is placed, all indexes will then be off by one), but is still captured as it may be applicable in
         #: various use-cases. Only set when the Order is populated through
-        #: :func:`~amazonorders.orders.AmazonOrders.get_order_history` (which takes ``start_index``, to correlate).
+        #: :func:`~amazonorders.orders.AmazonOrders.get_order_history` (use ``start_index`` to correlate).
         self.index: Optional[int] = index
 
         #: The Order Shipments.
