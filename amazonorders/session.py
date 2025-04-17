@@ -105,7 +105,7 @@ class AmazonSession:
         #: The shared session to be used across all requests.
         self.session: Session = Session()
         #: The last response executed on the Session.
-        self.last_response: Response = Response()
+        self.last_response: Optional[Response] = None
         #: A parsed representation of the last response executed on the Session.
         self.last_response_parsed: Tag = Tag(name="html")
         #: If :func:`login` has been executed and successfully logged in the session.
