@@ -34,7 +34,7 @@ test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev]"; \
-		coverage run -m pytest -v -s tests/integration; \
+		coverage run -m pytest -v tests/integration; \
 	)
 
 build-test-resources: install
