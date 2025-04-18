@@ -67,16 +67,6 @@ class UnitTestCase(TestCase):
                 match=[urlencoded_params_matcher(request_data)],
             )
 
-    def given_order_history_landing_exists(self):
-        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2023-10.html"), "r",
-                  encoding="utf-8") as f:
-            return responses.add(
-                responses.GET,
-                self.test_config.constants.ORDER_HISTORY_LANDING_URL,
-                body=f.read(),
-                status=200,
-            )
-
     def given_order_history_exists(self, year, start_index=0):
         with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-history-{year}-{start_index}.html"), "r",
                   encoding="utf-8") as f:

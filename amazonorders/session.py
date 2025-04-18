@@ -201,7 +201,7 @@ class AmazonSession:
         if (self.auth_cookies_stored() and
                 login_response.response.url.split("?")[0] == self.config.constants.SIGN_IN_REDIRECT_URL):
             self.logout()
-            self.get(self.config.constants.SIGN_IN_URL)
+            login_response = self.get(self.config.constants.SIGN_IN_URL)
 
         attempts = 0
         while not self.is_authenticated and attempts < self.config.max_auth_attempts:
