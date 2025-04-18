@@ -47,6 +47,7 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assert_order_112_0399923_3070642(orders[3], False)
         self.assertEqual(3, orders[3].index)
+        self.assert_orders_list_index(orders)
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
@@ -250,6 +251,7 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assert_order_114_9460922_7737063(orders[3], True)
         self.assertEqual(43, orders[3].index)
+        self.assert_orders_list_index(orders)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(10, resp2.call_count)
 

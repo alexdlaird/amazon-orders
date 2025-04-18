@@ -38,6 +38,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assertGreaterEqual(len(orders), 1)
         self.assert_populated_generic(orders[0], False)
         self.assertIsNotNone(orders[0].index)
+        self.assert_orders_list_index(orders)
 
     def test_get_order_history_full_details(self):
         # WHEN
@@ -49,6 +50,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assertGreaterEqual(len(orders), 1)
         self.assert_populated_generic(orders[0], True)
         self.assertIsNotNone(orders[0].index)
+        self.assert_orders_list_index(orders)
 
     def test_get_order_history_single_page(self):
         # WHEN

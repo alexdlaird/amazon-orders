@@ -6,6 +6,47 @@ from datetime import date
 
 
 class TestCase(unittest.TestCase):
+    def assert_orders_list_index(self, orders):
+        for i in range(1, len(orders)):
+            if orders[i].index < orders[i - 1].index:
+                return False
+        return True
+
+    def assert_populated_generic(self, order, full_details):
+        self.assertIsNotNone(order.order_number)
+        self.assertIsNotNone(order.grand_total)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertIsNotNone(order.order_placed_date)
+        if order.recipient:
+            self.assertIsNotNone(order.recipient.name)
+            self.assertIsNotNone(order.recipient.address)
+            self.assertGreaterEqual(len(order.shipments), 1)
+            shipment_items = []
+            for shipment in order.shipments:
+                shipment_items += shipment.items
+                self.assertGreaterEqual(len(shipment.items), 1)
+                self.assertIsNotNone(shipment.delivery_status)
+            self.assertEqual(str(order.items.sort()), str(shipment_items.sort()))
+        self.assertGreaterEqual(len(order.items), 1)
+        for item in order.items:
+            self.assertIsNotNone(item.title)
+            self.assertIsNotNone(item.link)
+
+        self.assertEqual(order.full_details, full_details)
+
+        if full_details:
+            self.assertIsNotNone(order.payment_method)
+            self.assertEqual(4, len(str(order.payment_method_last_4)))
+            self.assertIsNotNone(order.subtotal)
+            if order.recipient:
+                self.assertIsNotNone(order.shipping_total)
+            self.assertIsNotNone(order.total_before_tax)
+            self.assertIsNotNone(order.estimated_tax)
+            if order.recipient:
+                for item in order.items:
+                    self.assertIsNotNone(item.price)
+                    self.assertIsNotNone(item.seller.name)
+
     def assert_order_112_0399923_3070642(self, order, full_details):
         self.assertEqual("112-0399923-3070642", order.order_number)
         self.assertEqual(34.01, order.grand_total)
@@ -483,38 +524,3 @@ class TestCase(unittest.TestCase):
             self.assertEqual(18.95, order.items[1].price)
             self.assertEqual(9.98, order.items[2].price)
             self.assertEqual(21.27, order.items[3].price)
-
-    def assert_populated_generic(self, order, full_details):
-        self.assertIsNotNone(order.order_number)
-        self.assertIsNotNone(order.grand_total)
-        self.assertIsNotNone(order.order_details_link)
-        self.assertIsNotNone(order.order_placed_date)
-        if order.recipient:
-            self.assertIsNotNone(order.recipient.name)
-            self.assertIsNotNone(order.recipient.address)
-            self.assertGreaterEqual(len(order.shipments), 1)
-            shipment_items = []
-            for shipment in order.shipments:
-                shipment_items += shipment.items
-                self.assertGreaterEqual(len(shipment.items), 1)
-                self.assertIsNotNone(shipment.delivery_status)
-            self.assertEqual(str(order.items.sort()), str(shipment_items.sort()))
-        self.assertGreaterEqual(len(order.items), 1)
-        for item in order.items:
-            self.assertIsNotNone(item.title)
-            self.assertIsNotNone(item.link)
-
-        self.assertEqual(order.full_details, full_details)
-
-        if full_details:
-            self.assertIsNotNone(order.payment_method)
-            self.assertEqual(4, len(str(order.payment_method_last_4)))
-            self.assertIsNotNone(order.subtotal)
-            if order.recipient:
-                self.assertIsNotNone(order.shipping_total)
-            self.assertIsNotNone(order.total_before_tax)
-            self.assertIsNotNone(order.estimated_tax)
-            if order.recipient:
-                for item in order.items:
-                    self.assertIsNotNone(item.price)
-                    self.assertIsNotNone(item.seller.name)
