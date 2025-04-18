@@ -27,7 +27,7 @@ test: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev]"; \
-		coverage run -m -v --ignore=tests/integration && coverage report && coverage xml && coverage html; \
+		coverage run -m pytest -v --ignore=tests/integration && coverage report && coverage xml && coverage html; \
 	)
 
 test-integration: install
