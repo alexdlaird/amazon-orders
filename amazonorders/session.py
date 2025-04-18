@@ -195,36 +195,36 @@ class AmazonSession:
         Session cookies are persisted, and if existing session data is found during this auth flow, it will be
         skipped entirely and flagged as authenticated.
         """
-        login_response = self.get(self.config.constants.SIGN_IN_URL)
+        last_response = self.get(self.config.constants.SIGN_IN_URL)
 
         # If our local session data is stale, Amazon will redirect us to the signin page
         if (self.auth_cookies_stored() and
-                login_response.response.url.split("?")[0] == self.config.constants.SIGN_IN_REDIRECT_URL):
+                last_response.response.url.split("?")[0] == self.config.constants.SIGN_IN_REDIRECT_URL):
             self.logout()
-            login_response = self.get(self.config.constants.SIGN_IN_URL)
+            last_response = self.get(self.config.constants.SIGN_IN_URL)
 
         attempts = 0
         while not self.is_authenticated and attempts < self.config.max_auth_attempts:
             # TODO: BeautifulSoup doesn't let us query for #nav-item-signout, maybe because it's dynamic on the page,
             #  but we should find a better way to do this
             if self.auth_cookies_stored() or \
-                    ("Hello, sign in" not in login_response.response.text and
-                     "nav-item-signout" in login_response.response.text):
+                    ("Hello, sign in" not in last_response.response.text and
+                     "nav-item-signout" in last_response.response.text):
                 self.is_authenticated = True
                 break
 
             form_found = False
             for form in self.auth_forms:
-                if form.select_form(self, login_response.parsed):
+                if form.select_form(self, last_response.parsed):
                     form_found = True
 
                     form.fill_form()
-                    form.submit(login_response.response)
+                    last_response = form.submit(last_response.response)
 
                     break
 
             if not form_found:
-                self._raise_auth_error(login_response.response)
+                self._raise_auth_error(last_response.response)
 
             attempts += 1
 

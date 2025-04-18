@@ -90,11 +90,12 @@ class AuthForm(ABC):
         if additional_attrs:
             self.data.update(additional_attrs)
 
-    def submit(self, last_response: Response) -> None:
+    def submit(self, last_response: Response) -> AmazonSessionResponse:
         """
         Submit the populated ``<form>``.
 
         :param last_response: The response of the request that fetched the form.
+        :return: The response from the executed request.
         """
         if not self.amazon_session or not self.form or not self.data:
             raise AmazonOrdersError(
@@ -111,6 +112,8 @@ class AuthForm(ABC):
         self._handle_errors(form_response)
 
         self.clear_form()
+
+        return form_response
 
     def clear_form(self) -> None:
         """
