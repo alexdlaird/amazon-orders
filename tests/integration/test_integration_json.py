@@ -83,9 +83,11 @@ class TestIntegrationJSON(IntegrationTestCase):
     .. code:: json
 
         {
-            "year": <map to AmazonOrders.get_order_history(year)>,
-            "start_index": <map to AmazonOrders.get_order_history(start_index)>,
-            "full_details": <map to AmazonOrders.get_order_history(full_details)>,
+            "func": "get_order_history",
+            "year": <maps to ``year`` on ``get_order_history()``>,
+            "start_index": <maps to ``start_index`` on ``get_order_history()``>,
+            "full_details": <maps to ``full_details`` on ``get_order_history()``>,
+            "keep_paging": <maps to ``keep_paging`` on ``get_order_history()``>,
             "orders_len": <the expected response list length>,
             "orders": {
                 "3": {
@@ -100,6 +102,26 @@ class TestIntegrationJSON(IntegrationTestCase):
     With this syntax, multiple ``Orders`` from the response can be asserted against. The indexed dictionaries under
     the ``orders`` key then match the assertion functionality when testing against a single order, meaning you
     define here the fields and values under the ``Order`` that you want to assert on.
+
+    Transactions
+    =======
+    In a ``get_transactions`` test, additional top-level fields are needed to define the test, and they are:
+
+    .. code:: json
+
+        {
+            "func": "get_transactions",
+            "days": <maps to ``days`` on ``get_transactions()``>,
+            "transactions_len": <the expected response list length>,
+            "transactions": {
+                "3": {
+                    # ... The Transaction at index 3
+                },
+                "7": {
+                    # ... The Transaction at index 7
+                }
+            }
+        }
     """
 
     @parameterized.expand(private_json_file_data + env_json_data, skip_on_empty=True)
@@ -133,6 +155,19 @@ class TestIntegrationJSON(IntegrationTestCase):
             # THEN
             self.assertEqual(order.full_details, True)
             self.assert_json_items(order, order_json)
+        elif func == "get_transactions":
+            transactions_len = data.pop("transactions_len")
+            transactions_json = data
+            days = transactions_json["days"]
+
+            # WHEN
+            transactions = self.amazon_transactions.get_transactions(days)
+
+            # THEN
+            self.assertEqual(transactions_len, len(transactions))
+            for index, transaction_json in transactions_json.items():
+                transaction = transactions[int(index)]
+                self.assert_json_items(transaction, transaction_json)
         else:
             self.fail(
                 f"Unknown function AmazonOrders. {func}, check JSON in test file {filename}")
