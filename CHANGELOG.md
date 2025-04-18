@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.18...HEAD)
 
+### Changed
+
+- Synchronous nature of `AmazonSession`, since this was bad design, and also prevents adding any async support.
+
+### Removed
+
+- `AmazonSession.last_response` and `AmazonSession.last_response_parsed`. These variables forced `AmazonSession` in to a statefulness that means its underlying functionality cannot be made async. Use the response object [AmazonSessionResponse](https://amazon-orders.readthedocs.io/api.html#amazonorders.util.AmazonSessionResponse) instead.
+
 ## [3.2.18](https://github.com/alexdlaird/amazon-orders/compare/3.2.17...3.2.18) - 2025-04-16
 
 ### Added

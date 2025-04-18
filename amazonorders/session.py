@@ -15,6 +15,7 @@ from requests.utils import dict_from_cookiejar
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError
 from amazonorders.forms import CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm, AuthForm
+from amazonorders.util import AmazonSessionResponse
 
 logger = logging.getLogger(__name__)
 
@@ -104,10 +105,6 @@ class AmazonSession:
 
         #: The shared session to be used across all requests.
         self.session: Session = Session()
-        #: The last response executed on the Session.
-        self.last_response: Optional[Response] = None
-        #: A parsed representation of the last response executed on the Session.
-        self.last_response_parsed: Tag = Tag(name="html")
         #: If :func:`login` has been executed and successfully logged in the session.
         self.is_authenticated: bool = False
 
@@ -123,7 +120,7 @@ class AmazonSession:
     def request(self,
                 method: str,
                 url: str,
-                **kwargs: Any) -> Response:
+                **kwargs: Any) -> AmazonSessionResponse:
         """
         Execute the request against Amazon with base headers, parsing and storing the response
         and persisting response cookies.
@@ -131,7 +128,7 @@ class AmazonSession:
         :param method: The request method to execute.
         :param url: The URL to execute ``method`` on.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`requests.request`.
-        :return: The Response from the executed request.
+        :return: The response from the executed request.
         """
         if "headers" not in kwargs:
             kwargs["headers"] = {}
@@ -139,9 +136,8 @@ class AmazonSession:
 
         logger.debug(f"{method} request to {url}")
 
-        self.last_response = self.session.request(method, url, **kwargs)
-        self.last_response_parsed = BeautifulSoup(self.last_response.text,
-                                                  self.config.bs4_parser)
+        amazon_session_response = AmazonSessionResponse(self.session.request(method, url, **kwargs),
+                                                        self.config)
 
         cookies = dict_from_cookiejar(self.session.cookies)
         if os.path.exists(self.config.cookie_jar_path):
@@ -149,39 +145,40 @@ class AmazonSession:
         with open(self.config.cookie_jar_path, "w", encoding="utf-8") as f:
             f.write(json.dumps(cookies))
 
-        logger.debug(f"Response: {self.last_response.url} - {self.last_response.status_code}")
+        logger.debug(
+            f"Response: {amazon_session_response.response.url} - {amazon_session_response.response.status_code}")
 
         if self.debug:
-            page_name = self._get_page_from_url(self.config.output_dir, self.last_response.url)
+            page_name = self._get_page_from_url(self.config.output_dir, amazon_session_response.response.url)
             with open(os.path.join(self.config.output_dir, page_name), "w",
                       encoding="utf-8") as html_file:
                 logger.debug(
                     f"Response written to file: {html_file.name}")
-                html_file.write(self.last_response.text)
+                html_file.write(amazon_session_response.response.text)
 
-        return self.last_response
+        return amazon_session_response
 
     def get(self,
             url: str,
-            **kwargs: Any) -> Response:
+            **kwargs: Any) -> AmazonSessionResponse:
         """
         Perform a GET request.
 
         :param url: The URL to GET on.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`AmazonSession.request`.
-        :return: The Response from the executed GET request.
+        :return: The response from the executed GET request.
         """
         return self.request("GET", url, **kwargs)
 
     def post(self,
              url: str,
-             **kwargs: Any) -> Response:
+             **kwargs: Any) -> AmazonSessionResponse:
         """
         Perform a POST request.
 
         :param url: The URL to POST on.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`AmazonSession.request`.
-        :return: The Response from the executed POST request.
+        :return: The response from the executed POST request.
         """
         return self.request("POST", url, **kwargs)
 
@@ -199,11 +196,11 @@ class AmazonSession:
         Session cookies are persisted, and if existing session data is found during this auth flow, it will be
         skipped entirely and flagged as authenticated.
         """
-        self.get(self.config.constants.SIGN_IN_URL)
+        login_response = self.get(self.config.constants.SIGN_IN_URL)
 
         # If our local session data is stale, Amazon will redirect us to the signin page
         if (self.auth_cookies_stored() and
-                self.last_response.url.split("?")[0] == self.config.constants.SIGN_IN_REDIRECT_URL):
+                login_response.response.url.split("?")[0] == self.config.constants.SIGN_IN_REDIRECT_URL):
             self.logout()
             self.get(self.config.constants.SIGN_IN_URL)
 
@@ -212,23 +209,23 @@ class AmazonSession:
             # TODO: BeautifulSoup doesn't let us query for #nav-item-signout, maybe because it's dynamic on the page,
             #  but we should find a better way to do this
             if self.auth_cookies_stored() or \
-                    ("Hello, sign in" not in self.last_response.text and
-                     "nav-item-signout" in self.last_response.text):
+                    ("Hello, sign in" not in login_response.response.text and
+                     "nav-item-signout" in login_response.response.text):
                 self.is_authenticated = True
                 break
 
             form_found = False
             for form in self.auth_forms:
-                if form.select_form(self, self.last_response_parsed):
+                if form.select_form(self, login_response.parsed):
                     form_found = True
 
                     form.fill_form()
-                    form.submit()
+                    form.submit(login_response.response)
 
                     break
 
             if not form_found:
-                self._raise_auth_error()
+                self._raise_auth_error(login_response.response)
 
             attempts += 1
 
@@ -262,18 +259,18 @@ class AmazonSession:
             i += 1
         return filename_frmt.format(page_name=page_name, index=i)
 
-    def _raise_auth_error(self) -> None:
+    def _raise_auth_error(self, response: Response) -> None:
         debug_str = " To capture the page to a file, set the `debug` flag." if not self.debug else ""
-        if self.last_response.ok:
+        if response.ok:
             error_msg = (f"An error occurred, this is an unknown page, or its parsed contents don't match a "
-                         f"known auth flow: {self.last_response.url}.{debug_str}")
+                         f"known auth flow: {response.url}.{debug_str}")
         else:
             error_msg = "An error occurred, the page {url} returned {status_code}."
-            if 500 <= self.last_response.status_code < 600:
+            if 500 <= response.status_code < 600:
                 error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
                               "Wait a bit before trying again.")
 
-            error_msg = error_msg.format(url=self.last_response.url,
-                                         status_code=self.last_response.status_code) + debug_str
+            error_msg = error_msg.format(url=response.url,
+                                         status_code=response.status_code) + debug_str
 
         raise AmazonOrdersAuthError(error_msg)

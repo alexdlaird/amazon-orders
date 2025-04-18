@@ -74,10 +74,10 @@ class AmazonOrders:
         current_index = int(start_index) if start_index else 0
 
         while next_page:
-            self.amazon_session.get(next_page)
-            response_parsed = self.amazon_session.last_response_parsed
+            page_response_parsed = self.amazon_session.get(next_page).parsed
 
-            for order_tag in util.select(response_parsed, self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
+            for order_tag in util.select(page_response_parsed,
+                                         self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
                 order: Order = self.config.order_cls(order_tag, self.config, index=current_index)
 
                 if full_details:
@@ -88,8 +88,8 @@ class AmazonOrders:
                         logger.warning(f"Order {order.order_number} was partially populated, "
                                        f"since it is an unsupported Order type.")
                     else:
-                        self.amazon_session.get(order.order_details_link)
-                        order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
+                        order_details_response_parsed = self.amazon_session.get(order.order_details_link).parsed
+                        order_details_tag = util.select_one(order_details_response_parsed,
                                                             self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
                         order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order,
                                                       index=current_index)
@@ -100,7 +100,8 @@ class AmazonOrders:
 
             next_page = None
             if keep_paging:
-                next_page_tag = util.select_one(response_parsed, self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
+                next_page_tag = util.select_one(page_response_parsed,
+                                                self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
                     next_page = str(next_page_tag["href"])
                     if not next_page.startswith("http"):
@@ -123,11 +124,12 @@ class AmazonOrders:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        self.amazon_session.get(f"{self.config.constants.ORDER_DETAILS_URL}?orderID={order_id}")
-        if not self.amazon_session.last_response.url.startswith(self.config.constants.ORDER_DETAILS_URL):
+        order_details_response = self.amazon_session.get(
+            f"{self.config.constants.ORDER_DETAILS_URL}?orderID={order_id}")
+        if not order_details_response.response.url.startswith(self.config.constants.ORDER_DETAILS_URL):
             raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.")
 
-        order_details_tag = util.select_one(self.amazon_session.last_response_parsed,
+        order_details_tag = util.select_one(order_details_response.parsed,
                                             self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
         order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True)
 

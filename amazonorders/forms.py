@@ -11,10 +11,12 @@ import pyotp
 from PIL import Image
 from amazoncaptcha import AmazonCaptcha
 from bs4 import Tag
+from requests import Response
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
+from amazonorders.util import AmazonSessionResponse
 
 if TYPE_CHECKING:
     from amazonorders.session import AmazonSession
@@ -88,9 +90,11 @@ class AuthForm(ABC):
         if additional_attrs:
             self.data.update(additional_attrs)
 
-    def submit(self) -> None:
+    def submit(self, last_response: Response) -> None:
         """
         Submit the populated ``<form>``.
+
+        :param last_response: The response of the request that fetched the form.
         """
         if not self.amazon_session or not self.form or not self.data:
             raise AmazonOrdersError(
@@ -98,13 +102,13 @@ class AuthForm(ABC):
             )  # pragma: no cover
 
         method = str(self.form.get("method", "GET")).upper()
-        action = self._get_form_action()
+        action = self._get_form_action(last_response)
         request_data = {"params" if method == "GET" else "data": self.data}
-        self.amazon_session.request(method,
-                                    action,
-                                    **request_data)
+        form_response = self.amazon_session.request(method,
+                                                    action,
+                                                    **request_data)
 
-        self._handle_errors()
+        self._handle_errors(form_response)
 
         self.clear_form()
 
@@ -137,7 +141,7 @@ class AuthForm(ABC):
 
         return captcha_response
 
-    def _get_form_action(self) -> str:
+    def _get_form_action(self, last_response: Response) -> str:
         if not self.amazon_session or not self.form:
             raise AmazonOrdersError(
                 "Call AuthForm.select_form() first."
@@ -145,26 +149,26 @@ class AuthForm(ABC):
 
         action = self.form.get("action")
         if not action:
-            return self.amazon_session.last_response.url
+            return last_response.url
 
         action = str(action)
         if not action.startswith("http"):
             if action.startswith("/"):
-                parsed_url = urlparse(self.amazon_session.last_response.url)
+                parsed_url = urlparse(last_response.url)
                 return f"{parsed_url.scheme}://{parsed_url.netloc}{action}"
             else:
-                return "{url}/{path}".format(url="/".join(self.amazon_session.last_response.url.split("/")[:-1]),
+                return "{url}/{path}".format(url="/".join(last_response.url.split("/")[:-1]),
                                              path=action)
         else:
             return action
 
-    def _handle_errors(self) -> None:
+    def _handle_errors(self, form_response: AmazonSessionResponse) -> None:
         if not self.amazon_session:
             raise AmazonOrdersError(
                 "Call AuthForm.select_form() first."
             )  # pragma: no cover
 
-        error_tag = util.select_one(self.amazon_session.last_response_parsed, self.error_selector)
+        error_tag = util.select_one(form_response.parsed, self.error_selector)
         if error_tag:
             error_msg = f"An error occurred: {error_tag.text.strip().rstrip('.')}.\n"
 

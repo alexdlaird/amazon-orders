@@ -96,11 +96,11 @@ class AmazonTransactions:
 
         min_date = datetime.date.today() - datetime.timedelta(days=days)
 
-        self.amazon_session.get(self.config.constants.TRANSACTION_HISTORY_LANDING_URL)
-        if not self.amazon_session.last_response_parsed:
+        transaction_page_response = self.amazon_session.get(self.config.constants.TRANSACTION_HISTORY_LANDING_URL)
+        if not transaction_page_response.parsed:
             raise AmazonOrdersError("Could not get transaction history landing page.")
 
-        form_tag = util.select_one(self.amazon_session.last_response_parsed,
+        form_tag = util.select_one(transaction_page_response.parsed,
                                    self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
 
         transactions: List[Transaction] = []
@@ -117,11 +117,11 @@ class AmazonTransactions:
             if next_page_post_url is None:
                 return transactions
 
-            self.amazon_session.post(next_page_post_url, data=next_page_post_data)
-            if not self.amazon_session.last_response_parsed:
+            transaction_page_response = self.amazon_session.post(next_page_post_url, data=next_page_post_data)
+            if not transaction_page_response.parsed:
                 raise AmazonOrdersError("Could not get next transaction history page.")
 
-            form_tag = util.select_one(self.amazon_session.last_response_parsed,
+            form_tag = util.select_one(transaction_page_response.parsed,
                                        self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
 
         return transactions
