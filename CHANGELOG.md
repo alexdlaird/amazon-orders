@@ -9,10 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - Synchronous nature of `AmazonSession`, since this was bad design, and also prevents adding any async support.
+- Renamed `constants.Constants.TRANSACTION_HISTORY_LANDING_ROUTE` to `constants.Constants.TRANSACTION_HISTORY_ROUTE`.
+- Renamed `constants.Constants.TRANSACTION_HISTORY_LANDING_URL` to `constants.Constants.TRANSACTION_HISTORY_URL`.
 
 ### Removed
 
 - `AmazonSession.last_response` and `AmazonSession.last_response_parsed`. These variables forced `AmazonSession` in to a statefulness that means its underlying functionality cannot be made async. Use the response object [AmazonSessionResponse](https://amazon-orders.readthedocs.io/api.html#amazonorders.util.AmazonSessionResponse) instead.
+- `constants.Constants.ORDER_HISTORY_LANDING_URL`.
 
 ## [3.2.18](https://github.com/alexdlaird/amazon-orders/compare/3.2.17...3.2.18) - 2025-04-16
 

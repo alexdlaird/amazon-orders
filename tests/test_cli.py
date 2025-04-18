@@ -34,8 +34,7 @@ class TestCli(UnitTestCase):
         year = 2023
         start_index = 10
         self.given_login_responses_success()
-        resp1 = self.given_order_history_landing_exists()
-        resp2 = self.given_order_history_exists(year, start_index)
+        resp = self.given_order_history_exists(year, start_index)
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
@@ -47,8 +46,7 @@ class TestCli(UnitTestCase):
         # THEN
         self.assertEqual(0, response.exit_code)
         self.assert_login_responses_success()
-        self.assertEqual(1, resp1.call_count)
-        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(1, resp.call_count)
         self.assertIn("Order #112-0069846-3887437", response.output)
         self.assertIn("Order #113-1909885-6198667", response.output)
         self.assertIn("Order #112-4188066-0547448", response.output)
@@ -96,7 +94,7 @@ class TestCli(UnitTestCase):
                   "r", encoding="utf-8") as f:
             resp = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
                 status=200,
             )

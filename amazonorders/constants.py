@@ -33,7 +33,6 @@ class Constants:
     # URLs for orders
     ##########################################################################
 
-    ORDER_HISTORY_LANDING_URL = f"{BASE_URL}/gp/css/order-history"
     ORDER_HISTORY_URL = f"{BASE_URL}/your-orders/orders"
     ORDER_DETAILS_URL = f"{BASE_URL}/gp/your-account/order-details"
     HISTORY_FILTER_QUERY_PARAM = "timeFilter"
@@ -42,8 +41,8 @@ class Constants:
     # URLs for transactions
     ##########################################################################
 
-    TRANSACTION_HISTORY_LANDING_ROUTE = "/cpe/yourpayments/transactions"
-    TRANSACTION_HISTORY_LANDING_URL = f"{BASE_URL}{TRANSACTION_HISTORY_LANDING_ROUTE}"
+    TRANSACTION_HISTORY_ROUTE = "/cpe/yourpayments/transactions"
+    TRANSACTION_HISTORY_URL = f"{BASE_URL}{TRANSACTION_HISTORY_ROUTE}"
 
     ##########################################################################
     # Headers

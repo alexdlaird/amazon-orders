@@ -8,7 +8,6 @@ from typing import Any, List, Optional
 from urllib.parse import urlparse
 
 import requests
-from bs4 import BeautifulSoup, Tag
 from requests import Response, Session
 from requests.utils import dict_from_cookiejar
 
@@ -137,7 +136,7 @@ class AmazonSession:
         logger.debug(f"{method} request to {url}")
 
         amazon_session_response = AmazonSessionResponse(self.session.request(method, url, **kwargs),
-                                                        self.config)
+                                                        self.config.bs4_parser)
 
         cookies = dict_from_cookiejar(self.session.cookies)
         if os.path.exists(self.config.cookie_jar_path):

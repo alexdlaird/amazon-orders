@@ -8,7 +8,6 @@ from typing import List, Union, Optional, Callable
 from bs4 import Tag, BeautifulSoup
 from requests import Response
 
-from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.selectors import Selector
 
 logger = logging.getLogger(__name__)
@@ -19,11 +18,11 @@ class AmazonSessionResponse:
     A wrapper for the :class:`requests.Response` object, which also contains the parsed HTML.
     """
 
-    def __init__(self, response: Response, config: AmazonOrdersConfig) -> None:
+    def __init__(self, response: Response, bs4_parser: str) -> None:
         #: The request's response object.
         self.response: Response = response
         #: The parsed HTML from the response.
-        self.parsed: Tag = BeautifulSoup(self.response.text, config.bs4_parser)
+        self.parsed: Tag = BeautifulSoup(self.response.text, bs4_parser)
 
 
 def select(parsed: Tag, selector: Union[List[Union[str, Selector]], Union[str, Selector]]) -> List[Tag]:

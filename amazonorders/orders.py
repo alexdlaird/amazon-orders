@@ -58,8 +58,6 @@ class AmazonOrders:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        self.amazon_session.get(self.config.constants.ORDER_HISTORY_LANDING_URL)
-
         orders = []
         optional_start_index = f"&startIndex={start_index}" if start_index else ""
         next_page: Optional[str] = (

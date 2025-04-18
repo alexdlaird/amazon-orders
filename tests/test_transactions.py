@@ -35,7 +35,7 @@ class TestTransactions(UnitTestCase):
                   encoding="utf-8") as f:
             responses.add(
                 responses.GET,
-                f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
                 status=200,
             )
@@ -67,7 +67,7 @@ class TestTransactions(UnitTestCase):
                   encoding="utf-8") as f:
             responses.add(
                 responses.GET,
-                f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
                 status=200,
             )
@@ -99,7 +99,7 @@ class TestTransactions(UnitTestCase):
                   encoding="utf-8") as f:
             responses.add(
                 responses.GET,
-                f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
                 status=200,
             )
@@ -140,7 +140,7 @@ class TestTransactions(UnitTestCase):
                   encoding="utf-8") as f:
             responses.add(
                 responses.GET,
-                f"{self.test_config.constants.TRANSACTION_HISTORY_LANDING_URL}",
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
                 status=200,
             )

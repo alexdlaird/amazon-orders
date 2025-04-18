@@ -96,7 +96,7 @@ class AmazonTransactions:
 
         min_date = datetime.date.today() - datetime.timedelta(days=days)
 
-        transaction_page_response = self.amazon_session.get(self.config.constants.TRANSACTION_HISTORY_LANDING_URL)
+        transaction_page_response = self.amazon_session.get(self.config.constants.TRANSACTION_HISTORY_URL)
         if not transaction_page_response.parsed:
             raise AmazonOrdersError("Could not get transaction history landing page.")
 
