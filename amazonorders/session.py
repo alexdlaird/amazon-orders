@@ -8,6 +8,7 @@ from typing import Any, List, Optional
 from urllib.parse import urlparse
 
 import requests
+import requests.adapters
 from requests import Response, Session
 from requests.utils import dict_from_cookiejar
 
@@ -103,7 +104,7 @@ class AmazonSession:
         self.auth_forms: List[AuthForm] = auth_forms
 
         #: The shared session to be used across all requests.
-        self.session: Session = Session()
+        self.session: Session = self._create_session()
         #: If :func:`login` has been executed and successfully logged in the session.
         self.is_authenticated: bool = False
 
@@ -241,7 +242,7 @@ class AmazonSession:
             os.remove(self.config.cookie_jar_path)
 
         self.session.close()
-        self.session = Session()
+        self.session = self._create_session()
 
         self.is_authenticated = False
 
@@ -273,3 +274,9 @@ class AmazonSession:
                                          status_code=response.status_code) + debug_str
 
         raise AmazonOrdersAuthError(error_msg)
+
+    def _create_session(self):
+        session = Session()
+        adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
+        session.mount('https://', adapter)
+        return session
