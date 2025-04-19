@@ -4,7 +4,8 @@ on:
   workflow_call:
   workflow_dispatch:
   schedule:
-    - cron: "0 7 * * *"
+    # TODO: do not merge this to main, remove once validation is done
+    - cron: "*/30 * * * *"
 
 jobs:
   test:
@@ -20,6 +21,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        # TODO: do not merge this to main, remove once validation is done
+        with:
+          ref: asyncio
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
