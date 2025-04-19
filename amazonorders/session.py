@@ -277,6 +277,7 @@ class AmazonSession:
 
     def _create_session(self):
         session = Session()
-        adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
+        adapter = requests.adapters.HTTPAdapter(pool_connections=self.config.connection_pool_size,
+                                                pool_maxsize=self.config.connection_pool_size)
         session.mount('https://', adapter)
         return session

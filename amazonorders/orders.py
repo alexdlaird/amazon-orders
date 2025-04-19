@@ -144,6 +144,6 @@ class AmazonOrders:
 
     async def _async_wrapper(self, func, *args, **kwargs):
         loop = asyncio.get_running_loop()
-        with concurrent.futures.ThreadPoolExecutor() as pool:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.config.thread_pool_size) as pool:
             result = await loop.run_in_executor(pool, func, *args, **kwargs)
         return result

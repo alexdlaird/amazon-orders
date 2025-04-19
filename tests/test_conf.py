@@ -50,6 +50,7 @@ class TestConf(TestCase):
         self.assertTrue(os.path.exists(config_path))
         with open(config.config_path, "r") as f:
             self.assertEqual("""bs4_parser: html.parser
+connection_pool_size: {}
 constants_class: amazonorders.constants.Constants
 cookie_jar_path: {}
 item_class: amazonorders.entity.item.Item
@@ -58,7 +59,8 @@ order_class: amazonorders.entity.order.Order
 output_dir: {}
 selectors_class: amazonorders.selectors.Selectors
 shipment_class: amazonorders.entity.shipment.Shipment
-""".format(self.test_cookie_jar_path, self.test_output_dir), f.read())
+thread_pool_size: {}
+""".format(os.cpu_count() * 8, self.test_cookie_jar_path, self.test_output_dir, os.cpu_count() * 4), f.read())
 
     def test_override_default(self):
         # GIVEN
