@@ -4,6 +4,7 @@ __license__ = "MIT"
 import json
 import logging
 import os
+import threading
 from typing import Any, List, Optional
 from urllib.parse import urlparse
 
@@ -140,10 +141,9 @@ class AmazonSession:
                                                         self.config.bs4_parser)
 
         cookies = dict_from_cookiejar(self.session.cookies)
-        if os.path.exists(self.config.cookie_jar_path):
-            os.remove(self.config.cookie_jar_path)
-        with open(self.config.cookie_jar_path, "w", encoding="utf-8") as f:
-            f.write(json.dumps(cookies))
+        with threading.Lock():
+            with open(self.config.cookie_jar_path, "w", encoding="utf-8") as f:
+                f.write(json.dumps(cookies))
 
         logger.debug(
             f"Response: {amazon_session_response.response.url} - {amazon_session_response.response.status_code}")
