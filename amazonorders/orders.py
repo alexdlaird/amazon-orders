@@ -142,7 +142,7 @@ class AmazonOrders:
 
         return order
 
-    async def _async_wrapper(func, *args, **kwargs):
+    async def _async_wrapper(self, func, *args, **kwargs):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             result = await loop.run_in_executor(pool, func, *args, **kwargs)
