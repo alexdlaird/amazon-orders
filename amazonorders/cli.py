@@ -7,6 +7,7 @@ import datetime
 import logging
 import os
 import platform
+import time
 from typing import Any, Optional
 
 import click
@@ -146,12 +147,14 @@ Order History for {year}{optional_start_index}{optional_full_details}
         amazon_orders = AmazonOrders(amazon_session,
                                      config=config)
 
+        start_time = time.time()
         orders = amazon_orders.get_order_history(year=kwargs["year"],
                                                  start_index=kwargs["start_index"],
                                                  full_details=kwargs["full_details"],
                                                  keep_paging=not kwargs["single_page"])
+        end_time = time.time()
 
-        click.echo("... {} orders parsed.\n".format(len(orders)))
+        click.echo("... {} orders parsed in {} seconds.\n".format(len(orders), int(end_time - start_time)))
 
         for o in orders:
             click.echo(f"{_order_output(o, config)}\n")

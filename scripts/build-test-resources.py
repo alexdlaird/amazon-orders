@@ -39,13 +39,11 @@ def build_test_resources(args):
     """
 
     if not (os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")):
-        print(
-            "AMAZON_USERNAME and AMAZON_PASSWORD environment variables not set")
+        print("AMAZON_USERNAME and AMAZON_PASSWORD environment variables must be set to build test resources")
 
         sys.exit(1)
 
-    amazon_session = AmazonSession(os.environ["AMAZON_USERNAME"],
-                                   os.environ["AMAZON_PASSWORD"])
+    amazon_session = AmazonSession()
     amazon_session.login()
 
     pages_to_download = [
