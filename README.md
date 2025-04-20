@@ -57,6 +57,15 @@ If desired fields are populated as `None`, set `full_details=True` (or pass `--f
 since by default it is `False` (it will slow down querying). Have a look at [the Order entity's docs](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order)
 to see what fields are only populated with full details.
 
+### Automating Authentication
+
+One of the simplest ways to automate authentication is to take advantage of some of the environment variables that
+`amazon-orders` looks for. These include:
+
+- `AMAZON_USERNAME` - Amazon email address
+- `AMAZON_PASSWORD` - Amazon password
+- `OTP_SECRET_KEY` - The secret key Amazon provides when manually adding a 2FA authenticator app—setting this will auto-solve one-time password challenges
+
 ## Documentation
 
 For more advanced usage, `amazon-orders`'s official documentation is available
