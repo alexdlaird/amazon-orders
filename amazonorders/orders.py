@@ -5,7 +5,9 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
-from typing import List, Optional
+from typing import List, Optional, Any, Callable
+
+from bs4 import Tag
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
@@ -96,7 +98,11 @@ class AmazonOrders:
 
         return asyncio.run(self._build_orders_async(next_page, keep_paging, full_details, current_index))
 
-    async def _build_orders_async(self, next_page, keep_paging, full_details, current_index) -> List[Order]:
+    async def _build_orders_async(self,
+                                  next_page: Optional[str],
+                                  keep_paging: bool,
+                                  full_details: bool,
+                                  current_index: int) -> List[Any]:
         order_tasks = []
 
         while next_page:
@@ -123,7 +129,10 @@ class AmazonOrders:
 
         return await asyncio.gather(*order_tasks)
 
-    def _build_order(self, order_tag, full_details, current_index):
+    def _build_order(self,
+                     order_tag: List[Tag],
+                     full_details: bool,
+                     current_index: int) -> Order:
         order: Order = self.config.order_cls(order_tag, self.config, index=current_index)
 
         if full_details:
@@ -142,8 +151,10 @@ class AmazonOrders:
 
         return order
 
-    async def _async_wrapper(self, func, *args, **kwargs):
+    async def _async_wrapper(self,
+                             func: Callable,
+                             *args: Any) -> List[Order]:
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.config.thread_pool_size) as pool:
-            result = await loop.run_in_executor(pool, func, *args, **kwargs)
+            result = await loop.run_in_executor(pool, func, *args)
         return result

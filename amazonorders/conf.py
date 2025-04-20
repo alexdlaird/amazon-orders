@@ -37,8 +37,8 @@ class AmazonOrdersConfig:
             "shipment_class": "amazonorders.entity.shipment.Shipment",
             "item_class": "amazonorders.entity.item.Item",
             "bs4_parser": "html.parser",
-            "thread_pool_size": os.cpu_count() * 4,
-            "connection_pool_size": os.cpu_count() * 8,
+            "thread_pool_size": (os.cpu_count() or 1) * 4,
+            "connection_pool_size": (os.cpu_count() or 1) * 8,
         }
 
         if os.path.exists(self.config_path):
