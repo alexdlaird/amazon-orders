@@ -14,13 +14,13 @@ jobs:
       FORCE_COLOR: 1
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
       AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
-      OTP_SECRET_KEY: ${{ secrets.OTP_SECRET_KEY }}
+      AMAZON_OTP_SECRET_KEY: ${{ secrets.AMAZON_OTP_SECRET_KEY }}
       # The following variables are not required, defaults will be used if they are not defined
       AMAZON_BASE_URL: ${{ vars.AMAZON_BASE_URL }}
-      INTEGRATION_TEST_YEAR: ${{ vars.INTEGRATION_TEST_YEAR }}
-      START_INDEX: ${{ vars.START_INDEX }}
-      TRANSACTIONS_DAYS: ${{ vars.TRANSACTIONS_DAYS }}
-      FULL_DETAILS_LOOP_COUNT: ${{ vars.FULL_DETAILS_LOOP_COUNT }}
+      AMAZON_INTEGRATION_TEST_YEAR: ${{ vars.AMAZON_INTEGRATION_TEST_YEAR }}
+      AMAZON_START_INDEX: ${{ vars.AMAZON_START_INDEX }}
+      AMAZON_TRANSACTIONS_DAYS: ${{ vars.AMAZON_TRANSACTIONS_DAYS }}
+      AMAZON_FULL_DETAILS_LOOP_COUNT: ${{ vars.AMAZON_FULL_DETAILS_LOOP_COUNT }}
 
     runs-on: ubuntu-latest
 

@@ -16,6 +16,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - `AmazonOrders.get_order_history()` now fetches each individual order using `asyncio` for 5-10x performance improvements.
+- All environment variables are now consistently prefixed with `AMAZON_`, so `AMAZON_OTP_SECRET_KEY` instead of  `OTP_SECRET_KEY`.
 - Synchronous nature of `AmazonSession`, since this was bad design, and also prevents adding any async support.
 - `AmazonOrders.request` now takes `persist_cookies`, which defaults to `False`. Cookies are now only persisted when the login form is submitted, rather than with every request.
 - Renamed `constants.Constants.TRANSACTION_HISTORY_LANDING_ROUTE` to `constants.Constants.TRANSACTION_HISTORY_ROUTE`.

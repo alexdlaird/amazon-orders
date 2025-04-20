@@ -25,10 +25,10 @@ if os.path.exists(PRIVATE_RESOURCES_DIR):
             private_json_file_data.append((filename, data))
 
 env_json_data = []
-if "AMAZON_ORDERS_INTEGRATION_TEST_JSON" in os.environ:
-    data = json.loads(os.environ["AMAZON_ORDERS_INTEGRATION_TEST_JSON"])
+if "AMAZON_INTEGRATION_TEST_JSON" in os.environ:
+    data = json.loads(os.environ["AMAZON_INTEGRATION_TEST_JSON"])
     if not isinstance(data, list):
-        print("AMAZON_ORDERS_INTEGRATION_TEST_JSON must be a list of JSON objects")
+        print("AMAZON_INTEGRATION_TEST_JSON must be a list of JSON objects")
 
         sys.exit(1)
 
@@ -42,7 +42,7 @@ class TestIntegrationJSON(IntegrationTestCase):
     """
     The two JSON files committed to "private-resources" are provided as examples of the syntax. Any other
     files created in "private-resources" will be ignored by ``.gitignore``. Alternatively, instead of files,
-    this same JSON syntax can be provided as a list in the environment variable AMAZON_ORDERS_INTEGRATION_TEST_JSON.
+    this same JSON syntax can be provided as a list in the environment variable AMAZON_INTEGRATION_TEST_JSON.
 
     The starting JSON of a test description is:
 

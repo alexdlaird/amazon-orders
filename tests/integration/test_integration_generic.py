@@ -11,7 +11,7 @@ from tests.integrationtestcase import IntegrationTestCase
 class TestIntegrationGeneric(IntegrationTestCase):
     """
     These integration tests run generically against any Amazon account. The only requirement is that the
-    account in question has at least one order in the year ``INTEGRATION_TEST_YEAR`` (defaults to the
+    account in question has at least one order in the year ``AMAZON_INTEGRATION_TEST_YEAR`` (defaults to the
     current year). The only assertions done on the fields populated are ``isNotNone``.
     """
 
@@ -19,20 +19,20 @@ class TestIntegrationGeneric(IntegrationTestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        if os.environ.get("INTEGRATION_TEST_YEAR"):
-            cls.year = os.environ.get("INTEGRATION_TEST_YEAR")
+        if os.environ.get("AMAZON_INTEGRATION_TEST_YEAR"):
+            cls.year = os.environ.get("AMAZON_INTEGRATION_TEST_YEAR")
         else:
             cls.year = datetime.date.today().year
-        if os.environ.get("START_INDEX"):
-            cls.start_index = os.environ.get("START_INDEX")
+        if os.environ.get("AMAZON_START_INDEX"):
+            cls.start_index = os.environ.get("AMAZON_START_INDEX")
         else:
             cls.start_index = None
-        if os.environ.get("TRANSACTIONS_DAYS"):
-            cls.transactions_days = os.environ.get("TRANSACTIONS_DAYS")
+        if os.environ.get("AMAZON_TRANSACTIONS_DAYS"):
+            cls.transactions_days = os.environ.get("AMAZON_TRANSACTIONS_DAYS")
         else:
             cls.transactions_days = 90
-        if os.environ.get("FULL_DETAILS_LOOP_COUNT"):
-            cls.full_details_loop_count = int(os.environ.get("FULL_DETAILS_LOOP_COUNT"))
+        if os.environ.get("AMAZON_FULL_DETAILS_LOOP_COUNT"):
+            cls.full_details_loop_count = int(os.environ.get("AMAZON_FULL_DETAILS_LOOP_COUNT"))
         else:
             cls.full_details_loop_count = 1
 

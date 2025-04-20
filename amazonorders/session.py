@@ -95,7 +95,7 @@ class AmazonSession:
         #: The secret key Amazon provides when manually adding a 2FA authenticator app. Setting this will allow
         #: one-time password challenges to be auto-solved. Environment variable ``OTP_SECRET_KEY`` will override
         #: passed in or config value.
-        self.otp_secret_key: Optional[str] = (os.environ.get("OTP_SECRET_KEY") or otp_secret_key or
+        self.otp_secret_key: Optional[str] = (os.environ.get("AMAZON_OTP_SECRET_KEY") or otp_secret_key or
                                               config.otp_secret_key)
 
         #: Set logger ``DEBUG``, send output to ``stderr``, and write an HTML file for requests made on the session.
