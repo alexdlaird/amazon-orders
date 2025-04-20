@@ -1,7 +1,6 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
-import os
 from abc import ABC
 from io import BytesIO
 from typing import Any, Dict, Optional, TYPE_CHECKING
