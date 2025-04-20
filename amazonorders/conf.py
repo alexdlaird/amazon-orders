@@ -78,6 +78,10 @@ class AmazonOrdersConfig:
                     key: str) -> Any:
         return self._data[key]
 
+    def __contains__(self,
+                     key: str) -> bool:
+        return key in self._data
+
     def __getstate__(self):
         return self._data
 
