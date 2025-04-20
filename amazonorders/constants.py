@@ -23,6 +23,7 @@ class Constants:
         BASE_URL = os.environ.get("AMAZON_BASE_URL")
     else:
         BASE_URL = "https://www.amazon.com"
+    print("AMAZON_BASE_URL IS " + str(BASE_URL))
 
     ##########################################################################
     # URLs for AmazonSession
