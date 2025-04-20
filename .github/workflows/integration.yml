@@ -15,6 +15,7 @@ jobs:
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
       AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
       OTP_SECRET_KEY: ${{ secrets.OTP_SECRET_KEY }}
+      INTEGRATION_TEST_FULL_DETAILS_LOOP_COUNT: ${{ vars.INTEGRATION_TEST_FULL_DETAILS_LOOP_COUNT }}
 
     runs-on: ubuntu-latest
 
