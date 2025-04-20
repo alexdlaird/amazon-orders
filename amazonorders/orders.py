@@ -127,8 +127,7 @@ class AmazonOrders:
             else:
                 logger.debug("keep_paging is False, not paging")
 
-        # TODO: handle exceptions here—if AmazonOrdersAuthError, cancel remaining gather tasks. In other cases, a retry
-        #  may be doable.
+        # TODO: handle exceptions here—if AmazonOrdersAuthError, cancel remaining gather tasks. Add test.
         return await asyncio.gather(*order_tasks)
 
     def _build_order(self,
@@ -145,6 +144,8 @@ class AmazonOrders:
                 logger.warning(f"Order {order.order_number} was partially populated, "
                                f"since it is an unsupported Order type.")
             else:
+                # TODO: be on the lookout for if this causes rate limit issues with Amazon, or races with the
+                #  URL connection pool. If so, we may need to implement some retry logic here.
                 order_details_response_parsed = self.amazon_session.get(order.order_details_link).parsed
                 order_details_tag = util.select_one(order_details_response_parsed,
                                                     self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
