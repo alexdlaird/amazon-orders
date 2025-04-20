@@ -16,7 +16,7 @@ jobs:
       AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
       OTP_SECRET_KEY: ${{ secrets.OTP_SECRET_KEY }}
       # The following variables are not required, defaults will be used if they are not defined
-      AMAZON_BASE_URL: ${{ vars.AMAZON_BASE_URL }}
+      # AMAZON_BASE_URL: ${{ vars.AMAZON_BASE_URL }}
       INTEGRATION_TEST_YEAR: ${{ vars.INTEGRATION_TEST_YEAR }}
       START_INDEX: ${{ vars.START_INDEX }}
       TRANSACTIONS_DAYS: ${{ vars.TRANSACTIONS_DAYS }}
