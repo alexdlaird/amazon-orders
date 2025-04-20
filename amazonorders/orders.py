@@ -127,6 +127,8 @@ class AmazonOrders:
             else:
                 logger.debug("keep_paging is False, not paging")
 
+        # TODO: handle exceptions here—if AmazonOrdersAuthError, cancel remaining gather tasks. In other cases, a retry
+        #  may be doable.
         return await asyncio.gather(*order_tasks)
 
     def _build_order(self,

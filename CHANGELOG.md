@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `AmazonSession.otp_secret_key` field.
-- Ability to store `username`, `password`, and `otp_secret_key` in `AmazonOrdersConfig`.
+- Values for `username`, `password`, and `otp_secret_key` stored in `AmazonOrdersConfig` will now be used in precedence chain.
 
 ### Changed
 
