@@ -295,7 +295,7 @@ class MfaForm(AuthForm):
                 "Check if Amazon changed their MFA flow."
             )  # pragma: no cover
 
-        if self.config.otp_secret_key:
+        if hasattr(self.config, "otp_secret_key"):
             otp = pyotp.TOTP(self.config.otp_secret_key.replace(" ", "")).now()
         else:
             otp = self.amazon_session.io.prompt("Enter the one-time passcode sent to your device")
