@@ -216,9 +216,11 @@ Transaction History for {days} days
         amazon_transactions = AmazonTransactions(amazon_session,
                                                  config=config)
 
+        start_time = time.time()
         trxns = amazon_transactions.get_transactions(days=days)
+        end_time = time.time()
 
-        click.echo("... {} transactions parsed.\n".format(len(trxns)))
+        click.echo("... {} transactions parsed in {} seconds.\n".format(len(trxns), int(end_time - start_time)))
 
         for t in trxns:
             click.echo(f"{_transaction_output(t, config)}\n")
@@ -306,9 +308,8 @@ def _authenticate(amazon_session: AmazonSession,
         if amazon_session.auth_cookies_stored():
             if amazon_session.username or amazon_session.password:
                 click.echo(
-                    "Info: The --username and --password flags are ignored because a previous session "
-                    "still exists. If you would like to reauthenticate, call the `logout` command "
-                    "first.\n")
+                    "Info: The given username and password are being ignored because a previous session still exists. "
+                    "If you would like to reauthenticate, call the `logout` command first.\n")
         else:
             if not amazon_session.username:
                 amazon_session.username = click.prompt("Username")
@@ -375,7 +376,7 @@ def _transaction_output(transaction: Transaction,
     transaction_str = f"Transaction: {transaction.completed_date}"
     transaction_str += f"\n  Order #{transaction.order_number}"
     transaction_str += f"\n  Grand Total: {config.constants.format_currency(transaction.grand_total)}"
-    transaction_str += f"\n  Order Details Link: ${transaction.order_details_link}"
+    transaction_str += f"\n  Order Details Link: {transaction.order_details_link}"
 
     return transaction_str
 
