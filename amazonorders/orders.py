@@ -128,26 +128,6 @@ class AmazonOrders:
                 logger.debug("keep_paging is False, not paging")
 
         return await asyncio.gather(*order_tasks)
-        # TODO: POC code for handling AmazonOrdersAuthError, and then canceling remaining gathered tasks. Needs
-        #  further validation and unit test still.
-        # try:
-        #     await asyncio.gather(*order_tasks)
-        # except AmazonOrdersAuthError as e:
-        #     print(f"Caught exception: {e}")
-        #     for task in order_tasks:
-        #         if not task.done():
-        #             task.cancel()
-        #     await asyncio.gather(*order_tasks, return_exceptions=True)  # Wait for cancellation to complete
-        # finally:
-        #     orders = []
-        #     for task in order_tasks:
-        #         if task.cancelled():
-        #             print(f"Task {task} was cancelled")
-        #         elif task.exception():
-        #             print(f"Task {task} failed with {task.exception()}")
-        #         else:
-        #             orders.append(task.result())
-        #     return orders
 
     def _build_order(self,
                      order_tag: List[Tag],
