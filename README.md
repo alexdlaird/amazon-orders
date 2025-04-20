@@ -66,7 +66,7 @@ environment variables `amazon-orders` looks for are:
 
 - `AMAZON_USERNAME`
 - `AMAZON_PASSWORD`
-- `OTP_SECRET_KEY` (see [docs for usage](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key))
+- `AMAZON_OTP_SECRET_KEY` (see [docs for usage](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key))
 
 ## Documentation
 

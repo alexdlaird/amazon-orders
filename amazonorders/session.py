@@ -93,7 +93,7 @@ class AmazonSession:
         #: An Amazon password. Environment variable ``AMAZON_PASSWORD`` will override passed in or config value.
         self.password: Optional[str] = os.environ.get("AMAZON_PASSWORD") or password or config.password
         #: The secret key Amazon provides when manually adding a 2FA authenticator app. Setting this will allow
-        #: one-time password challenges to be auto-solved. Environment variable ``OTP_SECRET_KEY`` will override
+        #: one-time password challenges to be auto-solved. Environment variable ``AMAZON_OTP_SECRET_KEY`` will override
         #: passed in or config value.
         self.otp_secret_key: Optional[str] = (os.environ.get("AMAZON_OTP_SECRET_KEY") or otp_secret_key or
                                               config.otp_secret_key)
