@@ -31,6 +31,10 @@ class TestIntegrationGeneric(IntegrationTestCase):
             cls.transactions_days = os.environ.get("TRANSACTIONS_DAYS")
         else:
             cls.transactions_days = 90
+        if os.environ.get("FULL_DETAILS_LOOP_COUNT"):
+            cls.full_details_loop_count = int(os.environ.get("FULL_DETAILS_LOOP_COUNT"))
+        else:
+            cls.full_details_loop_count = 1
 
     def test_get_order_history(self):
         # WHEN
@@ -44,10 +48,10 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assert_orders_list_index(orders)
 
     def test_get_order_history_full_details(self):
-        # The environment variable INTEGRATION_TEST_FULL_DETAILS_LOOP_COUNT can be set to a higher number to put
+        # The environment variable FULL_DETAILS_LOOP_COUNT can be set to a higher number to put
         # more successive request pressure on Amazon, which helps ensure the async concurrency that exists when
         # building Order history won't cause issues with rate limiting, etc.
-        for i in range(int(os.environ.get("INTEGRATION_TEST_FULL_DETAILS_LOOP_COUNT", 1))):
+        for i in range(self.full_details_loop_count):
             # WHEN
             orders = self.amazon_orders.get_order_history(year=self.year,
                                                           start_index=self.start_index,
