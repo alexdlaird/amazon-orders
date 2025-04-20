@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import datetime
 import os
+import unittest
 
 from amazonorders.exception import AmazonOrdersNotFoundError
 from tests.integrationtestcase import IntegrationTestCase
@@ -51,6 +52,22 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assert_populated_generic(orders[0], True)
         self.assertIsNotNone(orders[0].index)
         self.assert_orders_list_index(orders)
+
+    @unittest.skipUnless(os.environ.get("LOAD_TEST_FULL_DETAILS") is not None,
+                         reason="Skipped, to load test full details, set environment variable "
+                                "LOAD_TEST_FULL_DETAILS=x, where x is the number of times to run the test")
+    def test_get_order_history_full_details_load(self):
+        for i in range(int(os.environ.get("LOAD_TEST_FULL_DETAILS"))):
+            # WHEN
+            orders = self.amazon_orders.get_order_history(year=self.year,
+                                                          start_index=self.start_index,
+                                                          full_details=True)
+
+            # THEN
+            self.assertGreaterEqual(len(orders), 1)
+            self.assert_populated_generic(orders[0], True)
+            self.assertIsNotNone(orders[0].index)
+            self.assert_orders_list_index(orders)
 
     def test_get_order_history_single_page(self):
         # WHEN
