@@ -33,19 +33,25 @@ class TestSession(UnitTestCase):
         
         And then some more.
         
-        And that's all"""), "This is a paragraph. So much space. More space. This sentence will have period "
-                            "added. So will this one with two spaces. And then some more. And that's all.")
+        And that's all"""  # noqa: W293
+                                           ),
+                         "This is a paragraph. So much space. More space. This sentence will have period "
+                         "added. So will this one with two spaces. And then some more. And that's all.")
         self.assertEqual(cleanup_html_text(""" There was a problem
         
         The One Time Password (OTP) you entered is not valid.
         
         Please try again
         
-        """), "There was a problem. The One Time Password (OTP) you entered is not valid. Please try again.")
+        """  # noqa: W293
+                                           ),
+                         "There was a problem. The One Time Password (OTP) you entered is not valid. "
+                         "Please try again.")
         self.assertEqual(cleanup_html_text("""
         
         This has leading newlines.
         
         They should be removed
         
-        """), "This has leading newlines. They should be removed.")
+        """  # noqa: W293
+                                           ), "This has leading newlines. They should be removed.")
