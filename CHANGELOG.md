@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- `AmazonOrders.get_order_history()` now fetches each individual order using `asyncio` for significant performance improvements.
 - Synchronous nature of `AmazonSession`, since this was bad design, and also prevents adding any async support.
 - Renamed `constants.Constants.TRANSACTION_HISTORY_LANDING_ROUTE` to `constants.Constants.TRANSACTION_HISTORY_ROUTE`.
 - Renamed `constants.Constants.TRANSACTION_HISTORY_LANDING_URL` to `constants.Constants.TRANSACTION_HISTORY_URL`.

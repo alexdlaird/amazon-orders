@@ -102,7 +102,7 @@ class AmazonOrders:
                                   next_page: Optional[str],
                                   keep_paging: bool,
                                   full_details: bool,
-                                  current_index: int) -> List[Any]:
+                                  current_index: int) -> List[Order]:
         order_tasks = []
 
         while next_page:
@@ -153,7 +153,7 @@ class AmazonOrders:
 
     async def _async_wrapper(self,
                              func: Callable,
-                             *args: Any) -> List[Order]:
+                             *args: Any) -> Order:
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.config.thread_pool_size) as pool:
             result = await loop.run_in_executor(pool, func, *args)

@@ -148,16 +148,16 @@ Order History for {year}{optional_start_index}{optional_full_details}
                                      config=config)
 
         start_time = time.time()
-        orders = amazon_orders.get_order_history(year=kwargs["year"],
+        total = 0
+        for o in amazon_orders.get_order_history(year=kwargs["year"],
                                                  start_index=kwargs["start_index"],
                                                  full_details=kwargs["full_details"],
-                                                 keep_paging=not kwargs["single_page"])
+                                                 keep_paging=not kwargs["single_page"]):
+            click.echo(f"{_order_output(o, config)}\n")
+            total += 1
         end_time = time.time()
 
-        click.echo("... {} orders parsed in {} seconds.\n".format(len(orders), int(end_time - start_time)))
-
-        for o in orders:
-            click.echo(f"{_order_output(o, config)}\n")
+        click.echo("... {} orders parsed in {} seconds.\n".format(total, int(end_time - start_time)))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -217,13 +217,13 @@ Transaction History for {days} days
                                                  config=config)
 
         start_time = time.time()
-        trxns = amazon_transactions.get_transactions(days=days)
+        total = 0
+        for t in amazon_transactions.get_transactions(days=days):
+            click.echo(f"{_transaction_output(t, config)}\n")
+            total += 1
         end_time = time.time()
 
-        click.echo("... {} transactions parsed in {} seconds.\n".format(len(trxns), int(end_time - start_time)))
-
-        for t in trxns:
-            click.echo(f"{_transaction_output(t, config)}\n")
+        click.echo("... {} transactions parsed in {} seconds.\n".format(total, int(end_time - start_time)))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -331,52 +331,52 @@ def _authenticate(amazon_session: AmazonSession,
             raise e
 
 
-def _order_output(order: Order,
+def _order_output(o: Order,
                   config: AmazonOrdersConfig) -> str:
     order_str = """-----------------------------------------------------------------------
 Order #{}
 -----------------------------------------------------------------------""".format(
-        order.order_number)
+        o.order_number)
 
-    order_str += f"\n  Shipments: {order.shipments}"
-    order_str += f"\n  Order Details Link: {order.order_details_link}"
-    order_str += f"\n  Grand Total: {config.constants.format_currency(order.grand_total)}"
-    order_str += f"\n  Order Placed Date: {order.order_placed_date}"
-    if order.recipient:
-        order_str += f"\n  {order.recipient}"
+    order_str += f"\n  Shipments: {o.shipments}"
+    order_str += f"\n  Order Details Link: {o.order_details_link}"
+    order_str += f"\n  Grand Total: {config.constants.format_currency(o.grand_total)}"
+    order_str += f"\n  Order Placed Date: {o.order_placed_date}"
+    if o.recipient:
+        order_str += f"\n  {o.recipient}"
     else:
         order_str += "\n  Recipient: None"
 
-    if order.payment_method:
-        order_str += f"\n  Payment Method: {order.payment_method}"
-    if order.payment_method_last_4:
-        order_str += f"\n  Payment Method Last 4: {order.payment_method_last_4}"
-    if order.subtotal:
-        order_str += f"\n  Subtotal: {config.constants.format_currency(order.subtotal)}"
-    if order.shipping_total:
-        order_str += f"\n  Shipping Total: {config.constants.format_currency(order.shipping_total)}"
-    if order.free_shipping:
-        order_str += f"\n  Free Shipping: {config.constants.format_currency(order.free_shipping)}"
-    if order.subscription_discount:
-        order_str += f"\n  Subscription Discount: {config.constants.format_currency(order.subscription_discount)}"
-    if order.total_before_tax:
-        order_str += f"\n  Total Before Tax: {config.constants.format_currency(order.total_before_tax)}"
-    if order.estimated_tax:
-        order_str += f"\n  Estimated Tax: {config.constants.format_currency(order.estimated_tax)}"
-    if order.refund_total:
-        order_str += f"\n  Refund Total: {config.constants.format_currency(order.refund_total)}"
+    if o.payment_method:
+        order_str += f"\n  Payment Method: {o.payment_method}"
+    if o.payment_method_last_4:
+        order_str += f"\n  Payment Method Last 4: {o.payment_method_last_4}"
+    if o.subtotal:
+        order_str += f"\n  Subtotal: {config.constants.format_currency(o.subtotal)}"
+    if o.shipping_total:
+        order_str += f"\n  Shipping Total: {config.constants.format_currency(o.shipping_total)}"
+    if o.free_shipping:
+        order_str += f"\n  Free Shipping: {config.constants.format_currency(o.free_shipping)}"
+    if o.subscription_discount:
+        order_str += f"\n  Subscription Discount: {config.constants.format_currency(o.subscription_discount)}"
+    if o.total_before_tax:
+        order_str += f"\n  Total Before Tax: {config.constants.format_currency(o.total_before_tax)}"
+    if o.estimated_tax:
+        order_str += f"\n  Estimated Tax: {config.constants.format_currency(o.estimated_tax)}"
+    if o.refund_total:
+        order_str += f"\n  Refund Total: {config.constants.format_currency(o.refund_total)}"
 
     order_str += "\n-----------------------------------------------------------------------"
 
     return order_str
 
 
-def _transaction_output(transaction: Transaction,
+def _transaction_output(t: Transaction,
                         config: AmazonOrdersConfig) -> str:
-    transaction_str = f"Transaction: {transaction.completed_date}"
-    transaction_str += f"\n  Order #{transaction.order_number}"
-    transaction_str += f"\n  Grand Total: {config.constants.format_currency(transaction.grand_total)}"
-    transaction_str += f"\n  Order Details Link: {transaction.order_details_link}"
+    transaction_str = f"Transaction: {t.completed_date}"
+    transaction_str += f"\n  Order #{t.order_number}"
+    transaction_str += f"\n  Grand Total: {config.constants.format_currency(t.grand_total)}"
+    transaction_str += f"\n  Order Details Link: {t.order_details_link}"
 
     return transaction_str
 
