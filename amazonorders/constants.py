@@ -6,7 +6,7 @@ import os
 
 class Constants:
     """
-    A class containing useful constants. Extend and override with `constants_class` in the config:
+    A class containing useful constants. Extend and override with ``constants_class`` in the config:
 
     .. code-block:: python
 

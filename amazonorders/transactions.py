@@ -98,7 +98,8 @@ class AmazonTransactions:
 
         transaction_page_response = self.amazon_session.get(self.config.constants.TRANSACTION_HISTORY_URL)
         if not transaction_page_response.parsed:
-            raise AmazonOrdersError("Could not get transaction history landing page.")
+            raise AmazonOrdersError(
+                f"Could not get next transaction history page {self.config.constants.TRANSACTION_HISTORY_URL}.")
 
         form_tag = util.select_one(transaction_page_response.parsed,
                                    self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
@@ -119,7 +120,7 @@ class AmazonTransactions:
 
             transaction_page_response = self.amazon_session.post(next_page_post_url, data=next_page_post_data)
             if not transaction_page_response.parsed:
-                raise AmazonOrdersError("Could not get next transaction history page.")
+                raise AmazonOrdersError(f"Could not get next transaction history page {next_page_post_url}.")
 
             form_tag = util.select_one(transaction_page_response.parsed,
                                        self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)

@@ -12,7 +12,7 @@ If you would like to contribute to the code, the process is pretty simple:
 5. Ensure no linting errors were introduced by running ``make check``.
 6. Submit a `pull requests <https://help.github.com/en/articles/creating-a-pull-request-from-a-fork>`_ to get the changes merged.
 
-Also be sure to review the `Code of Conduct <https://github.com/alexdlaird/amazon-orders/blob/main/CODE_OF_CONDUCT.md>`_ before
+Also be sure to review the `Code of Conduct <https://github.com/alexdlaird/amazon-orders?tab=coc-ov-file>`_ before
 submitting issues or pull requests.
 
 Want to contribute financially? If you've found ``amazon-orders`` useful, `sponsorship <https://github.com/sponsors/alexdlaird>`_

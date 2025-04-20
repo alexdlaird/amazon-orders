@@ -21,13 +21,13 @@ class Selector:
 
 class Selectors:
     """
-    A class containing CSS selectors. Extend and override with `selectors_class` in the config:
+    A class containing CSS selectors. Extend and override with ``selectors_class`` in the config:
 
     .. code-block:: python
 
         from amazonorders.conf import AmazonOrdersConfig
 
-        config = AmazonOrdersConfig(data={"selectors_class": "my_module.MyConstants"})
+        config = AmazonOrdersConfig(data={"selectors_class": "my_module.MySelectors"})
     """
 
     ##########################################################################

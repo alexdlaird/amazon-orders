@@ -39,6 +39,36 @@ website's HTML. Before submitting a bug report or requesting a new feature, try 
 ``amazon-orders`` one of the ways described above, and if any console output or generated HTML
 files are relevant to the issue, attach them to your request.
 
+Slow Parsing / Malformed Data
+-----------------------------
+
+By default, ``amazon-orders`` uses ``html.parser``, Python's `built-in HTML parser <https://docs.python.org/3/library/html.parser.html>`_.
+There are some situations where this parsers is not preferred, either because it is slower than other options, or in
+some cases it leads to parsing issues, where fields like ``title``, ``currency``, etc. are populated with mangled data.
+``amazon-orders`` should work with any `BeautifulSoup-compatible HTML parser <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-a-parser>`_,
+and many prefer to use ``lxml`` instead. If another parser is installed, you can change the parser ``amazon-orders``
+will use with ``AmazonOrdersConfig.bs4_parser``.
+
+Concurrency Workers Exhausted
+-----------------------------
+
+If you see this or similar errors, you may need to tweak ``AmazonOrdersConfig.thread_pool_size``. Increasing it is the
+likely solution, but doing so may also have an effect on how many active URL connections to Amazon can be executed at
+any given time, so adjusting both may be necessary. See also `URL Connection Pool Full`_.
+
+URL Connection Pool Full
+------------------------
+
+.. code-block:: sh
+
+    WARNING:requests.packages.urllib3.connectionpool:HttpConnectionPool
+    is full, discarding connection:
+
+If you see this or similar errors, you may need to tweak ``AmazonOrdersConfig.connection_pool_size``. Increasing it is
+the likely solution, but the issue may also be linked to the number of async tasks being executed at a given time.
+Adjusting one or both of these values up or down may be necessary to find the correct threshold. See also
+`Concurrency Workers Exhausted`_.
+
 Broken After Previously Working
 -------------------------------
 
@@ -48,10 +78,14 @@ This could be that Amazon changed the layout of a page, renamed or refactored a 
 something else.
 
 To see what the effected page looks like, `enable debug mode`_, then rerun your code. Running in
-``debug`` mode saves parsed HTML files locally for you so you can inspect the DOM and compare it to
-the parsing code within ``amazon-orders``. This may give you some insight in to what changed.
+``debug`` mode will save parsed HTML files locally for you so that you can inspect the DOM and compare
+it to the parsing code within ``amazon-orders``. This may give you some insight in to what changed.
 In ``amazon-orders``, look for code that uses `BeautifulSoup's CSS select() methods <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_.
-selector strings used by ``amazon-orders`` are defined in variables in :class:`~amazonorders.selectors.Selectors`.
+
+More advanced troubleshooting can be done by extending :class:`~amazonorders.selectors.Selectors` and
+:class:`~amazonorders.constants.Constants`, for instance to try different CSS selectors for parsing a field. When these
+classes are extended, use ``AmazonOrdersConfig.selectors_class`` and  ``AmazonOrdersConfig.constants_class`` to provide
+override classes.
 
 If you identify the issue, please `submit a bug report <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_.
 If you're able to resolve the issue, please `also submit a PR <https://github.com/alexdlaird/amazon-orders/compare>`_
