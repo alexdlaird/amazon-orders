@@ -85,9 +85,9 @@ Authentication can be automated by (in order of precedence) storing credentials 
 to :class:`~amazonorders.session.AmazonSession`, or storing them :class:`~amazonorders.conf.AmazonOrdersConfig`. The
 environment variables ``amazon-orders`` looks for are:
 
-- AMAZON_USERNAME
-- AMAZON_PASSWORD
-- `OTP_SECRET_KEY <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key>`_
+- ``AMAZON_USERNAME``
+- ``AMAZON_PASSWORD``
+- ``OTP_SECRET_KEY`` (see `docs for usage <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key>`_)
 
 Known Limitations
 -----------------
@@ -99,12 +99,12 @@ Known Limitations
     - If you fork the repo, override ``AMAZON_BASE_URL`` with an English, non-``.com`` version of the site, and use
       your own credentials with the ``integration.yml`` workflow to setup a nightly regression run, please
       `contact us <mailto:contact@alexlaird.com>`_ and we will start mentioning support for that version of the site.
-    - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details
+    - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
 - Some Puzzle CAPTCHAs are unsupported
     - While some CAPTCHAs can be auto-solved, and static image-based ones will be opened so the user can solve them
       manually, interactive CAPTCHAs—like Amazon's new puzzle-based CAPTCHAs—will block ``amazon-orders`` from being
       able to login.
-    - See `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_ for more details
+    - See `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_ for more details.
 
 Dive Deeper
 ===========
