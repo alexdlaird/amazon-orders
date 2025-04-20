@@ -19,7 +19,10 @@ class Constants:
     # General URL
     ##########################################################################
 
-    BASE_URL = os.environ.get("AMAZON_BASE_URL", "https://www.amazon.com")
+    if os.environ.get("AMAZON_BASE_URL"):
+        BASE_URL = os.environ.get("AMAZON_BASE_URL")
+    else:
+        BASE_URL = "https://www.amazon.com"
 
     ##########################################################################
     # URLs for AmazonSession

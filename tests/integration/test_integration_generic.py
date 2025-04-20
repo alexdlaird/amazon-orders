@@ -19,7 +19,10 @@ class TestIntegrationGeneric(IntegrationTestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.year = os.environ.get("INTEGRATION_TEST_YEAR", datetime.date.today().year)
+        if os.environ.get("INTEGRATION_TEST_YEAR"):
+            cls.year = os.environ.get("INTEGRATION_TEST_YEAR")
+        else:
+            cls.year = datetime.date.today().year
         if os.environ.get("START_INDEX"):
             cls.start_index = os.environ.get("START_INDEX")
         else:
