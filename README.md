@@ -64,9 +64,9 @@ to [`AmazonSession`](https://amazon-orders.readthedocs.io/api.html#amazonorders.
 in [`AmazonOrdersConfig`](https://amazon-orders.readthedocs.io/api.html#amazonorders.conf.AmazonOrdersConfig). The
 environment variables `amazon-orders` looks for are:
 
-- `AMAZON_USERNAME` - Amazon email address
-- `AMAZON_PASSWORD` - Amazon password
-- `OTP_SECRET_KEY` - The secret key Amazon provides when manually adding a 2FA authenticator app—setting this will auto-solve one-time password challenges
+- `AMAZON_USERNAME`
+- `AMAZON_PASSWORD`
+- [`OTP_SECRET_KEY`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key)
 
 ## Documentation
 

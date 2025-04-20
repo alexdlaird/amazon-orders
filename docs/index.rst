@@ -85,9 +85,9 @@ Authentication can be automated by (in order of precedence) storing credentials 
 to :class:`~amazonorders.session.AmazonSession`, or storing them :class:`~amazonorders.conf.AmazonOrdersConfig`. The
 environment variables ``amazon-orders`` looks for are:
 
-- ``AMAZON_USERNAME`` - Amazon email address
-- ``AMAZON_PASSWORD`` - Amazon password
-- ``OTP_SECRET_KEY`` - The secret key Amazon provides when manually adding a 2FA authenticator app—setting this will auto-solve one-time password challenges
+- AMAZON_USERNAME
+- AMAZON_PASSWORD
+- `OTP_SECRET_KEY <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key>`_
 
 Dive Deeper
 ===========
