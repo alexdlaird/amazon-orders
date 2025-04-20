@@ -70,8 +70,14 @@ class Constants:
                       "Chrome/130.0.0.0 Safari/537.36",
     }
 
+    ##########################################################################
+    # Currency
+    ##########################################################################
+
+    CURRENCY_SYMBOL = os.environ.get("AMAZON_CURRENCY_SYMBOL", "$")
+
     def format_currency(self, amount):
-        formatted_amt = "${:,.2f}".format(abs(amount))
+        formatted_amt = "{}{:,.2f}".format(self.CURRENCY_SYMBOL, abs(amount))
         if round(amount, 2) < 0:
             return f"-{formatted_amt}"
         return formatted_amt
