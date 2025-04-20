@@ -76,7 +76,7 @@ class AmazonOrdersConfig:
 
     def __getattr__(self,
                     key: str) -> Any:
-        return self._data[key]
+        return self._data.get(key, None)
 
     def __contains__(self,
                      key: str) -> bool:

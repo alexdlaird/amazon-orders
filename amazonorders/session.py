@@ -74,17 +74,8 @@ class AmazonSession:
                  config: Optional[AmazonOrdersConfig] = None,
                  auth_forms: Optional[List] = None,
                  otp_secret_key: Optional[str] = None) -> None:
-        #: An Amazon username. If given here, overrides any value in the config.
-        self.username: Optional[str] = username or os.environ.get("AMAZON_USERNAME")
-        #: An Amazon password. If given here, overrides any value in the config.
-        self.password: Optional[str] = password or os.environ.get("AMAZON_PASSWORD")
-        #: Amazon OTP secret key. If given here, overrides any value in the config.
-        self.otp_secret_key: Optional[str] = otp_secret_key or os.environ.get("OTP_SECRET_KEY")
-
         if not config:
-            config = AmazonOrdersConfig(data={"username": self.username,
-                                              "password": self.password,
-                                              "otp_secret_key": self.otp_secret_key})
+            config = AmazonOrdersConfig()
         if not auth_forms:
             auth_forms = [SignInForm(config),
                           MfaDeviceSelectForm(config),
@@ -96,6 +87,14 @@ class AmazonSession:
                                       "field-keywords"),
                           MfaForm(config,
                                   config.selectors.CAPTCHA_OTP_FORM_SELECTOR)]
+
+        #: An Amazon username. Environment variable ``AMAZON_USERNAME`` will override passed in or config value.
+        self.username: Optional[str] = os.environ.get("AMAZON_USERNAME") or username or config.username
+        #: An Amazon password. Environment variable ``AMAZON_PASSWORD`` will override passed in or config value.
+        self.password: Optional[str] = os.environ.get("AMAZON_PASSWORD") or password or config.password
+        #: Amazon OTP secret key. Environment variable ``OTP_SECRET_KEY`` will override passed in or config value.
+        self.otp_secret_key: Optional[str] = (os.environ.get("OTP_SECRET_KEY") or otp_secret_key or
+                                              config.otp_secret_key)
 
         #: Set logger ``DEBUG``, send output to ``stderr``, and write an HTML file for requests made on the session.
         self.debug: bool = debug
@@ -126,6 +125,7 @@ class AmazonSession:
     def request(self,
                 method: str,
                 url: str,
+                persist_cookies: bool = False,
                 **kwargs: Any) -> AmazonSessionResponse:
         """
         Execute the request against Amazon with base headers, parsing and storing the response
@@ -133,6 +133,7 @@ class AmazonSession:
 
         :param method: The request method to execute.
         :param url: The URL to execute ``method`` on.
+        :param persist_cookies: If ``True``, cookies from the response will be persisted to a file.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`requests.request`.
         :return: The response from the executed request.
         """
@@ -145,10 +146,11 @@ class AmazonSession:
         amazon_session_response = AmazonSessionResponse(self.session.request(method, url, **kwargs),
                                                         self.config.bs4_parser)
 
-        cookies = dict_from_cookiejar(self.session.cookies)
-        with threading.Lock():
-            with open(self.config.cookie_jar_path, "w", encoding="utf-8") as f:
-                f.write(json.dumps(cookies))
+        if persist_cookies:
+            cookies = dict_from_cookiejar(self.session.cookies)
+            with threading.Lock():
+                with open(self.config.cookie_jar_path, "w", encoding="utf-8") as f:
+                    f.write(json.dumps(cookies))
 
         logger.debug(
             f"Response: {amazon_session_response.response.url} - {amazon_session_response.response.status_code}")

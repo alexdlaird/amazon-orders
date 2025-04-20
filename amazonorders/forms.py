@@ -106,6 +106,7 @@ class AuthForm(ABC):
         request_data = {"params" if method == "GET" else "data": self.data}
         form_response = self.amazon_session.request(method,
                                                     action,
+                                                    persist_cookies=True,
                                                     **request_data)
 
         self._handle_errors(form_response)
@@ -295,8 +296,8 @@ class MfaForm(AuthForm):
                 "Check if Amazon changed their MFA flow."
             )  # pragma: no cover
 
-        if "otp_secret_key" in self.config:
-            otp = pyotp.TOTP(self.config.otp_secret_key.replace(" ", "")).now()
+        if self.amazon_session.otp_secret_key:
+            otp = pyotp.TOTP(self.amazon_session.otp_secret_key.replace(" ", "")).now()
         else:
             otp = self.amazon_session.io.prompt("Enter the one-time passcode sent to your device")
             self.amazon_session.io.echo("")

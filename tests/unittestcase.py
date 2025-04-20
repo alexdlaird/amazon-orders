@@ -18,6 +18,10 @@ class UnitTestCase(TestCase):
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources"))
 
     def setUp(self):
+        os.environ.pop('AMAZON_USERNAME', None)
+        os.environ.pop('AMAZON_PASSWORD', None)
+        os.environ.pop('OTP_SECRET_KEY', None)
+
         conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".config")
         self.test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")
         self.test_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.json")

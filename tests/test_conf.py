@@ -83,7 +83,8 @@ thread_pool_size: {}
             f.write("""cookie_jar_path: {}
 max_auth_attempts: 11
 output_dir: {}
-""".format(test_cookie_jar_path, test_output_dir))
+some_custom_config: {}
+""".format(test_cookie_jar_path, test_output_dir, "my-custom-config"))
 
         # WHEN
         config = AmazonOrdersConfig(config_path=config_path)
@@ -92,6 +93,7 @@ output_dir: {}
         self.assertEqual(11, config.max_auth_attempts)
         self.assertEqual(test_output_dir, config.output_dir)
         self.assertEqual(test_cookie_jar_path, config.cookie_jar_path)
+        self.assertEqual("my-custom-config", config.some_custom_config)
 
     def test_update_config(self):
         # GIVEN
