@@ -12,7 +12,7 @@ from bs4 import Tag
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError, AmazonOrdersAuthError
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
@@ -127,8 +127,27 @@ class AmazonOrders:
             else:
                 logger.debug("keep_paging is False, not paging")
 
-        # TODO: handle exceptions here—if AmazonOrdersAuthError, cancel remaining gather tasks. Add test.
         return await asyncio.gather(*order_tasks)
+        # TODO: POC code for handling AmazonOrdersAuthError, and then canceling remaining gathered tasks. Needs
+        #  further validation and unit test still.
+        # try:
+        #     await asyncio.gather(*order_tasks)
+        # except AmazonOrdersAuthError as e:
+        #     print(f"Caught exception: {e}")
+        #     for task in order_tasks:
+        #         if not task.done():
+        #             task.cancel()
+        #     await asyncio.gather(*order_tasks, return_exceptions=True)  # Wait for cancellation to complete
+        # finally:
+        #     orders = []
+        #     for task in order_tasks:
+        #         if task.cancelled():
+        #             print(f"Task {task} was cancelled")
+        #         elif task.exception():
+        #             print(f"Task {task} failed with {task.exception()}")
+        #         else:
+        #             orders.append(task.result())
+        #     return orders
 
     def _build_order(self,
                      order_tag: List[Tag],

@@ -148,7 +148,7 @@ def cleanup_html_text(text: str):
     # Remove remaining duplicated whitespace of any kind
     text = re.sub(r"\s\s+", " ", text)
     # Remove duplicate periods at end of text.
-    text = re.sub("\.+($|\s)", r".\1", text)
+    text = re.sub("\\.+($|\\s)", r".\1", text)
     if not text.endswith("."):
         text += "."
     return text
