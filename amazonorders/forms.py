@@ -173,9 +173,7 @@ class AuthForm(ABC):
 
         error_tag = util.select_one(form_response.parsed, self.error_selector)
         if error_tag:
-            # TODO: the errors Amazon gives are relatively predictable, but with lots of whitespace. We should be able
-            #  to clean this up to be more readable
-            error_msg = f"An error occurred: {error_tag.text.strip().rstrip('.')}.\n"
+            error_msg = f"An error occurred: {util.cleanup_html_text(error_tag.text)}\n"
 
             if self.critical:
                 raise AmazonOrdersAuthError(error_msg)

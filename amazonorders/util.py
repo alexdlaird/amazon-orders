@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import importlib
 import logging
+import re
 from typing import List, Union, Optional, Callable
 
 from bs4 import Tag, BeautifulSoup
@@ -130,3 +131,24 @@ def load_class(package: List, clazz: str) -> Callable:
     """
     constants_mod = importlib.import_module(".".join(package))
     return getattr(constants_mod, clazz)
+
+
+def cleanup_html_text(text: str):
+    """
+    Cleanup excessive whitespace within text that comes from an HTML block.
+
+    :param text: The text to clean up.
+    :return: The cleaned up text.
+    """
+    # First get rid of leading and trailing whitespace
+    text = text.strip()
+    # Reduce duplicated line returns, then replace line returns with periods
+    text = re.sub(r"\n\s*\n+", "\n", text)
+    text = text.replace("\n", ". ")
+    # Remove remaining duplicated whitespace of any kind
+    text = re.sub(r"\s\s+", " ", text)
+    # Remove duplicate periods at end of text.
+    text = re.sub("\.+($|\s)", r".\1", text)
+    if not text.endswith("."):
+        text += "."
+    return text
