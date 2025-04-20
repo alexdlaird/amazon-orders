@@ -81,8 +81,9 @@ to see what fields are only populated with full details.
 Automating Authentication
 -------------------------
 
-One of the simplest ways to automate authentication is to take advantage of some of the environment variables that
-``amazon-orders`` looks for. These include:
+Authentication can be automated by (in order of precedence) storing credentials in environment variables, passing them
+to :class:`~amazonorders.session.AmazonSession`, or storing them :class:`~amazonorders.conf.AmazonOrdersConfig`. The
+environment variables ``amazon-orders`` looks for are:
 
 - ``AMAZON_USERNAME`` - Amazon email address
 - ``AMAZON_PASSWORD`` - Amazon password

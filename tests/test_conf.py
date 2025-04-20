@@ -5,6 +5,8 @@ import os
 import shutil
 from unittest import TestCase
 
+import yaml
+
 from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig
 
@@ -64,6 +66,7 @@ thread_pool_size: {}
 
     def test_override_default(self):
         # GIVEN
+        # Default is 10
         config = AmazonOrdersConfig(data={
             "max_auth_attempts": 11
         })
@@ -100,6 +103,15 @@ output_dir: {}
 
         # WHEN
         config.update_config("max_auth_attempts", 7)
+        config.update_config("username", "test-username")
+        config.update_config("otp_secret_key", "test-otp-secret-key")
 
         # THEN
         self.assertEqual(7, config.max_auth_attempts)
+        self.assertEqual("test-username", config.username)
+        self.assertEqual("test-otp-secret-key", config.otp_secret_key)
+        with open(config.config_path, "r") as f:
+            persisted_config = yaml.safe_load(f)
+            self.assertEqual(7, persisted_config["max_auth_attempts"])
+            self.assertEqual("test-username", persisted_config["username"])
+            self.assertEqual("test-otp-secret-key", persisted_config["otp_secret_key"])

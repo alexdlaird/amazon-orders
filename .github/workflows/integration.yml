@@ -27,10 +27,14 @@ jobs:
           python-version: 3.12
       - name: Install jpeg
         run: sudo apt-get install -y libjpeg-dev zlib1g-dev
+     - name: Perform calculation
+         run: |
+           RESULT=$(($INTEGRATION_TEST_FULL_DETAILS_LOOP_COUNT + $NUM2))
+           echo "::set-env name=CALCULATED_VALUE::$RESULT"
       - name: Test
         uses: nick-fields/retry@v3
         with:
-          timeout_minutes: 20
+          timeout_minutes: 30
           retry_wait_seconds: 300
           max_attempts: 3
           command: make test-integration

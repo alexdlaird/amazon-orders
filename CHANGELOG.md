@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.18...HEAD)
 
+### Added
+
+- `AmazonSession.otp_secret_key` field.
+- Ability to store `username`, `password`, and `otp_secret_key` in `AmazonOrdersConfig`.
+
 ### Changed
 
 - `AmazonOrders.get_order_history()` now fetches each individual order using `asyncio` for significant performance improvements.

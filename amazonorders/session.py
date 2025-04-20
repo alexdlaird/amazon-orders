@@ -72,9 +72,19 @@ class AmazonSession:
                  debug: bool = False,
                  io: IODefault = IODefault(),
                  config: Optional[AmazonOrdersConfig] = None,
-                 auth_forms: Optional[List] = None) -> None:
+                 auth_forms: Optional[List] = None,
+                 otp_secret_key: Optional[str] = None) -> None:
+        #: An Amazon username. If given here, overrides any value in the config.
+        self.username: Optional[str] = username or os.environ.get("AMAZON_USERNAME")
+        #: An Amazon password. If given here, overrides any value in the config.
+        self.password: Optional[str] = password or os.environ.get("AMAZON_PASSWORD")
+        #: Amazon OTP secret key. If given here, overrides any value in the config.
+        self.otp_secret_key: Optional[str] = otp_secret_key or os.environ.get("OTP_SECRET_KEY")
+
         if not config:
-            config = AmazonOrdersConfig()
+            config = AmazonOrdersConfig(data={"username": self.username,
+                                              "password": self.password,
+                                              "otp_secret_key": self.otp_secret_key})
         if not auth_forms:
             auth_forms = [SignInForm(config),
                           MfaDeviceSelectForm(config),
@@ -86,11 +96,6 @@ class AmazonSession:
                                       "field-keywords"),
                           MfaForm(config,
                                   config.selectors.CAPTCHA_OTP_FORM_SELECTOR)]
-
-        #: An Amazon username.
-        self.username: Optional[str] = username or os.environ.get("AMAZON_USERNAME")
-        #: An Amazon password.
-        self.password: Optional[str] = password or os.environ.get("AMAZON_PASSWORD")
 
         #: Set logger ``DEBUG``, send output to ``stderr``, and write an HTML file for requests made on the session.
         self.debug: bool = debug

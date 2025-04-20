@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 import yaml
 
@@ -97,7 +97,7 @@ class AmazonOrdersConfig:
 
     def update_config(self,
                       key: str,
-                      value: str,
+                      value: Union[str, int, float],
                       save: bool = True) -> None:
         """
         Update the given key/value pair in the config object. By default, this update will also be persisted to the
