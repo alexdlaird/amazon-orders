@@ -63,17 +63,15 @@ class IOClick(IODefault):
 def amazon_orders_cli(ctx: Context,
                       **kwargs: Any) -> None:
     """
-    amazon-orders is an unofficial library that provides a command line interface alongside a programmatic API that
-    can be used to interact with Amazon.com's consumer-facing website.
+    amazon-orders is an unofficial library that provides a CLI (and Python API) for Amazon order history.
 
-    This works by parsing website data from Amazon.com. A periodic build validates functionality to ensure its
-    stability, but as Amazon provides no official API to use, this package may break at any time. This
-    package only supports the English version of the website.
+    This package works by parsing data from Amazon's consumer-facing website. A periodic build validates functionality
+    to ensure its stability, but as Amazon provides no official API to use, this package may break at any time. Check
+    for updates regularly to ensure you always have the latest stable release.
+
+    This package only officially supports the English, .com version of Amazon.
 
     Documentation can be found at https://amazon-orders.readthedocs.io.
-
-    Session data is persisted between requests and interactions with the CLI, minimizing the need to reauthenticate
-    after a successful login attempt.
     """
     if ctx.invoked_subcommand != "version":
         _print_banner()
