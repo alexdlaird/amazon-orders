@@ -148,16 +148,16 @@ Order History for {year}{optional_start_index}{optional_full_details}
                                      config=config)
 
         start_time = time.time()
-        orders = amazon_orders.get_order_history(year=kwargs["year"],
+        total = 0
+        for o in amazon_orders.get_order_history(year=kwargs["year"],
                                                  start_index=kwargs["start_index"],
                                                  full_details=kwargs["full_details"],
-                                                 keep_paging=not kwargs["single_page"])
+                                                 keep_paging=not kwargs["single_page"]):
+            click.echo(f"{_order_output(o, config)}\n")
+            total += 1
         end_time = time.time()
 
-        click.echo("... {} orders parsed in {} seconds.\n".format(len(orders), int(end_time - start_time)))
-
-        for o in orders:
-            click.echo(f"{_order_output(o, config)}\n")
+        click.echo("... {} orders parsed in {} seconds.\n".format(total, int(end_time - start_time)))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -217,13 +217,13 @@ Transaction History for {days} days
                                                  config=config)
 
         start_time = time.time()
-        trxns = amazon_transactions.get_transactions(days=days)
+        total = 0
+        for t in amazon_transactions.get_transactions(days=days):
+            click.echo(f"{_transaction_output(t, config)}\n")
+            total += 1
         end_time = time.time()
 
-        click.echo("... {} transactions parsed in {} seconds.\n".format(len(trxns), int(end_time - start_time)))
-
-        for t in trxns:
-            click.echo(f"{_transaction_output(t, config)}\n")
+        click.echo("... {} transactions parsed in {} seconds.\n".format(total, int(end_time - start_time)))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))

@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.18...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/3.2.19...HEAD)
+
+## [3.2.19](https://github.com/alexdlaird/amazon-orders/compare/3.2.18...3.2.19) - 2025-04-21
+
+### Added
+
+- `AmazonSession.otp_secret_key` field.
+- Values for `username`, `password`, and `otp_secret_key` stored in `AmazonOrdersConfig` will now be used in precedence chain.
+
+### Changed
+
+- `OTP_SECRET_KEY` is replaced with `AMAZON_OTP_SECRET_KEY`. Evaluation of `OTP_SECRET_KEY` will be removed in the next major release.
 
 ## [3.2.18](https://github.com/alexdlaird/amazon-orders/compare/3.2.17...3.2.18) - 2025-04-16
 
