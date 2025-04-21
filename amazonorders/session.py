@@ -247,7 +247,7 @@ class AmazonSession:
         """
         Logout and close the existing Amazon session and clear cookies.
         """
-        self.get(self.config.constants.SIGN_OUT_URL)
+        self.get(self.config.constants.SIGN_OUT_URL, persist_cookies=True)
 
         self.session.close()
         self.session = self._create_session()
