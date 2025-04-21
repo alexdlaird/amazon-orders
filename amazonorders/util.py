@@ -136,7 +136,7 @@ def load_class(package: List, clazz: str) -> Callable:
 def cleanup_html_text(text: str):
     """
     Cleanup excessive whitespace within text that comes from an HTML block.
-    
+
     :param text: The text to clean up.
     :return: The cleaned up text.
     """
