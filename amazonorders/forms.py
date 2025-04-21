@@ -173,7 +173,7 @@ class AuthForm(ABC):
 
         error_tag = util.select_one(form_response.parsed, self.error_selector)
         if error_tag:
-            error_msg = f"An error occurred: {error_tag.text.strip().rstrip('.')}.\n"
+            error_msg = f"An error occurred: {util.cleanup_html_text(error_tag.text)}\n"
 
             if self.critical:
                 raise AmazonOrdersAuthError(error_msg)
@@ -296,9 +296,8 @@ class MfaForm(AuthForm):
                 "Check if Amazon changed their MFA flow."
             )  # pragma: no cover
 
-        otp_secret_key = os.environ.get("OTP_SECRET_KEY")
-        if otp_secret_key:
-            otp = pyotp.TOTP(otp_secret_key.replace(" ", "")).now()
+        if self.amazon_session.otp_secret_key:
+            otp = pyotp.TOTP(self.amazon_session.otp_secret_key.replace(" ", "")).now()
         else:
             otp = self.amazon_session.io.prompt("Enter the one-time passcode sent to your device")
             self.amazon_session.io.echo("")

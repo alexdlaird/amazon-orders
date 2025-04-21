@@ -14,7 +14,7 @@ jobs:
       FORCE_COLOR: 1
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
       AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
-      OTP_SECRET_KEY: ${{ secrets.OTP_SECRET_KEY }}
+      AMAZON_OTP_SECRET_KEY: ${{ secrets.AMAZON_OTP_SECRET_KEY }}
 
     runs-on: ubuntu-latest
 

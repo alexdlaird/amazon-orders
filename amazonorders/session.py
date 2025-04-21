@@ -70,7 +70,8 @@ class AmazonSession:
                  debug: bool = False,
                  io: IODefault = IODefault(),
                  config: Optional[AmazonOrdersConfig] = None,
-                 auth_forms: Optional[List] = None) -> None:
+                 auth_forms: Optional[List] = None,
+                 otp_secret_key: Optional[str] = None) -> None:
         if not config:
             config = AmazonOrdersConfig()
         if not auth_forms:
@@ -85,10 +86,15 @@ class AmazonSession:
                           MfaForm(config,
                                   config.selectors.CAPTCHA_OTP_FORM_SELECTOR)]
 
-        #: An Amazon username.
-        self.username: Optional[str] = username or os.environ.get("AMAZON_USERNAME")
-        #: An Amazon password.
-        self.password: Optional[str] = password or os.environ.get("AMAZON_PASSWORD")
+        #: An Amazon username. Environment variable ``AMAZON_USERNAME`` will override passed in or config value.
+        self.username: Optional[str] = os.environ.get("AMAZON_USERNAME") or username or config.username
+        #: An Amazon password. Environment variable ``AMAZON_PASSWORD`` will override passed in or config value.
+        self.password: Optional[str] = os.environ.get("AMAZON_PASSWORD") or password or config.password
+        #: The secret key Amazon provides when manually adding a 2FA authenticator app. Setting this will allow
+        #: one-time password challenges to be auto-solved. Environment variable ``AMAZON_OTP_SECRET_KEY`` will override
+        #: passed in or config value.
+        self.otp_secret_key: Optional[str] = (os.environ.get("AMAZON_OTP_SECRET_KEY") or otp_secret_key or
+                                              config.otp_secret_key)
 
         #: Set logger ``DEBUG``, send output to ``stderr``, and write an HTML file for requests made on the session.
         self.debug: bool = debug
@@ -229,7 +235,9 @@ class AmazonSession:
             attempts += 1
 
         if attempts == self.config.max_auth_attempts:
-            raise AmazonOrdersAuthError("Max authentication flow attempts reached.")
+            raise AmazonOrdersAuthError(
+                "Authentication attempts exhausted. If authentication is correct, "
+                "try increasing AmazonOrdersConfig.max_auth_attempts.")
 
     def logout(self) -> None:
         """

@@ -14,11 +14,12 @@ from tests.testcase import TestCase
 
 class IntegrationTestCase(TestCase):
     """
-    If run from the Makefile, this test class will prompt for challenges (2FA, Captcha) as necessary.
-    Additionally, for a more automated experience, the following environment variables can be setup for
-    OTP prompts to be auto-solved:
+    This test class will prompt for challenges (2FA, Captcha) as necessary. To run fully automated (assuming
+    no Captcha prompts are encountered), set all authentication environment variables:
 
-    - OTP_SECRET_KEY
+    - AMAZON_USERNAME
+    - AMAZON_PASSWORD
+    - AMAZON_OTP_SECRET_KEY (optional, if 2FA is enabled for the account)
     """
 
     amazon_session = None
