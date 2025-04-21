@@ -78,7 +78,7 @@ This could be that Amazon changed the layout of a page, renamed or refactored a 
 something else.
 
 To see what the effected page looks like, `enable debug mode`_, then rerun your code. Running in
-``debug`` mode will save parsed HTML files locally for you so that you can inspect the DOM and compare
+``debug`` mode will save parsed HTML files locally for you so that you can inspect the DOM and compare it to
 the parsing code within ``amazon-orders``. This may give you some insight in to what changed.
 In ``amazon-orders``, look for code that uses `BeautifulSoup's CSS select() methods <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_.
 
