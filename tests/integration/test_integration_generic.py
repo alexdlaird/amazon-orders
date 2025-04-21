@@ -109,17 +109,17 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assertIsNotNone(orders[0].index)
         self.assert_orders_list_index(orders)
 
-    # def test_get_order_history_full_details(self):
-    #     # WHEN
-    #     orders = self.amazon_orders.get_order_history(year=self.year,
-    #                                                   start_index=self.start_index,
-    #                                                   full_details=True)
-    #
-    #     # THEN
-    #     self.assertGreaterEqual(len(orders), 1)
-    #     self.assert_populated_generic(orders[0], True)
-    #     self.assertIsNotNone(orders[0].index)
-    #     self.assert_orders_list_index(orders)
+    def test_get_order_history_full_details(self):
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=self.year,
+                                                      start_index=self.start_index,
+                                                      full_details=True)
+
+        # THEN
+        self.assertGreaterEqual(len(orders), 1)
+        self.assert_populated_generic(orders[0], True)
+        self.assertIsNotNone(orders[0].index)
+        self.assert_orders_list_index(orders)
 
     def test_get_order_history_single_page(self):
         # WHEN

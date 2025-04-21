@@ -275,4 +275,4 @@ class AmazonSession:
         raise AmazonOrdersAuthError(error_msg)
 
     def _build_sign_in_url(self):
-        return self.config.constants.SIGN_IN_URL + f"?{"&".join(self.config.constants.SIGN_IN_QUERY_PARAMS)}"
+        return self.config.constants.SIGN_IN_URL + "?" + "&".join(self.config.constants.SIGN_IN_QUERY_PARAMS)

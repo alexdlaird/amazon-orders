@@ -55,7 +55,6 @@ class AmazonOrders:
         :param keep_paging: ``False`` if only one page should be fetched.
         :return: A list of the requested Orders.
         """
-
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
