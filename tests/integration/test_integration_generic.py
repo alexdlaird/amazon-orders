@@ -5,11 +5,7 @@ import datetime
 import os
 import unittest
 
-from amazonorders import conf
-from amazonorders.conf import AmazonOrdersConfig
-
 from amazonorders.exception import AmazonOrdersNotFoundError
-from amazonorders.session import AmazonSession
 from tests.integrationtestcase import IntegrationTestCase
 
 
