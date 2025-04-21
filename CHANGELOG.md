@@ -6,13 +6,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.0...HEAD)
 
-## [4.0.0](https://github.com/alexdlaird/amazon-orders/compare/3.2.20...4.0.0) - TBD
+## [4.0.0](https://github.com/alexdlaird/amazon-orders/compare/3.2.19...4.0.0) - 2025-04-21
+
+### Added
+
+- Improvements to error handling and logging when persisted session expires.
+- Stability improvements.
 
 ### Changed
 
 - `AmazonOrders.get_order_history()` now fetches each individual order using `asyncio` for 5-10x performance improvements.
 - `AmazonOrders.request` now takes `persist_cookies`, which defaults to `False`. Cookies are now only persisted when the login form is submitted, rather than with every request.
 - `AmazonSession` is now thread-safe.
+- Support for Amazon's new login auth flow.
 - Renamed `constants.Constants.TRANSACTION_HISTORY_LANDING_ROUTE` to `constants.Constants.TRANSACTION_HISTORY_ROUTE`.
 - Renamed `constants.Constants.TRANSACTION_HISTORY_LANDING_URL` to `constants.Constants.TRANSACTION_HISTORY_URL`.
 - Testing environment variables are now consistently prefixed with `AMAZON_`.
@@ -22,14 +28,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `AmazonSession.last_response` and `AmazonSession.last_response_parsed`. These variables forced `AmazonSession` in to a statefulness that means its underlying functionality cannot be made async. Use the response object [AmazonSessionResponse](https://amazon-orders.readthedocs.io/api.html#amazonorders.util.AmazonSessionResponse) instead.
 - `constants.Constants.ORDER_HISTORY_LANDING_URL`.
 - Evaluation of `OTP_SECRET_KEY`, use `AMAZON_OTP_SECRET_KEY`.
-
-## [3.2.20](https://github.com/alexdlaird/amazon-orders/compare/3.2.19...3.2.20) - TBD
-
-### Added
-
-- Support for Amazon's new login auth flow. Removed `SIGN_IN_REDIRECT_URL` as part of this, since it is no longer necessary.
-- Improvements to error handling and logging when persisted session expires.
-- Stability improvements.
+- Removed `SIGN_IN_REDIRECT_URL`, as it is no longer needed with the new auth flow.
 
 ## [3.2.19](https://github.com/alexdlaird/amazon-orders/compare/3.2.18...3.2.19) - 2025-04-21
 
