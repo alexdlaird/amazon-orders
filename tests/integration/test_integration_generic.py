@@ -3,8 +3,13 @@ __license__ = "MIT"
 
 import datetime
 import os
+import unittest
+
+from amazonorders import conf
+from amazonorders.conf import AmazonOrdersConfig
 
 from amazonorders.exception import AmazonOrdersNotFoundError
+from amazonorders.session import AmazonSession
 from tests.integrationtestcase import IntegrationTestCase
 
 
@@ -28,6 +33,32 @@ class TestIntegrationGeneric(IntegrationTestCase):
             cls.transactions_days = os.environ.get("TRANSACTIONS_DAYS")
         else:
             cls.transactions_days = 90
+
+    @unittest.skip("Even though the form submissions suggest tha Amazon should not re-prompt for OTP, it often does. "
+                   "Further investigation needs to be done, perhaps in to deviceId, for this test to pass.")
+    def test_logout_login_no_otp_reprompt(self):
+        # GIVEN
+        with open(self.test_config.cookie_jar_path, "r") as f:
+            logged_in_persisted_cookies = f.read()
+
+        # WHEN
+        self.amazon_session.logout()
+
+        # THEN
+        with open(self.test_config.cookie_jar_path, "r") as f:
+            logged_out_persisted_cookies = f.read()
+        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertNotEqual(logged_in_persisted_cookies, logged_out_persisted_cookies)
+
+        # GIVEN
+        self.amazon_session.otp_secret_key = None
+
+        # WHEN
+        # If the test is not automated (ie. prompts for OTP here), consider that a failure
+        self.amazon_session.login()
+
+        # THEN
+        self.assertTrue(self.amazon_session.is_authenticated)
 
     def test_get_order_history(self):
         # WHEN
