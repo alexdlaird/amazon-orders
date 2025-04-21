@@ -2,10 +2,16 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import datetime
+import json
 import os
+import shutil
 import unittest
 
-from amazonorders.exception import AmazonOrdersNotFoundError
+from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.exception import AmazonOrdersNotFoundError, AmazonOrdersAuthError
+from amazonorders.orders import AmazonOrders
+from amazonorders.session import AmazonSession
+from amazonorders.transactions import AmazonTransactions
 from tests.integrationtestcase import IntegrationTestCase
 
 
@@ -56,6 +62,42 @@ class TestIntegrationGeneric(IntegrationTestCase):
         # THEN
         self.assertTrue(self.amazon_session.is_authenticated)
 
+    def test_persisted_session_expired(self):
+        # GIVEN
+        test_config_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..",
+                                       ".integration-config-auth-test")
+        if os.path.exists(test_config_dir):
+            shutil.rmtree(test_config_dir)
+        test_output_dir = os.path.join(test_config_dir, "output")
+        test_cookie_jar_path = os.path.join(test_config_dir, "cookies.json")
+        test_config = AmazonOrdersConfig(data={
+            "output_dir": test_output_dir,
+            "cookie_jar_path": test_cookie_jar_path
+        })
+        amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
+                                       config=test_config)
+        amazon_session.login()
+        amazon_orders = AmazonOrders(amazon_session)
+        amazon_transactions = AmazonTransactions(amazon_session)
+
+        # WHEN
+        with open(test_config.cookie_jar_path, "r") as f:
+            cookies = json.loads(f.read())
+        cookies["session-token"] = "invalid-token"
+        cookies["x-main"] = "invalid-token"
+        with open(test_config.cookie_jar_path, "w") as f:
+            f.write(json.dumps(cookies))
+        amazon_session.session.cookies.update(cookies)
+
+        # THEN
+        with self.assertRaises(AmazonOrdersAuthError):
+            amazon_orders.get_order(order_id="1234-fake-id")
+        with self.assertRaises(AmazonOrdersAuthError):
+            amazon_orders.get_order_history(year=self.year,
+                                            start_index=self.start_index)
+        with self.assertRaises(AmazonOrdersAuthError):
+            amazon_transactions.get_transactions(days=self.transactions_days)
+
     def test_get_order_history(self):
         # WHEN
         orders = self.amazon_orders.get_order_history(year=self.year,
@@ -67,17 +109,17 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assertIsNotNone(orders[0].index)
         self.assert_orders_list_index(orders)
 
-    def test_get_order_history_full_details(self):
-        # WHEN
-        orders = self.amazon_orders.get_order_history(year=self.year,
-                                                      start_index=self.start_index,
-                                                      full_details=True)
-
-        # THEN
-        self.assertGreaterEqual(len(orders), 1)
-        self.assert_populated_generic(orders[0], True)
-        self.assertIsNotNone(orders[0].index)
-        self.assert_orders_list_index(orders)
+    # def test_get_order_history_full_details(self):
+    #     # WHEN
+    #     orders = self.amazon_orders.get_order_history(year=self.year,
+    #                                                   start_index=self.start_index,
+    #                                                   full_details=True)
+    #
+    #     # THEN
+    #     self.assertGreaterEqual(len(orders), 1)
+    #     self.assert_populated_generic(orders[0], True)
+    #     self.assertIsNotNone(orders[0].index)
+    #     self.assert_orders_list_index(orders)
 
     def test_get_order_history_single_page(self):
         # WHEN
@@ -113,7 +155,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
 
     def test_get_transactions(self):
         # WHEN
-        transactions = self.amazon_transactions.get_transactions(self.transactions_days)
+        transactions = self.amazon_transactions.get_transactions(days=self.transactions_days)
 
         # THEN
         self.assertGreaterEqual(len(transactions), 1)

@@ -8,7 +8,7 @@ from typing import List, Optional
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError, AmazonOrdersAuthError
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
@@ -55,6 +55,7 @@ class AmazonOrders:
         :param keep_paging: ``False`` if only one page should be fetched.
         :return: A list of the requested Orders.
         """
+
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
@@ -72,9 +73,12 @@ class AmazonOrders:
         current_index = int(start_index) if start_index else 0
 
         while next_page:
-            page_response_parsed = self.amazon_session.get(next_page).parsed
+            page_response = self.amazon_session.get(next_page)
+            if page_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
+                raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
+                                            "reauthenticate first.")
 
-            for order_tag in util.select(page_response_parsed,
+            for order_tag in util.select(page_response.parsed,
                                          self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
                 order: Order = self.config.order_cls(order_tag, self.config, index=current_index)
 
@@ -86,8 +90,12 @@ class AmazonOrders:
                         logger.warning(f"Order {order.order_number} was partially populated, "
                                        f"since it is an unsupported Order type.")
                     else:
-                        order_details_response_parsed = self.amazon_session.get(order.order_details_link).parsed
-                        order_details_tag = util.select_one(order_details_response_parsed,
+                        order_details_response = self.amazon_session.get(order.order_details_link)
+                        if order_details_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
+                            raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
+                                                        "reauthenticate first.")
+
+                        order_details_tag = util.select_one(order_details_response.parsed,
                                                             self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
                         order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order,
                                                       index=current_index)
@@ -98,7 +106,7 @@ class AmazonOrders:
 
             next_page = None
             if keep_paging:
-                next_page_tag = util.select_one(page_response_parsed,
+                next_page_tag = util.select_one(page_response.parsed,
                                                 self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
                     next_page = str(next_page_tag["href"])
@@ -124,6 +132,10 @@ class AmazonOrders:
 
         order_details_response = self.amazon_session.get(
             f"{self.config.constants.ORDER_DETAILS_URL}?orderID={order_id}")
+        if order_details_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
+            raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
+                                        "reauthenticate first.")
+
         if not order_details_response.response.url.startswith(self.config.constants.ORDER_DETAILS_URL):
             raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.")
 

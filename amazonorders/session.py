@@ -193,22 +193,17 @@ class AmazonSession:
 
     def login(self) -> None:
         """
-        Execute an Amazon login process. This will include the sign-in page, and may also include Captcha challenges
-        and OTP pages (of 2FA authentication is enabled on your account).
+        Execute an Amazon login process. This will include the sign-in page, and may also include OTP (if 2FA is
+        enabled for your account) and Captcha challenges.
 
         If successful, ``is_authenticated`` will be set to ``True``.
 
-        Session cookies are persisted, and if existing session data is found during this auth flow, it will be
-        skipped entirely and flagged as authenticated.
+        If existing session data is already persisted, calling this function will still attempt to reauthenticate to
+        refresh it.
         """
-        last_response = self.get(self.config.constants.SIGN_IN_URL)
+        last_response = self.get(self._build_sign_in_url())
 
-        # If our local session data is stale, Amazon will redirect us to the signin page
-        if (self.auth_cookies_stored() and
-                last_response.response.url.split("?")[0] == self.config.constants.SIGN_IN_REDIRECT_URL):
-            self.logout()
-            last_response = self.get(self.config.constants.SIGN_IN_URL)
-
+        self.is_authenticated = False
         attempts = 0
         while not self.is_authenticated and attempts < self.config.max_auth_attempts:
             # TODO: BeautifulSoup doesn't let us query for #nav-item-signout, maybe because it's dynamic on the page,
@@ -278,3 +273,6 @@ class AmazonSession:
                                          status_code=response.status_code) + debug_str
 
         raise AmazonOrdersAuthError(error_msg)
+
+    def _build_sign_in_url(self):
+        return self.config.constants.SIGN_IN_URL + f"?{"&".join(self.config.constants.SIGN_IN_QUERY_PARAMS)}"

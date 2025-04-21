@@ -65,7 +65,7 @@ class UnitTestCase(TestCase):
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             self.authenticated_response = responses.add(
                 responses.POST,
-                self.test_config.constants.SIGN_IN_REDIRECT_URL,
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
                 match=[urlencoded_params_matcher(request_data)],

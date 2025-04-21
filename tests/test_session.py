@@ -40,7 +40,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
@@ -48,7 +48,7 @@ class TestSession(UnitTestCase):
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                self.test_config.constants.SIGN_IN_REDIRECT_URL,
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
@@ -68,7 +68,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
@@ -76,7 +76,7 @@ class TestSession(UnitTestCase):
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                self.test_config.constants.SIGN_IN_REDIRECT_URL,
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
@@ -98,21 +98,21 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-mfa.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                self.test_config.constants.SIGN_IN_REDIRECT_URL,
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.POST,
-                self.test_config.constants.SIGN_IN_REDIRECT_URL,
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
@@ -135,28 +135,28 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-new-otp.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                self.test_config.constants.SIGN_IN_REDIRECT_URL,
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-mfa.html"), "r", encoding="utf-8") as f:
             resp3 = responses.add(
                 responses.POST,
-                self.test_config.constants.SIGN_IN_REDIRECT_URL,
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.POST,
-                self.test_config.constants.SIGN_IN_REDIRECT_URL,
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
@@ -178,13 +178,13 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
         resp2 = responses.add(
             responses.POST,
-            self.test_config.constants.SIGN_IN_REDIRECT_URL,
+            self.test_config.constants.SIGN_IN_URL,
             status=302,
             headers={"Location": f"{self.test_config.constants.BASE_URL}/ap/cvf/request"}
         )
@@ -249,14 +249,14 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
         with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-2.html"), "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                self.test_config.constants.SIGN_IN_REDIRECT_URL,
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
@@ -300,13 +300,13 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
         resp2 = responses.add(
             responses.POST,
-            self.test_config.constants.SIGN_IN_REDIRECT_URL,
+            self.test_config.constants.SIGN_IN_URL,
             status=302,
             headers={"Location": f"{self.test_config.constants.BASE_URL}/ap/cvf/request"}
         )
@@ -353,7 +353,7 @@ class TestSession(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.BASE_URL}/gp/sign-in.html",
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
@@ -361,7 +361,7 @@ class TestSession(UnitTestCase):
                   "r", encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
-                self.test_config.constants.SIGN_IN_REDIRECT_URL,
+                self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
