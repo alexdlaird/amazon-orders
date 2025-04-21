@@ -306,6 +306,9 @@ class MfaForm(AuthForm):
                                  "rememberDevice": ""})
         self.data.update(additional_attrs)
 
+        if "deviceId" not in self.data:
+            self.data["deviceId"] = ""
+
 
 class CaptchaForm(AuthForm):
     def __init__(self,

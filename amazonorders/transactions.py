@@ -11,7 +11,7 @@ from dateutil import parser
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.transaction import Transaction
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def _parse_transaction_form_tag(form_tag: Tag,
                                 config: AmazonOrdersConfig) \
-        -> Tuple[List[Transaction], Optional[str], Optional[Dict[str, str]]]:
+        -> Tuple[List[Transaction], Optional[Dict[str, str]]]:
     transactions = []
     date_container_tags = util.select(form_tag, config.selectors.TRANSACTION_DATE_CONTAINERS_SELECTOR)
     for date_container_tag in date_container_tags:
@@ -46,16 +46,15 @@ def _parse_transaction_form_tag(form_tag: Tag,
     form_ie_input = util.select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_IE_SELECTOR)
     next_page_input = util.select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_SELECTOR)
     if not next_page_input or not form_state_input or not form_ie_input:
-        return transactions, None, None
+        return transactions, None
 
-    next_page_post_url = str(form_tag["action"])
-    next_page_post_data = {
+    next_page_data = {
         "ppw-widgetState": str(form_state_input["value"]),
         "ie": str(form_ie_input["value"]),
         str(next_page_input["name"]): "",
     }
 
-    return transactions, next_page_post_url, next_page_post_data
+    return transactions, next_page_data
 
 
 class AmazonTransactions:
@@ -96,33 +95,36 @@ class AmazonTransactions:
 
         min_date = datetime.date.today() - datetime.timedelta(days=days)
 
-        transaction_page_response = self.amazon_session.get(self.config.constants.TRANSACTION_HISTORY_URL)
-        if not transaction_page_response.parsed:
-            raise AmazonOrdersError(
-                f"Could not process transaction history page {self.config.constants.TRANSACTION_HISTORY_URL}.")
-
-        form_tag = util.select_one(transaction_page_response.parsed,
-                                   self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
-
         transactions: List[Transaction] = []
-        while form_tag:
-            loaded_transactions, next_page_post_url, next_page_post_data = (
+        keep_paging = True
+        next_page_data = None
+        while keep_paging:
+            transaction_page_response = self.amazon_session.post(self.config.constants.TRANSACTION_HISTORY_URL,
+                                                                 data=next_page_data)
+            if transaction_page_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
+                raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
+                                            "reauthenticate first.")
+            if not transaction_page_response.parsed:
+                raise AmazonOrdersError("Could not process transaction history.")
+
+            form_tag = util.select_one(transaction_page_response.parsed,
+                                       self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
+
+            if not form_tag:
+                break
+
+            loaded_transactions, next_page_data = (
                 _parse_transaction_form_tag(form_tag, self.config)
             )
+
             for transaction in loaded_transactions:
                 if transaction.completed_date >= min_date:
                     transactions.append(transaction)
                 else:
-                    return transactions
+                    next_page_data = None
+                    break
 
-            if next_page_post_url is None:
-                return transactions
-
-            transaction_page_response = self.amazon_session.post(next_page_post_url, data=next_page_post_data)
-            if not transaction_page_response.parsed:
-                raise AmazonOrdersError(f"Could not process next transaction history page {next_page_post_url}.")
-
-            form_tag = util.select_one(transaction_page_response.parsed,
-                                       self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
+            if not next_page_data:
+                keep_paging = False
 
         return transactions

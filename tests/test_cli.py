@@ -93,7 +93,7 @@ class TestCli(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"),
                   "r", encoding="utf-8") as f:
             resp = responses.add(
-                responses.GET,
+                responses.POST,
                 f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
                 status=200,

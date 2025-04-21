@@ -23,6 +23,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `constants.Constants.ORDER_HISTORY_LANDING_URL`.
 - Evaluation of `OTP_SECRET_KEY`, use `AMAZON_OTP_SECRET_KEY`.
 
+## [3.2.20](https://github.com/alexdlaird/amazon-orders/compare/3.2.19...3.2.20) - TBD
+
+### Added
+
+- Support for Amazon's new login auth flow. Removed `SIGN_IN_REDIRECT_URL` as part of this, since it is no longer necessary.
+- Improvements to error handling and logging when persisted session expires.
+- Stability improvements.
+
 ## [3.2.19](https://github.com/alexdlaird/amazon-orders/compare/3.2.18...3.2.19) - 2025-04-21
 
 ### Added

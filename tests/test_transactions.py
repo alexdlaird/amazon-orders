@@ -34,7 +34,7 @@ class TestTransactions(UnitTestCase):
                   "r",
                   encoding="utf-8") as f:
             responses.add(
-                responses.GET,
+                responses.POST,
                 f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
                 status=200,
@@ -66,7 +66,7 @@ class TestTransactions(UnitTestCase):
                   "r",
                   encoding="utf-8") as f:
             responses.add(
-                responses.GET,
+                responses.POST,
                 f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
                 status=200,
@@ -98,7 +98,7 @@ class TestTransactions(UnitTestCase):
                   "r",
                   encoding="utf-8") as f:
             responses.add(
-                responses.GET,
+                responses.POST,
                 f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
                 status=200,
@@ -139,7 +139,7 @@ class TestTransactions(UnitTestCase):
                   "r",
                   encoding="utf-8") as f:
             responses.add(
-                responses.GET,
+                responses.POST,
                 f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
                 status=200,
@@ -160,15 +160,12 @@ class TestTransactions(UnitTestCase):
             form_tag = parsed.select_one("form")
 
         # WHEN
-        transactions, next_page_url, next_page_data = _parse_transaction_form_tag(
+        transactions, next_page_data = _parse_transaction_form_tag(
             form_tag, self.test_config
         )
 
         # THEN
         self.assertEqual(len(transactions), 2)
-        self.assertEqual(
-            next_page_url, "https://www.amazon.com:443/cpe/yourpayments/transactions"
-        )
         self.assertEqual(
             next_page_data,
             {

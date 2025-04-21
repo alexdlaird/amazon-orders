@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import os
+from urllib.parse import quote_plus
 
 
 class Constants:
@@ -28,8 +29,14 @@ class Constants:
     # URLs for AmazonSession
     ##########################################################################
 
-    SIGN_IN_URL = f"{BASE_URL}/gp/sign-in.html"
-    SIGN_IN_REDIRECT_URL = f"{BASE_URL}/ap/signin"
+    SIGN_IN_URL = f"{BASE_URL}/ap/signin"
+    SIGN_IN_QUERY_PARAMS = ["openid.pape.max_auth_age=0",
+                            f"openid.return_to={quote_plus(BASE_URL)}%2F%3Fref_%3Dnav_custrec_signin",
+                            "openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select",
+                            "openid.assoc_handle=usflex",
+                            "openid.mode=checkid_setup",
+                            "openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select",
+                            "openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0"]
     SIGN_OUT_URL = f"{BASE_URL}/gp/flex/sign-out.html"
 
     ##########################################################################
@@ -58,8 +65,6 @@ class Constants:
         "Accept-Language": "en-US,en;q=0.9",
         "Cache-Control": "max-age=0",
         "Content-Type": "application/x-www-form-urlencoded",
-        "Origin": BASE_URL,
-        "Referer": SIGN_IN_REDIRECT_URL,
         "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
         "Sec-Ch-Ua-Mobile": "?0",
         "Sec-Ch-Ua-Platform": "macOS",
