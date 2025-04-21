@@ -30,7 +30,7 @@ class Constants:
 
     SIGN_IN_URL = f"{BASE_URL}/gp/sign-in.html"
     SIGN_IN_REDIRECT_URL = f"{BASE_URL}/ap/signin"
-    SIGN_OUT_URL = f"{BASE_URL}/gp/sign-out.html"
+    SIGN_OUT_URL = f"{BASE_URL}/gp/flex/sign-out.html"
 
     ##########################################################################
     # URLs for orders

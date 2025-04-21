@@ -5,7 +5,7 @@ from amazonorders.util import to_type, cleanup_html_text
 from tests.unittestcase import UnitTestCase
 
 
-class TestSession(UnitTestCase):
+class TestUtil(UnitTestCase):
     def test_to_type(self):
         self.assertIsNone(to_type(None))
 

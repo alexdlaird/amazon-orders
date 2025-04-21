@@ -299,7 +299,7 @@ class MfaForm(AuthForm):
         if self.amazon_session.otp_secret_key:
             otp = pyotp.TOTP(self.amazon_session.otp_secret_key.replace(" ", "")).now()
         else:
-            otp = self.amazon_session.io.prompt("Enter the one-time passcode sent to your device")
+            otp = self.amazon_session.io.prompt("Enter the one-time passcode from your preferred 2FA method")
             self.amazon_session.io.echo("")
 
         additional_attrs.update({self.solution_attr_key: otp,

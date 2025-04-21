@@ -249,9 +249,6 @@ class AmazonSession:
         """
         self.get(self.config.constants.SIGN_OUT_URL)
 
-        if os.path.exists(self.config.cookie_jar_path):
-            os.remove(self.config.cookie_jar_path)
-
         self.session.close()
         self.session = self._create_session()
 
