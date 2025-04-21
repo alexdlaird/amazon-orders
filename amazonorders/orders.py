@@ -110,12 +110,12 @@ class AmazonOrders:
         order_tasks = []
 
         while next_page:
-            page_response_parsed = self.amazon_session.get(next_page).parsed
-            if page_response_parsed.response.url.startswith(self.config.constants.SIGN_IN_URL):
+            page_response = self.amazon_session.get(next_page)
+            if page_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
                 raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
                                             "reauthenticate first.")
 
-            for order_tag in util.select(page_response_parsed,
+            for order_tag in util.select(page_response.parsed,
                                          self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
                 order_tasks.append(self._async_wrapper(self._build_order, order_tag, full_details, current_index))
 
@@ -123,7 +123,7 @@ class AmazonOrders:
 
             next_page = None
             if keep_paging:
-                next_page_tag = util.select_one(page_response_parsed,
+                next_page_tag = util.select_one(page_response.parsed,
                                                 self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
                     next_page = str(next_page_tag["href"])
@@ -152,11 +152,11 @@ class AmazonOrders:
             else:
                 # TODO: be on the lookout for if this causes rate limit issues with Amazon, or races with the
                 #  URL connection pool. If so, we may need to implement some retry logic here.
-                order_details_response_parsed = self.amazon_session.get(order.order_details_link).parsed
-                if order_details_response_parsed.response.url.startswith(self.config.constants.SIGN_IN_URL):
+                order_details_response = self.amazon_session.get(order.order_details_link)
+                if order_details_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
                     raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
                                                 "reauthenticate first.")
-                order_details_tag = util.select_one(order_details_response_parsed,
+                order_details_tag = util.select_one(order_details_response.parsed,
                                                     self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
                 order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order,
                                               index=current_index)
