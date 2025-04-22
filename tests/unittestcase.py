@@ -39,9 +39,12 @@ class UnitTestCase(TestCase):
             shutil.rmtree(conf.DEFAULT_CONFIG_DIR)
 
         # Reset environment variables that were temporarily cleared
-        os.environ["AMAZON_USERNAME"] = self.username
-        os.environ["AMAZON_PASSWORD"] = self.password
-        os.environ["AMAZON_OTP_SECRET_KEY"] = self.otp_secret_key
+        if self.username:
+            os.environ["AMAZON_USERNAME"] = self.username
+        if self.password:
+            os.environ["AMAZON_PASSWORD"] = self.password
+        if self.otp_secret_key:
+            os.environ["AMAZON_OTP_SECRET_KEY"] = self.otp_secret_key
 
     def given_login_responses_success(self):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
