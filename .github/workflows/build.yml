@@ -52,3 +52,9 @@ jobs:
     name: Validate
     uses: ./.github/workflows/validate.yml
     secrets: inherit
+
+  integration:
+    name: Integration Test
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/integration.yml
+    secrets: inherit
