@@ -55,9 +55,8 @@ Execute ``amazon-orders`` from the command line with:
 
     amazon-orders --username <AMAZON_EMAIL> --password <AMAZON_PASSWORD> history
 
-Or to use ``amazon-orders`` programmatically, `get_order_history() <https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order_history>`_
-and `get_order() <https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order>`_ are good
-places to start:
+Or to use ``amazon-orders`` programmatically, :func:`~amazonorders.orders.AmazonOrders.get_order_history` and
+:func:`~amazonorders.orders.AmazonOrders.get_order` are good places to start:
 
 .. code:: python
 
@@ -75,8 +74,8 @@ places to start:
         print(f"{order.order_number} - {order.grand_total}")
 
 If desired fields are populated as ``None``, set ``full_details=True`` (or pass ``--full-details`` to the ``history``
-command), since by default it is ``False`` (it will slow down querying). Have a look at `the Order entity's docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order>`_
-to see what fields are only populated with full details.
+command), since by default it is ``False`` (it will slow down querying). Have a look at the :class:`~amazonorders.entity.order.Order`
+entity's docs to see what fields are only populated with full details.
 
 Automating Authentication
 -------------------------
@@ -87,7 +86,7 @@ environment variables ``amazon-orders`` looks for are:
 
 - ``AMAZON_USERNAME``
 - ``AMAZON_PASSWORD``
-- ``AMAZON_OTP_SECRET_KEY`` (see `docs for usage <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key>`_)
+- ``AMAZON_OTP_SECRET_KEY`` (see :attr:`~amazonorders.session.AmazonSession.otp_secret_key`)
 
 Known Limitations
 -----------------
@@ -106,7 +105,7 @@ Known Limitations
       able to login.
     - Some recommended workarounds for this are:
         - Ensure credentials are correct. Invalid credentials too frequently will cause Amazon to require Captcha
-          more often. Persisting authentication in the config or the environment (see `docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.amazon_username>`_)
+          more often. Persisting authentication in the config or the environment (see `docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.username>`_)
           can help ensure passwords are never entered incorrectly.
         - Wait several hours (sometimes over a day is necessary) before trying again.
         - Use a browser to logout and then successfully login to your account there, which can clear failed login
@@ -114,8 +113,8 @@ Known Limitations
     - See `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_ for more details.
 - Device not remembered for OTP
     - Amazon will sometimes re-prompt for OTP even when a device has been remembered.
-    - The recommended workaround for this is persisting the ``otp_secret_key`` in the config or the environment (see `docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key>`_)
-      so that re-prompts are auto-solved.
+    - The recommended workaround for this is persisting the :attr:`~amazonorders.session.AmazonSession.otp_secret_key`
+      in the config or the environment so that re-prompts are auto-solved.
     - See `issue #55 <https://github.com/alexdlaird/amazon-orders/issues/55>`_ for more details.
 
 Dive Deeper
