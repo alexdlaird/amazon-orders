@@ -41,6 +41,7 @@ class TestIntegrationAuth(IntegrationTestCase):
 
         # WHEN
         amazon_session.login()
+        time.sleep(1)
         with open(self.test_config.cookie_jar_path, "r") as f:
             persisted_cookies = json.loads(f.read())
 
@@ -61,6 +62,7 @@ class TestIntegrationAuth(IntegrationTestCase):
 
         # WHEN
         amazon_session.logout()
+        time.sleep(1)
         with open(self.test_config.cookie_jar_path, "r") as f:
             persisted_cookies = json.loads(f.read())
 
@@ -92,6 +94,7 @@ class TestIntegrationAuth(IntegrationTestCase):
         amazon_session = AmazonSession(debug=self.debug,
                                        config=self.test_config)
         amazon_session.login()
+        time.sleep(1)
         amazon_orders = AmazonOrders(amazon_session)
 
         # WHEN
