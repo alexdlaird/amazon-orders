@@ -2,7 +2,7 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import os
-from urllib.parse import quote_plus
+from urllib.parse import urlencode
 
 
 class Constants:
@@ -30,13 +30,13 @@ class Constants:
     ##########################################################################
 
     SIGN_IN_URL = f"{BASE_URL}/ap/signin"
-    SIGN_IN_QUERY_PARAMS = ["openid.pape.max_auth_age=0",
-                            f"openid.return_to={quote_plus(BASE_URL)}%2F%3Fref_%3Dnav_custrec_signin",
-                            "openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select",
-                            "openid.assoc_handle=usflex",
-                            "openid.mode=checkid_setup",
-                            "openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select",
-                            "openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0"]
+    SIGN_IN_QUERY_PARAMS = {"openid.pape.max_auth_age": "0",
+                            "openid.return_to": f"{BASE_URL}/?ref_=nav_custrec_signin",
+                            "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
+                            "openid.assoc_handle": "usflex",
+                            "openid.mode": "checkid_setup",
+                            "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
+                            "openid.ns": "http://specs.openid.net/auth/2.0"}
     SIGN_OUT_URL = f"{BASE_URL}/gp/flex/sign-out.html"
 
     ##########################################################################
@@ -67,6 +67,8 @@ class Constants:
         "Dpr": "2",
         "Ect": "4g",
         "Priority": "u=0, i",
+        "Origin": BASE_URL,
+        "Referer": f"{SIGN_IN_URL}?{urlencode(SIGN_IN_QUERY_PARAMS)}",
         "Rtt": "50",
         "Sec-Ch-Dpr": "2",
         "Sec-Ch-Ua": "\"Google Chrome\";v=\"135\", \"Not-A.Brand\";v=\"8\", \"Chromium\";v=\"135\"",

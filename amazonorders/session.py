@@ -15,7 +15,7 @@ from requests.utils import dict_from_cookiejar
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError
-from amazonorders.forms import CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm, AuthForm
+from amazonorders.forms import AuthForm, CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm
 from amazonorders.util import AmazonSessionResponse
 
 logger = logging.getLogger(__name__)
@@ -205,7 +205,7 @@ class AmazonSession:
         If existing session data is already persisted, calling this function will still attempt to reauthenticate to
         refresh it.
         """
-        last_response = self.get(self._build_sign_in_url())
+        last_response = self.get(self.config.constants.SIGN_IN_URL, params=self.config.constants.SIGN_IN_QUERY_PARAMS)
 
         self.is_authenticated = False
         attempts = 0
@@ -284,6 +284,3 @@ class AmazonSession:
                                                 pool_maxsize=self.config.connection_pool_size)
         session.mount('https://', adapter)
         return session
-
-    def _build_sign_in_url(self):
-        return self.config.constants.SIGN_IN_URL + "?" + "&".join(self.config.constants.SIGN_IN_QUERY_PARAMS)
