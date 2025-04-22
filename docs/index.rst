@@ -106,15 +106,16 @@ Known Limitations
       able to login.
     - Some recommended workarounds for this are:
         - Ensure credentials are correct. Invalid credentials too frequently will cause Amazon to require Captcha
-          more often. Setting environment variables ``AMAZON_PASSWORD`` and ``AMAZON_OTP_SECRET_KEY`` (if 2FA is
-          enabled) can help ensure passwords are never entered incorrectly.
-        - Wait several hours (sometimes a day is necessary) before trying again.
-        - Use a browser to logout and then successfully login to your account.
+          more often. Persisting authentication in the config or the environment (see `docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.amazon_username>`_)
+          can help ensure passwords are never entered incorrectly.
+        - Wait several hours (sometimes over a day is necessary) before trying again.
+        - Use a browser to logout and then successfully login to your account there, which can clear failed login
+          attempt flags.
     - See `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_ for more details.
 - Device not remembered for OTP
     - Amazon will sometimes re-prompt for OTP even when a device has been remembered.
-    - The recommended workaround for this is setting the environment variable ``AMAZON_OTP_SECRET_KEY`` so that
-      re-prompts are auto-solved.
+    - The recommended workaround for this is persisting the ``otp_secret_key`` in the config or the environment (see `docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key>`_)
+      so that re-prompts are auto-solved.
     - See `issue #55 <https://github.com/alexdlaird/amazon-orders/issues/55>`_ for more details.
 
 Dive Deeper
