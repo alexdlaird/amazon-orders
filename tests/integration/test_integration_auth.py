@@ -35,7 +35,7 @@ class TestIntegrationAuth(IntegrationTestCase):
 
     def test_login(self):
         # GIVEN
-        amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
+        amazon_session = AmazonSession(debug=self.debug,
                                        config=self.test_config)
         amazon_orders = AmazonOrders(amazon_session)
 
@@ -54,7 +54,7 @@ class TestIntegrationAuth(IntegrationTestCase):
 
     def test_logout(self):
         # GIVEN
-        amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
+        amazon_session = AmazonSession(debug=self.debug,
                                        config=self.test_config)
         amazon_session.login()
         time.sleep(1)
@@ -75,7 +75,7 @@ class TestIntegrationAuth(IntegrationTestCase):
         os.environ["AMAZON_USERNAME"] = "invalid-username"
 
         # GIVEN
-        amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
+        amazon_session = AmazonSession(debug=self.debug,
                                        config=self.test_config)
 
         # WHEN
@@ -89,7 +89,7 @@ class TestIntegrationAuth(IntegrationTestCase):
         os.environ["AMAZON_USERNAME"] = amazon_username
 
     def test_persisted_session_expired(self):
-        amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
+        amazon_session = AmazonSession(debug=self.debug,
                                        config=self.test_config)
         amazon_session.login()
         amazon_orders = AmazonOrders(amazon_session)
@@ -130,7 +130,7 @@ class TestIntegrationAuth(IntegrationTestCase):
         os.environ["AMAZON_PASSWORD"] = "invalid-password"
 
         # GIVEN
-        amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
+        amazon_session = AmazonSession(debug=self.debug,
                                        config=self.test_config)
 
         # WHEN
@@ -154,7 +154,7 @@ class TestIntegrationAuth(IntegrationTestCase):
                    "/ax/claim auth flow instead—for this test to pass.")
     def test_login_logout_login_no_otp_reprompt(self):
         # GIVEN
-        amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
+        amazon_session = AmazonSession(debug=self.debug,
                                        config=self.test_config)
         amazon_session.login()
         time.sleep(1)

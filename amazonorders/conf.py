@@ -16,8 +16,8 @@ class AmazonOrdersConfig:
     An object containing ``amazon-orders``'s configuration. The state of this object is populated from the config file,
     if present, when it is instantiated, and it is also persisted back to the config file when :func:`~save` is called.
 
-    If overrides are passed in ``data`` parameter when this object is instantiated, they will be used in the
-    instantiated object, but not persisted to the config file until :func:`~save` is called.
+    If overrides are passed in ``data`` parameter when this object is instantiated, they will be used to populate the
+    new object, but not persisted to the config file until :func:`~save` is called.
     """
 
     def __init__(self,
@@ -28,6 +28,7 @@ class AmazonOrdersConfig:
 
         # Provision default configs
         self._data = {
+            # The maximum number of authentication forms to try before failing
             "max_auth_attempts": 10,
             "output_dir": os.path.join(os.getcwd(), "output"),
             "cookie_jar_path": os.path.join(DEFAULT_CONFIG_DIR, "cookies.json"),
@@ -39,6 +40,8 @@ class AmazonOrdersConfig:
             "bs4_parser": "html.parser",
             "thread_pool_size": (os.cpu_count() or 1) * 4,
             "connection_pool_size": (os.cpu_count() or 1) * 8,
+            # The maximum number of failed attempts to allow before failing CLI authentication
+            "max_auth_retries": 1
         }
 
         if os.path.exists(self.config_path):

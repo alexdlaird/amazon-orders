@@ -28,7 +28,8 @@ class IntegrationTestCase(TestCase):
     def setUpClass(cls):
         cls.set_up_class_conf()
 
-        cls.amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
+        cls.debug = os.environ.get("DEBUG", "False") == "True"
+        cls.amazon_session = AmazonSession(debug=cls.debug,
                                            config=cls.test_config)
         cls.amazon_session.login()
 

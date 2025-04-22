@@ -41,6 +41,7 @@ class TestConf(TestCase):
         self.assertFalse(os.path.exists(config_path))
         self.assertTrue(os.path.exists(self.test_output_dir))
         self.assertEqual(10, config.max_auth_attempts)
+        self.assertEqual(1, config.max_auth_retries)
         self.assertEqual(self.test_output_dir, config.output_dir)
         self.assertEqual(self.test_cookie_jar_path, config.cookie_jar_path)
         self.assertEqual("html.parser", config.bs4_parser)
@@ -57,6 +58,7 @@ constants_class: amazonorders.constants.Constants
 cookie_jar_path: {}
 item_class: amazonorders.entity.item.Item
 max_auth_attempts: 10
+max_auth_retries: 1
 order_class: amazonorders.entity.order.Order
 output_dir: {}
 selectors_class: amazonorders.selectors.Selectors

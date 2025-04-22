@@ -317,7 +317,7 @@ def _authenticate(amazon_session: AmazonSession,
 
         amazon_session.login()
     except AmazonOrdersAuthError as e:
-        if retries < 1:
+        if retries < amazon_session.config.max_auth_retries:
             if amazon_session.username:
                 click.secho(str(f"{e}\n"), fg="red")
                 click.echo(

@@ -18,9 +18,10 @@ class UnitTestCase(TestCase):
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources"))
 
     def setUp(self):
-        os.environ.pop('AMAZON_USERNAME', None)
-        os.environ.pop('AMAZON_PASSWORD', None)
-        os.environ.pop('AMAZON_OTP_SECRET_KEY', None)
+        # Temporarily clear these if they are set in the environment, so they don't interfere with unit tests
+        self.username = os.environ.pop('AMAZON_USERNAME', None)
+        self.password = os.environ.pop('AMAZON_PASSWORD', None)
+        self.otp_secret_key = os.environ.pop('AMAZON_OTP_SECRET_KEY', None)
 
         conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".config")
         self.test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")
@@ -36,6 +37,11 @@ class UnitTestCase(TestCase):
     def tearDown(self):
         if os.path.exists(conf.DEFAULT_CONFIG_DIR):
             shutil.rmtree(conf.DEFAULT_CONFIG_DIR)
+
+        # Reset environment variables that were temporarily cleared
+        os.environ["AMAZON_USERNAME"] = self.username
+        os.environ["AMAZON_PASSWORD"] = self.password
+        os.environ["AMAZON_OTP_SECRET_KEY"] = self.otp_secret_key
 
     def given_login_responses_success(self):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
