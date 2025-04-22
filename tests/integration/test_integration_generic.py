@@ -43,8 +43,6 @@ class TestIntegrationGeneric(IntegrationTestCase):
         else:
             cls.full_details_loop_count = 1
 
-    @unittest.skip("Even though the form submissions suggest tha Amazon should not re-prompt for OTP, it often does. "
-                   "Further investigation needs to be done, perhaps in to deviceId, for this test to pass.")
     def test_logout_login_no_otp_reprompt(self):
         # GIVEN
         with open(self.test_config.cookie_jar_path, "r") as f:
