@@ -20,9 +20,8 @@ class Constants:
     # General URL
     ##########################################################################
 
-    if os.environ.get("AMAZON_BASE_URL"):
-        BASE_URL = os.environ.get("AMAZON_BASE_URL")
-    else:
+    BASE_URL = os.environ.get("AMAZON_BASE_URL")
+    if not BASE_URL:
         BASE_URL = "https://www.amazon.com"
 
     ##########################################################################
@@ -86,6 +85,12 @@ class Constants:
                       "Chrome/135.0.0.0 Safari/537.36",
         "Viewport-Width": "1181"
     }
+
+    ##########################################################################
+    # Authentication
+    ##########################################################################
+
+    COOKIES_SET_WHEN_AUTHENTICATED = ["x-main"]
 
     ##########################################################################
     # Currency

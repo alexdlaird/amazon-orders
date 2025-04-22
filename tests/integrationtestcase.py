@@ -26,6 +26,17 @@ class IntegrationTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.set_up_class_conf()
+
+        cls.amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
+                                           config=cls.test_config)
+        cls.amazon_session.login()
+
+        cls.amazon_orders = AmazonOrders(cls.amazon_session)
+        cls.amazon_transactions = AmazonTransactions(cls.amazon_session)
+
+    @classmethod
+    def set_up_class_conf(cls):
         if not (os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")):
             print("AMAZON_USERNAME and AMAZON_PASSWORD environment variables must be set to run integration tests")
 
@@ -38,13 +49,6 @@ class IntegrationTestCase(TestCase):
             "output_dir": test_output_dir,
             "cookie_jar_path": test_cookie_jar_path
         })
-
-        cls.amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
-                                           config=cls.test_config)
-        cls.amazon_session.login()
-
-        cls.amazon_orders = AmazonOrders(cls.amazon_session)
-        cls.amazon_transactions = AmazonTransactions(cls.amazon_session)
 
     def setUp(self):
         self.assertTrue(self.amazon_session.is_authenticated)

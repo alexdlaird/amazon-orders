@@ -173,7 +173,7 @@ class AuthForm(ABC):
 
         error_tag = util.select_one(form_response.parsed, self.error_selector)
         if error_tag:
-            error_msg = f"An error occurred: {util.cleanup_html_text(error_tag.text)}\n"
+            error_msg = f"Error from Amazon: {util.cleanup_html_text(error_tag.text)}"
 
             if self.critical:
                 raise AmazonOrdersAuthError(error_msg)
@@ -276,7 +276,7 @@ class MfaForm(AuthForm):
         if not selector:
             selector = config.selectors.MFA_FORM_SELECTOR
 
-        super().__init__(config, selector)
+        super().__init__(config, selector, critical=True)
 
         self.solution_attr_key = solution_attr_key
 

@@ -145,11 +145,12 @@ class AmazonSession:
 
         logger.debug(f"{method} request to {url}")
 
-        amazon_session_response = AmazonSessionResponse(self.session.request(method, url, **kwargs),
+        response = self.session.request(method, url, **kwargs)
+        amazon_session_response = AmazonSessionResponse(response,
                                                         self.config.bs4_parser)
 
         if persist_cookies:
-            cookies = dict_from_cookiejar(self.session.cookies)
+            cookies = dict_from_cookiejar(response.cookies)
             with threading.Lock():
                 with open(self.config.cookie_jar_path, "w", encoding="utf-8") as f:
                     f.write(json.dumps(cookies))
@@ -193,7 +194,10 @@ class AmazonSession:
 
     def auth_cookies_stored(self) -> bool:
         cookies = dict_from_cookiejar(self.session.cookies)
-        return cookies.get("session-token") and cookies.get("x-main")
+        for cookie in self.config.constants.COOKIES_SET_WHEN_AUTHENTICATED:
+            if cookie not in cookies:
+                return False
+        return True
 
     def login(self) -> None:
         """
@@ -243,10 +247,9 @@ class AmazonSession:
         Logout and close the existing Amazon session and clear cookies.
         """
         self.get(self.config.constants.SIGN_OUT_URL, persist_cookies=True)
-
         self.session.close()
-        self.session = self._create_session()
 
+        self.session = self._create_session()
         self.is_authenticated = False
 
     def _get_page_from_url(self,
