@@ -321,7 +321,8 @@ def _authenticate(amazon_session: AmazonSession,
             if amazon_session.username:
                 click.secho(str(f"{e}\n"), fg="red")
                 click.echo(
-                    f"Info: Authenticating '{amazon_session.username}' failed. If using 2FA, wait a minute before retrying with a new OTP.\n")
+                    f"Info: Authenticating '{amazon_session.username}' failed. If using 2FA, wait a minute before "
+                    "retrying with a new OTP.\n")
 
             amazon_session.password = None
 
