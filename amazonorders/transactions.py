@@ -11,7 +11,7 @@ from dateutil import parser
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.transaction import Transaction
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
+from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)

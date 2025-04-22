@@ -9,7 +9,6 @@ import unittest
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersNotFoundError, AmazonOrdersError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
-from amazonorders.transactions import AmazonTransactions
 from tests.integrationtestcase import IntegrationTestCase
 
 
@@ -94,7 +93,6 @@ class TestIntegrationAuth(IntegrationTestCase):
                                        config=self.test_config)
         amazon_session.login()
         amazon_orders = AmazonOrders(amazon_session)
-        amazon_transactions = AmazonTransactions(amazon_session)
 
         # WHEN
         with open(self.test_config.cookie_jar_path, "r") as f:
