@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: "0 7 * * *"
 
+concurrency:
+  group: amazon-orders-integration-singleton
+
 jobs:
   test:
     name: Integration Test
