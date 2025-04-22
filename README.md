@@ -34,8 +34,8 @@ Execute `amazon-orders` from the command line with:
 amazon-orders --username <AMAZON_EMAIL> --password <AMAZON_PASSWORD> history
 ```
 
-Or to use `amazon-orders` programmatically, [`get_order_history()`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order_history)
-and [`get_order()`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order) are good
+Or to use `amazon-orders` programmatically, [`get_order_history`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order_history)
+and [`get_order`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order) are good
 places to start:
 
 ```python
@@ -54,8 +54,8 @@ for order in orders:
 ```
 
 If desired fields are populated as `None`, set `full_details=True` (or pass `--full-details` to the `history` command),
-since by default it is `False` (it will slow down querying). Have a look at [the Order entity's docs](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order)
-to see what fields are only populated with full details.
+since by default it is `False` (it will slow down querying). Have a look at the [Order](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order)
+entity's docs to see what fields are only populated with full details.
 
 ### Automating Authentication
 
