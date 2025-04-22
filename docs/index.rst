@@ -100,14 +100,21 @@ Known Limitations
       your own credentials with the ``integration.yml`` workflow to setup a nightly regression run, please
       `contact us <mailto:contact@alexlaird.com>`_ and we will start mentioning support for that version of the site.
     - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
-- Some puzzle Captchas are unsupported
-    - While some Captchas can be auto-solved, and static image-based ones will be opened so the user can solve them
-      manually, interactive Captchas—like Amazon's new puzzle-based Captchas—will block ``amazon-orders`` from being
+- Some Captchas are unsupported
+    - While some Captchas can be auto-solved, and static image-based ones are opened so the user can manually input
+      the solution, interactive Captchas—like Amazon's puzzle-based Captchas—will block ``amazon-orders`` from being
       able to login.
+    - Some recommended workarounds for this are:
+        - Ensure credentials are correct. Invalid credentials too frequently will cause Amazon to require Captcha
+          more often. Setting environment variables ``AMAZON_PASSWORD`` and ``AMAZON_OTP_SECRET_KEY`` (if 2FA is
+          enabled) can help ensure passwords are never entered incorrectly.
+        - Wait several hours (sometimes a day is necessary) before trying again.
+        - Use a browser to logout and then successfully login to your account.
     - See `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_ for more details.
 - Device not remembered for OTP
-    - Amazon will sometimes re-prompt for OTP even when a device has been remembered. The workaround for this is
-      setting ``AMAZON_OTP_SECRET_KEY`` so that re-prompts are auto-solved.
+    - Amazon will sometimes re-prompt for OTP even when a device has been remembered.
+    - The recommended workaround for this is setting the environment variable ``AMAZON_OTP_SECRET_KEY`` so that
+      re-prompts are auto-solved.
     - See `issue #55 <https://github.com/alexdlaird/amazon-orders/issues/55>`_ for more details.
 
 Dive Deeper
