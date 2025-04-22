@@ -242,6 +242,14 @@ class AmazonSession:
                 "Authentication attempts exhausted. If authentication is correct, "
                 "try increasing AmazonOrdersConfig.max_auth_attempts.")
 
+    def raise_expired_session(self):
+        """
+        Mark the session as expired and raise an error.
+        """
+        self.is_authenticated = False
+        raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
+                                    "reauthenticate first.")
+
     def logout(self) -> None:
         """
         Logout and close the existing Amazon session and clear cookies.

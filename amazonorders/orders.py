@@ -57,8 +57,7 @@ class AmazonOrders:
         order_details_response = self.amazon_session.get(
             f"{self.config.constants.ORDER_DETAILS_URL}?orderID={order_id}")
         if order_details_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
-            raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
-                                        "reauthenticate first.")
+            self.amazon_session.raise_expired_session()
 
         if not order_details_response.response.url.startswith(self.config.constants.ORDER_DETAILS_URL):
             raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.")
@@ -112,8 +111,7 @@ class AmazonOrders:
         while next_page:
             page_response = self.amazon_session.get(next_page)
             if page_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
-                raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
-                                            "reauthenticate first.")
+                self.amazon_session.raise_expired_session()
 
             for order_tag in util.select(page_response.parsed,
                                          self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
@@ -154,8 +152,7 @@ class AmazonOrders:
                 #  URL connection pool. If so, we may need to implement some retry logic here.
                 order_details_response = self.amazon_session.get(order.order_details_link)
                 if order_details_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
-                    raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
-                                                "reauthenticate first.")
+                    self.amazon_session.raise_expired_session()
                 order_details_tag = util.select_one(order_details_response.parsed,
                                                     self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
                 order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order,

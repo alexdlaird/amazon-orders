@@ -23,16 +23,13 @@ class TestIntegrationAuth(IntegrationTestCase):
         super().set_up_class_conf()
 
     def setUp(self):
-        pass
+        # An OTP is only valid for one login, so when an account is using 2FA, ensure extra sleep test to ensure the
+        # next token has been generated
+        self.reauth_sleep_time = 3 if "AMAZON_OTP_SECRET_KEY" not in os.environ else 61
 
     def tearDown(self):
         # Slow down auth tests to ensure we don't trigger Amazon to throttle or lock the account
-        time.sleep(3)
-
-        # An OTP is only valid for one login, so when an account is using 2FA, ensure extra sleep before starting the
-        # test to ensure the next token has been generated
-        if "AMAZON_OTP_SECRET_KEY" in os.environ:
-            time.sleep(60)
+        time.sleep(self.reauth_sleep_time)
 
         if os.path.exists(self.test_config.cookie_jar_path):
             os.remove(self.test_config.cookie_jar_path)
@@ -61,7 +58,7 @@ class TestIntegrationAuth(IntegrationTestCase):
         amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
                                        config=self.test_config)
         amazon_session.login()
-        time.sleep(3)
+        time.sleep(1)
 
         # WHEN
         amazon_session.logout()
@@ -98,7 +95,6 @@ class TestIntegrationAuth(IntegrationTestCase):
         amazon_session.login()
         amazon_orders = AmazonOrders(amazon_session)
         amazon_transactions = AmazonTransactions(amazon_session)
-        time.sleep(3)
 
         # WHEN
         with open(self.test_config.cookie_jar_path, "r") as f:
@@ -110,16 +106,18 @@ class TestIntegrationAuth(IntegrationTestCase):
         amazon_session.session.cookies.update(cookies)
 
         # THEN
-        # Since the session is expired, Amazon will start redirecting us when we try to access privileged resources
-        with self.assertRaises(AmazonOrdersAuthError):
-            amazon_orders.get_order(order_id="1234-fake-id")
+        # Trying to interact with a privilege resources will invalidate the session
+        self.assertTrue(amazon_session.is_authenticated)
         with self.assertRaises(AmazonOrdersAuthError):
             amazon_orders.get_order_history()
-        with self.assertRaises(AmazonOrdersAuthError):
-            amazon_transactions.get_transactions()
+        self.assertFalse(amazon_session.is_authenticated)
+        with self.assertRaises(AmazonOrdersError) as cm:
+            amazon_orders.get_order_history()
+        self.assertIn("AmazonSession.login() to authenticate first", str(cm.exception))
 
         # WHEN
         # Validate reauthentication after a session is expired
+        time.sleep(self.reauth_sleep_time)
         amazon_session.login()
 
         # THEN
@@ -161,7 +159,7 @@ class TestIntegrationAuth(IntegrationTestCase):
         amazon_session = AmazonSession(debug=os.environ.get("DEBUG", "False") == "True",
                                        config=self.test_config)
         amazon_session.login()
-        time.sleep(3)
+        time.sleep(1)
 
         # WHEN
         amazon_session.logout()
@@ -171,7 +169,7 @@ class TestIntegrationAuth(IntegrationTestCase):
 
         # GIVEN
         amazon_session.otp_secret_key = None
-        time.sleep(3)
+        time.sleep(1)
 
         # WHEN
         # If the test is not automated (ie. prompts for OTP here), consider that a failure

@@ -102,8 +102,7 @@ class AmazonTransactions:
             transaction_page_response = self.amazon_session.post(self.config.constants.TRANSACTION_HISTORY_URL,
                                                                  data=next_page_data)
             if transaction_page_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
-                raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
-                                            "reauthenticate first.")
+                self.amazon_session.raise_expired_session()
             if not transaction_page_response.parsed:
                 raise AmazonOrdersError("Could not process transaction history.")
 
