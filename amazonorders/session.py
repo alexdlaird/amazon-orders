@@ -274,12 +274,12 @@ class AmazonSession:
         return filename_frmt.format(page_name=page_name, index=i)
 
     def _raise_auth_error(self, response: Response) -> None:
-        debug_str = " To capture the page to a file, set the `debug` flag." if not self.debug else ""
+        debug_str = "\n--> To capture the page to a file, set the `debug` flag." if not self.debug else ""
         if response.ok:
-            error_msg = (f"An error occurred, this is an unknown page, or its parsed contents don't match a "
-                         f"known auth flow: {response.url}.{debug_str}")
+            error_msg = (f"This is an unknown page, or its parsed contents don't match a "
+                         f"known auth flow: {response.url}{debug_str}")
         else:
-            error_msg = "An error occurred, the page {url} returned {status_code}."
+            error_msg = "The page {url} returned {status_code}."
             if 500 <= response.status_code < 600:
                 error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
                               "Wait a bit before trying again.")
