@@ -49,10 +49,14 @@ jobs:
           command: make test-integration
       - run: echo pwd
       - run: ls -a
+        if: ${{ always() }}
       - run: ls -a
+        if: ${{ always() }}
       - run: ls amazon-orders -a
+        if: ${{ always() }}
       - run: ls amazon-orders/tests -a
-      - name: Upload artifact
+        if: ${{ always() }}
+      - name: Upload test output
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
