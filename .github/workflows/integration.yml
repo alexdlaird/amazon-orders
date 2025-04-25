@@ -22,6 +22,7 @@ jobs:
       AMAZON_OTP_SECRET_KEY: ${{ secrets.AMAZON_OTP_SECRET_KEY }}
       # The following variables are not required, defaults will be used if they are not defined
       AMAZON_BASE_URL: ${{ vars.AMAZON_BASE_URL }}
+      AMAZON_INTEGRATION_TEST_AUTH: ${{ vars.AMAZON_INTEGRATION_TEST_AUTH }}
       AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD: ${{ vars.AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD }}
       AMAZON_INTEGRATION_TEST_YEAR: ${{ vars.AMAZON_INTEGRATION_TEST_YEAR }}
       AMAZON_START_INDEX: ${{ vars.AMAZON_START_INDEX }}

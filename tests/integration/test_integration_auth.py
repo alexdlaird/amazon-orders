@@ -12,6 +12,9 @@ from amazonorders.session import AmazonSession
 from tests.integrationtestcase import IntegrationTestCase
 
 
+@unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH"),
+                 "Running auth tests may lock your account. Set AMAZON_INTEGRATION_TEST_AUTH explicitly "
+                 "to run.")
 class TestIntegrationAuth(IntegrationTestCase):
     """
     These integration tests run generically against any Amazon account to validate authentication.
