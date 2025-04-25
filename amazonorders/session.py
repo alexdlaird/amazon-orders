@@ -17,6 +17,7 @@ from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError
 from amazonorders.forms import AuthForm, CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm
 from amazonorders.util import AmazonSessionResponse
+from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +144,13 @@ class AmazonSession:
             kwargs["headers"] = {}
         kwargs["headers"].update(self.config.constants.BASE_HEADERS)
 
-        logger.debug(f"{method} request to {url}")
+        if self.debug:
+            url_to_log = url
+            if "params" in kwargs:
+                encoded_params = urlencode(kwargs["params"])
+                if encoded_params not in url:
+                    url_to_log += "?" + encoded_params
+            logger.debug(f"{method} request to {url_to_log}")
 
         response = self.session.request(method, url, **kwargs)
         amazon_session_response = AmazonSessionResponse(response,
@@ -233,8 +240,8 @@ class AmazonSession:
                     break
 
             if (not form_found
-                    # When Amazon redirects us back to the home page, not an auth page, treat this as a need to retry, not an
-                    # unknown auth page
+                    # When Amazon redirects us back to the home page, not an auth page, treat this as a need to retry,
+                    # not an unknown auth page
                     and last_response.response.url.rstrip("/") != self.config.constants.BASE_URL):
                 self._raise_auth_error(last_response.response)
 

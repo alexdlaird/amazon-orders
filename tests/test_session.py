@@ -289,6 +289,51 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp3.call_count)
         self.assertEqual(1, resp4.call_count)
 
+    @responses.activate
+    def test_captcha_3(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-3.html"), "r", encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "captcha_easy_2.jpg"), "rb") as f:
+            resp3 = responses.add(
+                responses.GET,
+                "https://images-na.ssl-images-amazon.com/captcha/cdkxpfei/Captcha_yzifyqjijr.jpg",
+                body=f.read(),
+                headers={"Content-Type": "image/jpeg"},
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+            resp4 = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.BASE_URL}/errors/validateCaptcha",
+                body=f.read(),
+                status=200,
+                match=[query_string_matcher("amzn=RHy879F26bdbSPHRWeZJyA%3D%3D&amzn-r=%2F"
+                                            "&amzn-pt=AuthenticationPortal&field-keywords=KACXFB")],
+            )
+
+        # WHEN
+        self.amazon_session.login()
+
+        # THEN
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(1, resp3.call_count)
+        self.assertEqual(1, resp4.call_count)
+
     @unittest.skipIf(sys.platform == "win32", reason="Windows does not respect PIL's show() method in tests")
     @responses.activate
     @patch("builtins.input")

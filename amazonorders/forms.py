@@ -102,10 +102,10 @@ class AuthForm(ABC):
             )  # pragma: no cover
 
         method = str(self.form.get("method", "GET")).upper()
-        action = self._get_form_action(last_response)
+        url = self._get_form_action(last_response)
         request_data = {"params" if method == "GET" else "data": self.data}
         form_response = self.amazon_session.request(method,
-                                                    action,
+                                                    url,
                                                     persist_cookies=True,
                                                     **request_data)
 
