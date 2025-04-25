@@ -12,8 +12,8 @@ from amazonorders.session import AmazonSession
 from tests.integrationtestcase import IntegrationTestCase
 
 
-@unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH"),
-                 "Running auth tests may lock your account. Set AMAZON_INTEGRATION_TEST_AUTH explicitly "
+@unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH", "False") == "True",
+                 "Running auth tests may lock your account. Set AMAZON_INTEGRATION_TEST_AUTH=True explicitly "
                  "to run.")
 class TestIntegrationAuth(IntegrationTestCase):
     """
@@ -133,10 +133,10 @@ class TestIntegrationAuth(IntegrationTestCase):
         # THEN
         self.assertTrue(amazon_session.is_authenticated)
 
-    @unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD"),
+    @unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD", "False") == "True",
                      "Running this test too many times in a row will trigger the Captcha flow instead (causing"
                      "the test to fail), and also may lock the Amazon account. Set "
-                     "AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD explicitly to run.")
+                     "AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD=True explicitly to run.")
     def test_login_wrong_password(self):
         amazon_password = os.environ["AMAZON_PASSWORD"]
         os.environ["AMAZON_PASSWORD"] = "invalid-password"
