@@ -47,6 +47,11 @@ jobs:
           retry_wait_seconds: 90
           max_attempts: 2
           command: make test-integration
+      - run: echo pwd
+      - run: ls -a
+      - run: ls -a
+      - run: ls amazon-orders -a
+      - run: ls amazon-orders/tests -a
       - name: Upload artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
