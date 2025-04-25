@@ -48,13 +48,12 @@ jobs:
           max_attempts: 2
           command: make test-integration
       - run: echo pwd
-      - run: ls -a
         if: ${{ always() }}
       - run: ls -a
         if: ${{ always() }}
-      - run: ls amazon-orders -a
+      - run: ls tests -a
         if: ${{ always() }}
-      - run: ls amazon-orders/tests -a
+      - run: ls tests/.integration-config -a
         if: ${{ always() }}
       - name: Upload test output
         if: ${{ always() }}
@@ -62,5 +61,5 @@ jobs:
         with:
           name: integration-test-output
           include-hidden-files: true
-          path: amazon-orders/tests/.integration-config/
+          path: tests/.integration-config/
           retention-days: 7
