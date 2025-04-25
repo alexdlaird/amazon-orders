@@ -101,15 +101,9 @@ Known Limitations
     - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
 - Some Captchas are unsupported
     - While some Captchas can be auto-solved, and static image-based ones are opened so the user can manually input
-      the solution, interactive Captchas—like Amazon's puzzle-based Captchas—will block ``amazon-orders`` from being
-      able to login.
-    - Some recommended workarounds for this are:
-        - Ensure credentials are correct. Invalid credentials too frequently will cause Amazon to require Captcha
-          more often. Persisting authentication in the config or the environment (see `docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.username>`_)
-          can help ensure passwords are never entered incorrectly.
-        - Wait several hours (sometimes over a day is necessary) before trying again.
-        - Use a browser to logout and then successfully login to your account there, which can clear failed login
-          attempt flags.
+      the solution, interactive Captchas—like `Amazon's puzzle-based Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
+      —will block ``amazon-orders`` from being able to login.
+    - See the troubleshooting steps for `reducing Captcha challenge frequency <troubleshooting.html#captcha-keep-blocking-automated-login>`_ for recommended workarounds.
     - See `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_ for more details.
 - Device not remembered for OTP
     - Amazon will sometimes re-prompt for OTP even when a device has been remembered.

@@ -39,6 +39,26 @@ website's HTML. Before submitting a bug report or requesting a new feature, try 
 ``amazon-orders`` one of the ways described above, and if any console output or generated HTML
 files are relevant to the issue, attach them to your request.
 
+Captcha Keep Blocking Automated Login
+-------------------------------------
+
+While ``amazon-orders`` can auto-solve some Captchas, are opened so the user can manually input the solution. However,
+this is not a solution in environments where you are trying to fully automate login. There is no perfect workaround to
+this, as when and how Captcha challenges are presented is at the discretion of Amazon, but there are at least a few
+ways you can try to reduce the likelihood you will be presented with Captcha challenges:
+
+- Ensure credentials are correct. Too many failed login attempts in a short period of time increases the chances of
+  being given a Captcha challenge. Persisting authentication in the config or the environment (see `docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.username>`_)
+  can help ensure passwords are never entered incorrectly.
+- Wait several hours (sometimes over a day is necessary) before trying again.
+- Enable 2FA. One-time password (OTP) challenges during login can be auto-solved with :attr:`~amazonorders.session.AmazonSession.otp_secret_key`,
+  and having this security measure enabled seems to reduce the frequency of Captcha challenges.
+- Use a browser to logout of your account, then log back in. Since your account may be flagged with suspicious activity,
+  you may likely be presented with the Captcha challenge in the browser, which you can then solve. Once logged in
+  successfully, it is less likely you will be immediately presented with a Captcha challenge again.
+    - Similarly, Captcha challenges are more often presented to unknown devices. Manually logging in once successfully
+      from the device may also reduce the likelihood of future Captcha challenges.
+
 Slow Parsing / Malformed Data
 -----------------------------
 
