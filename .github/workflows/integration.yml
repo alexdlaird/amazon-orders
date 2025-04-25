@@ -52,5 +52,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: integration-test-output
-          path: /home/runner/work/amazon-orders/amazon-orders/tests/.integration-config/
+          path: /home/runner/work/amazon-orders/amazon-orders/tests/.integration-config/**
           retention-days: 7
