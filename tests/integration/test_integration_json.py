@@ -39,7 +39,7 @@ if os.environ.get("AMAZON_INTEGRATION_TEST_JSON"):
         i += 1
 
 
-@unittest.skipIf(os.environ.get("AMAZON_INTEGRATION_TEST_JSON"),
+@unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_JSON"),
                  "AMAZON_INTEGRATION_TEST_JSON is not set")
 class TestIntegrationJSON(IntegrationTestCase):
     """
