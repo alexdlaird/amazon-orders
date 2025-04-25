@@ -17,7 +17,7 @@ jobs:
 
     env:
       FORCE_COLOR: 1
-      DEBUG: True
+      DEBUG: "True"
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
       AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
       AMAZON_OTP_SECRET_KEY: ${{ secrets.AMAZON_OTP_SECRET_KEY }}
