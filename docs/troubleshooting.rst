@@ -53,11 +53,17 @@ ways you can try to reduce the likelihood you will be presented with Captcha cha
 - Wait several hours (sometimes over a day is necessary) before trying again.
 - Enable 2FA. One-time password (OTP) challenges during login can be auto-solved with :attr:`~amazonorders.session.AmazonSession.otp_secret_key`,
   and having this security measure enabled seems to reduce the frequency of Captcha challenges.
-- Use a browser to logout of your account, then log back in. Since your account may be flagged with suspicious activity,
-  you may likely be presented with the Captcha challenge in the browser, which you can then solve. Once logged in
-  successfully, it is less likely you will be immediately presented with a Captcha challenge again.
-    - Similarly, Captcha challenges are more often presented to unknown devices. Manually logging in once successfully
-      from the device may also reduce the likelihood of future Captcha challenges.
+- Use a browser to manually solve the Captcha, as doing so may reduce the likelihood Amazon will continue to give you
+  Captcha challenges from ``amazon-orders``.
+
+    - In your browser, visit https://www.amazon.com/errors/validateCaptcha to solve a Captcha challenge while logged
+      in to your account.
+
+    - Logout of your account, then log back in. Amazon may present you with a different Captcha flow in this case,
+      which may be the one that needs to be solved for them to stop prompting you.
+
+    - Captcha challenges are more often presented to unknown devices. If possible, first manually login from a browser on
+      the device on which you're using ``amazon-orders``.
 
 Slow Parsing / Malformed Data
 -----------------------------
