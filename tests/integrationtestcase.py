@@ -27,10 +27,6 @@ class IntegrationTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # An OTP is only valid for one login, so when an account is using 2FA, ensure extra sleep between tests to
-        # ensure the next token has been generated
-        cls.reauth_sleep_time = 3 if "AMAZON_OTP_SECRET_KEY" not in os.environ else 61
-
         cls.set_up_class_conf()
 
         cls.debug = os.environ.get("DEBUG", "False") == "True"
@@ -48,6 +44,10 @@ class IntegrationTestCase(TestCase):
 
     @classmethod
     def set_up_class_conf(cls):
+        # An OTP is only valid for one login, so when an account is using 2FA, ensure extra sleep between tests to
+        # ensure the next token has been generated
+        cls.reauth_sleep_time = 3 if "AMAZON_OTP_SECRET_KEY" not in os.environ else 61
+
         if not (os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")):
             print("AMAZON_USERNAME and AMAZON_PASSWORD environment variables must be set to run integration tests")
 
