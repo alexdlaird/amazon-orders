@@ -47,3 +47,10 @@ jobs:
           retry_wait_seconds: 90
           max_attempts: 2
           command: make test-integration
+      - name: Upload artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: integration-test-output
+          path: /home/runner/work/amazon-orders/amazon-orders/tests/.integration-config/
+          retention-days: 7
