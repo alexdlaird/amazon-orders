@@ -232,7 +232,10 @@ class AmazonSession:
 
                     break
 
-            if not form_found:
+            if (not form_found
+                    # When Amazon redirects us back to the home page, not an auth page, treat this as a need to retry, not an
+                    # unknown auth page
+                    and last_response.response.url.rstrip("/") != self.config.constants.BASE_URL):
                 self._raise_auth_error(last_response.response)
 
             attempts += 1
