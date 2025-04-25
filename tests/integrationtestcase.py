@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import os
 import sys
+import time
 
 from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig
@@ -26,6 +27,10 @@ class IntegrationTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        # An OTP is only valid for one login, so when an account is using 2FA, ensure extra sleep between tests to
+        # ensure the next token has been generated
+        cls.reauth_sleep_time = 3 if "AMAZON_OTP_SECRET_KEY" not in os.environ else 61
+
         cls.set_up_class_conf()
 
         cls.debug = os.environ.get("DEBUG", "False") == "True"
@@ -35,6 +40,11 @@ class IntegrationTestCase(TestCase):
 
         cls.amazon_orders = AmazonOrders(cls.amazon_session)
         cls.amazon_transactions = AmazonTransactions(cls.amazon_session)
+
+    @classmethod
+    def tearDownClass(cls):
+        # Slow down between integration suites to ensure we don't trigger Amazon to throttle or lock the account
+        time.sleep(cls.reauth_sleep_time)
 
     @classmethod
     def set_up_class_conf(cls):

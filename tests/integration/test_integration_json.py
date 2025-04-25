@@ -4,6 +4,7 @@ __license__ = "MIT"
 import json
 import os
 import sys
+import unittest
 from datetime import datetime
 
 from parameterized import parameterized
@@ -25,7 +26,7 @@ if os.path.exists(PRIVATE_RESOURCES_DIR):
             private_json_file_data.append((filename, data))
 
 env_json_data = []
-if "AMAZON_INTEGRATION_TEST_JSON" in os.environ:
+if os.environ.get("AMAZON_INTEGRATION_TEST_JSON"):
     data = json.loads(os.environ["AMAZON_INTEGRATION_TEST_JSON"])
     if not isinstance(data, list):
         print("AMAZON_INTEGRATION_TEST_JSON must be a list of JSON objects")
@@ -38,6 +39,8 @@ if "AMAZON_INTEGRATION_TEST_JSON" in os.environ:
         i += 1
 
 
+@unittest.skipIf(os.environ.get("AMAZON_INTEGRATION_TEST_JSON"),
+                 "AMAZON_INTEGRATION_TEST_JSON is not set")
 class TestIntegrationJSON(IntegrationTestCase):
     """
     The two JSON files committed to "private-resources" are provided as examples of the syntax. Any other

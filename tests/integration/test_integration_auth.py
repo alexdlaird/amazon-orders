@@ -25,15 +25,11 @@ class TestIntegrationAuth(IntegrationTestCase):
         super().set_up_class_conf()
 
     def setUp(self):
-        # An OTP is only valid for one login, so when an account is using 2FA, ensure extra sleep test to ensure the
-        # next token has been generated
-        self.reauth_sleep_time = 3 if "AMAZON_OTP_SECRET_KEY" not in os.environ else 61
-
         if os.path.exists(self.test_config.cookie_jar_path):
             os.remove(self.test_config.cookie_jar_path)
 
     def tearDown(self):
-        # Slow down auth tests to ensure we don't trigger Amazon to throttle or lock the account
+        # Slow down between integration auth tests to ensure we don't trigger Amazon to throttle or lock the account
         time.sleep(self.reauth_sleep_time)
 
     def test_login(self):
