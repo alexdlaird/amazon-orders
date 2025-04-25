@@ -53,5 +53,5 @@ jobs:
         with:
           name: integration-test-output
           include-hidden-files: true
-          path: amazon-orders/amazon-orders/tests/.integration-config/
+          path: amazon-orders/tests/.integration-config/
           retention-days: 7
