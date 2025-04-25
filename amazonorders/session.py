@@ -150,7 +150,7 @@ class AmazonSession:
                                                         self.config.bs4_parser)
 
         if persist_cookies:
-            cookies = dict_from_cookiejar(response.cookies)
+            cookies = dict_from_cookiejar(self.session.cookies)
             with threading.Lock():
                 with open(self.config.cookie_jar_path, "w", encoding="utf-8") as f:
                     f.write(json.dumps(cookies))

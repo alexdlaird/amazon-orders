@@ -51,5 +51,8 @@ class IntegrationTestCase(TestCase):
             "cookie_jar_path": test_cookie_jar_path
         })
 
+        if os.path.exists(test_cookie_jar_path):
+            os.remove(test_cookie_jar_path)
+
     def setUp(self):
         self.assertTrue(self.amazon_session.is_authenticated)

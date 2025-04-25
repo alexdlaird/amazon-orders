@@ -26,12 +26,12 @@ class TestIntegrationAuth(IntegrationTestCase):
         # next token has been generated
         self.reauth_sleep_time = 3 if "AMAZON_OTP_SECRET_KEY" not in os.environ else 61
 
+        if os.path.exists(self.test_config.cookie_jar_path):
+            os.remove(self.test_config.cookie_jar_path)
+
     def tearDown(self):
         # Slow down auth tests to ensure we don't trigger Amazon to throttle or lock the account
         time.sleep(self.reauth_sleep_time)
-
-        if os.path.exists(self.test_config.cookie_jar_path):
-            os.remove(self.test_config.cookie_jar_path)
 
     def test_login(self):
         # GIVEN
