@@ -42,10 +42,15 @@ files are relevant to the issue, attach them to your request.
 Captcha Keep Blocking Automated Login
 -------------------------------------
 
-While ``amazon-orders`` can auto-solve some Captchas, are opened so the user can manually input the solution. However,
-this is not a solution in environments where you are trying to fully automate login. There is no perfect workaround to
-this, as when and how Captcha challenges are presented is at the discretion of Amazon, but there are at least a few
-ways you can try to reduce the likelihood you will be presented with Captcha challenges:
+While ``amazon-orders`` can auto-solve some Captchas, others are opened so the user can input the solution manually,
+and still other—like `Amazon's puzzle-based Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
+—require JavaScript and can't be solved at all and block ``amazon-orders`` from logging in (see `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_
+for more details).
+
+To attempt to fully automate login, you need to minimize how often (if at all) you are presented with Captcha
+challenges. There is no perfect workaround to this, as when and how challenges are presented is at the discretion of
+Amazon, but there are at least a few ways you can try to reduce the likelihood you will be presented with
+Captcha challenges:
 
 - Ensure credentials are correct. Too many failed login attempts in a short period of time increases the chances of
   being given a Captcha challenge. Persisting authentication in the config or the environment (see `docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.username>`_)

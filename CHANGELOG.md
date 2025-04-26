@@ -6,11 +6,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.2...HEAD)
 
+### Added
+
+- Improvements around auth retry logic.
+- Detect JavaScript-based auth challenges (which can be solved) and give more clear error for them.
+- Stability improvements.
+- Documentation improvements.
+
 ## [4.0.2](https://github.com/alexdlaird/amazon-orders/compare/4.0.1...4.0.2) - 2025-04-25
 
 ### Added
 
-- Stability improvements auth flow.
+- Stability improvements for auth flow.
 - Documentation improvements.
 
 ## [4.0.1](https://github.com/alexdlaird/amazon-orders/compare/4.0.0...4.0.1) - 2025-04-22

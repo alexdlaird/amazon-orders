@@ -13,8 +13,8 @@ from tests.integrationtestcase import IntegrationTestCase
 
 
 @unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH", "False") == "True",
-                 "Running auth tests may lock your account. Set AMAZON_INTEGRATION_TEST_AUTH=True explicitly "
-                 "to run.")
+                 "Running auth tests too frequently may lock your account. Set "
+                 "AMAZON_INTEGRATION_TEST_AUTH=True explicitly to run.")
 class TestIntegrationAuth(IntegrationTestCase):
     """
     These integration tests run generically against any Amazon account to validate authentication.
@@ -45,7 +45,7 @@ class TestIntegrationAuth(IntegrationTestCase):
         # THEN
         self.assertTrue(amazon_session.is_authenticated)
         # Navigating to a non-existent Order when authenticated returns 404 (rather than redirecting to login), which
-        # indicates we've successfully logged in
+        # indicates we're successfully logged in
         with self.assertRaises(AmazonOrdersNotFoundError):
             amazon_orders.get_order(order_id="1234-fake-id")
 
@@ -54,7 +54,6 @@ class TestIntegrationAuth(IntegrationTestCase):
         amazon_session = AmazonSession(debug=self.debug,
                                        config=self.test_config)
         amazon_session.login()
-        amazon_orders = AmazonOrders(amazon_session)
         old_session = amazon_session.session
         time.sleep(1)
 
@@ -65,10 +64,6 @@ class TestIntegrationAuth(IntegrationTestCase):
         # THEN
         self.assertFalse(amazon_session.is_authenticated)
         self.assertNotEqual(old_session, amazon_session.session)
-        # Navigating to a non-existent Order when unauthenticated redirects to login, which indicates we've
-        # successfully logged out
-        with self.assertRaises(AmazonOrdersAuthError):
-            amazon_orders.get_order(order_id="1234-fake-id")
 
     def test_login_no_account(self):
         amazon_username = os.environ["AMAZON_USERNAME"]

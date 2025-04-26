@@ -91,6 +91,7 @@ class Constants:
     ##########################################################################
 
     COOKIES_SET_WHEN_AUTHENTICATED = ["x-main"]
+    JS_ROBOT_TEXT_REGEX = r"[.\s\S]*verify that you're not a robot[.\s\S]*Enable JavaScript[.\s\S]*"
 
     ##########################################################################
     # Currency
@@ -99,7 +100,8 @@ class Constants:
     CURRENCY_SYMBOL = os.environ.get("AMAZON_CURRENCY_SYMBOL", "$")
 
     def format_currency(self, amount):
-        formatted_amt = "{}{:,.2f}".format(self.CURRENCY_SYMBOL, abs(amount))
+        formatted_amt = "{currency_symbol}{amount:,.2f}".format(currency_symbol=self.CURRENCY_SYMBOL,
+                                                                amount=abs(amount))
         if round(amount, 2) < 0:
             return f"-{formatted_amt}"
         return formatted_amt

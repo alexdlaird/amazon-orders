@@ -56,9 +56,9 @@ class Parsable:
             logger.warning(
                 "When building {name}, `{function}` "
                 "could not be parsed.".format(name=self.__class__.__name__,
-                                              function=parse_function.__name__.split(
-                                                  "_parse_")[1]),
+                                              function=parse_function.__name__.split("_parse_")[1]),
                 exc_info=True)
+            return None
 
     def simple_parse(self,
                      selector: Union[str, list],
@@ -150,7 +150,8 @@ class Parsable:
         if value is None and required:
             raise AmazonOrdersEntityError(
                 "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
-                    name=self.__class__.__name__, selector=selector))
+                    name=self.__class__.__name__,
+                    selector=selector))
 
         return value
 

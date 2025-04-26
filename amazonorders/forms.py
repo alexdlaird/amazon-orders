@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import re
 from abc import ABC
 from io import BytesIO
 from typing import Any, Dict, Optional, TYPE_CHECKING
@@ -41,7 +42,7 @@ class AuthForm(ABC):
         self.selector: Optional[str] = selector
         #: The CSS selector for the error div when form submission fails.
         self.error_selector: str = error_selector or config.selectors.DEFAULT_ERROR_TAG_SELECTOR
-        #: If ``critical``, form submission failures will raise :class:`~amazonorders.exception.AmazonOrdersAuthError`.
+        #: If ``True``, form submission failures will raise :class:`~amazonorders.exception.AmazonOrdersAuthError`.
         self.critical: bool = critical
         #: The :class:`~amazonorders.session.AmazonSession` on which to submit the form.
         self.amazon_session: Optional["AmazonSession"] = None
@@ -364,3 +365,26 @@ class CaptchaForm(AuthForm):
 
         additional_attrs.update({self.solution_attr_key: solution})
         self.data.update(additional_attrs)
+
+
+class JSAuthBlocker(AuthForm):
+    def __init__(self,
+                 config: AmazonOrdersConfig,
+                 regex: str) -> None:
+        self.regex = regex
+
+        super().__init__(config, None)
+
+    def select_form(self,
+                    amazon_session: "AmazonSession",
+                    parsed: Tag) -> bool:
+        if not self.regex:
+            raise AmazonOrdersError("Must set a regex first.")  # pragma: no cover
+
+        if re.search(self.regex, parsed.text):
+            raise AmazonOrdersAuthError("A JavaScript-based authentication challenge page has been found. This "
+                                        "library cannot solve these challenges. See "
+                                        "https://amazon-orders.readthedocs.io/troubleshooting.html"
+                                        "#captcha-keep-blocking-automated-login for more details.")
+
+        return False

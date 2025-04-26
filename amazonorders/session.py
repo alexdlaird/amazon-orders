@@ -15,7 +15,7 @@ from requests.utils import dict_from_cookiejar
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError
-from amazonorders.forms import AuthForm, CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm
+from amazonorders.forms import AuthForm, CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm, JSAuthBlocker
 from amazonorders.util import AmazonSessionResponse
 from urllib.parse import urlencode
 
@@ -87,7 +87,9 @@ class AmazonSession:
                                       config.selectors.CAPTCHA_2_ERROR_SELECTOR,
                                       "field-keywords"),
                           MfaForm(config,
-                                  config.selectors.CAPTCHA_OTP_FORM_SELECTOR)]
+                                  config.selectors.CAPTCHA_OTP_FORM_SELECTOR),
+                          JSAuthBlocker(config,
+                                        config.constants.JS_ROBOT_TEXT_REGEX)]
 
         #: An Amazon username. Environment variable ``AMAZON_USERNAME`` will override passed in or config value.
         self.username: Optional[str] = os.environ.get("AMAZON_USERNAME") or username or config.username
@@ -229,6 +231,9 @@ class AmazonSession:
                 self.is_authenticated = True
                 break
 
+            if attempts > 0:
+                logger.debug(f"Retrying auth flow, attempt {attempts} ...")
+
             form_found = False
             for form in self.auth_forms:
                 if form.select_form(self, last_response.parsed):
@@ -239,11 +244,8 @@ class AmazonSession:
 
                     break
 
-            if (not form_found
-                    # When Amazon redirects us back to the home page, not an auth page, treat this as a need to retry,
-                    # not an unknown auth page
-                    and last_response.response.url.rstrip("/") != self.config.constants.BASE_URL):
-                self._raise_auth_error(last_response.response)
+            if not form_found:
+                self._handle_auth_error(last_response.response)
 
             attempts += 1
 
@@ -283,21 +285,21 @@ class AmazonSession:
             i += 1
         return filename_frmt.format(page_name=page_name, index=i)
 
-    def _raise_auth_error(self, response: Response) -> None:
-        debug_str = "\n--> To capture the page to a file, set the `debug` flag." if not self.debug else ""
+    def _handle_auth_error(self,
+                           response: Response) -> None:
         if response.ok:
             error_msg = (f"This is an unknown page, or its parsed contents don't match a "
-                         f"known auth flow: {response.url}{debug_str}")
+                         f"known auth flow. If : {response.url}")
         else:
-            error_msg = "The page {url} returned {status_code}."
+            error_msg = f"The page {response.url} returned {response.status_code}."
             if 500 <= response.status_code < 600:
                 error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
                               "Wait a bit before trying again.")
 
-            error_msg = error_msg.format(url=response.url,
-                                         status_code=response.status_code) + debug_str
+        if not self.debug:
+            error_msg += "\n--> To capture the page to a file, set AmazonSession.debug=True."
 
-        raise AmazonOrdersAuthError(error_msg)
+        logger.warning(error_msg)
 
     def _create_session(self):
         session = Session()

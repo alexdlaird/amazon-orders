@@ -53,18 +53,22 @@ class TestConf(TestCase):
         self.assertTrue(os.path.exists(config_path))
         with open(config.config_path, "r") as f:
             self.assertEqual("""bs4_parser: html.parser
-connection_pool_size: {}
+connection_pool_size: {connection_pool_size}
 constants_class: amazonorders.constants.Constants
-cookie_jar_path: {}
+cookie_jar_path: {cookie_jar_path}
 item_class: amazonorders.entity.item.Item
 max_auth_attempts: 10
 max_auth_retries: 1
 order_class: amazonorders.entity.order.Order
-output_dir: {}
+output_dir: {output_dir}
 selectors_class: amazonorders.selectors.Selectors
 shipment_class: amazonorders.entity.shipment.Shipment
-thread_pool_size: {}
-""".format(os.cpu_count() * 8, self.test_cookie_jar_path, self.test_output_dir, os.cpu_count() * 4), f.read())
+thread_pool_size: {thread_pool_size}
+"""
+                             .format(connection_pool_size=os.cpu_count() * 8,
+                                     cookie_jar_path=self.test_cookie_jar_path,
+                                     output_dir=self.test_output_dir,
+                                     thread_pool_size=os.cpu_count() * 4), f.read())
 
     def test_override_default(self):
         # GIVEN
@@ -82,11 +86,14 @@ thread_pool_size: {}
         test_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "load-from-config-cookies.json")
         os.makedirs(conf.DEFAULT_CONFIG_DIR)
         with open(config_path, "w") as f:
-            f.write("""cookie_jar_path: {}
+            f.write("""cookie_jar_path: {cookie_jar_path}
 max_auth_attempts: 11
-output_dir: {}
-some_custom_config: {}
-""".format(test_cookie_jar_path, test_output_dir, "my-custom-config"))
+output_dir: {output_dir}
+some_custom_config: {custom_config}
+"""
+                    .format(cookie_jar_path=test_cookie_jar_path,
+                            output_dir=test_output_dir,
+                            custom_config="my-custom-config"))
 
         # WHEN
         config = AmazonOrdersConfig(config_path=config_path)

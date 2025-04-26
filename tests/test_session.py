@@ -54,11 +54,13 @@ class TestSession(UnitTestCase):
             )
 
         # WHEN
-        with self.assertRaises(AmazonOrdersAuthError):
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
             self.amazon_session.login()
 
         # THEN
         self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertIn("Error from Amazon: There was a problem. We cannot find an account with that "
+                      "email address.", str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
 
@@ -82,11 +84,12 @@ class TestSession(UnitTestCase):
             )
 
         # WHEN
-        with self.assertRaises(AmazonOrdersAuthError):
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
             self.amazon_session.login()
 
         # THEN
         self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertEqual("Error from Amazon: There was a problem. Your password is incorrect.", str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
 
@@ -288,6 +291,35 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
         self.assertEqual(1, resp3.call_count)
         self.assertEqual(1, resp4.call_count)
+
+    @responses.activate
+    def test_js_waf_login_blocker(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-js-bot-challenge.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
+            self.amazon_session.login()
+
+        # THEN
+        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertIn("A JavaScript-based authentication challenge page has been found.", str(cm.exception))
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
 
     @responses.activate
     def test_captcha_3(self):

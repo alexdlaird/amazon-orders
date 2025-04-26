@@ -155,7 +155,9 @@ Order History for {year}{optional_start_index}{optional_full_details}
             total += 1
         end_time = time.time()
 
-        click.echo("... {} orders parsed in {} seconds.\n".format(total, int(end_time - start_time)))
+        click.echo(
+            "... {total} orders parsed in {time} seconds.\n".format(total=total,
+                                                                    time=int(end_time - start_time)))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -204,9 +206,7 @@ def transactions(ctx: Context, **kwargs: Any):
         click.echo(
             """-----------------------------------------------------------------------
 Transaction History for {days} days
------------------------------------------------------------------------\n""".format(
-                days=days
-            )
+-----------------------------------------------------------------------\n""".format(days=days)
         )
         click.echo("Info: Fetching transaction history, this might take a minute ...")
 
@@ -221,7 +221,9 @@ Transaction History for {days} days
             total += 1
         end_time = time.time()
 
-        click.echo("... {} transactions parsed in {} seconds.\n".format(total, int(end_time - start_time)))
+        click.echo(
+            "... {total} transactions parsed in {time} seconds.\n".format(total=total,
+                                                                          time=int(end_time - start_time)))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -334,9 +336,8 @@ def _authenticate(amazon_session: AmazonSession,
 def _order_output(o: Order,
                   config: AmazonOrdersConfig) -> str:
     order_str = """-----------------------------------------------------------------------
-Order #{}
------------------------------------------------------------------------""".format(
-        o.order_number)
+Order #{order_number}
+-----------------------------------------------------------------------""".format(order_number=o.order_number)
 
     order_str += f"\n  Shipments: {o.shipments}"
     order_str += f"\n  Order Details Link: {o.order_details_link}"
