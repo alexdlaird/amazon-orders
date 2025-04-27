@@ -21,6 +21,8 @@ from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
 
+cookies_file_lock = threading.Lock()
+
 
 class IODefault:
     """
@@ -160,7 +162,7 @@ class AmazonSession:
 
         if persist_cookies:
             cookies = dict_from_cookiejar(self.session.cookies)
-            with threading.Lock():
+            with cookies_file_lock:
                 with open(self.config.cookie_jar_path, "w", encoding="utf-8") as f:
                     f.write(json.dumps(cookies))
 
