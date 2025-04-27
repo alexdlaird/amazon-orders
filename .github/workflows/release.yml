@@ -1,4 +1,4 @@
-name: Deploy
+name: Release
 
 run-name: Release ${{ github.ref_name }}
 
@@ -38,8 +38,8 @@ jobs:
     secrets: inherit
     needs: validate-version
 
-  deploy:
-    name: Deploy
+  Release:
+    name: Release
     needs: [build, integration]
 
     env:
