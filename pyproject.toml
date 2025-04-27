@@ -69,6 +69,16 @@ package-dir = { amazonorders = "amazonorders" }
 [tool.setuptools.dynamic]
 version = { attr = "amazonorders.__version__" }
 
+[tool.pytest.ini_options]
+junit_family = "legacy"
+addopts = [
+    "-s",
+    "--ignore=venv",
+    "--durations=0",
+    "--durations-min=0.5",
+    "--junitxml=build/test-results/junit.xml"
+]
+
 [tool.coverage.run]
 omit = [
     "venv/**",
