@@ -25,6 +25,9 @@ class Parsable:
     def __init__(self,
                  parsed: Tag,
                  config: AmazonOrdersConfig) -> None:
+        if parsed is None:
+            raise AmazonOrdersEntityError("The parsed HTML data cannot be None.")
+
         #: Parsed HTML data that can be used to populate the fields of the entity.
         self.parsed: Tag = parsed
         #: The AmazonOrdersConfig to use.
@@ -56,7 +59,7 @@ class Parsable:
             logger.warning(
                 "When building {name}, `{function}` "
                 "could not be parsed.".format(name=self.__class__.__name__,
-                                              function=parse_function.__name__.split("_parse_")[1]),
+                                              function=parse_function.__name__.removeprefix("_parse_")),
                 exc_info=True)
             return None
 
