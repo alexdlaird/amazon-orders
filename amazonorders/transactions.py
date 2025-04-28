@@ -101,6 +101,8 @@ class AmazonTransactions:
         while keep_paging:
             transaction_page_response = self.amazon_session.post(self.config.constants.TRANSACTION_HISTORY_URL,
                                                                  data=next_page_data)
+            if not transaction_page_response.response.ok:
+                raise AmazonOrdersError(self.amazon_session.build_response_error(transaction_page_response.response))
             if transaction_page_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
                 self.amazon_session.raise_expired_session()
             if not transaction_page_response.parsed:

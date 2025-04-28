@@ -307,10 +307,7 @@ class AmazonSession:
             error_msg = (f"This is an unknown page, or its parsed contents don't match a "
                          f"known auth flow. {response.url}")
         else:
-            error_msg = f"The page {response.url} returned {response.status_code}."
-            if 500 <= response.status_code < 600:
-                error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
-                              "Wait a bit before trying again.")
+            error_msg = self.build_response_error(response)
 
         if not self.debug:
             error_msg += "\n--> To capture the page to a file, set AmazonSession.debug=True."
@@ -323,3 +320,11 @@ class AmazonSession:
                                                 pool_maxsize=self.config.connection_pool_size)
         session.mount('https://', adapter)
         return session
+
+    def build_response_error(self,
+                             response: Response):
+        error_msg = f"The page {response.url} returned {response.status_code}."
+        if 500 <= response.status_code < 600:
+            error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
+                          "Wait a bit before trying again.")
+        return error_msg
