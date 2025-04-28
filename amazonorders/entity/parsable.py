@@ -53,10 +53,13 @@ class Parsable:
         try:
             return parse_function(**kwargs)
         except (AttributeError, IndexError, ValueError):
+            function = "simple_parse"
+            if parse_function.__name__ != function:
+                function = parse_function.__name__.split("_parse_")[1]
             logger.warning(
                 "When building {name}, `{function}` "
                 "could not be parsed.".format(name=self.__class__.__name__,
-                                              function=parse_function.__name__.split("_parse_")[1]),
+                                              function=function),
                 exc_info=True)
             return None
 

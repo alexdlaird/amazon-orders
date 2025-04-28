@@ -13,6 +13,7 @@ DEFAULT_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "amazonord
 
 config_file_lock = threading.Lock()
 cookies_file_lock = threading.Lock()
+debug_output_file_lock = threading.Lock()
 
 
 class AmazonOrdersConfig:

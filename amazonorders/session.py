@@ -13,7 +13,7 @@ import requests.adapters
 from requests import Response, Session
 from requests.utils import dict_from_cookiejar
 
-from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file_lock
+from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file_lock, debug_output_file_lock
 from amazonorders.exception import AmazonOrdersAuthError
 from amazonorders.forms import AuthForm, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm, SignInForm
 from amazonorders.util import AmazonSessionResponse
@@ -294,10 +294,11 @@ class AmazonSession:
         if not page_name:
             page_name = "index"
 
-        i = 0
-        filename_frmt = "{page_name}_{index}.html"
-        while os.path.isfile(os.path.join(output_dir, filename_frmt.format(page_name=page_name, index=i))):
-            i += 1
+        with debug_output_file_lock:
+            i = 0
+            filename_frmt = "{page_name}_{index}.html"
+            while os.path.isfile(os.path.join(output_dir, filename_frmt.format(page_name=page_name, index=i))):
+                i += 1
         return filename_frmt.format(page_name=page_name, index=i)
 
     def _raise_auth_error(self,
