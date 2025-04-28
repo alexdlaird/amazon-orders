@@ -155,6 +155,15 @@ class AmazonOrders:
                     self.amazon_session.raise_expired_session()
                 order_details_tag = util.select_one(order_details_response.parsed,
                                                     self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+                if order_details_tag is None:
+                    raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order.order_number} {order_details_tag} \n"
+                                                    f"\t was not found. details_link: {order.order_details_link} \n"
+                                                    f"\t response_url: {order_details_response.response.url} \n"
+                                                    # f"\t response_text: {order_details_response.response.text} \n"
+                                                    f"\t response_status_code: {order_details_response.response.status_code} \n"
+                                                    f"\t selector: {self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR} \n")
+                                                    # f"response.parsed: {order_details_response.parsed}"
+                
                 order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order,
                                               index=current_index)
 
