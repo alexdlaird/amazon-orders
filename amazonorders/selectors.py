@@ -65,7 +65,8 @@ class Selectors:
     ORDER_HISTORY_ENTITY_SELECTOR = ["div.order-card",
                                      "div.order"]
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
-                                     "div#ordersContainer"]
+                                     "div#ordersContainer",
+                                     "div#digitalOrderSummaryContainer"]
     ITEM_ENTITY_SELECTOR = ["[data-component='purchasedItems'] .a-fixed-left-grid",
                             "div:has(> div.yohtmlc-item)",
                             ".item-box"]
