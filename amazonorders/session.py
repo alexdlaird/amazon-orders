@@ -4,6 +4,7 @@ __license__ = "MIT"
 import json
 import logging
 import os
+import time
 from typing import Any, List, Optional
 from urllib.parse import urlencode, urlparse
 
@@ -236,7 +237,9 @@ class AmazonSession:
                 break
 
             if attempts > 0:
-                logger.debug(f"Retrying auth flow, attempt {attempts} ...")
+                logger.debug(f"Retrying auth flow, attempt {attempts} in "
+                             f"{self.config.auth_reattempt_wait} seconds ...")
+                time.sleep(self.config.auth_reattempt_wait)
 
                 # If a form was found on the last attempt, then we already have a response to evaluate from that,
                 # otherwise (and/or if we were redirected back to the home page) re-start the auth flow for this

@@ -34,6 +34,8 @@ class AmazonOrdersConfig:
         self._data = {
             # The maximum number of authentication forms to try before failing
             "max_auth_attempts": 10,
+            # The number of seconds to wait before retrying the auth flow
+            "auth_reattempt_wait": 5,
             "output_dir": os.path.join(os.getcwd(), "output"),
             "cookie_jar_path": os.path.join(DEFAULT_CONFIG_DIR, "cookies.json"),
             "constants_class": "amazonorders.constants.Constants",
