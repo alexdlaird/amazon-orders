@@ -65,7 +65,7 @@ selectors_class: amazonorders.selectors.Selectors
 shipment_class: amazonorders.entity.shipment.Shipment
 thread_pool_size: {thread_pool_size}
 """
-                             .format(connection_pool_size=os.cpu_count() * 8,
+                             .format(connection_pool_size=os.cpu_count() * 10,
                                      cookie_jar_path=self.test_cookie_jar_path,
                                      output_dir=self.test_output_dir,
                                      thread_pool_size=os.cpu_count() * 4), f.read())
