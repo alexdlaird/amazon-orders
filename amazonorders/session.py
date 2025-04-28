@@ -124,10 +124,11 @@ class AmazonSession:
         if not os.path.exists(cookie_dir):
             os.makedirs(cookie_dir)
         if os.path.exists(self.config.cookie_jar_path):
-            with open(self.config.cookie_jar_path, "r", encoding="utf-8") as f:
-                data = json.loads(f.read())
-                cookies = requests.utils.cookiejar_from_dict(data)
-                self.session.cookies.update(cookies)
+            with cookies_file_lock:
+                with open(self.config.cookie_jar_path, "r", encoding="utf-8") as f:
+                    data = json.loads(f.read())
+                    cookies = requests.utils.cookiejar_from_dict(data)
+                    self.session.cookies.update(cookies)
 
     def request(self,
                 method: str,

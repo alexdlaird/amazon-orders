@@ -1,5 +1,6 @@
 import logging
 import os
+import threading
 from typing import Any, Dict, Optional, Union
 
 import yaml
@@ -9,6 +10,8 @@ from amazonorders import util
 logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "amazonorders")
+
+config_file_lock = threading.Lock()
 
 
 class AmazonOrdersConfig:
@@ -123,7 +126,8 @@ class AmazonOrdersConfig:
         """
         Persist the current state of this config object to the config file.
         """
-        with open(self.config_path, "w") as config_file:
-            logger.debug(f"Saving config to {self.config_path} ...")
+        with config_file_lock:
+            with open(self.config_path, "w") as config_file:
+                logger.debug(f"Saving config to {self.config_path} ...")
 
-            yaml.dump(self._data, config_file)
+                yaml.dump(self._data, config_file)
