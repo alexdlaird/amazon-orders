@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "amazonorders")
 
 config_file_lock = threading.Lock()
+cookies_file_lock = threading.Lock()
 
 
 class AmazonOrdersConfig:
@@ -47,26 +48,30 @@ class AmazonOrdersConfig:
             "max_auth_retries": 1
         }
 
-        if os.path.exists(self.config_path):
-            with open(self.config_path, "r") as config_file:
-                logger.debug(f"Loading config from {self.config_path} ...")
-                config = yaml.safe_load(config_file)
-                if config is not None:
-                    config.update(data or {})
-                    data = config
+        with config_file_lock:
+            # Ensure directories and files exist for config data
+            config_dir = os.path.dirname(self.config_path)
+            if not os.path.exists(config_dir):
+                os.makedirs(config_dir)
+
+            if os.path.exists(self.config_path):
+                with open(self.config_path, "r") as config_file:
+                    logger.debug(f"Loading config from {self.config_path} ...")
+                    config = yaml.safe_load(config_file)
+                    if config is not None:
+                        config.update(data or {})
+                        data = config
 
         # Overload defaults if values passed
         self._data.update(data or {})
 
-        # Ensure directories and files exist for config data
-        config_dir = os.path.dirname(self.config_path)
-        if not os.path.exists(config_dir):
-            os.makedirs(config_dir)
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
-        cookie_jar_dir = os.path.dirname(self.cookie_jar_path)
-        if not os.path.exists(cookie_jar_dir):
-            os.makedirs(cookie_jar_dir)
+
+        with cookies_file_lock:
+            cookie_jar_dir = os.path.dirname(self.cookie_jar_path)
+            if not os.path.exists(cookie_jar_dir):
+                os.makedirs(cookie_jar_dir)
 
         constants_class_split = self.constants_class.split(".")
         selectors_class_split = self.selectors_class.split(".")
