@@ -43,7 +43,7 @@ class AmazonOrdersConfig:
             "item_class": "amazonorders.entity.item.Item",
             "bs4_parser": "html.parser",
             "thread_pool_size": (os.cpu_count() or 1) * 4,
-            "connection_pool_size": (os.cpu_count() or 1) * 8,
+            "connection_pool_size": (os.cpu_count() or 1) * 10,
             # The maximum number of failed attempts to allow before failing CLI authentication
             "max_auth_retries": 1
         }
