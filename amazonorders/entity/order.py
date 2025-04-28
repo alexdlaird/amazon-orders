@@ -94,9 +94,13 @@ class Order(Parsable):
         #: The Order Subscribe & Save discount. Only populated when ``full_details`` is ``True``.
         self.subscription_discount: Optional[float] = self._if_full_details(self._parse_currency("subscribe"))
         #: The Order total before tax. Only populated when ``full_details`` is ``True``.
-        self.total_before_tax: Optional[float] = self._if_full_details(self._parse_currency("before tax"))
+        self.total_before_tax: Optional[float] = self._if_full_details(self._parse_currency("total before tax"))
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
         self.estimated_tax: Optional[float] = self._if_full_details(self._parse_currency("estimated tax"))
+        #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
+        self.estimated_hst: Optional[float] = self._if_full_details(self._parse_currency("hst"))
+        #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
+        self.estimated_pst: Optional[float] = self._if_full_details(self._parse_currency("pst"))
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
         self.refund_total: Optional[float] = self._if_full_details(self._parse_currency("refund total"))
 
