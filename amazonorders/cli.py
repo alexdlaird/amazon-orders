@@ -3,6 +3,8 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import pandas as pd
+import csv
 import datetime
 import logging
 import os
@@ -53,6 +55,8 @@ class IOClick(IODefault):
 @click.option("--debug", is_flag=True, default=False,
               help="Enable debugging and send output to "
                    "command line.")
+@click.option("--no-captcha", is_flag=True, default=False,
+              help="Skip CAPTCHA challenges (bypass CaptchaForm).")
 @click.option("--config-path",
               help="The config path.")
 @click.option("--max-auth-attempts",
@@ -73,8 +77,8 @@ def amazon_orders_cli(ctx: Context,
 
     Documentation can be found at https://amazon-orders.readthedocs.io.
     """
-    if ctx.invoked_subcommand != "version":
-        _print_banner()
+    # if ctx.invoked_subcommand != "version":
+    #     _print_banner()
 
     ctx.ensure_object(dict)
     for key, value in kwargs.items():
@@ -96,12 +100,44 @@ def amazon_orders_cli(ctx: Context,
     username = kwargs.get("username")
     password = kwargs.get("password")
 
+    # amazon_session = AmazonSession(username,
+    #                                password,
+    #                                debug=kwargs["debug"],
+    #                                io=IOClick(),
+    #                                config=ctx.obj["conf"])
+    
+    # Build auth_forms override if requested
+    if kwargs.get("no_captcha"):
+        from amazonorders.forms import SignInForm, MfaDeviceSelectForm, MfaForm, JSAuthBlocker
+        config = ctx.obj["conf"]
+        auth_forms = [
+            SignInForm(config),
+            MfaDeviceSelectForm(config),
+            MfaForm(config),
+            JSAuthBlocker(config, config.constants.JS_ROBOT_TEXT_REGEX)
+        ]
+    else:
+        # if not auth_forms:
+        #     auth_forms = [SignInForm(config),
+        #                   MfaDeviceSelectForm(config),
+        #                   MfaForm(config),
+        #                   CaptchaForm(config),
+        #                   CaptchaForm(config,
+        #                               config.selectors.CAPTCHA_2_FORM_SELECTOR,
+        #                               config.selectors.CAPTCHA_2_ERROR_SELECTOR,
+        #                               "field-keywords"),
+        #                   MfaForm(config,
+        #                           config.selectors.CAPTCHA_OTP_FORM_SELECTOR),
+        #                   JSAuthBlocker(config,
+        #                                 config.constants.JS_ROBOT_TEXT_REGEX)]
+        auth_forms = None
+
     amazon_session = AmazonSession(username,
                                    password,
                                    debug=kwargs["debug"],
                                    io=IOClick(),
-                                   config=ctx.obj["conf"])
-
+                                   config=ctx.obj["conf"],
+                                   auth_forms=auth_forms)
     ctx.obj["amazon_session"] = amazon_session
 
 
@@ -116,6 +152,8 @@ def amazon_orders_cli(ctx: Context,
 @click.option("--full-details", is_flag=True, default=False,
               help="Get the full details for each order in the history. "
                    "This will execute an additional request per Order.")
+@click.option("--csv", is_flag=True, default=False,
+              help="Export the order history to a CSV file.")
 def history(ctx: Context,
             **kwargs: Any) -> None:
     """
@@ -146,13 +184,27 @@ Order History for {year}{optional_start_index}{optional_full_details}
                                      config=config)
 
         start_time = time.time()
-        total = 0
-        for o in amazon_orders.get_order_history(year=kwargs["year"],
+        # total = 0
+
+        orders = amazon_orders.get_order_history(year=kwargs["year"],
                                                  start_index=kwargs["start_index"],
                                                  full_details=kwargs["full_details"],
-                                                 keep_paging=not kwargs["single_page"]):
-            click.echo(f"{_order_output(o, config)}\n")
-            total += 1
+                                                 keep_paging=not kwargs["single_page"])
+        
+        if kwargs["csv"]:
+            # Convert list of dataclass‐like objects into a list of dicts
+            df = pd.DataFrame([o.__dict__ for o in orders])
+
+            # Export to CSV (no index column)
+            df.to_csv(f"orders-{kwargs['year']}.csv",
+                      columns=["index","shipments","items","order_number","order_details_link","grand_total","order_placed_date","recipient","payment_method","payment_method_last_4","subtotal","shipping_total","free_shipping","promotion_applied","coupon_savings","subscription_discount","total_before_tax","estimated_tax","estimated_hst","estimated_pst","refund_total"],
+                      index=False,
+                      quoting=csv.QUOTE_MINIMAL)    # quote fields with commas
+        else:
+            for o in orders:
+                click.echo(f"{_order_output(o, config)}\n")
+
+        total = len(orders)
         end_time = time.time()
 
         click.echo(
