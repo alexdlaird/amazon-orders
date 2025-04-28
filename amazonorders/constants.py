@@ -22,7 +22,7 @@ class Constants:
 
     BASE_URL = os.environ.get("AMAZON_BASE_URL")
     if not BASE_URL:
-        BASE_URL = "https://www.amazon.com"
+        BASE_URL = "https://www.amazon.ca"
 
     ##########################################################################
     # URLs for AmazonSession
@@ -30,9 +30,9 @@ class Constants:
 
     SIGN_IN_URL = f"{BASE_URL}/ap/signin"
     SIGN_IN_QUERY_PARAMS = {"openid.pape.max_auth_age": "0",
-                            "openid.return_to": f"{BASE_URL}/?ref_=nav_custrec_signin",
+                            "openid.return_to": f"{BASE_URL}/?_encoding=UTF8&ref_=nav_ya_signin",
                             "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
-                            "openid.assoc_handle": "usflex",
+                            "openid.assoc_handle": "caflex",
                             "openid.mode": "checkid_setup",
                             "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
                             "openid.ns": "http://specs.openid.net/auth/2.0"}
