@@ -34,6 +34,7 @@ jobs:
 
   integration:
     name: Integration Test
+    if: ${{ vars.AMAZON_INTEGRATION_SKIP_ON_RELEASE != 'true' }}
     uses: alexdlaird/amazon-orders/.github/workflows/integration.yml@main
     secrets: inherit
     needs: validate-version
