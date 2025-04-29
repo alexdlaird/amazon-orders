@@ -32,6 +32,7 @@ class AmazonOrdersConfig:
         self.config_path: str = os.path.join(DEFAULT_CONFIG_DIR, "config.yml") if config_path is None else config_path
 
         # Provision default configs
+        thread_pool_size = (os.cpu_count() or 1) * 4
         self._data = {
             # The maximum number of authentication forms to try before failing
             "max_auth_attempts": 10,
@@ -46,7 +47,7 @@ class AmazonOrdersConfig:
             "item_class": "amazonorders.entity.item.Item",
             "bs4_parser": "html.parser",
             "thread_pool_size": (os.cpu_count() or 1) * 4,
-            "connection_pool_size": (os.cpu_count() or 1) * 10,
+            "connection_pool_size": thread_pool_size * 2,
             # The maximum number of failed attempts to allow before failing CLI authentication
             "max_auth_retries": 1
         }
