@@ -107,6 +107,7 @@ class Order(Parsable):
         self.item_federal_tax: Optional[float] = self._if_full_details(self._parse_currency("hst"))
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
         self.item_provincial_tax: Optional[float] = self._if_full_details(self._parse_currency("pst"))
+        self.item_regulatory_fee: Optional[float] = self._if_full_details(self._parse_currency("fee"))
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
         self.refund_total: Optional[float] = self._if_full_details(self._parse_currency("refund total"))
 

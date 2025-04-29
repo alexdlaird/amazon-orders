@@ -38,10 +38,12 @@ class AmazonOrdersConfig:
             "shipment_class": "amazonorders.entity.shipment.Shipment",
             "item_class": "amazonorders.entity.item.Item",
             "bs4_parser": "html.parser",
-            "thread_pool_size": (os.cpu_count() or 1) * 4,
-            "connection_pool_size": (os.cpu_count() or 1) * 8,
+            "thread_pool_size": (os.cpu_count() or 1) * 2,
+            "connection_pool_size": (os.cpu_count() or 1) * 2,
             # The maximum number of failed attempts to allow before failing CLI authentication
-            "max_auth_retries": 1
+            "max_auth_retries": 1,
+            "max_session_auto_retries": 3,
+            "max_session_auto_backoff_factor": 1,
         }
 
         if os.path.exists(self.config_path):

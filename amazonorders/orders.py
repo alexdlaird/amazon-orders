@@ -156,7 +156,7 @@ class AmazonOrders:
                 order_details_tag = util.select_one(order_details_response.parsed,
                                                     self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
                 if order_details_tag is None:
-                    raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order.order_id} {order_details_tag} \n"
+                    raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order.index} {order.order_id} {order_details_tag} \n"
                                                     f"\t was not found. details_link: {order.order_details_link} \n"
                                                     f"\t response_url: {order_details_response.response.url} \n"
                                                     # f"\t response_text: {order_details_response.response.text} \n"

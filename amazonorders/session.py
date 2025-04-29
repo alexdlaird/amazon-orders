@@ -12,6 +12,7 @@ import requests
 import requests.adapters
 from requests import Response, Session
 from requests.utils import dict_from_cookiejar
+from urllib3.util.retry import Retry
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError
@@ -305,7 +306,16 @@ class AmazonSession:
 
     def _create_session(self):
         session = Session()
-        adapter = requests.adapters.HTTPAdapter(pool_connections=self.config.connection_pool_size,
-                                                pool_maxsize=self.config.connection_pool_size)
-        session.mount('https://', adapter)
+        retry = Retry(
+            total=self.config.max_session_auto_retries,
+            status_forcelist=[503],
+            backoff_factor=self.config.max_session_auto_backoff_factor,
+            allowed_methods=["GET", "POST"],
+        )
+        adapter = requests.adapters.HTTPAdapter(
+            pool_connections=self.config.connection_pool_size,
+            pool_maxsize=self.config.connection_pool_size,
+            max_retries=retry,
+        )
+        session.mount("https://", adapter)
         return session
