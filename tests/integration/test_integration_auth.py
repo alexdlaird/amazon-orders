@@ -104,6 +104,7 @@ class TestIntegrationAuth(IntegrationTestCase):
         self.assertTrue(amazon_session.is_authenticated)
         with self.assertRaises(AmazonOrdersAuthError):
             amazon_orders.get_order(order_id="1234-fake-id")
+        time.sleep(1)
         # And then we will find our session invalidated
         self.assertFalse(amazon_session.is_authenticated)
         with self.assertRaises(AmazonOrdersError) as cm:
