@@ -168,7 +168,7 @@ class AmazonSession:
         if self.debug:
             url_str = ""
             if url_to_log != amazon_session_response.response.url:
-                url_str = f" (redirected {amazon_session_response.response.url})"
+                url_str = f" - (redirected) {amazon_session_response.response.url}"
             logger.debug(f"Response: {amazon_session_response.response.status_code}{url_str}")
 
             page_name = self._get_page_from_url(self.config.output_dir, amazon_session_response.response.url)
