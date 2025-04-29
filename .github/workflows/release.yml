@@ -41,7 +41,7 @@ jobs:
 
   Release:
     name: Release
-    needs: [build, integration]
+    needs: [build, validate-release, integration]
     if: ${{ always() && ! failure() && ! cancelled() }}
 
     env:
