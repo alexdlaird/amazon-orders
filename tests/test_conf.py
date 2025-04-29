@@ -51,6 +51,7 @@ class TestConf(TestCase):
         config.save()
 
         # THEN
+        thread_pool_size = os.cpu_count() * 4
         self.assertTrue(os.path.exists(config_path))
         with open(config.config_path, "r") as f:
             self.assertEqual("""auth_reattempt_wait: 5
@@ -67,10 +68,10 @@ selectors_class: amazonorders.selectors.Selectors
 shipment_class: amazonorders.entity.shipment.Shipment
 thread_pool_size: {thread_pool_size}
 """
-                             .format(connection_pool_size=os.cpu_count() * 10,
+                             .format(connection_pool_size=thread_pool_size * 2,
                                      cookie_jar_path=self.test_cookie_jar_path,
                                      output_dir=self.test_output_dir,
-                                     thread_pool_size=os.cpu_count() * 4), f.read())
+                                     thread_pool_size=thread_pool_size), f.read())
 
     def test_override_default(self):
         # GIVEN
