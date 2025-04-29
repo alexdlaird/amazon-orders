@@ -45,7 +45,7 @@ jobs:
         uses: nick-fields/retry@v3
         with:
           timeout_minutes: 20
-          retry_wait_seconds: 90
+          retry_wait_seconds: 300
           max_attempts: 2
           command: make test-integration
       - name: Upload test output

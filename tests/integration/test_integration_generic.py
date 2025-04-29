@@ -3,7 +3,6 @@ __license__ = "MIT"
 
 import datetime
 import os
-import time
 
 from amazonorders.exception import AmazonOrdersNotFoundError
 from tests.integrationtestcase import IntegrationTestCase
@@ -32,10 +31,6 @@ class TestIntegrationGeneric(IntegrationTestCase):
             cls.full_details_loop_count = int(os.environ.get("AMAZON_FULL_DETAILS_LOOP_COUNT"))
         else:
             cls.full_details_loop_count = 1
-
-    def tearDown(self):
-        # Slow down between integration tests to ensure we don't trigger Amazon security measures
-        time.sleep(15)
 
     def test_get_order_history(self):
         # WHEN

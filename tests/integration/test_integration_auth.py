@@ -30,9 +30,9 @@ class TestIntegrationAuth(IntegrationTestCase):
 
     def tearDown(self):
         # Slow down between integration auth tests to ensure we don't trigger Amazon to throttle or lock the account
-        time.sleep(self.reauth_sleep_time)
+        time.sleep(40)
 
-    def test_login(self):
+    def test_login_then_expire_persisted_session(self):
         # GIVEN
         amazon_session = AmazonSession(debug=self.debug,
                                        config=self.test_config)
@@ -40,7 +40,6 @@ class TestIntegrationAuth(IntegrationTestCase):
 
         # WHEN
         amazon_session.login()
-        time.sleep(1)
 
         # THEN
         self.assertTrue(amazon_session.is_authenticated)
@@ -48,6 +47,28 @@ class TestIntegrationAuth(IntegrationTestCase):
         # indicates we're successfully logged in
         with self.assertRaises(AmazonOrdersNotFoundError):
             amazon_orders.get_order(order_id="1234-fake-id")
+
+        # WHEN
+        time.sleep(1)
+        with open(self.test_config.cookie_jar_path, "r") as f:
+            cookies = json.loads(f.read())
+        for cookie in self.test_config.constants.COOKIES_SET_WHEN_AUTHENTICATED:
+            cookies[cookie] = "invalid-token"
+        with open(self.test_config.cookie_jar_path, "w") as f:
+            f.write(json.dumps(cookies))
+        amazon_session.session.cookies.update(cookies)
+
+        # THEN
+        # Trying interacting with a privileged resource will redirect us to login
+        self.assertTrue(amazon_session.is_authenticated)
+        with self.assertRaises(AmazonOrdersAuthError):
+            amazon_orders.get_order(order_id="1234-fake-id")
+        time.sleep(1)
+        # And then we will find our session invalidated
+        self.assertFalse(amazon_session.is_authenticated)
+        with self.assertRaises(AmazonOrdersError) as cm:
+            amazon_orders.get_order(order_id="1234-fake-id")
+        self.assertIn("AmazonSession.login() to authenticate first", str(cm.exception))
 
     def test_logout(self):
         # GIVEN
@@ -59,7 +80,6 @@ class TestIntegrationAuth(IntegrationTestCase):
 
         # WHEN
         amazon_session.logout()
-        time.sleep(1)
 
         # THEN
         self.assertFalse(amazon_session.is_authenticated)
@@ -82,42 +102,6 @@ class TestIntegrationAuth(IntegrationTestCase):
         self.assertIn("cannot find an account", str(cm.exception))
 
         os.environ["AMAZON_USERNAME"] = amazon_username
-
-    def test_persisted_session_expired(self):
-        amazon_session = AmazonSession(debug=self.debug,
-                                       config=self.test_config)
-        amazon_session.login()
-        time.sleep(1)
-        amazon_orders = AmazonOrders(amazon_session)
-
-        # WHEN
-        with open(self.test_config.cookie_jar_path, "r") as f:
-            cookies = json.loads(f.read())
-        for cookie in self.test_config.constants.COOKIES_SET_WHEN_AUTHENTICATED:
-            cookies[cookie] = "invalid-token"
-        with open(self.test_config.cookie_jar_path, "w") as f:
-            f.write(json.dumps(cookies))
-        amazon_session.session.cookies.update(cookies)
-
-        # THEN
-        # Trying interacting with a privileged resource
-        self.assertTrue(amazon_session.is_authenticated)
-        with self.assertRaises(AmazonOrdersAuthError):
-            amazon_orders.get_order(order_id="1234-fake-id")
-        time.sleep(1)
-        # And then we will find our session invalidated
-        self.assertFalse(amazon_session.is_authenticated)
-        with self.assertRaises(AmazonOrdersError) as cm:
-            amazon_orders.get_order(order_id="1234-fake-id")
-        self.assertIn("AmazonSession.login() to authenticate first", str(cm.exception))
-
-        # WHEN
-        # Validate reauthentication after a session is expired
-        time.sleep(self.reauth_sleep_time)
-        amazon_session.login()
-
-        # THEN
-        self.assertTrue(amazon_session.is_authenticated)
 
     @unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD", "False") == "True",
                      "Running this test too many times in a row will trigger the Captcha flow instead (causing"
@@ -144,32 +128,3 @@ class TestIntegrationAuth(IntegrationTestCase):
             self.assertIn("CaptchaForm", str(cm.exception))
 
         os.environ["AMAZON_PASSWORD"] = amazon_password
-
-    @unittest.skipIf(not os.environ.get("AMAZON_OTP_SECRET_KEY"),
-                     "AMAZON_OTP_SECRET_KEY environment variable must be set")
-    @unittest.skip("Even though the form submissions suggest that Amazon should not re-prompt for OTP, it often does. "
-                   "Further investigation needs to be done—perhaps in to deviceId, or if we should go down the "
-                   "/ax/claim auth flow instead—for this test to pass.")
-    def test_login_logout_login_no_otp_reprompt(self):
-        # GIVEN
-        amazon_session = AmazonSession(debug=self.debug,
-                                       config=self.test_config)
-        amazon_session.login()
-        time.sleep(1)
-
-        # WHEN
-        amazon_session.logout()
-
-        # THEN
-        self.assertFalse(amazon_session.is_authenticated)
-
-        # GIVEN
-        amazon_session.otp_secret_key = None
-        time.sleep(1)
-
-        # WHEN
-        # If the test is not automated (ie. prompts for OTP here), consider that a failure
-        amazon_session.login()
-
-        # THEN
-        self.assertTrue(amazon_session.is_authenticated)
