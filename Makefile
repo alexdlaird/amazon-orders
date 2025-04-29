@@ -21,7 +21,7 @@ nopyc:
 	find . -name __pycache__ | xargs rm -rf || true
 
 clean: nopyc
-	rm -rf build dist *.egg-info $(PROJECT_VENV) tests/output tests/build tests/.integration-config
+	rm -rf build dist *.egg-info $(PROJECT_VENV) tests/output tests/build tests/.*config
 
 test: install
 	@( \
