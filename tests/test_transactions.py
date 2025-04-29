@@ -50,7 +50,7 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(transaction.payment_method, "Visa ****1234")
         self.assertEqual(transaction.grand_total, -45.19)
         self.assertFalse(transaction.is_refund)
-        self.assertEqual(transaction.order_number, "123-4567890-1234567")
+        self.assertEqual(transaction.order_id, "123-4567890-1234567")
         self.assertEqual(transaction.order_details_link,
                          "https://www.amazon.ca/gp/css/summary/edit.html?orderID=123-4567890-1234567")
         self.assertEqual(transaction.seller, "AMZN Mktp CA")
@@ -82,7 +82,7 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(transaction.payment_method, "WELLS FARGO BANK NATIONAL ASSOCIATION ***863")
         self.assertEqual(transaction.grand_total, 55.96)
         self.assertTrue(transaction.is_refund)
-        self.assertEqual(transaction.order_number, "0000000019080621061")
+        self.assertEqual(transaction.order_id, "0000000019080621061")
         self.assertEqual(transaction.order_details_link,
                          "https://www.amazon.com/gp/your-account/order-details?orderID=0000000019080621061")
         self.assertIsNone(transaction.seller)
@@ -114,7 +114,7 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(transaction.payment_method, "Prime Visa ****1111")
         self.assertEqual(transaction.grand_total, -26.29)
         self.assertFalse(transaction.is_refund)
-        self.assertEqual(transaction.order_number, "234-8832881-7100260")
+        self.assertEqual(transaction.order_id, "234-8832881-7100260")
         self.assertEqual(transaction.order_details_link,
                          "https://www.amazon.com/gp/css/summary/edit.html?orderID=234-8832881-7100260")
         self.assertEqual(transaction.seller, "AMZN Mktp US")
@@ -123,7 +123,7 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(transaction.payment_method, "Prime Visa ****1111")
         self.assertEqual(transaction.grand_total, 43.94)
         self.assertTrue(transaction.is_refund)
-        self.assertEqual(transaction.order_number, "234-3017692-4601031")
+        self.assertEqual(transaction.order_id, "234-3017692-4601031")
         self.assertEqual(transaction.order_details_link,
                          "https://www.amazon.com/gp/css/summary/edit.html?orderID=234-3017692-4601031")
         self.assertEqual(transaction.seller, "AMZN Mktp US")

@@ -73,7 +73,7 @@ class TestIntegrationJSON(IntegrationTestCase):
 
         {
             "func": "get_order",
-            "order_placed_date": "2023-12-15",
+            "order_date": "2023-12-15",
             "recipient": {
                 "name": "John Doe"
             }
@@ -150,7 +150,7 @@ class TestIntegrationJSON(IntegrationTestCase):
                 self.assert_json_items(order, order_json)
         elif func == "get_order":
             order_json = data
-            order_id = order_json["order_number"]
+            order_id = order_json["order_id"]
 
             # WHEN
             order = self.amazon_orders.get_order(order_id)

@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import json
 import logging
-from datetime import date
+from datetime import date, timedelta
 from typing import Any, List, Optional, TypeVar, Union
 
 from bs4 import BeautifulSoup, Tag
@@ -49,8 +49,10 @@ class Order(Parsable):
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
         #: The Order Items.
         self.items: List[Item] = clone.items if clone and not full_details else self._parse_items()
+        self.title: str = ", ".join(str(item) for item in self.items) if self.items else ""
+        self.item_quantity: int = len(self.items)
         #: The Order number.
-        self.order_number: str = clone.order_number if clone else self.safe_simple_parse(
+        self.order_id: str = clone.order_id if clone else self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR,
             required=True,
             prefix_split="#",
@@ -60,12 +62,15 @@ class Order(Parsable):
             self._parse_order_details_link)
         #: The Order grand total.
         self.grand_total: float = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
+        self.item_net_total: float = self.grand_total
+        self.payment_amount: float = self.grand_total
         #: The Order placed date.
-        self.order_placed_date: date = clone.order_placed_date if clone else self.safe_simple_parse(
+        self.order_date: date = clone.order_date if clone else self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR,
             suffix_split="Order #",
             suffix_split_fuzzy=True,
             parse_date=True)
+        self.payment_date: date = self.order_date + timedelta(days=1)
         #: The Order Recipients.
         self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient)
 
@@ -79,14 +84,15 @@ class Order(Parsable):
         self.payment_method_last_4: Optional[int] = self._if_full_details(
             self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR,
                                    prefix_split="ending in"))
-        #: The Order subtotal. Only populated when ``full_details`` is ``True``.
-        self.subtotal: Optional[float] = self._if_full_details(self._parse_currency("subtotal"))
+        #: The Order item_subtotal. Only populated when ``full_details`` is ``True``.
+        self.item_subtotal: Optional[float] = self._if_full_details(self._parse_currency("item_subtotal"))
         #: The Order shipping total. Only populated when ``full_details`` is ``True``.
         self.shipping_total: Optional[float] = self._if_full_details(self._parse_currency("shipping"))
         #: The Order free shipping. Only populated when ``full_details`` is ``True``.
         self.free_shipping: Optional[float] = self._if_full_details(self._parse_currency("free shipping"))
+        self.item_shipping_and_handling: Optional[float] = (self.shipping_total or 0.0) - (self.free_shipping or 0.0)
         #: The Order promotion applied. Only populated when ``full_details`` is ``True``.
-        self.promotion_applied: Optional[float] = self._if_full_details(
+        self.item_promotion: Optional[float] = self._if_full_details(
             self._parse_currency("promotion", combine_multiple=True))
         #: The Order coupon savings. Only populated when ``full_details`` is ``True``.
         self.coupon_savings: Optional[float] = self._if_full_details(
@@ -98,17 +104,21 @@ class Order(Parsable):
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
         self.estimated_tax: Optional[float] = self._if_full_details(self._parse_currency("estimated tax"))
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
-        self.estimated_hst: Optional[float] = self._if_full_details(self._parse_currency("hst"))
+        self.item_federal_tax: Optional[float] = self._if_full_details(self._parse_currency("hst"))
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
-        self.estimated_pst: Optional[float] = self._if_full_details(self._parse_currency("pst"))
+        self.item_provincial_tax: Optional[float] = self._if_full_details(self._parse_currency("pst"))
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
         self.refund_total: Optional[float] = self._if_full_details(self._parse_currency("refund total"))
 
+        self.amazon_internal_product_category: Optional[str] = ""
+        self.amazon_class: Optional[str] = ""
+        self.amazon_commodity: Optional[str] = ""
+
     def __repr__(self) -> str:
-        return f"<Order #{self.order_number}: \"{self.items}\">"
+        return f"<Order #{self.order_id}: \"{self.items}\">"
 
     def __str__(self) -> str:  # pragma: no cover
-        return f"Order #{self.order_number}: {self.items}"
+        return f"Order #{self.order_id}: {self.items}"
 
     def _parse_shipments(self) -> List[Shipment]:
         if not self.parsed or len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
@@ -133,8 +143,8 @@ class Order(Parsable):
     def _parse_order_details_link(self) -> Optional[str]:
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_DETAILS_LINK_SELECTOR, attr_name="href")
 
-        if not value and self.order_number:
-            value = f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
+        if not value and self.order_id:
+            value = f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_id}"
 
         return value
 

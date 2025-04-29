@@ -93,10 +93,10 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assertEqual(1, resp.call_count)
         order = orders[5]
-        self.assertEqual("112-8022032-9113020", order.order_number)
+        self.assertEqual("112-8022032-9113020", order.order_id)
         self.assertEqual(150.00, order.grand_total)
         self.assertIsNotNone(order.order_details_link)
-        self.assertEqual(date(2024, 10, 28), order.order_placed_date)
+        self.assertEqual(date(2024, 10, 28), order.order_date)
         self.assertEqual(1, len(order.items))
         self.assertEqual("Amazon eGift Card - Birthday Candles (Animated)",
                          order.items[0].title)
@@ -124,10 +124,10 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assertEqual(1, resp.call_count)
         order = orders[9]
-        self.assertEqual("113-9085096-9353021", order.order_number)
+        self.assertEqual("113-9085096-9353021", order.order_id)
         self.assertEqual(15.78, order.grand_total)
         self.assertIsNotNone(order.order_details_link)
-        self.assertEqual(date(2025, 2, 28), order.order_placed_date)
+        self.assertEqual(date(2025, 2, 28), order.order_date)
         self.assertEqual(0, len(order.items))
 
     @responses.activate
@@ -175,11 +175,11 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assertEqual(1, resp.call_count)
         order = orders[4]
-        self.assertEqual("111-2072777-8279433", order.order_number)
+        self.assertEqual("111-2072777-8279433", order.order_id)
         self.assertEqual(4, order.index)
         self.assertEqual(80.27, order.grand_total)
         self.assertIsNotNone(order.order_details_link)
-        self.assertEqual(date(2025, 1, 3), order.order_placed_date)
+        self.assertEqual(date(2025, 1, 3), order.order_date)
         self.assertEqual(0, len(order.items))
 
     @responses.activate
@@ -203,10 +203,10 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
         self.assertEqual(1, resp.call_count)
         order = orders[7]
-        self.assertEqual("113-6307059-7336242", order.order_number)
+        self.assertEqual("113-6307059-7336242", order.order_id)
         self.assertEqual(62.92, order.grand_total)
         self.assertIsNotNone(order.order_details_link)
-        self.assertEqual(date(2024, 12, 12), order.order_placed_date)
+        self.assertEqual(date(2024, 12, 12), order.order_date)
         self.assertEqual(0, len(order.items))
 
     @responses.activate

@@ -21,8 +21,8 @@ class TestOrder(UnitTestCase):
         order = Order(parsed, self.test_config, full_details=True)
 
         # THEN
-        self.assertEqual(order.subtotal, 1111.99)
-        self.assertEqual(order.shipping_total, 2222.99)
+        self.assertEqual(order.item_subtotal, 1111.99)
+        self.assertEqual(order.item_shipping_and_handling, 2222.99)
         self.assertEqual(order.total_before_tax, 3333.99)
         self.assertEqual(order.estimated_tax, 4444.99)
         self.assertIsNone(order.refund_total)
@@ -40,7 +40,7 @@ class TestOrder(UnitTestCase):
         order = Order(parsed, self.test_config, full_details=True)
 
         # THEN
-        self.assertEqual(order.promotion_applied, -0.05)
+        self.assertEqual(order.item_promotion, -0.05)
 
     def test_order_coupon_savings(self):
         # GIVEN

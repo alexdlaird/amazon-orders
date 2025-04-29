@@ -73,8 +73,8 @@ class TestIntegrationGeneric(IntegrationTestCase):
                                                       start_index=self.start_index,
                                                       keep_paging=False)
         self.assertGreaterEqual(len(orders), 1)
-        self.assertIsNotNone(orders[0].order_number)
-        order_id = orders[0].order_number
+        self.assertIsNotNone(orders[0].order_id)
+        order_id = orders[0].order_id
 
         # WHEN
         order = self.amazon_orders.get_order(order_id)
@@ -102,6 +102,6 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assertIsNotNone(transaction.payment_method)
         self.assertIsNotNone(transaction.grand_total)
         self.assertIsNotNone(transaction.is_refund)
-        self.assertIsNotNone(transaction.order_number)
+        self.assertIsNotNone(transaction.order_id)
         self.assertIsNotNone(transaction.order_details_link)
         self.assertIsNotNone(transaction.seller)

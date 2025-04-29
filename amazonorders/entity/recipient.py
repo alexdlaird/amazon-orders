@@ -32,7 +32,7 @@ class Recipient(Parsable):
         return f"<Recipient: \"{self.name}\">"
 
     def __str__(self) -> str:  # pragma: no cover
-        return f"Recipient: {self.name}"
+        return self.name
 
     def _parse_address(self) -> Optional[str]:
         value = self.simple_parse(self.config.selectors.FIELD_RECIPIENT_ADDRESS1_SELECTOR)

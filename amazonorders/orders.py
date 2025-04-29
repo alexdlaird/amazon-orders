@@ -142,10 +142,10 @@ class AmazonOrders:
 
         if full_details:
             if not order.order_details_link:
-                logger.warning(f"Order {order.order_number} was partially populated, "
+                logger.warning(f"Order {order.order_id} was partially populated, "
                                f"since order_details_link was not found.")
             elif len(util.select(order.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
-                logger.warning(f"Order {order.order_number} was partially populated, "
+                logger.warning(f"Order {order.order_id} was partially populated, "
                                f"since it is an unsupported Order type.")
             else:
                 # TODO: be on the lookout for if this causes rate limit issues with Amazon, or races with the
@@ -156,7 +156,7 @@ class AmazonOrders:
                 order_details_tag = util.select_one(order_details_response.parsed,
                                                     self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
                 if order_details_tag is None:
-                    raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order.order_number} {order_details_tag} \n"
+                    raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order.order_id} {order_details_tag} \n"
                                                     f"\t was not found. details_link: {order.order_details_link} \n"
                                                     f"\t response_url: {order_details_response.response.url} \n"
                                                     # f"\t response_text: {order_details_response.response.text} \n"

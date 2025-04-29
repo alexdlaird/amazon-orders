@@ -190,16 +190,85 @@ Order History for {year}{optional_start_index}{optional_full_details}
                                                  start_index=kwargs["start_index"],
                                                  full_details=kwargs["full_details"],
                                                  keep_paging=not kwargs["single_page"])
-        
+
         if kwargs["csv"]:
             # Convert list of dataclass‐like objects into a list of dicts
             df = pd.DataFrame([o.__dict__ for o in orders])
 
+            df = df.rename(
+                columns={
+                    "index": "Index",
+                    "order_date": "Order Date",
+                    "order_id": "Order ID",
+                    "item_quantity": "Item quantity",
+                    "item_subtotal": "Item subtotal",
+                    "item_shipping_and_handling": "Item shipping and handling",
+                    "item_promotion": "Item promotion",
+                    "item_federal_tax": "Item Federal Tax",
+                    "item_provincial_tax": "Item Provincial Tax",
+                    "item_regulatory_fee": "Item Regulatory Fee",
+                    "item_net_total": "Item net total",
+                    "payment_method": "Payment Method",
+                    "payment_method_last_4": "Payment Method Last 4",
+                    "payment_amount": "Payment Amount",
+                    "payment_date": "Payment Date",
+                    "shipments": "Shipments",
+                    "title": "Title",
+                    "amazon_internal_product_category": "Amazon Internal Product Category",
+                    "amazon_class": "Class",
+                    "amazon_commodity": "Commodity",
+                    "items": "Items",
+                    "order_details_link": "Order Details Link",
+                    "grand_total": "Grand Total",
+                    "recipient": "Recipient",
+                    "free_shipping": "Free Shipping",
+                    "coupon_savings": "Coupon Savings",
+                    "subscription_discount": "Subscription Discount",
+                    "total_before_tax": "Total Before Tax",
+                    "estimated_tax": "Estimated Tax",
+                    "refund_total": "Refund Total",
+                }
+            )[
+                [
+                    "Index",
+                    "Order Date",
+                    "Order ID",
+                    "Item quantity",
+                    "Item subtotal",
+                    "Item shipping and handling",
+                    "Item promotion",
+                    "Item Federal Tax",
+                    "Item Provincial Tax",
+                    "Item Regulatory Fee",
+                    "Item net total",
+                    "Payment Method",
+                    "Payment Method Last 4",
+                    "Payment Amount",
+                    "Payment Date",
+                    "Shipments",
+                    "Title",
+                    "Amazon Internal Product Category",
+                    "Class",
+                    "Commodity",
+                    "Items",
+                    "Order Details Link",
+                    "Grand Total",
+                    "Recipient",
+                    "Free Shipping",
+                    "Coupon Savings",
+                    "Subscription Discount",
+                    "Total Before Tax",
+                    "Estimated Tax",
+                    "Refund Total",
+                ]
+            ]
+
             # Export to CSV (no index column)
-            df.to_csv(f"orders-{kwargs['year']}.csv",
-                      columns=["index","shipments","items","order_number","order_details_link","grand_total","order_placed_date","recipient","payment_method","payment_method_last_4","subtotal","shipping_total","free_shipping","promotion_applied","coupon_savings","subscription_discount","total_before_tax","estimated_tax","estimated_hst","estimated_pst","refund_total"],
-                      index=False,
-                      quoting=csv.QUOTE_MINIMAL)    # quote fields with commas
+            df.to_csv(
+                f"orders-{kwargs['year']}.csv",
+                index=False,
+                quoting=csv.QUOTE_MINIMAL,
+            )  # quote fields with commas
         else:
             for o in orders:
                 click.echo(f"{_order_output(o, config)}\n")
@@ -388,15 +457,15 @@ def _authenticate(amazon_session: AmazonSession,
 def _order_output(o: Order,
                   config: AmazonOrdersConfig) -> str:
     order_str = """-----------------------------------------------------------------------
-Order #{order_number}
------------------------------------------------------------------------""".format(order_number=o.order_number)
+Order #{order_id}
+-----------------------------------------------------------------------""".format(order_id=o.order_id)
 
     order_str += f"\n  Shipments: {o.shipments}"
     order_str += f"\n  Order Details Link: {o.order_details_link}"
     order_str += f"\n  Grand Total: {config.constants.format_currency(o.grand_total)}"
-    order_str += f"\n  Order Placed Date: {o.order_placed_date}"
+    order_str += f"\n  Order Placed Date: {o.order_date}"
     if o.recipient:
-        order_str += f"\n  {o.recipient}"
+        order_str += f"\n  Recipient: {o.recipient}"
     else:
         order_str += "\n  Recipient: None"
 
@@ -404,10 +473,10 @@ Order #{order_number}
         order_str += f"\n  Payment Method: {o.payment_method}"
     if o.payment_method_last_4:
         order_str += f"\n  Payment Method Last 4: {o.payment_method_last_4}"
-    if o.subtotal:
-        order_str += f"\n  Subtotal: {config.constants.format_currency(o.subtotal)}"
-    if o.shipping_total:
-        order_str += f"\n  Shipping Total: {config.constants.format_currency(o.shipping_total)}"
+    if o.item_subtotal:
+        order_str += f"\n  Subtotal: {config.constants.format_currency(o.item_subtotal)}"
+    if o.item_shipping_and_handling:
+        order_str += f"\n  Shipping Total: {config.constants.format_currency(o.item_shipping_and_handling)}"
     if o.free_shipping:
         order_str += f"\n  Free Shipping: {config.constants.format_currency(o.free_shipping)}"
     if o.subscription_discount:
@@ -427,7 +496,7 @@ Order #{order_number}
 def _transaction_output(t: Transaction,
                         config: AmazonOrdersConfig) -> str:
     transaction_str = f"Transaction: {t.completed_date}"
-    transaction_str += f"\n  Order #{t.order_number}"
+    transaction_str += f"\n  Order #{t.order_id}"
     transaction_str += f"\n  Grand Total: {config.constants.format_currency(t.grand_total)}"
     transaction_str += f"\n  Order Details Link: {t.order_details_link}"
 
