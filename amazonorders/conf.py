@@ -1,5 +1,6 @@
 import logging
 import os
+import threading
 from typing import Any, Dict, Optional, Union
 
 import yaml
@@ -9,6 +10,10 @@ from amazonorders import util
 logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "amazonorders")
+
+config_file_lock = threading.Lock()
+cookies_file_lock = threading.Lock()
+debug_output_file_lock = threading.Lock()
 
 
 class AmazonOrdersConfig:
@@ -30,6 +35,8 @@ class AmazonOrdersConfig:
         self._data = {
             # The maximum number of authentication forms to try before failing
             "max_auth_attempts": 10,
+            # The number of seconds to wait before retrying the auth flow
+            "auth_reattempt_wait": 5,
             "output_dir": os.path.join(os.getcwd(), "output"),
             "cookie_jar_path": os.path.join(DEFAULT_CONFIG_DIR, "cookies.json"),
             "constants_class": "amazonorders.constants.Constants",
@@ -39,31 +46,35 @@ class AmazonOrdersConfig:
             "item_class": "amazonorders.entity.item.Item",
             "bs4_parser": "html.parser",
             "thread_pool_size": (os.cpu_count() or 1) * 4,
-            "connection_pool_size": (os.cpu_count() or 1) * 8,
+            "connection_pool_size": (os.cpu_count() or 1) * 10,
             # The maximum number of failed attempts to allow before failing CLI authentication
             "max_auth_retries": 1
         }
 
-        if os.path.exists(self.config_path):
-            with open(self.config_path, "r") as config_file:
-                logger.debug(f"Loading config from {self.config_path} ...")
-                config = yaml.safe_load(config_file)
-                if config is not None:
-                    config.update(data or {})
-                    data = config
+        with config_file_lock:
+            # Ensure directories and files exist for config data
+            config_dir = os.path.dirname(self.config_path)
+            if not os.path.exists(config_dir):
+                os.makedirs(config_dir)
+
+            if os.path.exists(self.config_path):
+                with open(self.config_path, "r") as config_file:
+                    logger.debug(f"Loading config from {self.config_path} ...")
+                    config = yaml.safe_load(config_file)
+                    if config is not None:
+                        config.update(data or {})
+                        data = config
 
         # Overload defaults if values passed
         self._data.update(data or {})
 
-        # Ensure directories and files exist for config data
-        config_dir = os.path.dirname(self.config_path)
-        if not os.path.exists(config_dir):
-            os.makedirs(config_dir)
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
-        cookie_jar_dir = os.path.dirname(self.cookie_jar_path)
-        if not os.path.exists(cookie_jar_dir):
-            os.makedirs(cookie_jar_dir)
+
+        with cookies_file_lock:
+            cookie_jar_dir = os.path.dirname(self.cookie_jar_path)
+            if not os.path.exists(cookie_jar_dir):
+                os.makedirs(cookie_jar_dir)
 
         constants_class_split = self.constants_class.split(".")
         selectors_class_split = self.selectors_class.split(".")
@@ -123,7 +134,8 @@ class AmazonOrdersConfig:
         """
         Persist the current state of this config object to the config file.
         """
-        with open(self.config_path, "w") as config_file:
-            logger.debug(f"Saving config to {self.config_path} ...")
+        with config_file_lock:
+            with open(self.config_path, "w") as config_file:
+                logger.debug(f"Saving config to {self.config_path} ...")
 
-            yaml.dump(self._data, config_file)
+                yaml.dump(self._data, config_file)

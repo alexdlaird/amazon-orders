@@ -5,7 +5,7 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
-from typing import List, Optional, Any, Callable
+from typing import Any, Callable, List, Optional
 
 from bs4 import Tag
 
@@ -56,6 +56,8 @@ class AmazonOrders:
 
         order_details_response = self.amazon_session.get(
             f"{self.config.constants.ORDER_DETAILS_URL}?orderID={order_id}")
+        if not order_details_response.response.ok:
+            raise AmazonOrdersError(self.amazon_session.build_response_error(order_details_response.response))
         if order_details_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
             self.amazon_session.raise_expired_session()
 
@@ -110,6 +112,8 @@ class AmazonOrders:
 
         while next_page:
             page_response = self.amazon_session.get(next_page)
+            if not page_response.response.ok:
+                raise AmazonOrdersError(self.amazon_session.build_response_error(page_response.response))
             if page_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
                 self.amazon_session.raise_expired_session()
 
@@ -151,6 +155,8 @@ class AmazonOrders:
                 # TODO: be on the lookout for if this causes rate limit issues with Amazon, or races with the
                 #  URL connection pool. If so, we may need to implement some retry logic here.
                 order_details_response = self.amazon_session.get(order.order_details_link)
+                if not order_details_response.response.ok:
+                    raise AmazonOrdersError(self.amazon_session.build_response_error(order_details_response.response))
                 if order_details_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
                     self.amazon_session.raise_expired_session()
                 order_details_tag = util.select_one(order_details_response.parsed,

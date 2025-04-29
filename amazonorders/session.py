@@ -4,24 +4,21 @@ __license__ = "MIT"
 import json
 import logging
 import os
-import threading
+import time
 from typing import Any, List, Optional
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 import requests
 import requests.adapters
 from requests import Response, Session
 from requests.utils import dict_from_cookiejar
 
-from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file_lock, debug_output_file_lock
 from amazonorders.exception import AmazonOrdersAuthError
-from amazonorders.forms import AuthForm, CaptchaForm, MfaDeviceSelectForm, MfaForm, SignInForm, JSAuthBlocker
+from amazonorders.forms import AuthForm, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm, SignInForm
 from amazonorders.util import AmazonSessionResponse
-from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
-
-cookies_file_lock = threading.Lock()
 
 
 class IODefault:
@@ -121,13 +118,15 @@ class AmazonSession:
         self.is_authenticated: bool = False
 
         cookie_dir = os.path.dirname(self.config.cookie_jar_path)
-        if not os.path.exists(cookie_dir):
-            os.makedirs(cookie_dir)
-        if os.path.exists(self.config.cookie_jar_path):
-            with open(self.config.cookie_jar_path, "r", encoding="utf-8") as f:
-                data = json.loads(f.read())
-                cookies = requests.utils.cookiejar_from_dict(data)
-                self.session.cookies.update(cookies)
+        with config_file_lock:
+            if not os.path.exists(cookie_dir):
+                os.makedirs(cookie_dir)
+        with cookies_file_lock:
+            if os.path.exists(self.config.cookie_jar_path):
+                with open(self.config.cookie_jar_path, "r", encoding="utf-8") as f:
+                    data = json.loads(f.read())
+                    cookies = requests.utils.cookiejar_from_dict(data)
+                    self.session.cookies.update(cookies)
 
     def request(self,
                 method: str,
@@ -148,13 +147,13 @@ class AmazonSession:
             kwargs["headers"] = {}
         kwargs["headers"].update(self.config.constants.BASE_HEADERS)
 
+        url_to_log = url
         if self.debug:
-            url_to_log = url
             if "params" in kwargs:
                 encoded_params = urlencode(kwargs["params"])
                 if encoded_params not in url:
                     url_to_log += "?" + encoded_params
-            logger.debug(f"{method} request to {url_to_log}")
+            logger.debug(f"{method} request: {url_to_log}")
 
         response = self.session.request(method, url, **kwargs)
         amazon_session_response = AmazonSessionResponse(response,
@@ -166,10 +165,12 @@ class AmazonSession:
                 with open(self.config.cookie_jar_path, "w", encoding="utf-8") as f:
                     f.write(json.dumps(cookies))
 
-        logger.debug(
-            f"Response: {amazon_session_response.response.url} - {amazon_session_response.response.status_code}")
-
         if self.debug:
+            url_str = ""
+            if url_to_log != amazon_session_response.response.url:
+                url_str = f" (redirected {amazon_session_response.response.url})"
+            logger.debug(f"Response: {amazon_session_response.response.status_code}{url_str}")
+
             page_name = self._get_page_from_url(self.config.output_dir, amazon_session_response.response.url)
             with open(os.path.join(self.config.output_dir, page_name), "w",
                       encoding="utf-8") as html_file:
@@ -220,9 +221,11 @@ class AmazonSession:
         If existing session data is already persisted, calling this function will still attempt to reauthenticate to
         refresh it.
         """
-        last_response = self.get(self.config.constants.SIGN_IN_URL, params=self.config.constants.SIGN_IN_QUERY_PARAMS)
+        last_response = self.get(self.config.constants.SIGN_IN_URL,
+                                 params=self.config.constants.SIGN_IN_QUERY_PARAMS)
 
         self.is_authenticated = False
+        form_found = False
         attempts = 0
         while not self.is_authenticated and attempts < self.config.max_auth_attempts:
             # TODO: BeautifulSoup doesn't let us query for #nav-item-signout, maybe because it's dynamic on the page,
@@ -234,9 +237,19 @@ class AmazonSession:
                 break
 
             if attempts > 0:
-                logger.debug(f"Retrying auth flow, attempt {attempts} ...")
+                logger.debug(f"Retrying auth flow, attempt {attempts} in "
+                             f"{self.config.auth_reattempt_wait} seconds ...")
+                time.sleep(self.config.auth_reattempt_wait)
 
-            form_found = False
+                # If a form was found on the last attempt, then we already have a response to evaluate from that,
+                # otherwise (and/or if we were redirected back to the home page) re-start the auth flow for this
+                # attempt
+                if not form_found or last_response.response.url.rstrip("/") == self.config.constants.BASE_URL:
+                    last_response = self.get(self.config.constants.SIGN_IN_URL,
+                                             params=self.config.constants.SIGN_IN_QUERY_PARAMS)
+
+                form_found = False
+
             for form in self.auth_forms:
                 if form.select_form(self, last_response.parsed):
                     form_found = True
@@ -247,7 +260,7 @@ class AmazonSession:
                     break
 
             if not form_found:
-                self._handle_auth_error(last_response.response)
+                self._raise_auth_error(last_response.response)
 
             attempts += 1
 
@@ -281,27 +294,25 @@ class AmazonSession:
         if not page_name:
             page_name = "index"
 
-        i = 0
-        filename_frmt = "{page_name}_{index}.html"
-        while os.path.isfile(os.path.join(output_dir, filename_frmt.format(page_name=page_name, index=i))):
-            i += 1
+        with debug_output_file_lock:
+            i = 0
+            filename_frmt = "{page_name}_{index}.html"
+            while os.path.isfile(os.path.join(output_dir, filename_frmt.format(page_name=page_name, index=i))):
+                i += 1
         return filename_frmt.format(page_name=page_name, index=i)
 
-    def _handle_auth_error(self,
-                           response: Response) -> None:
+    def _raise_auth_error(self,
+                          response: Response) -> None:
         if response.ok:
             error_msg = (f"This is an unknown page, or its parsed contents don't match a "
-                         f"known auth flow. If : {response.url}")
+                         f"known auth flow. {response.url}")
         else:
-            error_msg = f"The page {response.url} returned {response.status_code}."
-            if 500 <= response.status_code < 600:
-                error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
-                              "Wait a bit before trying again.")
+            error_msg = self.build_response_error(response)
 
         if not self.debug:
             error_msg += "\n--> To capture the page to a file, set AmazonSession.debug=True."
 
-        logger.warning(error_msg)
+        raise AmazonOrdersAuthError(error_msg)
 
     def _create_session(self):
         session = Session()
@@ -309,3 +320,11 @@ class AmazonSession:
                                                 pool_maxsize=self.config.connection_pool_size)
         session.mount('https://', adapter)
         return session
+
+    def build_response_error(self,
+                             response: Response):
+        error_msg = f"The page {response.url} returned {response.status_code}."
+        if 500 <= response.status_code < 600:
+            error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
+                          "Wait a bit before trying again.")
+        return error_msg

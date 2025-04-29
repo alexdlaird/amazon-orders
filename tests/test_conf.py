@@ -36,6 +36,7 @@ class TestConf(TestCase):
         })
 
         # THEN
+        self.assertEqual(5, config.auth_reattempt_wait)
         self.assertEqual(config_path, config.config_path)
         self.assertTrue(os.path.exists(conf.DEFAULT_CONFIG_DIR))
         self.assertFalse(os.path.exists(config_path))
@@ -52,7 +53,8 @@ class TestConf(TestCase):
         # THEN
         self.assertTrue(os.path.exists(config_path))
         with open(config.config_path, "r") as f:
-            self.assertEqual("""bs4_parser: html.parser
+            self.assertEqual("""auth_reattempt_wait: 5
+bs4_parser: html.parser
 connection_pool_size: {connection_pool_size}
 constants_class: amazonorders.constants.Constants
 cookie_jar_path: {cookie_jar_path}
@@ -65,7 +67,7 @@ selectors_class: amazonorders.selectors.Selectors
 shipment_class: amazonorders.entity.shipment.Shipment
 thread_pool_size: {thread_pool_size}
 """
-                             .format(connection_pool_size=os.cpu_count() * 8,
+                             .format(connection_pool_size=os.cpu_count() * 10,
                                      cookie_jar_path=self.test_cookie_jar_path,
                                      output_dir=self.test_output_dir,
                                      thread_pool_size=os.cpu_count() * 4), f.read())
