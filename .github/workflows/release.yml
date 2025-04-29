@@ -42,6 +42,7 @@ jobs:
   Release:
     name: Release
     needs: [build, integration]
+    if: ${{ always() && ! failure() && ! cancelled() }}
 
     env:
       FORCE_COLOR: 1
