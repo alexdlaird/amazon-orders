@@ -28,7 +28,8 @@ class UnitTestCase(TestCase):
         self.test_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.json")
         self.test_config = AmazonOrdersConfig(data={
             "output_dir": self.test_output_dir,
-            "cookie_jar_path": self.test_cookie_jar_path
+            "cookie_jar_path": self.test_cookie_jar_path,
+            "auth_reattempt_wait": 0
         })
 
         if os.path.exists(self.test_cookie_jar_path):
