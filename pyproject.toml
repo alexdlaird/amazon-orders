@@ -34,6 +34,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "pytest-retry",
     "parameterized",
     "coverage[toml]",
     "flake8",

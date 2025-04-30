@@ -35,12 +35,7 @@ test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev]"; \
-		coverage run -m pytest -v tests/integration; \
-		if [[ $? -ne 0 ]]; then \
-		  	echo "Waiting ${INTEGRATION_TEST_RETRY_SLEEP} seconds before retrying failed tests ..."; \
-		  	timeout $INTEGRATION_TEST_RETRY_SLEEP; \
-		  	coverage run -m pytest -v --lf -x tests/integration; \
-		fi; \
+		pytest -v tests/integration --retries 1 --retry-delay 300; \
 	)
 
 build-test-resources: install

@@ -32,34 +32,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
         else:
             cls.full_details_loop_count = 1
 
-    def test_get_order_history(self):
-        # WHEN
-        orders = self.amazon_orders.get_order_history(year=self.year,
-                                                      start_index=self.start_index)
-
-        # THEN
-        self.assertGreaterEqual(len(orders), 1)
-        self.assert_populated_generic(orders[0], False)
-        self.assertIsNotNone(orders[0].index)
-        self.assert_orders_list_index(orders)
-
-    def test_get_order_history_full_details(self):
-        # The environment variable FULL_DETAILS_LOOP_COUNT can be set to a higher number to put
-        # more successive request pressure on Amazon, which helps ensure the async concurrency that exists when
-        # building Order history won't cause issues with rate limiting, etc.
-        for i in range(self.full_details_loop_count):
-            # WHEN
-            orders = self.amazon_orders.get_order_history(year=self.year,
-                                                          start_index=self.start_index,
-                                                          full_details=True)
-
-            # THEN
-            self.assertGreaterEqual(len(orders), 1)
-            self.assert_populated_generic(orders[0], True)
-            self.assertIsNotNone(orders[0].index)
-            self.assert_orders_list_index(orders)
-
-    def test_get_order_history_single_page_then_get_order(self):
+    def test_get_order_after_get_order_history_single_page(self):
         # WHEN
         orders = self.amazon_orders.get_order_history(year=self.year,
                                                       keep_paging=False)
@@ -86,6 +59,33 @@ class TestIntegrationGeneric(IntegrationTestCase):
         # WHEN
         with self.assertRaises(AmazonOrdersNotFoundError):
             self.amazon_orders.get_order(order_id)
+
+    def test_get_order_history(self):
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=self.year,
+                                                      start_index=self.start_index)
+
+        # THEN
+        self.assertGreaterEqual(len(orders), 1)
+        self.assert_populated_generic(orders[0], False)
+        self.assertIsNotNone(orders[0].index)
+        self.assert_orders_list_index(orders)
+
+    def test_get_order_history_full_details(self):
+        # The environment variable FULL_DETAILS_LOOP_COUNT can be set to a higher number to put
+        # more successive request pressure on Amazon, which helps ensure the async concurrency that exists when
+        # building Order history won't cause issues with rate limiting, etc.
+        for i in range(self.full_details_loop_count):
+            # WHEN
+            orders = self.amazon_orders.get_order_history(year=self.year,
+                                                          start_index=self.start_index,
+                                                          full_details=True)
+
+            # THEN
+            self.assertGreaterEqual(len(orders), 1)
+            self.assert_populated_generic(orders[0], True)
+            self.assertIsNotNone(orders[0].index)
+            self.assert_orders_list_index(orders)
 
     def test_get_transactions(self):
         # WHEN
