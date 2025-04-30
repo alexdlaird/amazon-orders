@@ -89,7 +89,8 @@ class AmazonTransactions:
         Get Amazon transaction history for a given number of days.
 
         :param days: The number of days worth of transactions to get.
-        :param next_page_data: If a previous execution errored, pass :attr:`~amazonorders.exception.AmazonOrdersError.meta` to continue paging.
+        :param next_page_data: If a previous execution errored, pass
+            :attr:`~amazonorders.exception.AmazonOrdersError.meta` to continue paging.
         :return: A list of the requested Transactions.
         """
         if not self.amazon_session.is_authenticated:
