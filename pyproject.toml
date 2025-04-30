@@ -42,7 +42,7 @@ dev = [
     "lxml"
 ]
 integration = [
-    "pytest-retry",
+    "pytest-rerunfailures",
     "parameterized"
 ]
 docs = [

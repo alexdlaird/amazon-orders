@@ -3,7 +3,7 @@
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
 PROJECT_VENV ?= venv
-INTEGRATION_TEST_RETRY_DELAY ?= 300
+INTEGRATION_TEST_RERUN_DELAY ?= 300
 
 all: local check test
 
@@ -35,7 +35,7 @@ test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev,integration]"; \
-		pytest -v -x tests/integration --retries 1 --retry-delay ${INTEGRATION_TEST_RETRY_DELAY}; \
+		pytest -v -x tests/integration --reruns 1 --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY}; \
 	)
 
 build-test-resources: install

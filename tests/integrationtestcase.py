@@ -39,8 +39,8 @@ class IntegrationTestCase(TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        # Slow down between integration suites to ensure we don't trigger Amazon to throttle or lock the account
-        time.sleep(40)
+        print(f"... sleeping {cls.teardown_sleep_time} seconds to slow down between integration suites ...")
+        time.sleep(cls.teardown_sleep_time)
 
     @classmethod
     def set_up_class_conf(cls):
@@ -48,6 +48,8 @@ class IntegrationTestCase(TestCase):
             print("AMAZON_USERNAME and AMAZON_PASSWORD environment variables must be set to run integration tests")
 
             sys.exit(1)
+
+        cls.teardown_sleep_time = os.environ.get("AMAZON_INTEGRATION_TEST_TEARDOWN_SLEEP", 40)
 
         conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".integration-config")
         test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")

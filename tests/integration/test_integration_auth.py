@@ -3,10 +3,11 @@ __license__ = "MIT"
 
 import json
 import os
+import sys
 import time
 import unittest
 
-from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersNotFoundError, AmazonOrdersError
+from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersNotFoundError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.integrationtestcase import IntegrationTestCase
@@ -29,8 +30,8 @@ class TestIntegrationAuth(IntegrationTestCase):
             os.remove(self.test_config.cookie_jar_path)
 
     def tearDown(self):
-        # Slow down between integration auth tests to ensure we don't trigger Amazon to throttle or lock the account
-        time.sleep(40)
+        print(f"... sleeping {self.teardown_sleep_time} seconds to slow down between auth tests ...")
+        time.sleep(self.teardown_sleep_time)
 
     def test_login_then_expire_persisted_session(self):
         # GIVEN
