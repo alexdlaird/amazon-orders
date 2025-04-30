@@ -1,12 +1,21 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+from typing import Union, Optional, Dict, Any
+
 
 class AmazonOrdersError(Exception):
     """
     Raised when a general ``amazon-orders`` error has occurred.
     """
-    pass
+
+    def __init__(self,
+                 error: Union[str, BaseException],
+                 meta: Optional[Dict[str, Any]] = None) -> None:
+        super(AmazonOrdersError, self).__init__(error)
+
+        #: Metadata for context around when the error was raised.
+        self.meta = meta
 
 
 class AmazonOrdersNotFoundError(AmazonOrdersError):

@@ -229,7 +229,7 @@ Transaction History for {days} days
         ctx.fail(str(e))
 
 
-@amazon_orders_cli.command(short_help="Check if persisted session exists.")
+@amazon_orders_cli.command(short_help="Check if a persisted session exists.")
 @click.pass_context
 def check_session(ctx: Context) -> None:
     """
@@ -268,7 +268,7 @@ def logout(ctx: Context) -> None:
     amazon_session = ctx.obj["amazon_session"]
     amazon_session.logout()
 
-    click.echo("Info: Successfully logged out of the Amazon session.\n")
+    click.echo("Info: Successfully logged out of Amazon.\n")
 
 
 @amazon_orders_cli.command()

@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import json
 import os
 import re
 import shutil
@@ -29,7 +30,8 @@ class UnitTestCase(TestCase):
         self.test_config = AmazonOrdersConfig(data={
             "output_dir": self.test_output_dir,
             "cookie_jar_path": self.test_cookie_jar_path,
-            "auth_reattempt_wait": 0
+            "auth_reattempt_wait": 0,
+            "max_auth_retries": 0
         })
 
         if os.path.exists(self.test_cookie_jar_path):
@@ -81,6 +83,25 @@ class UnitTestCase(TestCase):
                 match=[urlencoded_params_matcher(request_data)],
             )
 
+    def given_authenticated_url_redirects_to_login(self,
+                                                   method=responses.GET):
+        return responses.add(
+            method,
+            re.compile(f"{self.test_config.constants.BASE_URL}/(gp|cpe|your-orders)/.*"),
+            status=302,
+            headers={"Location": self.test_config.constants.SIGN_IN_URL}
+        )
+
+    def given_authenticated_url_renders_login(self,
+                                              method=responses.GET):
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            return responses.add(
+                method,
+                re.compile(f"{self.test_config.constants.BASE_URL}/(gp|cpe|your-orders)/.*"),
+                body=f.read(),
+                status=200
+            )
+
     def given_order_history_exists(self, year, start_index=0):
         with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-history-{year}-{start_index}.html"), "r",
                   encoding="utf-8") as f:
@@ -114,6 +135,14 @@ class UnitTestCase(TestCase):
                 body=f.read(),
                 status=200,
             )
+
+    def given_persisted_session_exists(self):
+        cookies = {"session-id": "my-session-id",
+                   "session-token": "my-session-token",
+                   "x-main": "bleep-bleep-bloop",
+                   "skin": "noskin"}
+        with open(self.test_config.cookie_jar_path, "w", encoding="utf-8") as f:
+            f.write(json.dumps(cookies))
 
     def assert_login_responses_success(self):
         self.assertEqual(1, self.signin_response.call_count)

@@ -43,7 +43,7 @@ class Order(Parsable):
         #: order is placed, all indexes will then be off by one), but is still captured as it may be applicable in
         #: various use-cases. Only set when the Order is populated through
         #: :func:`~amazonorders.orders.AmazonOrders.get_order_history` (use ``start_index`` to correlate).
-        self.index: Optional[int] = index
+        self.index: Optional[int] = index if index is not None else (clone.index if clone else None)
 
         #: The Order Shipments.
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
@@ -165,7 +165,7 @@ class Order(Parsable):
             value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
             if value:
-                data_popover = value.get("data-a-popover", {})  # type: ignore[arg-type, var-annotated]
+                data_popover = value.get("data-a-popover", {})  # type: ignore[var-annotated]
                 inline_content = data_popover.get("inlineContent")  # type: ignore[union-attr]
                 if inline_content:
                     value = BeautifulSoup(json.loads(inline_content), self.config.bs4_parser)
@@ -195,7 +195,9 @@ class Order(Parsable):
 
         return Recipient(value, self.config)
 
-    def _parse_currency(self, contains, combine_multiple=False) -> Optional[float]:
+    def _parse_currency(self,
+                        contains: str,
+                        combine_multiple: bool = False) -> Optional[float]:
         value = None
 
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):

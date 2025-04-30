@@ -101,12 +101,7 @@ class AmazonTransactions:
         while keep_paging:
             transaction_page_response = self.amazon_session.post(self.config.constants.TRANSACTION_HISTORY_URL,
                                                                  data=next_page_data)
-            if not transaction_page_response.response.ok:
-                raise AmazonOrdersError(self.amazon_session.build_response_error(transaction_page_response.response))
-            if transaction_page_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
-                self.amazon_session.raise_expired_session()
-            if not transaction_page_response.parsed:
-                raise AmazonOrdersError("Could not process transaction history.")
+            self.amazon_session.check_response(transaction_page_response)
 
             form_tag = util.select_one(transaction_page_response.parsed,
                                        self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)

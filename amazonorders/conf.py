@@ -97,10 +97,11 @@ class AmazonOrdersConfig:
                      key: str) -> bool:
         return key in self._data
 
-    def __getstate__(self):
+    def __getstate__(self) -> Dict[str, Any]:
         return self._data
 
-    def __setstate__(self, state):
+    def __setstate__(self,
+                     state: Dict[str, Any]) -> None:
         self._data = state
         constants_class_split = self.constants_class.split(".")
         selectors_class_split = self.selectors_class.split(".")

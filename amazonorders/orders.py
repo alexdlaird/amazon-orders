@@ -44,29 +44,31 @@ class AmazonOrders:
             logger.setLevel(logging.DEBUG)
 
     def get_order(self,
-                  order_id: str) -> Order:
+                  order_id: str,
+                  clone: Optional[Order] = None) -> Order:
         """
         Get the full details for a given Amazon order ID.
 
         :param order_id: The Amazon Order ID to lookup.
+        :param clone: If a partially populated version of the order has already been fetched from history.
         :return: The requested Order.
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
+        meta = {"index": clone.index} if clone else None
+
         order_details_response = self.amazon_session.get(
             f"{self.config.constants.ORDER_DETAILS_URL}?orderID={order_id}")
-        if not order_details_response.response.ok:
-            raise AmazonOrdersError(self.amazon_session.build_response_error(order_details_response.response))
-        if order_details_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
-            self.amazon_session.raise_expired_session()
+        self.amazon_session.check_response(order_details_response, meta=meta)
 
         if not order_details_response.response.url.startswith(self.config.constants.ORDER_DETAILS_URL):
-            raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.")
+            raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.",
+                                            meta=meta)
 
         order_details_tag = util.select_one(order_details_response.parsed,
                                             self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-        order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True)
+        order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=clone)
 
         return order
 
@@ -112,10 +114,7 @@ class AmazonOrders:
 
         while next_page:
             page_response = self.amazon_session.get(next_page)
-            if not page_response.response.ok:
-                raise AmazonOrdersError(self.amazon_session.build_response_error(page_response.response))
-            if page_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
-                self.amazon_session.raise_expired_session()
+            self.amazon_session.check_response(page_response, meta={"index": current_index})
 
             for order_tag in util.select(page_response.parsed,
                                          self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
@@ -145,24 +144,11 @@ class AmazonOrders:
         order: Order = self.config.order_cls(order_tag, self.config, index=current_index)
 
         if full_details:
-            if not order.order_details_link:
-                logger.warning(f"Order {order.order_number} was partially populated, "
-                               f"since order_details_link was not found.")
-            elif len(util.select(order.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
+            if len(util.select(order.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
                 logger.warning(f"Order {order.order_number} was partially populated, "
                                f"since it is an unsupported Order type.")
             else:
-                # TODO: be on the lookout for if this causes rate limit issues with Amazon, or races with the
-                #  URL connection pool. If so, we may need to implement some retry logic here.
-                order_details_response = self.amazon_session.get(order.order_details_link)
-                if not order_details_response.response.ok:
-                    raise AmazonOrdersError(self.amazon_session.build_response_error(order_details_response.response))
-                if order_details_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
-                    self.amazon_session.raise_expired_session()
-                order_details_tag = util.select_one(order_details_response.parsed,
-                                                    self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-                order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=order,
-                                              index=current_index)
+                order = self.get_order(order.order_number, clone=order)
 
         return order
 

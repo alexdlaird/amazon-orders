@@ -6,8 +6,10 @@ import unittest
 from datetime import date
 
 import responses
+from bs4 import Tag, BeautifulSoup
 
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.entity.order import Order
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError, AmazonOrdersNotFoundError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
@@ -28,10 +30,49 @@ class TestOrders(UnitTestCase):
 
         self.amazon_orders = AmazonOrders(self.amazon_session)
 
-    def test_get_orders_unauthenticated(self):
+    def test_get_order_unauthenticated(self):
         # WHEN
-        with self.assertRaises(AmazonOrdersError):
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order("1234-fake-id")
+
+        self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
+
+    def test_get_order_history_unauthenticated(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
             self.amazon_orders.get_order_history()
+
+        self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
+
+    @responses.activate
+    def test_get_order_session_expires(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_authenticated_url_redirects_to_login()
+        self.given_login_responses_success()
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
+            self.amazon_orders.get_order("1234-fake-id")
+
+        self.assertIn("Amazon redirected to login.", str(cm.exception))
+        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
+    def test_get_order_history_session_expires(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_authenticated_url_redirects_to_login()
+        self.given_login_responses_success()
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
+            self.amazon_orders.get_order_history()
+
+        self.assertIn("Amazon redirected to login.", str(cm.exception))
+        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertEqual(1, resp.call_count)
 
     @responses.activate
     def test_get_order_history(self):
@@ -49,6 +90,27 @@ class TestOrders(UnitTestCase):
         self.assertEqual(3, orders[3].index)
         self.assert_orders_list_index(orders)
         self.assertEqual(1, resp.call_count)
+
+    @responses.activate
+    def test_get_order_history_errors_with_meta(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2020
+        start_index = 40
+        resp = responses.add(
+            responses.GET,
+            f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+            status=503,
+        )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order_history(year=year,
+                                                 start_index=start_index)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertEqual(cm.exception.meta["index"], start_index)
 
     @responses.activate
     def test_get_order_history_2024_data_component(self):
@@ -347,7 +409,7 @@ class TestOrders(UnitTestCase):
         order_id = "112-9685975-5907428"
         with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
                   encoding="utf-8") as f:
-            resp1 = responses.add(
+            resp = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
                 body=f.read(),
@@ -360,7 +422,50 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
         self.assertIsNone(order.index)
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
+    def test_get_order_not_found_errors_with_meta(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "112-9685975-5907428"
+        index = 42
+        # The first time we fetch it will succeed
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+        # The second time it will redirect, simulating a not found
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                status=302,
+                headers={"Location": self.test_config.constants.ORDER_HISTORY_URL}
+            )
+        resp3 = responses.add(
+            responses.GET,
+            self.test_config.constants.ORDER_HISTORY_URL,
+            status=200
+        )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+        # Set the index, simulating that we fetched this order from a history query
+        order.index = index
+        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+            self.amazon_orders.get_order(order_id, clone=order)
+
+        # THEN
         self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(1, resp3.call_count)
+        self.assertEqual(cm.exception.meta["index"], index)
 
     @responses.activate
     def test_get_order_2024_data_component(self):

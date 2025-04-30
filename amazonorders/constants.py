@@ -99,7 +99,8 @@ class Constants:
 
     CURRENCY_SYMBOL = os.environ.get("AMAZON_CURRENCY_SYMBOL", "$")
 
-    def format_currency(self, amount):
+    def format_currency(self,
+                        amount: float) -> str:
         formatted_amt = "{currency_symbol}{amount:,.2f}".format(currency_symbol=self.CURRENCY_SYMBOL,
                                                                 amount=abs(amount))
         if round(amount, 2) < 0:

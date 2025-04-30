@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 import responses
 from bs4 import BeautifulSoup
 
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
 from amazonorders.session import AmazonSession
 from amazonorders.transactions import AmazonTransactions, _parse_transaction_form_tag
 from tests.unittestcase import UnitTestCase
@@ -22,6 +23,27 @@ class TestTransactions(UnitTestCase):
         )
 
         self.amazon_transactions = AmazonTransactions(self.amazon_session)
+
+    def test_get_transactions_unauthenticated(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_transactions.get_transactions()
+
+        self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
+
+    @responses.activate
+    def test_get_transactions_session_expires(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_authenticated_url_renders_login(method=responses.POST)
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
+            self.amazon_transactions.get_transactions()
+
+        self.assertIn("Amazon redirected to login.", str(cm.exception))
+        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertEqual(1, resp.call_count)
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)

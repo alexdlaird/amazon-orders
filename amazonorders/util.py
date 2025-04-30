@@ -4,7 +4,7 @@ __license__ = "MIT"
 import importlib
 import logging
 import re
-from typing import List, Union, Optional, Callable
+from typing import List, Union, Optional, Callable, Any
 
 from bs4 import Tag, BeautifulSoup
 from requests import Response
@@ -58,7 +58,8 @@ def select(parsed: Tag, selector: Union[List[Union[str, Selector]], Union[str, S
     return []
 
 
-def select_one(parsed: Tag, selector: Union[List[Union[str, Selector]], Union[str, Selector]]) -> Optional[Tag]:
+def select_one(parsed: Tag,
+               selector: Union[List[Union[str, Selector]], Union[str, Selector]]) -> Optional[Tag]:
     """
     This is a helper function that extends BeautifulSoup's `select_one() <https://www.crummy.com/software/
     BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_ method to allow for multiple selectors.
@@ -121,7 +122,7 @@ def to_type(value: str) -> Union[int, float, bool, str, None]:
     return rv
 
 
-def load_class(package: List, clazz: str) -> Callable:
+def load_class(package: List[str], clazz: str) -> Union[Callable, Any]:
     """
     Import the given class from the given package, and return it.
 
@@ -133,7 +134,7 @@ def load_class(package: List, clazz: str) -> Callable:
     return getattr(constants_mod, clazz)
 
 
-def cleanup_html_text(text: str):
+def cleanup_html_text(text: str) -> str:
     """
     Cleanup excessive whitespace within text that comes from an HTML block.
 

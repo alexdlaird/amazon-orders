@@ -82,16 +82,16 @@ def build_test_resources(args):
     for page in pages_to_download:
         if page["type"] == "order-details":
             url = f"{config.constants.ORDER_DETAILS_URL}?orderID={page['order-id']}"
-            amazon_session_response = amazon_session.get(url)
-            response_parsed = BeautifulSoup(amazon_session_response.response.text, "html.parser")
+            session_response = amazon_session.get(url)
+            response_parsed = BeautifulSoup(session_response.response.text, "html.parser")
 
             cleaned_response = _obfuscate(response_parsed, hide_data_rules)
 
             page_name = f"order-details-{page['order-id']}.html"
         else:
             url = f"{config.constants.ORDER_HISTORY_URL}?timeFilter=year-{page['year']}&startIndex={page['start-index']}"
-            amazon_session_response = amazon_session.get(url)
-            response_parsed = BeautifulSoup(amazon_session_response.response.text, "html.parser")
+            session_response = amazon_session.get(url)
+            response_parsed = BeautifulSoup(session_response.response.text, "html.parser")
 
             cleaned_response = _obfuscate(response_parsed, hide_data_rules)
 

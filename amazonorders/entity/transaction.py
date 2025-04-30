@@ -4,6 +4,7 @@ __license__ = "MIT"
 import logging
 import re
 from datetime import date
+from typing import Union, Optional
 
 from amazonorders.exception import AmazonOrdersError
 from bs4 import Tag
@@ -50,7 +51,7 @@ class Transaction(Parsable):
     def __str__(self) -> str:  # pragma: no cover
         return f"Transaction {self.completed_date}: Order #{self.order_number}, Grand Total: {self.grand_total}"
 
-    def _parse_grand_total(self) -> float:
+    def _parse_grand_total(self) -> Union[float, int]:
         value = self.simple_parse(self.config.selectors.FIELD_TRANSACTION_GRAND_TOTAL_SELECTOR)
 
         value = self.to_currency(value)
@@ -64,9 +65,7 @@ class Transaction(Parsable):
         return value
 
     def _parse_order_number(self) -> str:
-        value = self.simple_parse(
-            self.config.selectors.FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR
-        )
+        value = self.simple_parse(self.config.selectors.FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR)
 
         if value is None:
             raise AmazonOrdersError(
@@ -79,14 +78,10 @@ class Transaction(Parsable):
 
         return value
 
-    def _parse_order_details_link(self) -> str:
-        value = self.simple_parse(
-            self.config.selectors.FIELD_TRANSACTION_ORDER_LINK_SELECTOR, attr_name="href"
-        )
+    def _parse_order_details_link(self) -> Optional[str]:
+        value = self.simple_parse(self.config.selectors.FIELD_TRANSACTION_ORDER_LINK_SELECTOR, attr_name="href")
 
         if not value and self.order_number:
-            value = (
-                f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
-            )
+            value = f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
 
         return value

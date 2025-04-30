@@ -5,7 +5,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 from urllib.parse import urlencode, urlparse
 
 import requests
@@ -14,7 +14,7 @@ from requests import Response, Session
 from requests.utils import dict_from_cookiejar
 
 from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file_lock, debug_output_file_lock
-from amazonorders.exception import AmazonOrdersAuthError
+from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
 from amazonorders.forms import AuthForm, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm, SignInForm
 from amazonorders.util import AmazonSessionResponse
 
@@ -269,14 +269,6 @@ class AmazonSession:
                 "Authentication attempts exhausted. If authentication is correct, "
                 "try increasing AmazonOrdersConfig.max_auth_attempts.")
 
-    def raise_expired_session(self):
-        """
-        Mark the session as expired and raise an error.
-        """
-        self.is_authenticated = False
-        raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
-                                    "reauthenticate first.")
-
     def logout(self) -> None:
         """
         Logout and close the existing Amazon session and clear cookies.
@@ -286,6 +278,40 @@ class AmazonSession:
 
         self.session = self._create_session()
         self.is_authenticated = False
+
+    def build_response_error(self,
+                             response: Response) -> str:
+        """
+        Build an error message from the given response.
+
+        :param response: The response to check and build a response.
+        :return: The error message.
+        """
+        error_msg = f"The page {response.url} returned {response.status_code}."
+        if 500 <= response.status_code < 600:
+            error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
+                          "Wait a bit before trying again.")
+        return error_msg
+
+    def check_response(self,
+                       amazon_session_response: AmazonSessionResponse,
+                       meta: Optional[Dict[str, Any]] = None) -> None:
+        """
+        Check the response to ensure it appears to be returning a valid response, and that it is still authenticated.
+        We detect if authentication has expired by checking for redirects to the login page. Raise an error if the
+        response is not going to contain the requested data for parsing.
+
+        :param amazon_session_response: The response to check.
+        :param meta: Metadata to be added to any errors raised.
+        """
+        if not amazon_session_response.response.ok:
+            raise AmazonOrdersError(self.build_response_error(amazon_session_response.response), meta=meta)
+        if (amazon_session_response.response.url.startswith(self.config.constants.SIGN_IN_URL) or
+                (amazon_session_response.parsed and
+                 amazon_session_response.parsed.select_one(self.config.selectors.SIGN_IN_FORM_SELECTOR) is not None)):
+            self.is_authenticated = False
+            raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
+                                        "reauthenticate first.", meta=meta)
 
     def _get_page_from_url(self,
                            output_dir: str,
@@ -314,17 +340,9 @@ class AmazonSession:
 
         raise AmazonOrdersAuthError(error_msg)
 
-    def _create_session(self):
+    def _create_session(self) -> Session:
         session = Session()
         adapter = requests.adapters.HTTPAdapter(pool_connections=self.config.connection_pool_size,
                                                 pool_maxsize=self.config.connection_pool_size)
         session.mount('https://', adapter)
         return session
-
-    def build_response_error(self,
-                             response: Response):
-        error_msg = f"The page {response.url} returned {response.status_code}."
-        if 500 <= response.status_code < 600:
-            error_msg += (" Amazon had an issue on their end, or may be temporarily blocking your requests. "
-                          "Wait a bit before trying again.")
-        return error_msg

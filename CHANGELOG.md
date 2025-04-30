@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.3...HEAD)
 
+### Added
+
+- Stability improvements and increased test coverage.
+- Documentation improvements.
+
 ## [4.0.3](https://github.com/alexdlaird/amazon-orders/compare/4.0.2...4.0.3) - 2025-04-29
 
 ### Added

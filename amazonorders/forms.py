@@ -4,7 +4,7 @@ __license__ = "MIT"
 import re
 from abc import ABC
 from io import BytesIO
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import Any, Dict, Optional, TYPE_CHECKING, Union
 from urllib.parse import urlparse
 
 import pyotp
@@ -125,7 +125,7 @@ class AuthForm(ABC):
         self.data = None
 
     def _solve_captcha(self,
-                       url: str) -> str:
+                       url: str) -> Union[str, Any]:
         if not self.amazon_session:
             raise AmazonOrdersError(
                 "Call AuthForm.select_form() first."

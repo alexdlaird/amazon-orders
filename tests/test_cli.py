@@ -16,17 +16,76 @@ class TestCli(UnitTestCase):
     def setUp(self):
         super().setUp()
 
+        self.test_config.save()
+
         self.runner = CliRunner()
 
     def test_missing_credentials(self):
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
-                                      ["--config-path", self.test_config.config_path,
-                                       "--username", "", "--password", ""])
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "",
+                                          "--password", ""
+                                      ])
 
         # THEN
         self.assertEqual(2, response.exit_code)
         self.assertTrue("Usage: " in response.output)
+
+    @responses.activate
+    def test_login_command(self):
+        # GIVEN
+        self.given_login_responses_success()
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username",
+                                          "--password", "some-password",
+                                          "login"
+                                      ])
+
+        self.assertEqual(0, response.exit_code)
+        self.assert_login_responses_success()
+        self.assertIn("Successfully logged in to Amazon", response.output)
+
+    @responses.activate
+    def test_logout_command(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        signout_response = responses.add(
+            responses.GET,
+            self.test_config.constants.SIGN_OUT_URL,
+            status=200,
+        )
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "logout"
+                                      ])
+
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, signout_response.call_count)
+        self.assertIn("Successfully logged out of Amazon", response.output)
+
+    @responses.activate
+    def test_check_session_command(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "check-session"
+                                      ])
+
+        self.assertEqual(0, response.exit_code)
+        self.assertIn("A persisted session exists", response.output)
 
     @responses.activate
     def test_history_command(self):
@@ -38,10 +97,11 @@ class TestCli(UnitTestCase):
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
-                                      ["--config-path", self.test_config.config_path,
-                                       "--username", "some-username", "--password",
-                                       "some-password", "history", "--year",
-                                       year, "--start-index", start_index, "--single-page"])
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username",
+                                          "--password", "some-password",
+                                          "history", "--year", year, "--start-index", start_index, "--single-page"])
 
         # THEN
         self.assertEqual(0, response.exit_code)
@@ -74,9 +134,12 @@ class TestCli(UnitTestCase):
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
-                                      ["--config-path", self.test_config.config_path,
-                                       "--username", "some-username", "--password",
-                                       "some-password", "order", order_id])
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username",
+                                          "--password", "some-password",
+                                          "order", order_id
+                                      ])
 
         # THEN
         self.assertEqual(0, response.exit_code)
@@ -103,14 +166,10 @@ class TestCli(UnitTestCase):
         response = self.runner.invoke(
             amazon_orders_cli,
             [
-                "--config-path",
-                self.test_config.config_path,
-                "--username",
-                "some-username",
-                "--password",
-                "some-password",
-                "transactions",
-                "--days",
+                "--config-path", self.test_config.config_path,
+                "--username", "some-username",
+                "--password", "some-password",
+                "transactions", "--days",
                 days,
             ],
         )
@@ -121,6 +180,110 @@ class TestCli(UnitTestCase):
         self.assertIn("1 transactions parsed", response.output)
         self.assertIn("Transaction: 2024-10-11\n  Order #123-4567890-1234567\n  Grand Total: -$45.19", response.output)
 
+    @responses.activate
+    def test_history_command_error(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-invalid-password.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username",
+                                          "--password", "some-password",
+                                          "history"
+                                      ])
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertIn("Error from Amazon: There was a problem. Your password is incorrect.", response.output)
+
+    @responses.activate
+    def test_order_command_error(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-invalid-password.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username",
+                                          "--password", "some-password",
+                                          "order", "1234-fake-id"
+                                      ])
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertIn("Error from Amazon: There was a problem. Your password is incorrect.", response.output)
+
+    @responses.activate
+    def test_transactions_command_error(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-invalid-password.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(
+            amazon_orders_cli,
+            [
+                "--config-path", self.test_config.config_path,
+                "--username", "some-username",
+                "--password", "some-password",
+                "transactions"
+            ],
+        )
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertIn("Error from Amazon: There was a problem. Your password is incorrect.", response.output)
+
     def test_update_config(self):
         # GIVEN
         self.test_config.save()
@@ -129,8 +292,10 @@ class TestCli(UnitTestCase):
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
-                                      ["--config-path", self.test_config.config_path,
-                                       "update-config", "max_auth_attempts", "7"])
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "update-config", "max_auth_attempts", "7"
+                                      ])
 
         # THEN
         self.assertEqual(0, response.exit_code)
