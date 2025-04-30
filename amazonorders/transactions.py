@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import datetime
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 
 from bs4 import Tag
 from dateutil import parser
@@ -34,7 +34,7 @@ def _parse_transaction_form_tag(form_tag: Tag,
         transactions_container_tag = date_container_tag.find_next_sibling(
             config.selectors.TRANSACTIONS_CONTAINER_SELECTOR)
         if not isinstance(transactions_container_tag, Tag):
-            logger.warning("Could not find transactions container tag in Transaction form.")
+            logger.warning("Could not find Transactions container tag in Transaction form.")
             continue
 
         transaction_tags = util.select(transactions_container_tag, config.selectors.TRANSACTIONS_SELECTOR)
@@ -83,11 +83,13 @@ class AmazonTransactions:
             logger.setLevel(logging.DEBUG)
 
     def get_transactions(self,
-                         days: int = 365) -> List[Transaction]:
+                         days: int = 365,
+                         next_page_data: Optional[Dict[str, Any]] = None) -> List[Transaction]:
         """
         Get Amazon transaction history for a given number of days.
 
         :param days: The number of days worth of transactions to get.
+        :param next_page_data: If a previous execution errored, pass :attr:`~amazonorders.exception.AmazonOrdersError.meta` to continue paging.
         :return: A list of the requested Transactions.
         """
         if not self.amazon_session.is_authenticated:
@@ -97,17 +99,16 @@ class AmazonTransactions:
 
         transactions: List[Transaction] = []
         keep_paging = True
-        next_page_data = None
         while keep_paging:
             transaction_page_response = self.amazon_session.post(self.config.constants.TRANSACTION_HISTORY_URL,
                                                                  data=next_page_data)
-            self.amazon_session.check_response(transaction_page_response)
+            self.amazon_session.check_response(transaction_page_response, meta=next_page_data)
 
             form_tag = util.select_one(transaction_page_response.parsed,
                                        self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
 
             if not form_tag:
-                break
+                raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.")
 
             loaded_transactions, next_page_data = (
                 _parse_transaction_form_tag(form_tag, self.config)

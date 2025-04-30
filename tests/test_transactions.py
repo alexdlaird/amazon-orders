@@ -18,9 +18,9 @@ class TestTransactions(UnitTestCase):
     def setUp(self):
         super().setUp()
 
-        self.amazon_session = AmazonSession(
-            "some-username", "some-password", config=self.test_config
-        )
+        self.amazon_session = AmazonSession("some-username",
+                                            "some-password",
+                                            config=self.test_config)
 
         self.amazon_transactions = AmazonTransactions(self.amazon_session)
 
@@ -52,10 +52,9 @@ class TestTransactions(UnitTestCase):
         mock_get_today.date.today.return_value = datetime.date(2024, 10, 11)
         days = 1
         self.amazon_session.is_authenticated = True
-        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"),
-                  "r",
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",
                   encoding="utf-8") as f:
-            responses.add(
+            resp = responses.add(
                 responses.POST,
                 f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
@@ -76,6 +75,46 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(transaction.order_details_link,
                          "https://www.amazon.ca/gp/css/summary/edit.html?orderID=123-4567890-1234567")
         self.assertEqual(transaction.seller, "AMZN Mktp CA")
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
+    def test_get_transactions_errors_with_meta(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = responses.add(
+            responses.POST,
+            f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
+            status=503,
+        )
+        next_page_data = {"some": "meta"}
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_transactions.get_transactions(next_page_data=next_page_data)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertEqual(cm.exception.meta, next_page_data)
+
+    @responses.activate
+    def test_get_transactions_invalid_page(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "500.html"), "r", encoding="utf-8") as f:
+            resp = responses.add(
+                responses.POST,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_transactions.get_transactions()
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("Could not parse Transaction history.", str(cm.exception))
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)

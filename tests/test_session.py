@@ -327,7 +327,7 @@ class TestSession(UnitTestCase):
                 "F2.0&amzn-pt=AuthenticationPortal&field-keywords=FBJRAC")],
         )
         # Successful Captcha redirects us back to the home page, which should restart the auth flow
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "index.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "index.html"), "r", encoding="utf-8") as f:
             resp5 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/",
@@ -484,7 +484,7 @@ class TestSession(UnitTestCase):
                 "F2.0&amzn-pt=AuthenticationPortal&field-keywords=FBJRAC")],
         )
         # Successful Captcha redirects us back to the home page, which should restart the auth flow
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "index.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "index.html"), "r", encoding="utf-8") as f:
             resp5 = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.BASE_URL}/",

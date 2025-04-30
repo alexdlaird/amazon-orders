@@ -12,6 +12,11 @@ Main Interface
     :private-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.transactions
+    :members:
+    :private-members:
+    :show-inheritance:
+
 Session Management
 ------------------
 

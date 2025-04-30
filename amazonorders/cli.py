@@ -108,13 +108,13 @@ def amazon_orders_cli(ctx: Context,
 @amazon_orders_cli.command()
 @click.pass_context
 @click.option("--year", default=datetime.date.today().year,
-              help="The year for which to get order history, defaults to the current year.")
+              help="The year for which to get Order history, defaults to the current year.")
 @click.option("--start-index",
               help="The index of the Order from which to start fetching in the history.")
 @click.option("--single-page", is_flag=True, default=False,
               help="Only one page should be fetched.")
 @click.option("--full-details", is_flag=True, default=False,
-              help="Get the full details for each order in the history. "
+              help="Get the full details for each Order in the history. "
                    "This will execute an additional request per Order.")
 def history(ctx: Context,
             **kwargs: Any) -> None:
@@ -139,7 +139,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
                    .format(year=year,
                            optional_start_index=optional_start_index,
                            optional_full_details=optional_full_details))
-        click.echo("Info: Fetching order history, this might take a minute ...")
+        click.echo("Info: Fetching Order history, this might take a minute ...")
 
         config = ctx.obj["conf"]
         amazon_orders = AmazonOrders(amazon_session,
@@ -156,7 +156,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
         end_time = time.time()
 
         click.echo(
-            "... {total} orders parsed in {time} seconds.\n".format(total=total,
+            "... {total} Orders parsed in {time} seconds.\n".format(total=total,
                                                                     time=int(end_time - start_time)))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
@@ -191,7 +191,7 @@ def order(ctx: Context,
 @amazon_orders_cli.command()
 @click.pass_context
 @click.option("--days", default=365,
-              help="The number of days of transactions to get.")
+              help="The number of days of Transactions to get.")
 def transactions(ctx: Context, **kwargs: Any):
     """
     Get Amazon transaction history for a given number of days.
@@ -208,7 +208,7 @@ def transactions(ctx: Context, **kwargs: Any):
 Transaction History for {days} days
 -----------------------------------------------------------------------\n""".format(days=days)
         )
-        click.echo("Info: Fetching transaction history, this might take a minute ...")
+        click.echo("Info: Fetching Transaction history, this might take a minute ...")
 
         config = ctx.obj["conf"]
         amazon_transactions = AmazonTransactions(amazon_session,
@@ -222,7 +222,7 @@ Transaction History for {days} days
         end_time = time.time()
 
         click.echo(
-            "... {total} transactions parsed in {time} seconds.\n".format(total=total,
+            "... {total} Transactions parsed in {time} seconds.\n".format(total=total,
                                                                           time=int(end_time - start_time)))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)

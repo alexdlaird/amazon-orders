@@ -111,6 +111,30 @@ class TestOrders(UnitTestCase):
         self.assertEqual(cm.exception.meta["index"], start_index)
 
     @responses.activate
+    def test_get_order_history_invalid_page(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2020
+        start_index = 40
+        with open(os.path.join(self.RESOURCES_DIR, "500.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order_history(year=year,
+                                                 start_index=start_index)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("Could not parse Order history.", str(cm.exception))
+
+    @responses.activate
     def test_get_order_history_2024_data_component(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
@@ -464,6 +488,28 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
         self.assertEqual(1, resp3.call_count)
         self.assertEqual(cm.exception.meta["index"], index)
+
+    @responses.activate
+    def test_get_order_invalid_page(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "112-9685975-5907428"
+        with open(os.path.join(self.RESOURCES_DIR, "500.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("Could not parse details for Order", str(cm.exception))
 
     @responses.activate
     def test_get_order_2024_data_component(self):

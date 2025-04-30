@@ -68,6 +68,10 @@ class AmazonOrders:
 
         order_details_tag = util.select_one(order_details_response.parsed,
                                             self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+
+        if not order_details_tag:
+            raise AmazonOrdersError(f"Could not parse details for Order {order_id}. Check if Amazon changed the HTML.")
+
         order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=clone)
 
         return order
@@ -116,8 +120,13 @@ class AmazonOrders:
             page_response = self.amazon_session.get(next_page)
             self.amazon_session.check_response(page_response, meta={"index": current_index})
 
-            for order_tag in util.select(page_response.parsed,
-                                         self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR):
+            order_tags = util.select(page_response.parsed,
+                                     self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
+
+            if not order_tags:
+                raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")
+
+            for order_tag in order_tags:
                 order_tasks.append(self._async_wrapper(self._build_order, order_tag, full_details, current_index))
 
                 current_index += 1

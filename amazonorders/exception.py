@@ -14,7 +14,7 @@ class AmazonOrdersError(Exception):
                  meta: Optional[Dict[str, Any]] = None) -> None:
         super(AmazonOrdersError, self).__init__(error)
 
-        #: Metadata for context around when the error was raised.
+        #: Metadata for context around the error was raised.
         self.meta = meta
 
 
