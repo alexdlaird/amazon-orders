@@ -28,14 +28,14 @@ test: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev]"; \
-		coverage run -m pytest -v --ignore=tests/integration && coverage report && coverage xml && coverage html; \
+		coverage run -m pytest -v --ignore=tests/integration -o junit_suite_name=unit && coverage report && coverage xml && coverage html; \
 	)
 
 test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev,integration]"; \
-		pytest -v -x -k test_integration --reruns 1 --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY}; \
+		pytest -v -x --ignore=tests/unit -o junit_suite_name=integration --reruns 1 --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY}; \
 	)
 
 build-test-resources: install
