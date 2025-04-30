@@ -41,13 +41,8 @@ jobs:
           python-version: 3.12
       - name: Install jpeg
         run: sudo apt-get install -y libjpeg-dev zlib1g-dev
-      - name: Test
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 20
-          retry_wait_seconds: 300
-          max_attempts: 2
-          command: make test-integration
+      - name: Integration test
+        run: make test-integration
       - name: Upload test output
         if: ${{ always() }}
         uses: actions/upload-artifact@v4

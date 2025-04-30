@@ -3,6 +3,7 @@
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
 PROJECT_VENV ?= venv
+INTEGRATION_TEST_RETRY_SLEEP ?= 300
 
 all: local check test
 
@@ -34,7 +35,12 @@ test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev]"; \
-		coverage run -m pytest -v -x tests/integration; \
+		coverage run -m pytest -v tests/integration; \
+		if [[ $? -ne 0 ]]; then \
+		  	echo "Waiting ${INTEGRATION_TEST_RETRY_SLEEP} seconds before retrying failed tests ..."; \
+		  	timeout $INTEGRATION_TEST_RETRY_SLEEP; \
+		  	coverage run -m pytest -v --lf -x tests/integration; \
+		fi; \
 	)
 
 build-test-resources: install
