@@ -34,7 +34,7 @@ test: install
 test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
-		python -m pip install ".[dev]"; \
+		python -m pip install ".[dev,integration]"; \
 		pytest -v tests/integration --retries 1 --retry-delay 300; \
 	)
 

@@ -34,14 +34,16 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "pytest-retry",
-    "parameterized",
     "coverage[toml]",
     "flake8",
     "flake8-pyproject",
     "pep8-naming",
     "responses",
     "lxml"
+]
+integration = [
+    "pytest-retry",
+    "parameterized"
 ]
 docs = [
     "Sphinx",
