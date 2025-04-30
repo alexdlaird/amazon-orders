@@ -6,9 +6,7 @@ import unittest
 from datetime import date
 
 import responses
-from bs4 import Tag, BeautifulSoup
 
-from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError, AmazonOrdersNotFoundError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
