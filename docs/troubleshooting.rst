@@ -77,8 +77,8 @@ By default, ``amazon-orders`` uses ``html.parser``, Python's `built-in HTML pars
 There are some situations where this parsers is not preferred, either because it is slower than other options, or in
 some cases it leads to parsing issues, where fields like ``title``, ``currency``, etc. are populated with mangled data.
 ``amazon-orders`` should work with any `BeautifulSoup-compatible HTML parser <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-a-parser>`_,
-and many prefer to use ``lxml`` instead. If another parser is installed, you can change the parser ``amazon-orders``
-will use with ``AmazonOrdersConfig.bs4_parser``.
+and many prefer to use `lxml <https://pypi.org/project/lxml/>`_ instead. If another parser is installed, you can change
+the parser ``amazon-orders`` will use with ``AmazonOrdersConfig.bs4_parser``.
 
 Concurrency Workers Exhausted
 -----------------------------

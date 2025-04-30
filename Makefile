@@ -35,7 +35,7 @@ test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev,integration]"; \
-		pytest -v -x --ignore=tests/unit -o junit_suite_name=integration --reruns 1 --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY}; \
+		pytest -v --ignore=tests/unit -o junit_suite_name=integration --reruns 1 --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY}; \
 	)
 
 build-test-resources: install
