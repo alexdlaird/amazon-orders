@@ -16,5 +16,4 @@ build
 
 tests/.config/
 tests/.integration-config/
-tests/build/
 scripts/*.html

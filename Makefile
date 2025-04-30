@@ -22,7 +22,7 @@ nopyc:
 	find . -name __pycache__ | xargs rm -rf || true
 
 clean: nopyc
-	rm -rf build dist *.egg-info $(PROJECT_VENV) tests/output tests/build tests/.*config
+	rm -rf build dist *.egg-info $(PROJECT_VENV) tests/.*config
 
 test: install
 	@( \
@@ -35,7 +35,7 @@ test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev,integration]"; \
-		pytest -v -x tests/integration --reruns 1 --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY}; \
+		pytest -v -x -k test_integration --reruns 1 --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY}; \
 	)
 
 build-test-resources: install

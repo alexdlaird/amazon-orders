@@ -51,3 +51,9 @@ jobs:
           include-hidden-files: true
           path: tests/.integration-config/
           retention-days: 7
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./build/test-results
