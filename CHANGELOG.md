@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.4...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.5...HEAD)
+
+## [4.0.5](https://github.com/alexdlaird/amazon-orders/compare/4.0.4...4.0.5) - 2025-05-01
+
+### Added
+
+- Ability to pass `next_page_data` to [get_transactions()](https://amazon-orders.readthedocs.io/api.html#amazonorders.transactions.AmazonTransactions.get_transactions).
+- Stability improvements.
+- Documentation improvements (including adding [AmazonTransactions](https://amazon-orders.readthedocs.io/api.html#amazonorders.transactions.AmazonTransactions) to docs).
 
 ## [4.0.4](https://github.com/alexdlaird/amazon-orders/compare/4.0.3...4.0.4) - 2025-04-30
 
