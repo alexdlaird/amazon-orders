@@ -16,7 +16,7 @@ class Selector:
         #: The CSS selector
         self.css_selector: str = css_selector
         #: The text within the tag that must match
-        self.text = text
+        self.text: Optional[str] = text
 
 
 class Selectors:

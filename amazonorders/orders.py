@@ -47,10 +47,10 @@ class AmazonOrders:
                   order_id: str,
                   clone: Optional[Order] = None) -> Order:
         """
-        Get the full details for a given Amazon order ID.
+        Get the full details for a given Amazon Order ID.
 
         :param order_id: The Amazon Order ID to lookup.
-        :param clone: If a partially populated version of the order has already been fetched from history.
+        :param clone: If a partially populated version of the Order has already been fetched from history.
         :return: The requested Order.
         """
         if not self.amazon_session.is_authenticated:
@@ -82,12 +82,14 @@ class AmazonOrders:
                           full_details: bool = False,
                           keep_paging: bool = True) -> List[Order]:
         """
-        Get the Amazon order history for a given year.
+        Get the Amazon Order history for a given year.
 
         :param year: The year for which to get history.
-        :param start_index: The index of the Order from which to start fetching in the history. Also see
-            Order's :attr:`~amazonorders.entity.order.Order.index`.
-        :param full_details: Get the full details for each order in the history. This will execute an additional
+        :param start_index: The index of the Order from which to start fetching in the history. See
+            :attr:`~amazonorders.entity.order.Order.index` to correlate, or if a call to this method previously errored
+            out, see ``index`` in the exception's :attr:`~amazonorders.exception.AmazonOrdersError.meta` to continue
+            paging where it left off.
+        :param full_details: Get the full details for each Order in the history. This will execute an additional
             request per Order.
         :param keep_paging: ``False`` if only one page should be fetched.
         :return: A list of the requested Orders.

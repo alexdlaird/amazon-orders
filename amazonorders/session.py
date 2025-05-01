@@ -184,11 +184,11 @@ class AmazonSession:
             url: str,
             **kwargs: Any) -> AmazonSessionResponse:
         """
-        Perform a GET request.
+        Perform a ``GET`` request.
 
-        :param url: The URL to GET on.
+        :param url: The URL to request.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`AmazonSession.request`.
-        :return: The response from the executed GET request.
+        :return: The response from the executed request.
         """
         return self.request("GET", url, **kwargs)
 
@@ -196,11 +196,11 @@ class AmazonSession:
              url: str,
              **kwargs: Any) -> AmazonSessionResponse:
         """
-        Perform a POST request.
+        Perform a ``POST`` request.
 
-        :param url: The URL to POST on.
+        :param url: The URL to request.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`AmazonSession.request`.
-        :return: The response from the executed POST request.
+        :return: The response from the executed request.
         """
         return self.request("POST", url, **kwargs)
 

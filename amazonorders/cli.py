@@ -119,7 +119,7 @@ def amazon_orders_cli(ctx: Context,
 def history(ctx: Context,
             **kwargs: Any) -> None:
     """
-    Get the Amazon order history for a given year.
+    Get the Amazon Order history for a given year.
     """
     amazon_session = ctx.obj["amazon_session"]
 
@@ -169,7 +169,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
 def order(ctx: Context,
           order_id: str) -> None:
     """
-    Get the full details for a given Amazon order ID.
+    Get the full details for a given Amazon Order ID.
     """
     amazon_session = ctx.obj["amazon_session"]
 
@@ -194,7 +194,7 @@ def order(ctx: Context,
               help="The number of days of Transactions to get.")
 def transactions(ctx: Context, **kwargs: Any):
     """
-    Get Amazon transaction history for a given number of days.
+    Get Amazon Transaction history for a given number of days.
     """
     amazon_session = ctx.obj["amazon_session"]
 

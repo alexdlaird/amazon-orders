@@ -86,11 +86,11 @@ class AmazonTransactions:
                          days: int = 365,
                          next_page_data: Optional[Dict[str, Any]] = None) -> List[Transaction]:
         """
-        Get Amazon transaction history for a given number of days.
+        Get Amazon Transaction history for a given number of days.
 
-        :param days: The number of days worth of transactions to get.
-        :param next_page_data: If a previous execution errored, pass
-            :attr:`~amazonorders.exception.AmazonOrdersError.meta` to continue paging.
+        :param days: The number of days worth of Transactions to get.
+        :param next_page_data: If a call to this method previously errored out, passing the exception's
+            :attr:`~amazonorders.exception.AmazonOrdersError.meta` will continue paging where it left off.
         :return: A list of the requested Transactions.
         """
         if not self.amazon_session.is_authenticated:

@@ -1,7 +1,7 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
-from typing import Union, Optional, Dict, Any
+from typing import Any, Dict, Optional, Union
 
 
 class AmazonOrdersError(Exception):
@@ -15,7 +15,7 @@ class AmazonOrdersError(Exception):
         super(AmazonOrdersError, self).__init__(error)
 
         #: Metadata for context around the error was raised.
-        self.meta = meta
+        self.meta: Optional[Dict[str, Any]] = meta
 
 
 class AmazonOrdersNotFoundError(AmazonOrdersError):

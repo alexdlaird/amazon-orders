@@ -40,9 +40,10 @@ class Order(Parsable):
         self.full_details: bool = full_details
 
         #: Where the Order appeared in the history when it was queried. This will inevitably change (ex. when a new
-        #: order is placed, all indexes will then be off by one), but is still captured as it may be applicable in
-        #: various use-cases. Only set when the Order is populated through
-        #: :func:`~amazonorders.orders.AmazonOrders.get_order_history` (use ``start_index`` to correlate).
+        #: Order is placed, all indexes will then be off by one), but is still captured as it may be applicable in
+        #: various use-cases. Populated when the Order was fetched through
+        #: :func:`~amazonorders.orders.AmazonOrders.get_order_history` (use ``start_index`` to correlate), or when
+        #: the ``clone`` has its ``index`` set.
         self.index: Optional[int] = index if index is not None else (clone.index if clone else None)
 
         #: The Order Shipments.

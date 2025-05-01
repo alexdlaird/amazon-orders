@@ -39,7 +39,7 @@ class Constants:
     SIGN_OUT_URL = f"{BASE_URL}/gp/flex/sign-out.html"
 
     ##########################################################################
-    # URLs for orders
+    # URLs for Orders
     ##########################################################################
 
     ORDER_HISTORY_URL = f"{BASE_URL}/your-orders/orders"
@@ -47,7 +47,7 @@ class Constants:
     HISTORY_FILTER_QUERY_PARAM = "timeFilter"
 
     ##########################################################################
-    # URLs for transactions
+    # URLs for Transactions
     ##########################################################################
 
     TRANSACTION_HISTORY_ROUTE = "/cpe/yourpayments/transactions"

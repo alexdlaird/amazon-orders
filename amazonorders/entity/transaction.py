@@ -36,9 +36,9 @@ class Transaction(Parsable):
         self.grand_total: float = self.safe_parse(self._parse_grand_total)
         #: The Transaction was a refund or not.
         self.is_refund: bool = self.grand_total > 0
-        #: The Transaction order number.
+        #: The Transaction Order number.
         self.order_number: str = self.safe_parse(self._parse_order_number)
-        #: The Transaction order details link.
+        #: The Transaction Order details link.
         self.order_details_link: str = self.safe_parse(self._parse_order_details_link)
         #: The Transaction seller name.
         self.seller: str = self.safe_simple_parse(
