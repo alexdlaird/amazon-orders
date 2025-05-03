@@ -65,7 +65,7 @@ class Item(Parsable):
         return f"<Item: \"{self.title}\">"
 
     def __str__(self) -> str:  # pragma: no cover
-        return f"Item: {self.title}"
+        return self.title
 
     def __lt__(self,
                other: ItemEntity) -> bool:

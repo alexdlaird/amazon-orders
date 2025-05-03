@@ -49,7 +49,7 @@ class Order(Parsable):
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
         #: The Order Items.
         self.items: List[Item] = clone.items if clone and not full_details else self._parse_items()
-        self.title: str = ", ".join(str(item) for item in self.items) if self.items else ""
+        self.title: str = " + ".join(str(item) for item in self.items) if self.items else ""
         self.item_quantity: int = len(self.items)
         #: The Order number.
         self.order_id: str = clone.order_id if clone else self.safe_simple_parse(
@@ -57,6 +57,7 @@ class Order(Parsable):
             required=True,
             prefix_split="#",
             prefix_split_fuzzy=True)
+        self.payment_reference_id: str = self.order_id
         #: The Order details link.
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
             self._parse_order_details_link)
@@ -81,33 +82,33 @@ class Order(Parsable):
             self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR,
                                    attr_name="alt"))
         #: The Order payment method's last 4 digits. Only populated when ``full_details`` is ``True``.
-        self.payment_method_last_4: Optional[int] = self._if_full_details(
+        self.payment_method_last_4: Optional[str] = self._if_full_details(
             self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR,
                                    prefix_split="ending in"))
         #: The Order item_subtotal. Only populated when ``full_details`` is ``True``.
-        self.item_subtotal: Optional[float] = self._if_full_details(self._parse_currency("item_subtotal"))
+        self.item_subtotal: Optional[float] = self._if_full_details(self._parse_currency("subtotal")) or 0.0
         #: The Order shipping total. Only populated when ``full_details`` is ``True``.
-        self.shipping_total: Optional[float] = self._if_full_details(self._parse_currency("shipping"))
+        self.shipping_total: Optional[float] = self._if_full_details(self._parse_currency("shipping")) or 0.0
         #: The Order free shipping. Only populated when ``full_details`` is ``True``.
-        self.free_shipping: Optional[float] = self._if_full_details(self._parse_currency("free shipping"))
+        self.free_shipping: Optional[float] = self._if_full_details(self._parse_currency("free shipping")) or 0.0
         self.item_shipping_and_handling: Optional[float] = (self.shipping_total or 0.0) - (self.free_shipping or 0.0)
         #: The Order promotion applied. Only populated when ``full_details`` is ``True``.
         self.item_promotion: Optional[float] = self._if_full_details(
-            self._parse_currency("promotion", combine_multiple=True))
+            self._parse_currency("promotion", combine_multiple=True)) or 0.0
         #: The Order coupon savings. Only populated when ``full_details`` is ``True``.
         self.coupon_savings: Optional[float] = self._if_full_details(
-            self._parse_currency("coupon", combine_multiple=True))
+            self._parse_currency("coupon", combine_multiple=True)) or 0.0
         #: The Order Subscribe & Save discount. Only populated when ``full_details`` is ``True``.
-        self.subscription_discount: Optional[float] = self._if_full_details(self._parse_currency("subscribe"))
+        self.subscription_discount: Optional[float] = self._if_full_details(self._parse_currency("subscribe")) or 0.0
         #: The Order total before tax. Only populated when ``full_details`` is ``True``.
         self.total_before_tax: Optional[float] = self._if_full_details(self._parse_currency("total before tax"))
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
         self.estimated_tax: Optional[float] = self._if_full_details(self._parse_currency("estimated tax"))
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
-        self.item_federal_tax: Optional[float] = self._if_full_details(self._parse_currency("hst"))
+        self.item_federal_tax: Optional[float] = self._if_full_details(self._parse_currency("hst")) or 0.0
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
-        self.item_provincial_tax: Optional[float] = self._if_full_details(self._parse_currency("pst"))
-        self.item_regulatory_fee: Optional[float] = self._if_full_details(self._parse_currency("fee"))
+        self.item_provincial_tax: Optional[float] = self._if_full_details(self._parse_currency("pst")) or 0.0
+        self.item_regulatory_fee: Optional[float] = self._if_full_details(self._parse_currency("fee")) or 0.0
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
         self.refund_total: Optional[float] = self._if_full_details(self._parse_currency("refund total"))
 

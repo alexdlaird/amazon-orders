@@ -193,7 +193,19 @@ Order History for {year}{optional_start_index}{optional_full_details}
 
         if kwargs["csv"]:
             # Convert list of dataclass‐like objects into a list of dicts
-            df = pd.DataFrame([o.__dict__ for o in orders])
+            orders_dict = []
+            for o in orders:
+                if o.payment_amount not in (0, None):
+                    order_dict = o.__dict__.copy()
+                    # Format dates as yyyy/mm/dd
+                    if isinstance(o.order_date, datetime.date):
+                        order_dict["order_date"] = o.order_date.strftime("%Y/%m/%d")
+                    if isinstance(o.payment_date, datetime.date):
+                        order_dict["payment_date"] = o.payment_date.strftime("%Y/%m/%d")
+                    orders_dict.append(order_dict)
+
+            # Convert list of dataclass‐like objects into a list of dicts
+            df = pd.DataFrame(orders_dict)
 
             df = df.rename(
                 columns={
@@ -210,8 +222,9 @@ Order History for {year}{optional_start_index}{optional_full_details}
                     "item_net_total": "Item net total",
                     "payment_method": "Payment Method",
                     "payment_method_last_4": "Payment Method Last 4",
-                    "payment_amount": "Payment Amount",
-                    "payment_date": "Payment Date",
+                    "payment_reference_id": "Payment Reference ID",
+                    "payment_date": "Payment date",
+                    "payment_amount": "Payment amount",
                     "shipments": "Shipments",
                     "title": "Title",
                     "amazon_internal_product_category": "Amazon Internal Product Category",
@@ -243,8 +256,9 @@ Order History for {year}{optional_start_index}{optional_full_details}
                     "Item net total",
                     "Payment Method",
                     "Payment Method Last 4",
-                    "Payment Amount",
-                    "Payment Date",
+                    "Payment Reference ID",
+                    "Payment date",
+                    "Payment amount",
                     "Shipments",
                     "Title",
                     "Amazon Internal Product Category",

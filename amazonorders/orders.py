@@ -147,6 +147,9 @@ class AmazonOrders:
             elif len(util.select(order.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
                 logger.warning(f"Order {order.order_id} was partially populated, "
                                f"since it is an unsupported Order type.")
+            elif order.grand_total == 0:
+                logger.warning(f"Order {order.order_id} was ignored for full details "
+                               f"since grand_total was not found.")
             else:
                 # TODO: be on the lookout for if this causes rate limit issues with Amazon, or races with the
                 #  URL connection pool. If so, we may need to implement some retry logic here.
