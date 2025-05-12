@@ -340,8 +340,8 @@ def _authenticate(amazon_session: AmazonSession,
 
 
 def _prompt_to_reauth_flow() -> None:
-    click.echo("Info: Amazon redirected to login, which likely means the persisted session is stale. It was logged "
-               "out, so try running the command again.")
+    click.echo("... Amazon redirected to login, which likely means the persisted session is stale. It was logged "
+               "out, so try running the command again.\n")
 
 
 def _order_output(o: Order,
