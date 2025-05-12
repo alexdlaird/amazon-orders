@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.5...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.6...HEAD)
+
+## [4.0.6](https://github.com/alexdlaird/amazon-orders/compare/4.0.5...4.0.6) - 2025-05-12
+
+### Added
+
+- Stability improvements for auth flow.
 
 ## [4.0.5](https://github.com/alexdlaird/amazon-orders/compare/4.0.4...4.0.5) - 2025-05-01
 

@@ -7,7 +7,8 @@ from datetime import date
 
 import responses
 
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError, AmazonOrdersNotFoundError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError, AmazonOrdersNotFoundError, \
+    AmazonOrdersAuthRedirectError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
@@ -50,12 +51,12 @@ class TestOrders(UnitTestCase):
         self.given_login_responses_success()
 
         # WHEN
-        with self.assertRaises(AmazonOrdersAuthError) as cm:
+        with self.assertRaises(AmazonOrdersAuthRedirectError) as cm:
             self.amazon_orders.get_order("1234-fake-id")
 
         self.assertIn("Amazon redirected to login.", str(cm.exception))
         self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertEqual(1, resp.call_count)
+        self.assertEqual(2, resp.call_count)
 
     @responses.activate
     def test_get_order_history_session_expires(self):
@@ -65,12 +66,12 @@ class TestOrders(UnitTestCase):
         self.given_login_responses_success()
 
         # WHEN
-        with self.assertRaises(AmazonOrdersAuthError) as cm:
+        with self.assertRaises(AmazonOrdersAuthRedirectError) as cm:
             self.amazon_orders.get_order_history()
 
         self.assertIn("Amazon redirected to login.", str(cm.exception))
         self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertEqual(1, resp.call_count)
+        self.assertEqual(2, resp.call_count)
 
     @responses.activate
     def test_get_order_history(self):

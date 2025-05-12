@@ -6,14 +6,15 @@ import os
 import time
 import unittest
 
-from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersNotFoundError
+from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersNotFoundError, \
+    AmazonOrdersAuthRedirectError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.integrationtestcase import IntegrationTestCase
 
 
 @unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH", "False") == "True",
-                 "Running auth tests too frequently may lock your account. Set "
+                 "Running auth tests too frequently may lock the account. Set "
                  "AMAZON_INTEGRATION_TEST_AUTH=True explicitly to run.")
 class TestIntegrationAuth(IntegrationTestCase):
     """
@@ -43,6 +44,7 @@ class TestIntegrationAuth(IntegrationTestCase):
 
         # THEN
         self.assertTrue(amazon_session.is_authenticated)
+        self.assertTrue(amazon_session.auth_cookies_stored())
         # Navigating to a non-existent Order when authenticated returns 404 (rather than redirecting to login), which
         # indicates we're successfully logged in
         with self.assertRaises(AmazonOrdersNotFoundError):
@@ -53,19 +55,20 @@ class TestIntegrationAuth(IntegrationTestCase):
         with open(self.test_config.cookie_jar_path, "r") as f:
             cookies = json.loads(f.read())
         for cookie in self.test_config.constants.COOKIES_SET_WHEN_AUTHENTICATED:
-            cookies[cookie] = "invalid-token"
+            cookies[cookie] = "invalid-and-stale"
         with open(self.test_config.cookie_jar_path, "w") as f:
             f.write(json.dumps(cookies))
         amazon_session.session.cookies.update(cookies)
 
         # THEN
-        # Trying interacting with a privileged resource will redirect us to login
+        # Trying to interact with a privileged resource will redirect us to login
         self.assertTrue(amazon_session.is_authenticated)
-        with self.assertRaises(AmazonOrdersAuthError):
+        with self.assertRaises(AmazonOrdersAuthRedirectError):
             amazon_orders.get_order(order_id="1234-fake-id")
         time.sleep(1)
         # And then we will find our session invalidated
         self.assertFalse(amazon_session.is_authenticated)
+        self.assertFalse(amazon_session.auth_cookies_stored())
         with self.assertRaises(AmazonOrdersError) as cm:
             amazon_orders.get_order(order_id="1234-fake-id")
         self.assertIn("AmazonSession.login() to authenticate first", str(cm.exception))
@@ -83,6 +86,7 @@ class TestIntegrationAuth(IntegrationTestCase):
 
         # THEN
         self.assertFalse(amazon_session.is_authenticated)
+        self.assertFalse(amazon_session.auth_cookies_stored())
         self.assertNotEqual(old_session, amazon_session.session)
 
     def test_login_no_account(self):
@@ -104,7 +108,7 @@ class TestIntegrationAuth(IntegrationTestCase):
         os.environ["AMAZON_USERNAME"] = amazon_username
 
     @unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD", "False") == "True",
-                     "Running this test too many times in a row will trigger the Captcha flow instead (causing"
+                     "Running this test too too frequently will trigger the Captcha flow instead (causing"
                      "the test to fail), and also may lock the Amazon account. Set "
                      "AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD=True explicitly to run.")
     def test_login_wrong_password(self):

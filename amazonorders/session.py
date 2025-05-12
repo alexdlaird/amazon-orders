@@ -14,7 +14,7 @@ from requests import Response, Session
 from requests.utils import dict_from_cookiejar
 
 from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file_lock, debug_output_file_lock
-from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
+from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersAuthRedirectError
 from amazonorders.forms import AuthForm, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm, SignInForm
 from amazonorders.util import AmazonSessionResponse
 
@@ -275,8 +275,16 @@ class AmazonSession:
         """
         self.get(self.config.constants.SIGN_OUT_URL, persist_cookies=True)
         self.session.close()
-
         self.session = self._create_session()
+
+        # Ensure authentication cookies are unset, since we can get inconsistent persistence behavior otherwise
+        with cookies_file_lock:
+            cookies = dict_from_cookiejar(self.session.cookies)
+            for cookie in self.config.constants.COOKIES_SET_WHEN_AUTHENTICATED:
+                cookies.pop(cookie, None)
+            with open(self.config.cookie_jar_path, "w") as f:
+                f.write(json.dumps(cookies))
+
         self.is_authenticated = False
 
     def build_response_error(self,
@@ -309,9 +317,10 @@ class AmazonSession:
         if (amazon_session_response.response.url.startswith(self.config.constants.SIGN_IN_URL) or
                 (amazon_session_response.parsed and
                  amazon_session_response.parsed.select_one(self.config.selectors.SIGN_IN_FORM_SELECTOR) is not None)):
-            self.is_authenticated = False
-            raise AmazonOrdersAuthError("Amazon redirected to login. Call AmazonSession.login() to "
-                                        "reauthenticate first.", meta=meta)
+            logger.debug("Amazon redirect to login, so persisted AmazonSession will be logged out.")
+            self.logout()
+            raise AmazonOrdersAuthRedirectError("Amazon redirected to login. Call AmazonSession.login() to "
+                                                "reauthenticate first.", meta=meta)
 
     def _get_page_from_url(self,
                            output_dir: str,

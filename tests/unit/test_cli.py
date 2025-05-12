@@ -144,6 +144,7 @@ class TestCli(UnitTestCase):
         # THEN
         self.assertEqual(0, response.exit_code)
         self.assertEqual(1, resp1.call_count)
+        self.assert_login_responses_success()
         self.assertIn("Order #112-2961628-4757846", response.output)
 
     @responses.activate
@@ -177,6 +178,7 @@ class TestCli(UnitTestCase):
         # THEN
         self.assertEqual(0, response.exit_code)
         self.assertEqual(1, resp.call_count)
+        self.assert_login_responses_success()
         self.assertIn("1 Transactions parsed", response.output)
         self.assertIn("Transaction: 2024-10-11\n  Order #123-4567890-1234567\n  Grand Total: -$45.19", response.output)
 
@@ -283,6 +285,31 @@ class TestCli(UnitTestCase):
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
         self.assertIn("Error from Amazon: There was a problem. Your password is incorrect.", response.output)
+
+    @responses.activate
+    def test_persisted_session_stale_logout(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        self.given_login_responses_success()
+        self.given_authenticated_url_redirects_to_login()
+        signout_response = responses.add(
+            responses.GET,
+            self.test_config.constants.SIGN_OUT_URL,
+            status=200,
+        )
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "history"
+                                      ])
+
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, signout_response.call_count)
+        self.assert_no_auth_cookies_persisted()
+        self.assertIn("Amazon redirected to login", response.output)
+        self.assertIn("logged out, so try running the command again", response.output)
 
     def test_update_config(self):
         # GIVEN

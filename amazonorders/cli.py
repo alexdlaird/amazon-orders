@@ -17,7 +17,7 @@ from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
 from amazonorders.entity.transaction import Transaction
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError, AmazonOrdersAuthRedirectError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
 from amazonorders.transactions import AmazonTransactions
@@ -158,6 +158,8 @@ Order History for {year}{optional_start_index}{optional_full_details}
         click.echo(
             "... {total} Orders parsed in {time} seconds.\n".format(total=total,
                                                                     time=int(end_time - start_time)))
+    except AmazonOrdersAuthRedirectError:
+        _prompt_to_reauth_flow()
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -183,6 +185,8 @@ def order(ctx: Context,
         o = amazon_orders.get_order(order_id)
 
         click.echo(f"{_order_output(o, config)}\n")
+    except AmazonOrdersAuthRedirectError:
+        _prompt_to_reauth_flow()
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -224,6 +228,8 @@ Transaction History for {days} days
         click.echo(
             "... {total} Transactions parsed in {time} seconds.\n".format(total=total,
                                                                           time=int(end_time - start_time)))
+    except AmazonOrdersAuthRedirectError:
+        _prompt_to_reauth_flow()
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -309,7 +315,7 @@ def _authenticate(amazon_session: AmazonSession,
             if amazon_session.username or amazon_session.password:
                 click.echo(
                     "Info: The given username and password are being ignored because a previous session still exists. "
-                    "If you would like to reauthenticate, call the `logout` command first.\n")
+                    "To reauthenticate, call the `logout` command first.\n")
         else:
             if not amazon_session.username:
                 amazon_session.username = click.prompt("Username")
@@ -331,6 +337,11 @@ def _authenticate(amazon_session: AmazonSession,
             _authenticate(amazon_session, retries=retries + 1)
         else:
             raise e
+
+
+def _prompt_to_reauth_flow() -> None:
+    click.echo("Info: Amazon redirected to login, which likely means the persisted session is stale. It was logged "
+               "out, so try running the command again.")
 
 
 def _order_output(o: Order,

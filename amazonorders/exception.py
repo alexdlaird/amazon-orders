@@ -32,6 +32,14 @@ class AmazonOrdersAuthError(AmazonOrdersError):
     pass
 
 
+class AmazonOrdersAuthRedirectError(AmazonOrdersAuthError):
+    """
+    Raised when an ``amazon-orders`` session that was previously authenticated redirects to login, indicating the
+    likely need to reauthenticate.
+    """
+    pass
+
+
 class AmazonOrdersEntityError(AmazonOrdersError):
     """
     Raised when an ``amazon-orders`` entity parsing error has occurred.
