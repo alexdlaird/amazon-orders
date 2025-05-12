@@ -16,6 +16,7 @@ jobs:
 
     env:
       FORCE_COLOR: 1
+      PYTHONDONTWRITEBYTECODE: 1
 
     strategy:
       fail-fast: false
