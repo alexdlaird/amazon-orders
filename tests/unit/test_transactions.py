@@ -35,7 +35,8 @@ class TestTransactions(UnitTestCase):
     def test_get_transactions_session_expires(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        resp = self.given_authenticated_url_renders_login(method=responses.POST)
+        auth_redirect_response = self.given_authenticated_url_renders_login(method=responses.POST)
+        signout_response = self.given_logout_response_success()
 
         # WHEN
         with self.assertRaises(AmazonOrdersAuthRedirectError) as cm:
@@ -43,7 +44,8 @@ class TestTransactions(UnitTestCase):
 
         self.assertIn("Amazon redirected to login.", str(cm.exception))
         self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertEqual(2, resp.call_count)
+        self.assertEqual(1, auth_redirect_response.call_count)
+        self.assertEqual(1, signout_response.call_count)
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)

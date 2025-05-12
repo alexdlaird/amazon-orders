@@ -37,11 +37,7 @@ class TestSession(UnitTestCase):
     @responses.activate
     def test_logout(self):
         # GIVEN
-        signout_response = responses.add(
-            responses.GET,
-            self.test_config.constants.SIGN_OUT_URL,
-            status=200,
-        )
+        signout_response = self.given_logout_response_success()
         self.amazon_session.is_authenticated = True
         old_session = self.amazon_session.session
 
@@ -571,3 +567,4 @@ class TestSession(UnitTestCase):
         self.assertIn("A JavaScript-based authentication challenge page has been found.", str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
+

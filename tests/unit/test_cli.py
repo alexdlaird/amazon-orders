@@ -55,11 +55,7 @@ class TestCli(UnitTestCase):
     def test_logout_command(self):
         # GIVEN
         self.given_persisted_session_exists()
-        signout_response = responses.add(
-            responses.GET,
-            self.test_config.constants.SIGN_OUT_URL,
-            status=200,
-        )
+        signout_response = self.given_logout_response_success()
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
@@ -291,12 +287,8 @@ class TestCli(UnitTestCase):
         # GIVEN
         self.given_persisted_session_exists()
         self.given_login_responses_success()
-        self.given_authenticated_url_redirects_to_login()
-        signout_response = responses.add(
-            responses.GET,
-            self.test_config.constants.SIGN_OUT_URL,
-            status=200,
-        )
+        auth_redirect_response = self.given_authenticated_url_redirects_to_login()
+        signout_response = self.given_logout_response_success()
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
@@ -306,6 +298,7 @@ class TestCli(UnitTestCase):
                                       ])
 
         self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, auth_redirect_response.call_count)
         self.assertEqual(1, signout_response.call_count)
         self.assert_no_auth_cookies_persisted()
         self.assertIn("Amazon redirected to login", response.output)
