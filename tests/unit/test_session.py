@@ -567,4 +567,3 @@ class TestSession(UnitTestCase):
         self.assertIn("A JavaScript-based authentication challenge page has been found.", str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
-

@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 import responses
 from bs4 import BeautifulSoup
 
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError, AmazonOrdersAuthRedirectError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthRedirectError
 from amazonorders.session import AmazonSession
 from amazonorders.transactions import AmazonTransactions, _parse_transaction_form_tag
 from tests.unittestcase import UnitTestCase

@@ -7,8 +7,7 @@ from datetime import date
 
 import responses
 
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError, AmazonOrdersNotFoundError, \
-    AmazonOrdersAuthRedirectError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError, AmazonOrdersAuthRedirectError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
