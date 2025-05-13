@@ -24,7 +24,8 @@ class AmazonOrdersConfig:
     If overrides are passed in ``data`` parameter when this object is instantiated, they will be used to populate the
     new object, but not persisted to the config file until :func:`~save` is called.
 
-    Default values provisioned with the config can be found `here <https://amazon-orders.readthedocs.io/_modules/amazonorders/conf.html#AmazonOrdersConfig>`_.
+    Default values provisioned with the config can be found
+    `here <https://amazon-orders.readthedocs.io/_modules/amazonorders/conf.html#AmazonOrdersConfig>`_.
     """
 
     def __init__(self,
