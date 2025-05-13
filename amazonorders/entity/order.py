@@ -25,7 +25,7 @@ class Order(Parsable):
     """
     An Amazon Order. If desired fields are populated as ``None``, ensure ``full_details`` is ``True`` when
     retrieving the Order (for instance, with :func:`~amazonorders.orders.AmazonOrders.get_order_history`), since
-    by default it is ``False`` (it will slow down querying).
+    by default it is ``False`` (enabling slows down querying).
     """
 
     def __init__(self,

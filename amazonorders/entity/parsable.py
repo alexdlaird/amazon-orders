@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 class Parsable:
     """
-    A base class that contains a parsed representation of the entity, and can be extended to
-    be made up of the entities fields utilizing the helper methods.
+    A base class that contains a parsed representation of the entity, which can be extended to build an entity that
+    utilizes the common the helper methods.
     """
 
     def __init__(self,
@@ -27,7 +27,7 @@ class Parsable:
                  config: AmazonOrdersConfig) -> None:
         #: Parsed HTML data that can be used to populate the fields of the entity.
         self.parsed: Tag = parsed
-        #: The AmazonOrdersConfig to use.
+        #: The config to use.
         self.config: AmazonOrdersConfig = config
 
     def __getstate__(self) -> Dict:
@@ -40,7 +40,7 @@ class Parsable:
                    **kwargs: Any) -> Any:
         """
         Execute the given parse function on a field, handling any common parse exceptions and passing
-        them as warnings to the logger, suppressing them as exceptions.
+        them as warnings to the logger (suppressing them as exceptions).
 
         :param parse_function: The parse function to attempt safe execution.
         :param kwargs: The ``kwargs`` will be passed to ``parse_function``.

@@ -7,15 +7,15 @@ from typing import Optional
 class Selector:
     """
     Can be used to extend the definition of a CSS selector, allowing for programmatic inspection
-    of the selections results before determining the selector matches.
+    of the selections results before determining if selector matches.
     """
 
     def __init__(self,
                  css_selector: str,
                  text: Optional[str] = None) -> None:
-        #: The CSS selector
+        #: The CSS selector.
         self.css_selector: str = css_selector
-        #: The text within the tag that must match
+        #: The text within the tag that must match.
         self.text: Optional[str] = text
 
 

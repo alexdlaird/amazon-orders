@@ -36,7 +36,7 @@ class AuthForm(ABC):
                  selector: Optional[str],
                  error_selector: Optional[str] = None,
                  critical: bool = False) -> None:
-        #: The AmazonOrdersConfig to use.
+        #: The config to use.
         self.config: AmazonOrdersConfig = config
         #: The CSS selector for the ``<form>``.
         self.selector: Optional[str] = selector

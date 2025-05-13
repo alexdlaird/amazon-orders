@@ -75,7 +75,7 @@ Or to use ``amazon-orders`` programmatically, :func:`~amazonorders.orders.Amazon
         print(f"{order.order_number} - {order.grand_total}")
 
 If desired fields are populated as ``None``, set ``full_details=True`` (or pass ``--full-details`` to the ``history``
-command), since by default it is ``False`` (it will slow down querying). Have a look at the :class:`~amazonorders.entity.order.Order`
+command), since by default it is ``False`` (enabling slows down querying). Have a look at the :class:`~amazonorders.entity.order.Order`
 entity's docs to see what fields are only populated with full details.
 
 Automating Authentication

@@ -5,11 +5,11 @@ Troubleshooting
 Enable Debug Mode
 -----------------
 
-``debug`` mode does a few main things:
+Enabling ``debug`` mode does a few main things:
 
 1. Sets ``logger`` levels to ``DEBUG``
 2. Sends ``logger`` output to ``stderr``, so you'll see it on the console when using the CLI
-3. Any HTML page parsed will also be be saved locally
+3. HTML pages will be be saved locally
 
 To enable ``debug`` mode when using the CLI, simply pass the ``--debug`` flag, which works with any
 command:

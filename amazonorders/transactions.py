@@ -72,12 +72,12 @@ class AmazonTransactions:
         if not config:
             config = amazon_session.config
 
-        #: The AmazonSession to use for requests.
+        #: The session to use for requests.
         self.amazon_session: AmazonSession = amazon_session
-        #: The AmazonOrdersConfig to use.
+        #: The config to use.
         self.config: AmazonOrdersConfig = config
 
-        #: Set logger ``DEBUG`` and send output to ``stderr``.
+        #: Setting logger to ``DEBUG`` will send output to ``stderr``.
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)

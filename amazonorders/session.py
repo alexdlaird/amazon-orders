@@ -60,8 +60,8 @@ class IODefault:
 class AmazonSession:
     """
     An interface for interacting with Amazon and authenticating an underlying :class:`requests.Session`. Utilizing
-    this class means session data is maintained between requests. Session data is also persisted after each request,
-    meaning it will also be maintained between separate instantiations of the class or application.
+    this class means session data is maintained between requests. Session data may also persisted after each request,
+    so it can also be maintained between separate instantiations of the class or application.
 
     To get started, call the :func:`login` function.
     """
@@ -100,13 +100,14 @@ class AmazonSession:
         self.otp_secret_key: Optional[str] = (os.environ.get("AMAZON_OTP_SECRET_KEY") or otp_secret_key or
                                               config.otp_secret_key)
 
-        #: Set logger ``DEBUG``, send output to ``stderr``, and write an HTML file for requests made on the session.
+        #: Setting logger to ``DEBUG`` will send output to ``stderr`` and write an HTML file for all requests made
+        #: on the session.
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
         #: The I/O handler for echoes and prompts.
         self.io: IODefault = io
-        #: The AmazonOrdersConfig to use.
+        #: The config to use.
         self.config: AmazonOrdersConfig = config
         #: The list of form implementations to use with authentication. If a value is passed for this when
         #: instantiating an AmazonSession, ensure that list is populated with the default form implementations.
@@ -134,8 +135,7 @@ class AmazonSession:
                 persist_cookies: bool = False,
                 **kwargs: Any) -> AmazonSessionResponse:
         """
-        Execute the request against Amazon with base headers, parsing and storing the response
-        and persisting response cookies.
+        Execute the request against Amazon with base headers, parsing and storing the response.
 
         :param method: The request method to execute.
         :param url: The URL to execute ``method`` on.
@@ -214,7 +214,8 @@ class AmazonSession:
     def login(self) -> None:
         """
         Execute an Amazon login process. This will include the sign-in page, and may also include OTP (if 2FA is
-        enabled for your account) and Captcha challenges.
+        enabled for your account), Captcha challenges, and any other forms in
+        :attr:`~amazonorders.session.AmazonSession.auth_forms`.
 
         If successful, ``is_authenticated`` will be set to ``True``.
 

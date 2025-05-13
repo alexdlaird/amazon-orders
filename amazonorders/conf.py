@@ -23,6 +23,8 @@ class AmazonOrdersConfig:
 
     If overrides are passed in ``data`` parameter when this object is instantiated, they will be used to populate the
     new object, but not persisted to the config file until :func:`~save` is called.
+
+    Default values provisioned with the config can be found `here <https://amazon-orders.readthedocs.io/_modules/amazonorders/conf.html#AmazonOrdersConfig>`_.
     """
 
     def __init__(self,
@@ -38,6 +40,7 @@ class AmazonOrdersConfig:
             "max_auth_attempts": 10,
             # The number of seconds to wait before retrying the auth flow
             "auth_reattempt_wait": 5,
+            # Where output files (for instance, HTML pages, when ``debug`` mode is enabled) will be written
             "output_dir": os.path.join(os.getcwd(), "output"),
             "cookie_jar_path": os.path.join(DEFAULT_CONFIG_DIR, "cookies.json"),
             "constants_class": "amazonorders.constants.Constants",
@@ -121,11 +124,11 @@ class AmazonOrdersConfig:
                       save: bool = True) -> None:
         """
         Update the given key/value pair in the config object. By default, this update will also be persisted to the
-        config file, but if only the object should be updated without persisted, passing ``save=False``.
+        config file. If only the object should be updated without persisting, pass ``save=False``.
 
-        :param key: The to be updated.
+        :param key: The key to be updated.
         :param value: The new value.
-        :param save: True if the config should be persisted.
+        :param save: ``True`` if the config should be persisted.
         """
         self._data[key] = value
 
