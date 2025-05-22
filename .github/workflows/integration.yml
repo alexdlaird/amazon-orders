@@ -17,6 +17,7 @@ jobs:
 
     env:
       FORCE_COLOR: 1
+      PYTHONUNBUFFERED: 1
       PYTHONDONTWRITEBYTECODE: 1
       DEBUG: "True"
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
