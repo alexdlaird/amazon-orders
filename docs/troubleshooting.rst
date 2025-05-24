@@ -11,14 +11,7 @@ Enabling ``debug`` mode does a few main things:
 2. Sends ``logger`` output to ``stderr``, so you'll see it on the console when using the CLI
 3. HTML pages will be be saved locally
 
-To enable ``debug`` mode when using the CLI, simply pass the ``--debug`` flag, which works with any
-command:
-
-.. code-block:: shell
-
-  amazon-orders --debug history
-
-To enable ``debug`` mode through a Python script, you need to pass ``debug=True`` to
+To enable ``debug`` mode in Python, you need to pass ``debug=True`` to
 :class:`~amazonorders.session.AmazonSession`:
 
 .. code-block:: python
@@ -33,6 +26,13 @@ To enable ``debug`` mode through a Python script, you need to pass ``debug=True`
 
     amazon_orders = AmazonOrders(amazon_session)
     orders = amazon_orders.get_order_history()
+
+To enable ``debug`` mode when using the CLI, pass the ``--debug`` flag, which works with any
+command:
+
+.. code-block:: shell
+
+  amazon-orders --debug history
 
 Integrating with Amazon.com via scraping is complicated and requires ``form`` data from the
 website's HTML. Before submitting a bug report or requesting a new feature, try running

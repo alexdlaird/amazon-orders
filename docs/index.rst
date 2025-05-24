@@ -44,20 +44,15 @@ using ``pip``:
 
     pip install amazon-orders --upgrade
 
-That’s it! ``amazon-orders`` is now available as a Python package is
-available from the command line.
+That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
 Basic Usage
 ===========
 
-Execute ``amazon-orders`` from the command line with:
-
-.. code:: sh
-
-    amazon-orders --username <AMAZON_EMAIL> --password <AMAZON_PASSWORD> history
-
-Or to use ``amazon-orders`` programmatically, :func:`~amazonorders.orders.AmazonOrders.get_order_history` and
-:func:`~amazonorders.orders.AmazonOrders.get_order` are good places to start:
+You'll use :class:`~amazonorders.session.AmazonSession` to authenticate your Amazon account, then
+:class:`~amazonorders.orders.AmazonOrders` and :class:`~amazonorders.transactions.AmazonTransactions` to interact with
+account data. :func:`~amazonorders.orders.AmazonOrders.get_order_history` and
+:func:`~amazonorders.orders.AmazonOrders.get_order` are good places to start.
 
 .. code:: python
 
@@ -74,9 +69,20 @@ Or to use ``amazon-orders`` programmatically, :func:`~amazonorders.orders.Amazon
     for order in orders:
         print(f"{order.order_number} - {order.grand_total}")
 
-If desired fields are populated as ``None``, set ``full_details=True`` (or pass ``--full-details`` to the ``history``
-command), since by default it is ``False`` (enabling slows down querying). Have a look at the :class:`~amazonorders.entity.order.Order`
-entity's docs to see what fields are only populated with full details.
+If the fields you're looking for aren't populated with the above, set ``full_details=True`` (or pass ``--full-details``
+to the ``history`` CLI command), since by default it is ``False`` (enabling it slows down querying, since an additional
+request for each order is necessary). Have a look at the :class:`~amazonorders.entity.order.Order` entity's docs to see
+what fields are only populated with full details.
+
+Command Line Usage
+------------------
+
+You can also run any command available to the main Python interface from the command line:
+
+.. code:: sh
+
+    amazon-orders login
+    amazon-orders history --year 2023
 
 Automating Authentication
 -------------------------

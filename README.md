@@ -24,19 +24,15 @@ This package only officially supports the English, `.com` version of Amazon.
 pip install amazon-orders --upgrade
 ```
 
-That's it! `amazon-orders` is now available as a Python package is available from the command line.
+That's it! `amazon-orders` is now available as a package to your Python projects and from the command line.
 
 ## Basic Usage
 
-Execute `amazon-orders` from the command line with:
-
-```sh
-amazon-orders --username <AMAZON_EMAIL> --password <AMAZON_PASSWORD> history
-```
-
-Or to use `amazon-orders` programmatically, [`get_order_history`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order_history)
-and [`get_order`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order) are good
-places to start:
+You'll use [`AmazonSession`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession) to
+authenticate your Amazon account, then [`AmazonOrders`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders)
+and [`AmazonTransactions`](https://amazon-orders.readthedocs.io/api.html#amazonorders.transactions.AmazonTransactions)
+to interact with account data. [`get_order_history`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order_history)
+and [`get_order`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order) are good places to start.
 
 ```python
 from amazonorders.session import AmazonSession
@@ -53,9 +49,19 @@ for order in orders:
     print(f"{order.order_number} - {order.grand_total}")
 ```
 
-If desired fields are populated as `None`, set `full_details=True` (or pass `--full-details` to the `history` command),
-since by default it is `False` (enabling slows down querying). Have a look at the [Order](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order)
-entity's docs to see what fields are only populated with full details.
+If the fields you're looking for aren't populated with the above, set `full_details=True` (or pass `--full-details` to
+the `history` CLI command), since by default it is `False` (enabling it slows down querying, since an additional
+request for each order is necessary). Have a look at the [Order](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order) entity's docs to see what fields are only
+populated with full details.
+
+### Command Line Usage
+
+You can also run any command available to the main Python interface from the command line:
+
+```sh
+amazon-orders login
+amazon-orders history --year 2023
+```
 
 ### Automating Authentication
 
