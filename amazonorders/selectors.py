@@ -64,6 +64,7 @@ class Selectors:
 
     ORDER_HISTORY_ENTITY_SELECTOR = ["div.order-card",
                                      "div.order"]
+    ORDER_HISTORY_COUNT_SELECTOR = ".js-yo-container span.num-orders"
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer"]
     ITEM_ENTITY_SELECTOR = ["[data-component='purchasedItems'] .a-fixed-left-grid",
@@ -169,6 +170,7 @@ class Selectors:
     #####################################
 
     TRANSACTION_HISTORY_FORM_SELECTOR = "form:has(input[name='ppw-widgetState'])"
+    TRANSACTION_HISTORY_CONTAINER_SELECTOR = ".pmts-portal-component"
     TRANSACTION_DATE_CONTAINERS_SELECTOR = "div.apx-transaction-date-container"
     TRANSACTIONS_CONTAINER_SELECTOR = "div"
     TRANSACTIONS_SELECTOR = "div.apx-transactions-line-item-component-container:has(*)"

@@ -6,6 +6,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.6...HEAD)
 
+## [4.0.7](https://github.com/alexdlaird/amazon-orders/compare/4.0.6...4.0.7) - 2025-05-27
+
+### Fixed
+
+- Edge cases where, when zero orders and/or zero transactions existed in the account, an exception was thrown. Now returns an empty list.
+
 ## [4.0.6](https://github.com/alexdlaird/amazon-orders/compare/4.0.5...4.0.6) - 2025-05-12
 
 ### Added

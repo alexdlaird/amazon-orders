@@ -126,7 +126,12 @@ class AmazonOrders:
                                      self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
 
             if not order_tags:
-                raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")
+                order_count_tag = util.select_one(page_response.parsed,
+                                                  self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR)
+                if order_count_tag and order_count_tag.text.startswith("0 "):
+                    break
+                else:
+                    raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")
 
             for order_tag in order_tags:
                 order_tasks.append(self._async_wrapper(self._build_order, order_tag, full_details, current_index))

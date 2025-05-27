@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import datetime
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import responses
 from click.testing import CliRunner
@@ -145,9 +145,9 @@ class TestCli(UnitTestCase):
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)
-    def test_transactions_command(self, mock_get_today: Mock):
+    def test_transactions_command(self, mock_today):
         # GIVEN
-        mock_get_today.date.today.return_value = datetime.date(2024, 10, 11)
+        mock_today.date.today.return_value = datetime.date(2024, 10, 11)
         days = 1
         self.given_login_responses_success()
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"),

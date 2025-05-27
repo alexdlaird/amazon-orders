@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import datetime
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import responses
 from bs4 import BeautifulSoup
@@ -40,7 +40,7 @@ class TestTransactions(UnitTestCase):
 
         # WHEN
         with self.assertRaises(AmazonOrdersAuthRedirectError) as cm:
-            self.amazon_transactions.get_transactions()
+            self.amazon_transactions.get_transactions(keep_paging=False)
 
         self.assertIn("Amazon redirected to login.", str(cm.exception))
         self.assertFalse(self.amazon_session.is_authenticated)
@@ -49,9 +49,9 @@ class TestTransactions(UnitTestCase):
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)
-    def test_get_transactions(self, mock_get_today: Mock):
+    def test_get_transactions(self, mock_today):
         # GIVEN
-        mock_get_today.date.today.return_value = datetime.date(2024, 10, 11)
+        mock_today.date.today.return_value = datetime.date(2024, 10, 11)
         days = 1
         self.amazon_session.is_authenticated = True
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",
@@ -64,7 +64,7 @@ class TestTransactions(UnitTestCase):
             )
 
         # WHEN
-        transactions = self.amazon_transactions.get_transactions(days=days)
+        transactions = self.amazon_transactions.get_transactions(days=days, keep_paging=False)
 
         # THEN
         self.assertEqual(1, len(transactions))
@@ -92,7 +92,7 @@ class TestTransactions(UnitTestCase):
 
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
-            self.amazon_transactions.get_transactions(next_page_data=next_page_data)
+            self.amazon_transactions.get_transactions(next_page_data=next_page_data, keep_paging=False)
 
         # THEN
         self.assertEqual(1, resp.call_count)
@@ -112,7 +112,7 @@ class TestTransactions(UnitTestCase):
 
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
-            self.amazon_transactions.get_transactions()
+            self.amazon_transactions.get_transactions(keep_paging=False)
 
         # THEN
         self.assertEqual(1, resp.call_count)
@@ -120,15 +120,15 @@ class TestTransactions(UnitTestCase):
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)
-    def test_get_transactions_refunded_empty_order_link(self, mock_get_today: Mock):
+    def test_get_transactions_refunded_empty_order_link(self, mock_today):
         # GIVEN
-        mock_get_today.date.today.return_value = datetime.date(2025, 2, 28)
+        mock_today.date.today.return_value = datetime.date(2025, 2, 28)
         days = 30
         self.amazon_session.is_authenticated = True
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-refunded.html"),
                   "r",
                   encoding="utf-8") as f:
-            responses.add(
+            resp = responses.add(
                 responses.POST,
                 f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
@@ -136,7 +136,7 @@ class TestTransactions(UnitTestCase):
             )
 
         # WHEN
-        transactions = self.amazon_transactions.get_transactions(days=days)
+        transactions = self.amazon_transactions.get_transactions(days=days, keep_paging=False)
 
         # THEN
         self.assertEqual(19, len(transactions))
@@ -149,18 +149,27 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(transaction.order_details_link,
                          "https://www.amazon.com/gp/your-account/order-details?orderID=0000000019080621061")
         self.assertIsNone(transaction.seller)
+        self.assertEqual(1, resp.call_count)
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)
-    def test_get_transactions_with_pending(self, mock_get_today: Mock):
+    def test_get_transactions_paginated(self, mock_today):
         # GIVEN
-        mock_get_today.date.today.return_value = datetime.date(2025, 2, 13)
-        days = 30
+        mock_today.date.today.return_value = datetime.date(2025, 5, 27)
         self.amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-with-next-page.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.POST,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
+                body=f.read(),
+                status=200,
+            )
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-in-progress.html"),
                   "r",
                   encoding="utf-8") as f:
-            responses.add(
+            resp2 = responses.add(
                 responses.POST,
                 f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
@@ -168,7 +177,32 @@ class TestTransactions(UnitTestCase):
             )
 
         # WHEN
-        transactions = self.amazon_transactions.get_transactions(days=days)
+        transactions = self.amazon_transactions.get_transactions()
+
+        # THEN
+        self.assertEqual(40, len(transactions))
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+
+    @responses.activate
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_with_pending(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2025, 2, 13)
+        days = 30
+        self.amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-in-progress.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.POST,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        transactions = self.amazon_transactions.get_transactions(days=days, keep_paging=False)
 
         # THEN
         self.assertEqual(20, len(transactions))
@@ -190,15 +224,37 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(transaction.order_details_link,
                          "https://www.amazon.com/gp/css/summary/edit.html?orderID=234-3017692-4601031")
         self.assertEqual(transaction.seller, "AMZN Mktp US")
+        self.assertEqual(1, resp.call_count)
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)
-    def test_get_transactions_grand_total_blank(self, mock_get_today: Mock):
+    def test_get_transactions_grand_total_blank(self, mock_today):
         # GIVEN
-        mock_get_today.date.today.return_value = datetime.date(2025, 2, 19)
+        mock_today.date.today.return_value = datetime.date(2025, 2, 19)
         days = 30
         self.amazon_session.is_authenticated = True
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-grand-total-blank.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.POST,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        transactions = self.amazon_transactions.get_transactions(days=days, keep_paging=False)
+
+        # THEN
+        self.assertEqual(19, len(transactions))
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
+    def test_get_transactions_zero_transactions(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-zero-transactions.html"),
                   "r",
                   encoding="utf-8") as f:
             responses.add(
@@ -209,10 +265,10 @@ class TestTransactions(UnitTestCase):
             )
 
         # WHEN
-        transactions = self.amazon_transactions.get_transactions(days=days)
+        transactions = self.amazon_transactions.get_transactions(keep_paging=False)
 
         # THEN
-        self.assertEqual(19, len(transactions))
+        self.assertEqual(0, len(transactions))
 
     def test_parse_transaction_form_tag(self):
         # GIVEN

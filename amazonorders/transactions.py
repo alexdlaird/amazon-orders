@@ -84,13 +84,15 @@ class AmazonTransactions:
 
     def get_transactions(self,
                          days: int = 365,
-                         next_page_data: Optional[Dict[str, Any]] = None) -> List[Transaction]:
+                         next_page_data: Optional[Dict[str, Any]] = None,
+                         keep_paging: bool = True) -> List[Transaction]:
         """
         Get Amazon Transaction history for a given number of days.
 
         :param days: The number of days worth of Transactions to get.
         :param next_page_data: If a call to this method previously errored out, passing the exception's
             :attr:`~amazonorders.exception.AmazonOrdersError.meta` will continue paging where it left off.
+        :param keep_paging: ``False`` if only one page should be fetched.
         :return: A list of the requested Transactions.
         """
         if not self.amazon_session.is_authenticated:
@@ -99,17 +101,24 @@ class AmazonTransactions:
         min_date = datetime.date.today() - datetime.timedelta(days=days)
 
         transactions: List[Transaction] = []
-        keep_paging = True
-        while keep_paging:
-            transaction_page_response = self.amazon_session.post(self.config.constants.TRANSACTION_HISTORY_URL,
-                                                                 data=next_page_data)
-            self.amazon_session.check_response(transaction_page_response, meta=next_page_data)
+        first_page = True
+        while first_page or keep_paging:
+            first_page = False
 
-            form_tag = util.select_one(transaction_page_response.parsed,
+            page_response = self.amazon_session.post(self.config.constants.TRANSACTION_HISTORY_URL,
+                                                     data=next_page_data)
+            self.amazon_session.check_response(page_response, meta=next_page_data)
+
+            form_tag = util.select_one(page_response.parsed,
                                        self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
 
             if not form_tag:
-                raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.")
+                transaction_container = util.select_one(page_response.parsed,
+                                                        self.config.selectors.TRANSACTION_HISTORY_CONTAINER_SELECTOR)
+                if transaction_container and "don't have any transactions" in transaction_container.text:
+                    break
+                else:
+                    raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.")
 
             loaded_transactions, next_page_data = (
                 _parse_transaction_form_tag(form_tag, self.config)

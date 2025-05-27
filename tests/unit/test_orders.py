@@ -621,6 +621,27 @@ class TestOrders(UnitTestCase):
         self.assertIsNone(order.index)
         self.assertEqual(1, resp1.call_count)
 
+    @responses.activate
+    def test_get_order_history_zero_orders(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2023
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2023-zero-orders.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                self.test_config.constants.ORDER_HISTORY_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year)
+
+        # THEN
+        self.assertEqual(0, len(orders))
+        self.assertEqual(1, resp.call_count)
+
     @unittest.skipIf(not os.path.exists(temp_order_history_file_path),
                      reason="Skipped, to debug an order history page, "
                             "place it at tests/output/temp-order-history.html")
