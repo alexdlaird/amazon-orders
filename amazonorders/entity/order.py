@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import json
+import html
 import logging
 from datetime import date, timedelta
 from typing import Any, List, Optional, TypeVar, Union
@@ -61,6 +62,11 @@ class Order(Parsable):
         #: The Order details link.
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
             self._parse_order_details_link)
+        #: The Order invoice link.
+        if clone and clone.invoice_link:
+            self.invoice_link: Optional[str] = clone.invoice_link
+        else:
+            self.invoice_link: Optional[str] = self.safe_parse(self._parse_invoice_link)
         #: The Order grand total.
         self.grand_total: float = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
         self.item_net_total: float = self.grand_total
@@ -148,6 +154,28 @@ class Order(Parsable):
 
         if not value and self.order_id:
             value = f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_id}"
+
+        return value
+
+    def _parse_invoice_link(self) -> Optional[str]:
+        value = self.simple_parse(
+            self.config.selectors.FIELD_ORDER_INVOICE_LINK_SELECTOR, attr_name="href"
+        )
+
+        if not value:
+            popover = util.select_one(
+                self.parsed, self.config.selectors.FIELD_ORDER_INVOICE_POPOVER_SELECTOR
+            )
+            if popover:
+                data = popover.get("data-a-popover")
+                if data:
+                    try:
+                        value = json.loads(html.unescape(data)).get("url")
+                    except Exception:
+                        value = None
+
+        if not value and self.order_id:
+            value = f"{self.config.constants.ORDER_INVOICE_URL}?orderID={self.order_id}"
 
         return value
 

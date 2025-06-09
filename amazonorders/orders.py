@@ -179,3 +179,18 @@ class AmazonOrders:
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.config.thread_pool_size) as pool:
             result = await loop.run_in_executor(pool, func, *args)
         return result
+
+    def download_invoice(self, order_id: str, file_path: str) -> None:
+        """Download the invoice PDF for the given order ID."""
+        if not self.amazon_session.is_authenticated:
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
+
+        invoice_url = f"{self.config.constants.ORDER_INVOICE_URL}?orderID={order_id}"
+        response = self.amazon_session.get(invoice_url, headers={"Accept": "application/pdf"})
+        if response.response.status_code != 200:
+            raise AmazonOrdersError(
+                f"Failed to download invoice: {response.response.status_code}"
+            )
+
+        with open(file_path, "wb") as f:
+            f.write(response.response.content)

@@ -29,6 +29,21 @@ class TestOrder(UnitTestCase):
         self.assertIsNone(order.subscription_discount)
         self.assertEqual(order.grand_total, 7777.99)
 
+    def test_order_invoice_link(self):
+        # GIVEN
+        with open(
+            os.path.join(self.RESOURCES_DIR, "orders", "order-currency-stripped-snippet.html"),
+            "r",
+            encoding="utf-8",
+        ) as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertIn("/gp/css/summary/print.html", order.invoice_link)
+
     def test_order_promotion_applied(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-promotion-applied-snippet.html"),

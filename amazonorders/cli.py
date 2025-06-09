@@ -154,6 +154,8 @@ def amazon_orders_cli(ctx: Context,
                    "This will execute an additional request per Order.")
 @click.option("--csv", is_flag=True, default=False,
               help="Export the order history to a CSV file.")
+@click.option("--invoices", is_flag=True, default=False,
+              help="Download an invoice PDF for each order.")
 def history(ctx: Context,
             **kwargs: Any) -> None:
     """
@@ -190,6 +192,12 @@ Order History for {year}{optional_start_index}{optional_full_details}
                                                  start_index=kwargs["start_index"],
                                                  full_details=kwargs["full_details"],
                                                  keep_paging=not kwargs["single_page"])
+
+        if kwargs["invoices"]:
+            for o in orders:
+                invoice_path = os.path.join(config.output_dir, f"{o.order_id}.pdf")
+                amazon_orders.download_invoice(o.order_id, invoice_path)
+                click.echo(f"Invoice saved to {invoice_path}")
 
         if kwargs["csv"]:
             # Convert list of dataclass‐like objects into a list of dicts
@@ -318,6 +326,30 @@ def order(ctx: Context,
         o = amazon_orders.get_order(order_id)
 
         click.echo(f"{_order_output(o, config)}\n")
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+
+@amazon_orders_cli.command()
+@click.pass_context
+@click.argument("order_id")
+@click.option("--output-file", help="Where to write the invoice PDF.")
+def invoice(ctx: Context, order_id: str, output_file: Optional[str]) -> None:
+    """Download the invoice PDF for a given Amazon order ID."""
+    amazon_session = ctx.obj["amazon_session"]
+
+    try:
+        _authenticate(amazon_session)
+
+        config = ctx.obj["conf"]
+        amazon_orders = AmazonOrders(amazon_session, config=config)
+
+        if not output_file:
+            output_file = f"{order_id}.pdf"
+
+        amazon_orders.download_invoice(order_id, output_file)
+        click.echo(f"Invoice saved to {output_file}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
