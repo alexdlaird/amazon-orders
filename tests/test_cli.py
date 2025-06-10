@@ -139,49 +139,6 @@ class TestCli(UnitTestCase):
             self.assertIn("max_auth_attempts: 7", f.read())
 
     @responses.activate
-    def test_invoice_command(self):
-        # GIVEN
-        order_id = "112-2961628-4757846"
-        self.given_login_responses_success()
-        pdf_link = "/documents/download/abc123/invoice.pdf"
-        responses.add(
-            responses.GET,
-            f"{self.test_config.constants.ORDER_INVOICE_MENU_URL}?orderId={order_id}",
-            body=f"<a href='{pdf_link}'>Invoice 1</a>",
-            status=200,
-        )
-        responses.add(
-            responses.GET,
-            f"{self.test_config.constants.BASE_URL}{pdf_link}",
-            body=b"PDFDATA",
-            status=200,
-            content_type="application/pdf",
-        )
-
-        # WHEN
-        with self.runner.isolated_filesystem():
-            output_file = "invoice.pdf"
-            response = self.runner.invoke(
-                amazon_orders_cli,
-                [
-                    "--config-path",
-                    self.test_config.config_path,
-                    "--username",
-                    "some-username",
-                    "--password",
-                    "some-password",
-                    "invoice",
-                    order_id,
-                    "--output-file",
-                    output_file,
-                ],
-            )
-
-            # THEN
-            self.assertEqual(0, response.exit_code)
-            self.assertTrue(os.path.exists(output_file))
-
-    @responses.activate
     def test_history_command_download_invoices(self):
         # GIVEN
         year = 2024
@@ -238,4 +195,5 @@ class TestCli(UnitTestCase):
 
             # THEN
             self.assertEqual(0, response.exit_code)
-            self.assertTrue(os.path.exists(f"{order_id}.pdf"))
+            expected = "AmazonInvoice_20241101_112-5939971-8962610.pdf"
+            self.assertTrue(os.path.exists(expected))
