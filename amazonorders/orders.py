@@ -188,6 +188,8 @@ class AmazonOrders:
         invoice_url = None
 
         if invoice_link and "invoice.html" in invoice_link:
+            if not invoice_link.startswith("http"):
+                invoice_link = f"{self.config.constants.BASE_URL}{invoice_link}"
             menu_response = self.amazon_session.get(invoice_link)
             link_tag = util.select_one(
                 menu_response.parsed,
@@ -208,6 +210,9 @@ class AmazonOrders:
                 invoice_url = invoice_link
             else:
                 invoice_url = f"{self.config.constants.ORDER_INVOICE_URL}?orderID={order_id}"
+
+        if invoice_url and not invoice_url.startswith("http"):
+            invoice_url = f"{self.config.constants.BASE_URL}{invoice_url}"
 
         response = self.amazon_session.get(invoice_url, headers={"Accept": "application/pdf"})
         if response.response.status_code != 200:
