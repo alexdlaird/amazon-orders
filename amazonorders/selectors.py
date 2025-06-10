@@ -117,6 +117,7 @@ class Selectors:
         "a[href*='/gp/digital/your-account/order-summary.html']",
     ]
     FIELD_ORDER_INVOICE_POPOVER_SELECTOR = "span[data-a-popover*='invoice.html']"
+    FIELD_ORDER_INVOICE_PDF_LINK_SELECTOR = "a[href*='print']"
     FIELD_ORDER_NUMBER_SELECTOR = ["[data-component='orderId']",
                                    "[data-component='briefOrderInfo'] div.a-column",
                                    ".order-date-invoice-item bdi[dir='ltr']",

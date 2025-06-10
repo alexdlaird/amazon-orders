@@ -196,7 +196,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
         if kwargs["invoices"]:
             for o in orders:
                 invoice_path = os.path.join(config.output_dir, f"{o.order_id}.pdf")
-                amazon_orders.download_invoice(o.order_id, invoice_path)
+                amazon_orders.download_invoice(o.order_id, invoice_path, o.invoice_link)
                 click.echo(f"Invoice saved to {invoice_path}")
 
         if kwargs["csv"]:
@@ -348,7 +348,8 @@ def invoice(ctx: Context, order_id: str, output_file: Optional[str]) -> None:
         if not output_file:
             output_file = f"{order_id}.pdf"
 
-        amazon_orders.download_invoice(order_id, output_file)
+        invoice_link = f"{config.constants.ORDER_INVOICE_MENU_URL}?orderId={order_id}"
+        amazon_orders.download_invoice(order_id, output_file, invoice_link)
         click.echo(f"Invoice saved to {output_file}\n")
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)

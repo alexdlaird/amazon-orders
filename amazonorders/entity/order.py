@@ -175,7 +175,7 @@ class Order(Parsable):
                         value = None
 
         if not value and self.order_id:
-            value = f"{self.config.constants.ORDER_INVOICE_URL}?orderID={self.order_id}"
+            value = f"{self.config.constants.ORDER_INVOICE_MENU_URL}?orderId={self.order_id}"
 
         return value
 

@@ -45,6 +45,7 @@ class Constants:
     ORDER_HISTORY_URL = f"{BASE_URL}/your-orders/orders"
     ORDER_DETAILS_URL = f"{BASE_URL}/gp/your-account/order-details"
     ORDER_INVOICE_URL = f"{BASE_URL}/gp/css/summary/print.html"
+    ORDER_INVOICE_MENU_URL = f"{BASE_URL}/gp/shared-cs/ajax/invoice/invoice.html"
     HISTORY_FILTER_QUERY_PARAM = "timeFilter"
 
     ##########################################################################

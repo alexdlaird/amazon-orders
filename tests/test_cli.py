@@ -145,6 +145,12 @@ class TestCli(UnitTestCase):
         self.given_login_responses_success()
         responses.add(
             responses.GET,
+            f"{self.test_config.constants.ORDER_INVOICE_MENU_URL}?orderId={order_id}",
+            body="<a href='/gp/css/summary/print.html?orderID={order_id}'>PDF</a>",
+            status=200,
+        )
+        responses.add(
+            responses.GET,
             f"{self.test_config.constants.ORDER_INVOICE_URL}?orderID={order_id}",
             body=b"PDFDATA",
             status=200,

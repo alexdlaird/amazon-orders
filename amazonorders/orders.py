@@ -180,12 +180,27 @@ class AmazonOrders:
             result = await loop.run_in_executor(pool, func, *args)
         return result
 
-    def download_invoice(self, order_id: str, file_path: str) -> None:
+    def download_invoice(self, order_id: str, file_path: str, invoice_link: Optional[str] = None) -> None:
         """Download the invoice PDF for the given order ID."""
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        invoice_url = f"{self.config.constants.ORDER_INVOICE_URL}?orderID={order_id}"
+        invoice_url = None
+
+        if invoice_link and "invoice.html" in invoice_link:
+            menu_response = self.amazon_session.get(invoice_link)
+            link_tag = util.select_one(menu_response.parsed, self.config.selectors.FIELD_ORDER_INVOICE_PDF_LINK_SELECTOR)
+            if link_tag:
+                invoice_url = link_tag.get("href")
+                if invoice_url and not invoice_url.startswith("http"):
+                    invoice_url = f"{self.config.constants.BASE_URL}{invoice_url}"
+
+        if not invoice_url:
+            if invoice_link and "print" in invoice_link:
+                invoice_url = invoice_link
+            else:
+                invoice_url = f"{self.config.constants.ORDER_INVOICE_URL}?orderID={order_id}"
+
         response = self.amazon_session.get(invoice_url, headers={"Accept": "application/pdf"})
         if response.response.status_code != 200:
             raise AmazonOrdersError(
