@@ -5,6 +5,7 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
+import os
 from typing import List, Optional, Any, Callable
 
 from bs4 import Tag
@@ -179,3 +180,66 @@ class AmazonOrders:
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.config.thread_pool_size) as pool:
             result = await loop.run_in_executor(pool, func, *args)
         return result
+
+    def download_invoice(self,
+                         order_id: str,
+                         order_date: datetime.date,
+                         output_dir: str,
+                         invoice_link: Optional[str] = None) -> List[str]:
+        """Download invoice PDFs for the given order ID."""
+        if not self.amazon_session.is_authenticated:
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
+
+        invoice_urls: List[str] = []
+
+        if invoice_link and "invoice.html" in invoice_link:
+            if not invoice_link.startswith("http"):
+                invoice_link = f"{self.config.constants.BASE_URL}{invoice_link}"
+            menu_response = self.amazon_session.get(invoice_link)
+            link_tags = util.select(
+                menu_response.parsed,
+                self.config.selectors.FIELD_ORDER_INVOICE_PDF_LINK_SELECTOR,
+            )
+            if not link_tags:
+                link_tags = util.select(
+                    menu_response.parsed,
+                    self.config.selectors.FIELD_ORDER_INVOICE_PRINT_LINK_SELECTOR,
+                )
+            for tag in link_tags:
+                href = tag.get("href")
+                if href:
+                    if not href.startswith("http"):
+                        href = f"{self.config.constants.BASE_URL}{href}"
+                    invoice_urls.append(href)
+
+        if not invoice_urls:
+            if invoice_link and "print" in invoice_link:
+                invoice_urls.append(invoice_link)
+            else:
+                invoice_urls.append(
+                    f"{self.config.constants.ORDER_INVOICE_URL}?orderID={order_id}"
+                )
+
+        file_paths: List[str] = []
+        index = 1
+        for invoice_url in invoice_urls:
+            if not invoice_url.startswith("http"):
+                invoice_url = f"{self.config.constants.BASE_URL}{invoice_url}"
+
+            response = self.amazon_session.get(invoice_url, headers={"Accept": "application/pdf"})
+            if response.response.status_code != 200:
+                raise AmazonOrdersError(
+                    f"Failed to download invoice: {response.response.status_code}"
+                )
+
+            base = f"AmazonInvoice_{order_date.strftime('%Y%m%d')}_{order_id}"
+            if len(invoice_urls) > 1:
+                file_path = os.path.join(output_dir, f"{base}_{index}.pdf")
+            else:
+                file_path = os.path.join(output_dir, f"{base}.pdf")
+            with open(file_path, "wb") as f:
+                f.write(response.response.content)
+            file_paths.append(file_path)
+            index += 1
+
+        return file_paths

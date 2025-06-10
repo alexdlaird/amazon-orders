@@ -154,6 +154,8 @@ def amazon_orders_cli(ctx: Context,
                    "This will execute an additional request per Order.")
 @click.option("--csv", is_flag=True, default=False,
               help="Export the order history to a CSV file.")
+@click.option("--invoices", is_flag=True, default=False,
+              help="Download an invoice PDF for each order.")
 def history(ctx: Context,
             **kwargs: Any) -> None:
     """
@@ -190,6 +192,17 @@ Order History for {year}{optional_start_index}{optional_full_details}
                                                  start_index=kwargs["start_index"],
                                                  full_details=kwargs["full_details"],
                                                  keep_paging=not kwargs["single_page"])
+
+        if kwargs["invoices"]:
+            for o in orders:
+                file_paths = amazon_orders.download_invoice(
+                    o.order_id,
+                    o.order_date,
+                    config.output_dir,
+                    o.invoice_link,
+                )
+                for p in file_paths:
+                    click.echo(f"Invoice saved to {p}")
 
         if kwargs["csv"]:
             # Convert list of dataclass‐like objects into a list of dicts

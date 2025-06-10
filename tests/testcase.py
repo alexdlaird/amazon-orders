@@ -16,6 +16,7 @@ class TestCase(unittest.TestCase):
         self.assertIsNotNone(order.order_id)
         self.assertIsNotNone(order.grand_total)
         self.assertIsNotNone(order.order_details_link)
+        self.assertIsNotNone(order.invoice_link)
         self.assertIsNotNone(order.order_date)
         if order.recipient:
             self.assertIsNotNone(order.recipient.name)
