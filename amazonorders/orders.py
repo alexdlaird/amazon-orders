@@ -189,7 +189,15 @@ class AmazonOrders:
 
         if invoice_link and "invoice.html" in invoice_link:
             menu_response = self.amazon_session.get(invoice_link)
-            link_tag = util.select_one(menu_response.parsed, self.config.selectors.FIELD_ORDER_INVOICE_PDF_LINK_SELECTOR)
+            link_tag = util.select_one(
+                menu_response.parsed,
+                self.config.selectors.FIELD_ORDER_INVOICE_PDF_LINK_SELECTOR,
+            )
+            if not link_tag:
+                link_tag = util.select_one(
+                    menu_response.parsed,
+                    self.config.selectors.FIELD_ORDER_INVOICE_PRINT_LINK_SELECTOR,
+                )
             if link_tag:
                 invoice_url = link_tag.get("href")
                 if invoice_url and not invoice_url.startswith("http"):

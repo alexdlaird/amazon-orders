@@ -143,15 +143,16 @@ class TestCli(UnitTestCase):
         # GIVEN
         order_id = "112-2961628-4757846"
         self.given_login_responses_success()
+        pdf_link = "/documents/download/abc123/invoice.pdf"
         responses.add(
             responses.GET,
             f"{self.test_config.constants.ORDER_INVOICE_MENU_URL}?orderId={order_id}",
-            body="<a href='/gp/css/summary/print.html?orderID={order_id}'>PDF</a>",
+            body=f"<a href='{pdf_link}'>Invoice 1</a>",
             status=200,
         )
         responses.add(
             responses.GET,
-            f"{self.test_config.constants.ORDER_INVOICE_URL}?orderID={order_id}",
+            f"{self.test_config.constants.BASE_URL}{pdf_link}",
             body=b"PDFDATA",
             status=200,
             content_type="application/pdf",
@@ -198,9 +199,16 @@ class TestCli(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
+        pdf_link = "/documents/download/def456/invoice.pdf"
         responses.add(
             responses.GET,
-            f"{self.test_config.constants.ORDER_INVOICE_URL}?orderID={order_id}",
+            f"{self.test_config.constants.ORDER_INVOICE_MENU_URL}?orderId={order_id}",
+            body=f"<a href='{pdf_link}'>Invoice 1</a>",
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            f"{self.test_config.constants.BASE_URL}{pdf_link}",
             body=b"PDFDATA",
             status=200,
             content_type="application/pdf",
