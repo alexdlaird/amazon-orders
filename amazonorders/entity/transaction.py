@@ -80,7 +80,7 @@ class Transaction(Parsable):
                 "Check if Amazon changed the HTML."
             )  # pragma: no cover
 
-        match = re.match(".*#([0-9-]+)$", value)
+        match = re.match(".*#(D?[0-9-]+)$", value)
         value = match.group(1) if match else ""
 
         return value

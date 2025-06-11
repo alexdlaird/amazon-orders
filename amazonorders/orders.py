@@ -60,8 +60,15 @@ class AmazonOrders:
         if order_details_response.response.url.startswith(self.config.constants.SIGN_IN_URL):
             self.amazon_session.raise_expired_session()
 
-        if not order_details_response.response.url.startswith(self.config.constants.ORDER_DETAILS_URL):
-            raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.")
+        if not order_details_response.response.url.startswith(
+            (
+                self.config.constants.ORDER_DETAILS_URL,
+                self.config.constants.ORDER_SUMMARY_URL,
+            )
+        ):
+            raise AmazonOrdersNotFoundError(
+                f"Amazon redirected, which likely means Order {order_id} was not found."
+            )
 
         order_details_tag = util.select_one(order_details_response.parsed,
                                             self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)

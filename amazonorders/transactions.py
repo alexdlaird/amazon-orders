@@ -130,6 +130,6 @@ class AmazonTransactions:
 
     def get_transactions_by_year(self, year: int) -> List[Transaction]:
         """Get Amazon transaction history for the given year."""
-        days = (datetime.date.today() - datetime.date(year, 1, 1)).days + 365
+        days = (datetime.date.today() - datetime.date(year, 1, 1)).days + 30
         transactions = self.get_transactions(days=days)
         return [t for t in transactions if t.completed_date.year == year]
