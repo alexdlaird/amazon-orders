@@ -429,6 +429,33 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp1.call_count)
 
     @responses.activate
+    def test_get_order_2024_digital_order_rd(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "D01-9262519-8073835"
+        with open(
+            os.path.join(
+                self.RESOURCES_DIR, "orders", f"order-summary-{order_id}.html"
+            ),
+            "r",
+            encoding="utf-8",
+        ) as f:
+            resp1 = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assert_order_D01_9262519_8073835_digital_order_rd(order, True)
+        self.assertIsNone(order.index)
+        self.assertEqual(1, resp1.call_count)
+
+    @responses.activate
     def test_get_order_2024_data_component_subscription(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
