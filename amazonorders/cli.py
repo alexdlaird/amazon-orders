@@ -19,7 +19,7 @@ from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
 from amazonorders.entity.transaction import Transaction
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError, AmazonOrdersNotFoundError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession, IODefault
 from amazonorders.transactions import AmazonTransactions
@@ -206,7 +206,7 @@ Order History for {year}{optional_start_index}{optional_full_details}
                     order = amazon_orders.get_order(t.order_id)
                 if order:
                     order.payment_date = t.completed_date
-                    if t.payment_amount and not order.payment_amount:
+                    if t.grand_total and not order.payment_amount:
                         order.payment_amount = t.grand_total
                     if t.payment_method and not order.payment_method:
                         order.payment_method = t.payment_method
@@ -404,12 +404,16 @@ def transactions(ctx: Context, **kwargs: Any):
 
         if kwargs["full_details"]:
             for t in transactions:
-                order = amazon_orders.get_order(t.order_id)
-                order.payment_date = t.completed_date
-                order.payment_amount = t.grand_total
-                order.payment_method = t.payment_method
-                # order.payment_method_last_4 = t.payment_method_last_4
-                t.order = order
+                try: 
+                    order = amazon_orders.get_order(t.order_id)
+                    order.payment_date = t.completed_date
+                    order.payment_amount = t.grand_total
+                    order.payment_method = t.payment_method
+                    # order.payment_method_last_4 = t.payment_method_last_4
+                    t.order = order
+                except AmazonOrdersNotFoundError as e:
+                    logger.debug(f"Error getting order {t.order_id}: {e}")
+                    t.order = None
 
         if kwargs["invoices"]:
             for t in transactions:
