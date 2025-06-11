@@ -197,31 +197,27 @@ Order History for {year}{optional_start_index}{optional_full_details}
             keep_paging=not kwargs["single_page"],
         )
 
-        order_map = {o.order_id: o for o in orders}
-
-        transactions = amazon_transactions.get_transactions_by_year(year)
-
-        fetch_orders = kwargs["full_details"] or kwargs["csv"] or kwargs["invoices"]
-
-        for t in transactions:
-            order = order_map.get(t.order_id)
-            if fetch_orders and not order:
-                order = amazon_orders.get_order(t.order_id)
-            if order:
-                order.payment_date = t.completed_date
-                order.payment_amount = t.grand_total
-                if t.payment_method:
-                    order.payment_method = t.payment_method
-                t.order = order
+        if kwargs["full_details"]:
+            order_map = {o.order_id: o for o in orders}
+            transactions = amazon_transactions.get_transactions_by_year(year)
+            for t in transactions:
+                order = order_map.get(t.order_id)
+                if not order:
+                    order = amazon_orders.get_order(t.order_id)
+                if order:
+                    order.payment_date = t.completed_date
+                    if t.payment_amount and not order.payment_amount:
+                        order.payment_amount = t.grand_total
+                    if t.payment_method and not order.payment_method:
+                        order.payment_method = t.payment_method
+                    t.order = order
+                    orders.append(order)
 
         if kwargs["invoices"]:
-            for t in transactions:
-                o = t.order
-                if not o:
-                    continue
+            for o in orders:
                 file_paths = amazon_orders.download_invoice(
                     o.order_id,
-                    o.order_date,
+                    o.payment_date,
                     config.output_dir,
                     o.invoice_link,
                 )
@@ -231,17 +227,15 @@ Order History for {year}{optional_start_index}{optional_full_details}
         if kwargs["csv"]:
             # Convert list of dataclass‐like objects into a list of dicts
             orders_dict = []
-            for t in transactions:
-                o = t.order
-                if not o or o.payment_amount in (0, None):
-                    continue
-                order_dict = o.__dict__.copy()
-                # Format dates as yyyy/mm/dd
-                if isinstance(o.order_date, datetime.date):
-                    order_dict["order_date"] = o.order_date.strftime("%Y/%m/%d")
-                if isinstance(o.payment_date, datetime.date):
-                    order_dict["payment_date"] = o.payment_date.strftime("%Y/%m/%d")
-                orders_dict.append(order_dict)
+            for o in orders:
+                if o.payment_amount not in (0, None):
+                    order_dict = o.__dict__.copy()
+                    # Format dates as yyyy/mm/dd
+                    if isinstance(o.order_date, datetime.date):
+                        order_dict["order_date"] = o.order_date.strftime("%Y/%m/%d")
+                    if isinstance(o.payment_date, datetime.date):
+                        order_dict["payment_date"] = o.payment_date.strftime("%Y/%m/%d")
+                    orders_dict.append(order_dict)
 
             # Convert list of dataclass‐like objects into a list of dicts
             df = pd.DataFrame(orders_dict)
@@ -318,26 +312,20 @@ Order History for {year}{optional_start_index}{optional_full_details}
 
             # Export to CSV (no index column)
             df.to_csv(
-                f"transactions-{kwargs['year']}.csv",
+                f"orders-{kwargs['year']}.csv",
                 index=False,
                 quoting=csv.QUOTE_MINIMAL,
             )  # quote fields with commas
         else:
-            for t in transactions:
-                if t.order:
-                    click.echo(f"{_order_output(t.order, config)}\n")
-                else:
-                    click.echo(f"{_transaction_output(t, config)}\n")
+            for o in orders:
+                click.echo(f"{_order_output(o, config)}\n")
 
-        total = len(transactions)
+        total = len(orders)
         end_time = time.time()
 
         click.echo(
-            "... {total} transactions parsed in {time} seconds.\n".format(
-                total=total,
-                time=int(end_time - start_time),
-            )
-        )
+            "... {total} orders parsed in {time} seconds.\n".format(total=total,
+                                                                    time=int(end_time - start_time)))
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
@@ -370,6 +358,8 @@ def order(ctx: Context,
 
 @amazon_orders_cli.command()
 @click.pass_context
+@click.option("--year", default=datetime.date.today().year,
+              help="The year for which to get transaction's order, defaults to the current year.")
 @click.option("--days", default=365,
               help="The number of days of transactions to get.")
 @click.option("--full-details", is_flag=True, default=False,
@@ -387,13 +377,16 @@ def transactions(ctx: Context, **kwargs: Any):
     try:
         _authenticate(amazon_session)
 
+        year = kwargs["year"]
         days = kwargs["days"]
+        full_details = kwargs["full_details"]
 
-        click.echo(
-            """-----------------------------------------------------------------------
-Transaction History for {days} days
------------------------------------------------------------------------\n""".format(days=days)
-        )
+        click.echo("-----------------------------------------------------------------------")
+        if year:
+            click.echo("Transaction History for {year} year".format(year=year))
+        else:
+            click.echo("Transaction History for {days} days".format(days=days))
+        click.echo("-----------------------------------------------------------------------")
         click.echo("Info: Fetching transaction history, this might take a minute ...")
 
         config = ctx.obj["conf"]
@@ -404,134 +397,129 @@ Transaction History for {days} days
 
         start_time = time.time()
 
-        transactions = amazon_transactions.get_transactions(days=days)
+        if kwargs["year"]:
+            transactions = amazon_transactions.get_transactions_by_year(year)
+        else:
+            transactions = amazon_transactions.get_transactions(days=days)
 
-        fetch_orders = kwargs["full_details"] or kwargs["csv"] or kwargs["invoices"]
-        if fetch_orders:
+        if kwargs["full_details"]:
             for t in transactions:
                 order = amazon_orders.get_order(t.order_id)
                 order.payment_date = t.completed_date
                 order.payment_amount = t.grand_total
-                if t.payment_method:
-                    order.payment_method = t.payment_method
+                order.payment_method = t.payment_method
+                # order.payment_method_last_4 = t.payment_method_last_4
                 t.order = order
 
-            if kwargs["invoices"]:
-                for t in transactions:
-                    o = t.order
-                    if not o:
-                        continue
-                    file_paths = amazon_orders.download_invoice(
-                        o.order_id,
-                        o.order_date,
-                        config.output_dir,
-                        o.invoice_link,
-                    )
-                    for p in file_paths:
-                        click.echo(f"Invoice saved to {p}")
-
-            if kwargs["csv"]:
-                orders_dict = []
-                for t in transactions:
-                    o = t.order
-                    if not o or o.payment_amount in (0, None):
-                        continue
-                    order_dict = o.__dict__.copy()
-                    if isinstance(o.order_date, datetime.date):
-                        order_dict["order_date"] = o.order_date.strftime("%Y/%m/%d")
-                    if isinstance(o.payment_date, datetime.date):
-                        order_dict["payment_date"] = o.payment_date.strftime("%Y/%m/%d")
-                    orders_dict.append(order_dict)
-
-                df = pd.DataFrame(orders_dict)
-
-                df = df.rename(
-                    columns={
-                        "index": "Index",
-                        "order_date": "Order Date",
-                        "order_id": "Order ID",
-                        "item_quantity": "Item quantity",
-                        "item_subtotal": "Item subtotal",
-                        "item_shipping_and_handling": "Item shipping and handling",
-                        "item_promotion": "Item promotion",
-                        "item_federal_tax": "Item Federal Tax",
-                        "item_provincial_tax": "Item Provincial Tax",
-                        "item_regulatory_fee": "Item Regulatory Fee",
-                        "item_net_total": "Item net total",
-                        "payment_method": "Payment Method",
-                        "payment_method_last_4": "Payment Method Last 4",
-                        "payment_reference_id": "Payment Reference ID",
-                        "payment_date": "Payment date",
-                        "payment_amount": "Payment amount",
-                        "shipments": "Shipments",
-                        "title": "Title",
-                        "amazon_internal_product_category": "Amazon Internal Product Category",
-                        "amazon_class": "Class",
-                        "amazon_commodity": "Commodity",
-                        "items": "Items",
-                        "order_details_link": "Order Details Link",
-                        "grand_total": "Grand Total",
-                        "recipient": "Recipient",
-                        "free_shipping": "Free Shipping",
-                        "coupon_savings": "Coupon Savings",
-                        "subscription_discount": "Subscription Discount",
-                        "total_before_tax": "Total Before Tax",
-                        "estimated_tax": "Estimated Tax",
-                        "refund_total": "Refund Total",
-                    }
-                )[
-                    [
-                        "Index",
-                        "Order Date",
-                        "Order ID",
-                        "Item quantity",
-                        "Item subtotal",
-                        "Item shipping and handling",
-                        "Item promotion",
-                        "Item Federal Tax",
-                        "Item Provincial Tax",
-                        "Item Regulatory Fee",
-                        "Item net total",
-                        "Payment Method",
-                        "Payment Method Last 4",
-                        "Payment Reference ID",
-                        "Payment date",
-                        "Payment amount",
-                        "Shipments",
-                        "Title",
-                        "Amazon Internal Product Category",
-                        "Class",
-                        "Commodity",
-                        "Items",
-                        "Order Details Link",
-                        "Grand Total",
-                        "Recipient",
-                        "Free Shipping",
-                        "Coupon Savings",
-                        "Subscription Discount",
-                        "Total Before Tax",
-                        "Estimated Tax",
-                        "Refund Total",
-                    ]
-                ]
-
-                df.to_csv(
-                    f"transactions-{days}.csv",
-                    index=False,
-                    quoting=csv.QUOTE_MINIMAL,
+        if kwargs["invoices"]:
+            for t in transactions:
+                o = t.order
+                if not o:
+                    continue
+                file_paths = amazon_orders.download_invoice(
+                    o.order_id,
+                    o.payment_date,
+                    config.output_dir,
+                    o.invoice_link,
                 )
-            else:
-                for t in transactions:
-                    if t.order:
-                        click.echo(f"{_order_output(t.order, config)}\n")
-                    else:
-                        click.echo(f"{_transaction_output(t, config)}\n")
+                for p in file_paths:
+                    click.echo(f"Invoice saved to {p}")
 
-            total = len(transactions)
+        if kwargs["csv"]:
+            orders_dict = []
+            for t in transactions:
+                o = t.order
+                if not o or o.payment_amount in (0, None):
+                    continue
+                order_dict = o.__dict__.copy()
+                if isinstance(o.order_date, datetime.date):
+                    order_dict["order_date"] = o.order_date.strftime("%Y/%m/%d")
+                if isinstance(o.payment_date, datetime.date):
+                    order_dict["payment_date"] = o.payment_date.strftime("%Y/%m/%d")
+                orders_dict.append(order_dict)
+
+            df = pd.DataFrame(orders_dict)
+
+            df = df.rename(
+                columns={
+                    "index": "Index",
+                    "order_date": "Order Date",
+                    "order_id": "Order ID",
+                    "item_quantity": "Item quantity",
+                    "item_subtotal": "Item subtotal",
+                    "item_shipping_and_handling": "Item shipping and handling",
+                    "item_promotion": "Item promotion",
+                    "item_federal_tax": "Item Federal Tax",
+                    "item_provincial_tax": "Item Provincial Tax",
+                    "item_regulatory_fee": "Item Regulatory Fee",
+                    "item_net_total": "Item net total",
+                    "payment_method": "Payment Method",
+                    "payment_method_last_4": "Payment Method Last 4",
+                    "payment_reference_id": "Payment Reference ID",
+                    "payment_date": "Payment date",
+                    "payment_amount": "Payment amount",
+                    "shipments": "Shipments",
+                    "title": "Title",
+                    "amazon_internal_product_category": "Amazon Internal Product Category",
+                    "amazon_class": "Class",
+                    "amazon_commodity": "Commodity",
+                    "items": "Items",
+                    "order_details_link": "Order Details Link",
+                    "grand_total": "Grand Total",
+                    "recipient": "Recipient",
+                    "free_shipping": "Free Shipping",
+                    "coupon_savings": "Coupon Savings",
+                    "subscription_discount": "Subscription Discount",
+                    "total_before_tax": "Total Before Tax",
+                    "estimated_tax": "Estimated Tax",
+                    "refund_total": "Refund Total",
+                }
+            )[
+                [
+                    "Index",
+                    "Order Date",
+                    "Order ID",
+                    "Item quantity",
+                    "Item subtotal",
+                    "Item shipping and handling",
+                    "Item promotion",
+                    "Item Federal Tax",
+                    "Item Provincial Tax",
+                    "Item Regulatory Fee",
+                    "Item net total",
+                    "Payment Method",
+                    "Payment Method Last 4",
+                    "Payment Reference ID",
+                    "Payment date",
+                    "Payment amount",
+                    "Shipments",
+                    "Title",
+                    "Amazon Internal Product Category",
+                    "Class",
+                    "Commodity",
+                    "Items",
+                    "Order Details Link",
+                    "Grand Total",
+                    "Recipient",
+                    "Free Shipping",
+                    "Coupon Savings",
+                    "Subscription Discount",
+                    "Total Before Tax",
+                    "Estimated Tax",
+                    "Refund Total",
+                ]
+            ]
+
+            df.to_csv(
+                f"transactions-{days}.csv",
+                index=False,
+                quoting=csv.QUOTE_MINIMAL,
+            )
         else:
             for t in transactions:
                 click.echo(f"{_transaction_output(t, config)}\n")
-            total = len(transactions)
+
+        total = len(transactions)
 
         end_time = time.time()
 
