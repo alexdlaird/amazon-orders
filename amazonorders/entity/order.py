@@ -15,7 +15,9 @@ from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersEntityError
+from dateutil import parser
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -53,11 +55,8 @@ class Order(Parsable):
         self.title: str = " + ".join(str(item) for item in self.items) if self.items else ""
         self.item_quantity: int = len(self.items)
         #: The Order number.
-        self.order_id: str = clone.order_id if clone else self.safe_simple_parse(
-            selector=self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR,
-            required=True,
-            prefix_split="#",
-            prefix_split_fuzzy=True)
+        self.order_id: str = clone.order_id if clone else self.safe_parse(
+            self._parse_order_id, required=True)
         self.payment_reference_id: str = self.order_id
         #: The Order details link.
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
@@ -72,11 +71,8 @@ class Order(Parsable):
         self.item_net_total: float = self.grand_total
         self.payment_amount: float = self.grand_total
         #: The Order placed date.
-        self.order_date: date = clone.order_date if clone else self.safe_simple_parse(
-            selector=self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR,
-            suffix_split="Order #",
-            suffix_split_fuzzy=True,
-            parse_date=True)
+        self.order_date: date = clone.order_date if clone else self.safe_parse(
+            self._parse_order_date, required=True)
         self.payment_date: date = self.order_date + timedelta(days=1)
         #: The Order Recipients.
         self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient)
@@ -149,6 +145,61 @@ class Order(Parsable):
         items.sort()
         return items
 
+    def _parse_order_id(self, required: bool = False) -> Optional[str]:
+        value = self.simple_parse(
+            self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR,
+            prefix_split="#",
+            prefix_split_fuzzy=True,
+        )
+
+        if not value:
+            tag = util.select_one(self.parsed, "#searchOrdersInput")
+            if tag:
+                value = tag.get("value")
+
+        if not value:
+            match = re.search(r"[A-Z0-9]{3}-\d{7}-\d{7}", self.parsed.text)
+            if match:
+                value = match.group(0)
+
+        if not value and required:
+            raise AmazonOrdersEntityError(
+                "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
+                    name=self.__class__.__name__,
+                    selector=self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR,
+                )
+            )
+
+        return value
+
+    def _parse_order_date(self, required: bool = False) -> Optional[date]:
+        value = self.simple_parse(
+            self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR,
+            suffix_split="Order #",
+            suffix_split_fuzzy=True,
+            parse_date=True,
+        )
+
+        if not value:
+            tag = util.select_one(self.parsed, "td[bgcolor='#ddddcc'] > b")
+            if tag:
+                m = re.search(r"Digital Order:\s*(.*)", tag.get_text(strip=True))
+                if m:
+                    try:
+                        value = parser.parse(m.group(1), fuzzy=True).date()
+                    except Exception:
+                        value = None
+
+        if not value and required:
+            raise AmazonOrdersEntityError(
+                "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
+                    name=self.__class__.__name__,
+                    selector=self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR,
+                )
+            )
+
+        return value
+
     def _parse_order_details_link(self) -> Optional[str]:
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_DETAILS_LINK_SELECTOR, attr_name="href")
 
@@ -183,6 +234,12 @@ class Order(Parsable):
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
 
         total_str = "total"
+
+        if not value:
+            for t in util.select(self.parsed, "td.a-text-right b"):
+                if "Total for this Order" in t.text:
+                    value = t.text.split(":")[-1]
+                    break
 
         if not value:
             value = self._parse_currency("grand total")

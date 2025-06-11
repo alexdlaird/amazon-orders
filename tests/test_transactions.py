@@ -151,6 +151,29 @@ class TestTransactions(UnitTestCase):
         # THEN
         self.assertEqual(19, len(transactions))
 
+    @responses.activate
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_by_year(self, mock_get_today: Mock):
+        # GIVEN
+        mock_get_today.date.today.return_value = datetime.date(2024, 10, 11)
+        self.amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            responses.add(
+                responses.POST,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        transactions = self.amazon_transactions.get_transactions_by_year(2024)
+
+        # THEN
+        self.assertEqual(1, len(transactions))
+        self.assertEqual(2024, transactions[0].completed_date.year)
+
     def test_parse_transaction_form_tag(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "transaction-form-tag.html"),

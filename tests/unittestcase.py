@@ -71,10 +71,22 @@ class UnitTestCase(TestCase):
             "password": "some-password",
             "rememberMe": "true"
         }
-        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+        with open(
+            os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"),
+            "r",
+            encoding="utf-8",
+        ) as f:
             self.authenticated_response = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+                match=[urlencoded_params_matcher(request_data)],
+            )
+            # Some auth pages post to amazon.com, so mock that as well
+            responses.add(
+                responses.POST,
+                "https://www.amazon.com/ap/signin",
                 body=f.read(),
                 status=200,
                 match=[urlencoded_params_matcher(request_data)],
@@ -90,6 +102,16 @@ class UnitTestCase(TestCase):
                 "{optional_start_index}".format(url=self.test_config.constants.ORDER_HISTORY_URL,
                                                 year=year,
                                                 optional_start_index=optional_start_index),
+                body=f.read(),
+                status=200,
+            )
+
+    def given_transactions_exists(self):
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            return responses.add(
+                responses.POST,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
                 body=f.read(),
                 status=200,
             )

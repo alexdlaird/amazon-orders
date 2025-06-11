@@ -10,6 +10,10 @@ from bs4 import Tag
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - only for type hints
+    from amazonorders.entity.order import Order
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +26,11 @@ class Transaction(Parsable):
     def __init__(self,
                  parsed: Tag,
                  config: AmazonOrdersConfig,
-                 completed_date: date) -> None:
+                 completed_date: date,
+                 index: Optional[int] = None) -> None:
         super().__init__(parsed, config)
+
+        self.index: Optional[int] = index
 
         #: The Transaction completed date.
         self.completed_date: date = completed_date
@@ -43,6 +50,8 @@ class Transaction(Parsable):
         self.seller: str = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_TRANSACTION_SELLER_NAME_SELECTOR
         )
+        #: The Order associated with this Transaction, populated on demand.
+        self.order: Optional["Order"] = None
 
     def __repr__(self) -> str:
         return f"<Transaction {self.completed_date}: \"Order #{self.order_id}, Grand Total: {self.grand_total}\">"
@@ -74,7 +83,7 @@ class Transaction(Parsable):
                 "Check if Amazon changed the HTML."
             )  # pragma: no cover
 
-        match = re.match(".*#([0-9-]+)$", value)
+        match = re.match(".*#(D?[0-9-]+)$", value)
         value = match.group(1) if match else ""
 
         return value

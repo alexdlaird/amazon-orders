@@ -447,6 +447,18 @@ class TestCase(unittest.TestCase):
 
         # We cannot parse full details for digital orders, so nothing to assert
 
+    def assert_order_D01_9262519_8073835_digital_order_rd(self, order, full_details=False):
+        self.assertEqual("D01-9262519-8073835", order.order_id)
+        self.assertEqual(14.99, order.grand_total)
+        self.assertIsNotNone(order.order_details_link)
+        self.assertEqual(date(2024, 9, 20), order.order_date)
+        self.assertEqual(0, len(order.shipments))
+        self.assertEqual(0, len(order.items))
+
+        self.assertEqual(order.full_details, full_details)
+
+        # We cannot parse full details for digital orders, so nothing to assert
+
     def assert_order_114_8722141_6545058_data_component_subscription(self, order, full_details=False):
         self.assertEqual("114-8722141-6545058", order.order_id)
         self.assertEqual(44.46, order.grand_total)

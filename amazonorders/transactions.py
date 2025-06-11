@@ -95,6 +95,8 @@ class AmazonTransactions:
 
         min_date = datetime.date.today() - datetime.timedelta(days=days)
 
+        current_index = 0
+
         transactions: List[Transaction] = []
         keep_paging = True
         next_page_data = None
@@ -118,7 +120,9 @@ class AmazonTransactions:
 
             for transaction in loaded_transactions:
                 if transaction.completed_date >= min_date:
+                    transaction.index = current_index
                     transactions.append(transaction)
+                    current_index += 1
                 else:
                     next_page_data = None
                     break
@@ -127,3 +131,9 @@ class AmazonTransactions:
                 keep_paging = False
 
         return transactions
+
+    def get_transactions_by_year(self, year: int) -> List[Transaction]:
+        """Get Amazon transaction history for the given year."""
+        days = (datetime.date.today() - datetime.date(year, 1, 1)).days + 30
+        transactions = self.get_transactions(days=days)
+        return [t for t in transactions if t.completed_date.year == year]
