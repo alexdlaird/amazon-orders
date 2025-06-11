@@ -275,16 +275,41 @@ class AmazonSession:
         self.session = self._create_session()
         self.is_authenticated = False
 
-    def _get_page_from_url(self,
-                           output_dir: str,
-                           url: str) -> str:
-        page_name = os.path.splitext(os.path.basename(urlparse(url).path))[0]
+    def _get_page_from_url(self, output_dir: str, url: str) -> str:
+        parsed = urlparse(url)
+        path_parts = [p for p in parsed.path.split("/") if p]
+        page_name = os.path.splitext(path_parts[-1] if path_parts else "index")[0]
+
+        if page_name.startswith("ref=") and len(path_parts) > 1:
+            page_name = os.path.splitext(path_parts[-2])[0]
         if not page_name:
             page_name = "index"
 
+        order_id = None
+        query = parsed.query
+        if query:
+            params = dict([p.split("=", 1) for p in query.split("&") if "=" in p])
+            order_id = params.get("orderID") or params.get("orderId")
+
+        if order_id and page_name in [
+            "order-details",
+            "order-summary",
+            "invoice",
+            "print",
+        ]:
+            base_name = "invoice" if page_name in ["invoice", "print"] else page_name
+            filename = f"{base_name}-{order_id}.html"
+            i = 1
+            while os.path.isfile(os.path.join(output_dir, filename)):
+                filename = f"{base_name}-{order_id}_{i}.html"
+                i += 1
+            return filename
+
         i = 0
         filename_frmt = "{page_name}_{index}.html"
-        while os.path.isfile(os.path.join(output_dir, filename_frmt.format(page_name=page_name, index=i))):
+        while os.path.isfile(
+            os.path.join(output_dir, filename_frmt.format(page_name=page_name, index=i))
+        ):
             i += 1
         return filename_frmt.format(page_name=page_name, index=i)
 
