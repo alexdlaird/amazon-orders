@@ -26,8 +26,11 @@ class Transaction(Parsable):
     def __init__(self,
                  parsed: Tag,
                  config: AmazonOrdersConfig,
-                 completed_date: date) -> None:
+                 completed_date: date,
+                 index: Optional[int] = None) -> None:
         super().__init__(parsed, config)
+
+        self.index: Optional[int] = index
 
         #: The Transaction completed date.
         self.completed_date: date = completed_date

@@ -45,7 +45,8 @@ class AmazonOrders:
             logger.setLevel(logging.DEBUG)
 
     def get_order(self,
-                  order_id: str) -> Order:
+                  order_id: str,
+                  current_index: Optional[int] = None) -> Order:
         """
         Get the full details for a given Amazon order ID.
 
@@ -72,7 +73,7 @@ class AmazonOrders:
 
         order_details_tag = util.select_one(order_details_response.parsed,
                                             self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-        order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True)
+        order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True, index=current_index)
 
         return order
 
