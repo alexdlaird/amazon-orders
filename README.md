@@ -77,7 +77,7 @@ environment variables `amazon-orders` looks for are:
 ## Documentation
 
 For more advanced usage, `amazon-orders`'s official documentation is available
-at [ReadTheDocs](http://amazon-orders.readthedocs.io).
+at [Read the Docs](http://amazon-orders.readthedocs.io).
 
 ## Contributing
 
