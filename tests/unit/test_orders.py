@@ -642,6 +642,30 @@ class TestOrders(UnitTestCase):
         self.assertEqual(0, len(orders))
         self.assertEqual(1, resp.call_count)
 
+    def test_get_order_history_start_index_equal_orders_count(self):
+        for start_index in [10, 20]:
+            year = 2023
+            uri = f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}"
+            with self.subTest(start_index=start_index):
+                with responses.RequestsMock() as rsps:
+                    # GIVEN
+                    self.amazon_session.is_authenticated = True
+                    with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2023-10-ten-orders.html"), "r",
+                              encoding="utf-8") as f:
+                        resp = rsps.add(
+                            responses.GET,
+                            uri,
+                            body=f.read(),
+                            status=200,
+                        )
+
+                    # WHEN
+                    orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+                    # THEN
+                    self.assertEqual(0, len(orders))
+                    self.assertEqual(1, resp.call_count)
+
     @unittest.skipIf(not os.path.exists(temp_order_history_file_path),
                      reason="Skipped, to debug an order history page, "
                             "place it at tests/output/temp-order-history.html")
