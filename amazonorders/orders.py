@@ -128,7 +128,9 @@ class AmazonOrders:
             if not order_tags:
                 order_count_tag = util.select_one(page_response.parsed,
                                                   self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR)
-                if order_count_tag and order_count_tag.text.startswith("0 "):
+                (order_count, _) = order_count_tag.text.split(" ", 2) if order_count_tag else ("0", None)
+
+                if order_count_tag and int(order_count) <= current_index:
                     break
                 else:
                     raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")
