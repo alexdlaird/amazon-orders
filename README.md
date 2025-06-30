@@ -10,21 +10,22 @@
 `amazon-orders` is an unofficial library that provides a Python API (and CLI) for Amazon order history.
 
 This package works by parsing data from Amazon's consumer-facing website. A periodic build validates functionality
-to ensure its stability, but as Amazon provides no official API to use, this package may break at any time. Pin
-the [minor version](https://semver.org/) with a wildcard (ex. `==4.0.*`, not `==4.0.8`)—or reinstall with the
-`--upgrade` (as shown below) often—to ensure you always get the latest stable release.
-
-This package only officially supports the English, `.com` version of Amazon.
+to ensure its stability, but as Amazon provides no official API to use, this package may break at any time (so check
+often to ensure you're on the latest version of the package). Only the English, `.com` version of Amazon is
+officially supported.
 
 ## Installation
 
-`amazon-orders` is available on [PyPI](https://pypi.org/project/amazon-orders/) and can be installed using `pip`:
+`amazon-orders` is available on [PyPI](https://pypi.org/project/amazon-orders/) and can be installed and/or upgraded using `pip`:
 
 ```sh
 pip install amazon-orders --upgrade
 ```
 
 That's it! `amazon-orders` is now available as a package to your Python projects and from the command line.
+
+If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (ex. `==4.0.*`, not `==4.0.8`) to
+ensure you always get the latest stable release.
 
 ## Basic Usage
 
