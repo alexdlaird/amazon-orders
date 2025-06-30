@@ -27,10 +27,9 @@ Amazon Orders - A Python libray (and CLI) for Amazon order history
 
 This package works by parsing data from Amazon's consumer-facing website. A periodic build validates functionality
 to ensure its stability, but as Amazon provides no official API to use, this package may break at any time (so check
-often to ensure you're on the latest version of the package). Only the English, ``.com`` version of Amazon is
-officially supported.
+often to ensure you're on the latest version).
 
-This package only officially supports the English, ``.com`` version of Amazon.
+Only the English, ``.com`` version of Amazon is officially supported.
 
 Installation
 ============
