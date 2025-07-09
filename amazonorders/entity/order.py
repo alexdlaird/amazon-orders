@@ -96,8 +96,9 @@ class Order(Parsable):
         self.reward_points: Optional[float] = self._if_full_details(
             self._parse_currency("reward", combine_multiple=True))
         #: The Order Subscribe & Save discount. Only populated when ``full_details`` is ``True``.
-        self.subscription_discount: Optional[float] = (self._if_full_details(self._parse_currency("subscribe"))
-                                                       or self._if_full_details(self._parse_currency("subscription")))
+        subscribe_discount = self._if_full_details(self._parse_currency("subscribe"))
+        subscription_discount = self._if_full_details(self._parse_currency("subscription"))
+        self.subscription_discount: Optional[float] = subscribe_discount if subscribe_discount is not None else subscription_discount
         #: The Order total before tax. Only populated when ``full_details`` is ``True``.
         self.total_before_tax: Optional[float] = self._if_full_details(self._parse_currency("before tax"))
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``.
