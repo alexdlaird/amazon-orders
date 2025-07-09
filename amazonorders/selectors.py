@@ -157,7 +157,8 @@ class Selectors:
     FIELD_RECIPIENT_ADDRESS2_SELECTOR = "li.displayAddressAddressLine2"
     FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR = "li.displayAddressCityStateOrRegionPostalCode"
     FIELD_RECIPIENT_ADDRESS_COUNTRY_SELECTOR = "li.displayAddressCountryName"
-    FIELD_RECIPIENT_ADDRESS_FALLBACK_SELECTOR = "div:nth-child(2)"
+    FIELD_RECIPIENT_ADDRESS_FALLBACK_SELECTOR = ["div:nth-child(2)",
+                                                 "li:nth-child(2)"]
 
     #####################################
     # CSS selectors for Seller fields
