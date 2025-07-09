@@ -130,7 +130,7 @@ class Selectors:
                                                    "div#od-subtotals div.a-row"]
     FIELD_ORDER_SUBTOTALS_TAG_POPOVER_PRELOAD_SELECTOR = ".a-popover-preload"
     FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR = "div.a-span-last"
-    FIELD_ORDER_ADDRESS_SELECTOR = "div.displayAddressDiv"
+    FIELD_ORDER_ADDRESS_SELECTOR = ["div.displayAddressDiv", "[data-component='shippingAddress']"]
     FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR = "div.recipient span.a-declarative"
     FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR = "script[id^='shipToData']"
     FIELD_ORDER_GIFT_CARD_INSTANCE_SELECTOR = ".gift-card-instance"
@@ -151,7 +151,8 @@ class Selectors:
     #####################################
 
     FIELD_RECIPIENT_NAME_SELECTOR = ["li.displayAddressFullName",
-                                     "div:nth-child(1)"]
+                                     "div:nth-child(1)",
+                                     "li:nth-child(1)"]
     FIELD_RECIPIENT_ADDRESS1_SELECTOR = "li.displayAddressAddressLine1"
     FIELD_RECIPIENT_ADDRESS2_SELECTOR = "li.displayAddressAddressLine2"
     FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR = "li.displayAddressCityStateOrRegionPostalCode"

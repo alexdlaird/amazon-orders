@@ -6,6 +6,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.8...HEAD)
 
+### Added
+
+- Support for parsing shipping data from new `data-component` tag.
+- `Order.reward_points` field, which is now parsed alongside other subtotals.
+
+### Fixed
+
+- Edge case where `Order.subscription_discount` was not populated.
+
 ## [4.0.8](https://github.com/alexdlaird/amazon-orders/compare/4.0.7...4.0.8) - 2025-06-27
 
 ### Fixed
