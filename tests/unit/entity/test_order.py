@@ -42,6 +42,20 @@ class TestOrder(UnitTestCase):
         # THEN
         self.assertEqual(order.promotion_applied, -0.05)
 
+    def test_order_subscriptions_and_reward_points(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-subscriptions-and-reward-points-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual(order.subscription_discount, -0.78)
+        self.assertEqual(order.reward_points, -5.98)
+
     def test_order_coupon_savings(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-coupon-savings.html"),
