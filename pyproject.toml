@@ -4,6 +4,7 @@ dynamic = ["version"]
 description = "A Python libray (and CLI) for Amazon order history"
 readme = "README.md"
 license = { file = "LICENSE" }
+authors = [{ name = "Alex Laird", email = "contact@alexlaird.com" }]
 maintainers = [{ name = "Alex Laird", email = "contact@alexlaird.com" }]
 requires-python = ">=3.8"
 dependencies = [
