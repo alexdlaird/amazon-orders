@@ -106,6 +106,14 @@ class Order(Parsable):
         self.estimated_tax: Optional[float] = self._if_full_details(self._parse_currency("estimated tax"))
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
         self.refund_total: Optional[float] = self._if_full_details(self._parse_currency("refund total"))
+        #: The Multibuy Discount. Only populated when ``full_details`` is ``True``.
+        self.multibuy_discount: Optional[float] = self._if_full_details(self._parse_currency("multibuy discount"))
+        #: The Amazon Discount. Only populated when ``full_details`` is ``True``.
+        self.amazon_discount: Optional[float] = self._if_full_details(self._parse_currency("amazon discount"))
+        #: Gift Card Ammount. Only populated when ``full_details`` is ``True``.
+        self.gift_card: Optional[float] = self._if_full_details(self._parse_currency("gift card amount"))
+        #: Gift Card Ammount. Only populated when ``full_details`` is ``True``.
+        self.gift_wrap: Optional[float] = self._if_full_details(self._parse_currency("gift wrap"))
 
     def __repr__(self) -> str:
         return f"<Order #{self.order_number}: \"{self.items}\">"
