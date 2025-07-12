@@ -106,7 +106,7 @@ class Order(Parsable):
         self.estimated_tax: Optional[float] = self._if_full_details(self._parse_currency("estimated tax"))
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
         self.refund_total: Optional[float] = self._if_full_details(self._parse_currency("refund total"))
-        #: The Multibuy Discount. Only populated when ``full_details`` is ``True``.
+        #: The Multibuy discount. Only populated when ``full_details`` is ``True``.
         self.multibuy_discount: Optional[float] = self._if_full_details(self._parse_currency("multibuy discount"))
         #: The Amazon discount. Only populated when ``full_details`` is ``True``.
         self.amazon_discount: Optional[float] = self._if_full_details(self._parse_currency("amazon discount"))
