@@ -94,3 +94,55 @@ class TestOrder(UnitTestCase):
 
         # THEN
         self.assertEqual(order.coupon_savings, -1.29)
+
+    def test_order_amazon_discount(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-amazon-discount-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual(order.amazon_discount, -1.62)
+
+    def test_order_gift_wrap(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-gift-wrap-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual(order.gift_wrap, 3.99)
+
+    def test_order_multibuy_discount(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-multibuy-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual(order.multibuy_discount, -3.74)
+
+    def test_order_gift_card(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-gift-card-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual(order.gift_card, -2.37)
