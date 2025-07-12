@@ -3,10 +3,10 @@ name = "amazon-orders"
 dynamic = ["version"]
 description = "A Python libray (and CLI) for Amazon order history"
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "MIT"
 authors = [{ name = "Alex Laird", email = "contact@alexlaird.com" }]
 maintainers = [{ name = "Alex Laird", email = "contact@alexlaird.com" }]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "click>=7.1",
     "requests>=2.23",
@@ -21,10 +21,8 @@ classifiers = [
     "Environment :: Console",
     "Environment :: Web Environment",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",

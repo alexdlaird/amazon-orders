@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.10...HEAD)
 
+### Removed
+
+- Support for Python 3.8.
+
 ## [4.0.10](https://github.com/alexdlaird/amazon-orders/compare/4.0.9...4.0.10) - 2025-07-12
 
 ### Added
