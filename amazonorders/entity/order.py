@@ -110,9 +110,9 @@ class Order(Parsable):
         self.multibuy_discount: Optional[float] = self._if_full_details(self._parse_currency("multibuy discount"))
         #: The Amazon Discount. Only populated when ``full_details`` is ``True``.
         self.amazon_discount: Optional[float] = self._if_full_details(self._parse_currency("amazon discount"))
-        #: Gift Card Ammount. Only populated when ``full_details`` is ``True``.
+        #: Gift Card Amount. Only populated when ``full_details`` is ``True``.
         self.gift_card: Optional[float] = self._if_full_details(self._parse_currency("gift card amount"))
-        #: Gift Card Ammount. Only populated when ``full_details`` is ``True``.
+        #: Gift Card Amount. Only populated when ``full_details`` is ``True``.
         self.gift_wrap: Optional[float] = self._if_full_details(self._parse_currency("gift wrap"))
 
     def __repr__(self) -> str:
