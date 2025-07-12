@@ -95,9 +95,9 @@ class Order(Parsable):
         #: The Order reward points. Only populated when ``full_details`` is ``True``.
         self.reward_points: Optional[float] = self._if_full_details(
             self._parse_currency("reward", combine_multiple=True))
-        #: The Order Subscribe & Save discount. Only populated when ``full_details`` is ``True``.
         subscribe_discount = self._if_full_details(self._parse_currency("subscribe"))
         subscription_discount = self._if_full_details(self._parse_currency("subscription"))
+        #: The Order Subscribe & Save discount. Only populated when ``full_details`` is ``True``.
         self.subscription_discount: Optional[float] = subscribe_discount if subscribe_discount is not None \
             else subscription_discount
         #: The Order total before tax. Only populated when ``full_details`` is ``True``.
@@ -108,11 +108,11 @@ class Order(Parsable):
         self.refund_total: Optional[float] = self._if_full_details(self._parse_currency("refund total"))
         #: The Multibuy Discount. Only populated when ``full_details`` is ``True``.
         self.multibuy_discount: Optional[float] = self._if_full_details(self._parse_currency("multibuy discount"))
-        #: The Amazon Discount. Only populated when ``full_details`` is ``True``.
+        #: The Amazon discount. Only populated when ``full_details`` is ``True``.
         self.amazon_discount: Optional[float] = self._if_full_details(self._parse_currency("amazon discount"))
-        #: Gift Card Amount. Only populated when ``full_details`` is ``True``.
+        #: The Gift Card total. Only populated when ``full_details`` is ``True``.
         self.gift_card: Optional[float] = self._if_full_details(self._parse_currency("gift card amount"))
-        #: Gift Card Amount. Only populated when ``full_details`` is ``True``.
+        #: The Gift Wrap total. Only populated when ``full_details`` is ``True``.
         self.gift_wrap: Optional[float] = self._if_full_details(self._parse_currency("gift wrap"))
 
     def __repr__(self) -> str:
