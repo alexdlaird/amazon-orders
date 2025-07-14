@@ -416,7 +416,6 @@ class TestSession(UnitTestCase):
                                             "&field-keywords=CMKRMC")],
             )
 
-
         # WHEN
         self.amazon_session.login()
 
