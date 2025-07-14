@@ -10,7 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- Support for automating Amazon's new Captcha solution that is pre-populated in the field form.
+- Support for automating Amazon's new Captcha solution that is pre-populated in the form field.
 
 ### Removed
 
