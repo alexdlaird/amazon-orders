@@ -389,6 +389,43 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp3.call_count)
         self.assertEqual(1, resp4.call_count)
 
+    @responses.activate
+    def test_captcha_4_no_image_field_keywords(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-4.html"), "r", encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+            resp3 = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.BASE_URL}/errors/validateCaptcha",
+                body=f.read(),
+                status=200,
+                match=[query_string_matcher("amzn=pWQdSQ6MM4EQcVH2lWVE9w%3D%3D&amzn-r=%2f"
+                                            "&field-keywords=CMKRMC")],
+            )
+
+
+        # WHEN
+        self.amazon_session.login()
+
+        # THEN
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(1, resp3.call_count)
+
     @unittest.skipIf(sys.platform == "win32", reason="Windows does not respect PIL's show() method in tests")
     @responses.activate
     @patch("builtins.input")

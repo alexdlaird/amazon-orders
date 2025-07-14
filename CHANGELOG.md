@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.10...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.11...HEAD)
+
+## [4.0.11](https://github.com/alexdlaird/amazon-orders/compare/4.0.10...4.0.11) - 2025-07-14
+
+### Added
+
+- Support for automating Amazon's new Captcha solution that is pre-populated in the field form.
 
 ### Removed
 

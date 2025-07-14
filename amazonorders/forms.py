@@ -351,17 +351,22 @@ class CaptchaForm(AuthForm):
             )  # pragma: no cover
 
         img_tag = form_parent.select_one("img")
-        if not img_tag:
+        solution_tag = form_parent.select_one(f"input[name='{self.solution_attr_key}']")
+
+        if not img_tag and not solution_tag:
             raise AmazonOrdersError(
-                "CaptchaForm <img> tag not found, but it's required. "
+                f"CaptchaForm <img> or <input name='{self.solution_attr_key}']> tags not found, but one is required. "
                 "Check if Amazon changed their Captcha flow."
             )  # pragma: no cover
 
-        img_url = str(img_tag["src"])
+        if img_tag:
+            img_url = str(img_tag["src"])
 
-        if not img_url.startswith("http"):
-            img_url = f"{self.config.constants.BASE_URL}{img_url}"
-        solution = self._solve_captcha(img_url)
+            if not img_url.startswith("http"):
+                img_url = f"{self.config.constants.BASE_URL}{img_url}"
+            solution = self._solve_captcha(img_url)
+        else:
+            solution = solution_tag["value"]
 
         additional_attrs.update({self.solution_attr_key: solution})
         self.data.update(additional_attrs)
