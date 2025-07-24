@@ -51,7 +51,7 @@ body:
 - type: input
   id: amazon-url
   attributes:
-    label: What URL are you directed to when logging in to your Amazon account?
+    label: What URL does your browser take you to when logging in to Amazon?
     placeholder: https://www.amazon.com/ap/signin
   validations:
     required: true
