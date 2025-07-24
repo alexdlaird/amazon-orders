@@ -339,7 +339,7 @@ class CaptchaForm(AuthForm):
         if not self.data:
             raise AmazonOrdersError(
                 "CaptchaForm data did not populate, but it's required. "
-                "Check if Amazon changed their Captcha flow."
+                "Check if Amazon changed their Captcha flow, and see https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-automated-login"
             )  # pragma: no cover
 
         # TODO: eliminate the use of find_parent() here
@@ -347,7 +347,8 @@ class CaptchaForm(AuthForm):
         if not form_parent:
             raise AmazonOrdersError(
                 "CaptchaForm parent not found, but it's required. "
-                "Check if Amazon changed their Captcha flow."
+                "Check if Amazon changed their Captcha flow, and see "
+                "https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login."
             )  # pragma: no cover
 
         img_tag = form_parent.select_one("img")
@@ -364,7 +365,8 @@ class CaptchaForm(AuthForm):
         else:
             raise AmazonOrdersError(
                 f"CaptchaForm <img> or <input name='{self.solution_attr_key}']> tags not found, but one is required. "
-                "Check if Amazon changed their Captcha flow."
+                "Check if Amazon changed their Captcha flow, and see "
+                "https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login."
             )  # pragma: no cover
 
         additional_attrs.update({self.solution_attr_key: solution})
@@ -386,9 +388,9 @@ class JSAuthBlocker(AuthForm):
             raise AmazonOrdersError("Must set a regex first.")  # pragma: no cover
 
         if re.search(self.regex, parsed.text):
-            raise AmazonOrdersAuthError("A JavaScript-based authentication challenge page has been found. This "
-                                        "library cannot solve these challenges. See "
-                                        "https://amazon-orders.readthedocs.io/troubleshooting.html"
-                                        "#captcha-keep-blocking-automated-login for more details.")
+            raise AmazonOrdersAuthError(
+                "A JavaScript-based authentication challenge page has been found. This library cannot solve these "
+                "challenges. See "
+                "https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login for more details.")
 
         return False

@@ -111,7 +111,7 @@ Known Limitations
     - While some Captchas can be auto-solved, and static image-based ones are opened so the user can manually input
       the solution, interactive Captchas—like `Amazon's puzzle-based Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
       —require JavaScript to solve, and will block ``amazon-orders`` from being able to login.
-    - See the troubleshooting steps for `reducing Captcha challenge frequency <troubleshooting.html#captcha-keep-blocking-automated-login>`_ for recommended workarounds.
+    - See the troubleshooting steps for `reducing Captcha challenge frequency <troubleshooting.html#captcha-blocking-login>`_ for recommended workarounds.
     - See `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_ for more details.
 - Device not remembered for OTP
     - Amazon will sometimes re-prompt for OTP even when a device has been remembered.

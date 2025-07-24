@@ -39,11 +39,11 @@ website's HTML. Before submitting a bug report or requesting a new feature, try 
 ``amazon-orders`` one of the ways described above, and if any console output or generated HTML
 files are relevant to the issue, attach them to your request.
 
-Captcha Keep Blocking Automated Login
--------------------------------------
+Captcha Blocking Login
+----------------------
 
 While ``amazon-orders`` can auto-solve some Captchas, others are opened so the user can input the solution manually,
-and still other—like `Amazon's puzzle-based Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
+and still other—like `Amazon's puzzle-based WAF Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
 —require JavaScript and can't be solved at all and block ``amazon-orders`` from logging in (see `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_
 for more details).
 
