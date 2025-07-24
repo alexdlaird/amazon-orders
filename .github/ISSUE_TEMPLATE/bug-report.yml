@@ -41,6 +41,14 @@ body:
     required: true
 
 - type: input
+  id: amazon-url
+  attributes:
+    label: What URL are you directed to when logging in to your Amazon account?
+    placeholder: https://www.amazon.com/ap/signin
+  validations:
+    required: true
+
+- type: input
   id: library-version
   attributes:
     label: amazon-orders Version
