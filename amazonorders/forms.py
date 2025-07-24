@@ -339,7 +339,8 @@ class CaptchaForm(AuthForm):
         if not self.data:
             raise AmazonOrdersError(
                 "CaptchaForm data did not populate, but it's required. "
-                "Check if Amazon changed their Captcha flow, and see https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-automated-login"
+                "Check if Amazon changed their Captcha flow, and see "
+                "https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-automated-login"
             )  # pragma: no cover
 
         # TODO: eliminate the use of find_parent() here
