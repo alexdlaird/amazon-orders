@@ -83,6 +83,10 @@ class Selectors:
         # Identifies an order from a physical Amazon store
         Selector("div.yohtmlc-shipment-status-primaryText", "Purchased at Amazon")
     ]
+    # Selectors defined here mean the Order will not be parsed, as the details given are not consistent for parsing
+    ORDER_CANCELED = [
+        Selector("div.yohtmlc-shipment-status-primaryText", "Cancelled")
+    ]
 
     #####################################
     # CSS selectors for Item fields
@@ -114,9 +118,9 @@ class Selectors:
                                          ]
     FIELD_ORDER_NUMBER_SELECTOR = ["[data-component='orderId']",
                                    "[data-component='briefOrderInfo'] div.a-column",
-                                   ".order-date-invoice-item bdi[dir='ltr']",
-                                   "bdi[dir='ltr']",
-                                   "span[dir='ltr']"]
+                                   ".order-date-invoice-item :is(bdi, span)[dir='ltr']",
+                                   ".yohtmlc-order-id :is(bdi, span)[dir='ltr']",
+                                   ":is(bdi, span)[dir='ltr']"]
     FIELD_ORDER_GRAND_TOTAL_SELECTOR = ["div.yohtmlc-order-total span.value",
                                         "div.order-header div.a-column.a-span2",
                                         "div.order-header div.a-col-left .a-span9"]

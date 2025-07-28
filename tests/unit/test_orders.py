@@ -188,6 +188,37 @@ class TestOrders(UnitTestCase):
         self.assertIsNotNone(order.items[0].image_link)
 
     @responses.activate
+    def test_get_order_history_2025_canceled(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2025
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-canceled-order.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                self.test_config.constants.ORDER_HISTORY_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, keep_paging=False)
+
+        # THEN
+        self.assertEqual(10, len(orders))
+        self.assertEqual(1, resp.call_count)
+        order = orders[9]
+        self.assertEqual("111-9642662-1037012", order.order_number)
+        self.assertIsNone(order.grand_total)
+        self.assertIsNone(order.order_details_link)
+        self.assertEqual(date(2025, 7, 15), order.order_placed_date)
+        self.assertEqual(1, len(order.items))
+        self.assertEqual("CarlinKit 5.0 Wireless CarPlay/Android Auto Adapter USB for Factory Wired CarPlay Cars (Model Year: 2015 to 2025), Wireless CarPlay/Android Auto Dongle Convert Wired to Wireless,Fit In-Dash Navigation",
+                         order.items[0].title)
+        self.assertIsNotNone(order.items[0].link)
+        self.assertIsNotNone(order.items[0].image_link)
+
+    @responses.activate
     def test_get_order_history_2025_amazon_store(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
