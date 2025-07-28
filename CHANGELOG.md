@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - Parsing cancelled orders in history.
+- Selector stability for parsing order ID and date.
 
 ## [4.0.12](https://github.com/alexdlaird/amazon-orders/compare/4.0.11...4.0.12) - 2025-07-24
 
