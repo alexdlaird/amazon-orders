@@ -150,6 +150,9 @@ class Order(Parsable):
         return value
 
     def _parse_grand_total(self) -> float:
+        if len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS)) > 0:
+            return None
+
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
 
         total_str = "total"

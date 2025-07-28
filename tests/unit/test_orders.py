@@ -207,10 +207,10 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertEqual(10, len(orders))
         self.assertEqual(1, resp.call_count)
-        order = orders[9]
+        order = orders[0]
         self.assertEqual("111-9642662-1037012", order.order_number)
         self.assertIsNone(order.grand_total)
-        self.assertIsNone(order.order_details_link)
+        self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2025, 7, 15), order.order_placed_date)
         self.assertEqual(1, len(order.items))
         self.assertEqual("CarlinKit 5.0 Wireless CarPlay/Android Auto Adapter USB for Factory Wired CarPlay Cars (Model Year: 2015 to 2025), Wireless CarPlay/Android Auto Dongle Convert Wired to Wireless,Fit In-Dash Navigation",

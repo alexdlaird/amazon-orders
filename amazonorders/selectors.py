@@ -83,8 +83,9 @@ class Selectors:
         # Identifies an order from a physical Amazon store
         Selector("div.yohtmlc-shipment-status-primaryText", "Purchased at Amazon")
     ]
-    # Selectors defined here mean the Order will not be parsed, as the details given are not consistent for parsing
-    ORDER_CANCELED = [
+    # Selectors defined here mean the Order will not have parsable totals
+    ORDER_SKIP_TOTALS = [
+        # Identifies as order that was cancelled
         Selector("div.yohtmlc-shipment-status-primaryText", "Cancelled")
     ]
 
@@ -127,7 +128,7 @@ class Selectors:
     FIELD_ORDER_PLACED_DATE_SELECTOR = ["[data-component='orderDate']",
                                         "span.order-date-invoice-item",
                                         "[data-component='briefOrderInfo'] div.a-column",
-                                        "div.a-span3"]
+                                        "div:is(.a-span3, .a-span12)"]
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"
     FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["[data-component='orderSubtotals'] div.a-row",
