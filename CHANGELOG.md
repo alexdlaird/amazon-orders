@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.12...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.13...HEAD)
+
+## [4.0.13](https://github.com/alexdlaird/amazon-orders/compare/4.0.11...4.0.12) - 2025-07-28
+
+### Fixed
+
+- Parsing cancelled orders in history.
 
 ## [4.0.12](https://github.com/alexdlaird/amazon-orders/compare/4.0.11...4.0.12) - 2025-07-24
 

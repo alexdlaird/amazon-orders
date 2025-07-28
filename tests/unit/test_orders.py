@@ -213,7 +213,9 @@ class TestOrders(UnitTestCase):
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2025, 7, 15), order.order_placed_date)
         self.assertEqual(1, len(order.items))
-        self.assertEqual("CarlinKit 5.0 Wireless CarPlay/Android Auto Adapter USB for Factory Wired CarPlay Cars (Model Year: 2015 to 2025), Wireless CarPlay/Android Auto Dongle Convert Wired to Wireless,Fit In-Dash Navigation",
+        self.assertEqual("CarlinKit 5.0 Wireless CarPlay/Android Auto Adapter USB for Factory Wired CarPlay Cars "
+                         "(Model Year: 2015 to 2025), Wireless CarPlay/Android Auto Dongle Convert Wired to Wireless,"
+                         "Fit In-Dash Navigation",
                          order.items[0].title)
         self.assertIsNotNone(order.items[0].link)
         self.assertIsNotNone(order.items[0].image_link)

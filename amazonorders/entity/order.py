@@ -149,7 +149,7 @@ class Order(Parsable):
 
         return value
 
-    def _parse_grand_total(self) -> float:
+    def _parse_grand_total(self) -> Optional[float]:
         if len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS)) > 0:
             return None
 
