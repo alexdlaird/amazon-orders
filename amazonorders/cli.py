@@ -352,7 +352,8 @@ Order #{order_number}
 
     order_str += f"\n  Shipments: {o.shipments}"
     order_str += f"\n  Order Details Link: {o.order_details_link}"
-    order_str += f"\n  Grand Total: {config.constants.format_currency(o.grand_total)}"
+    if o.grand_total:
+        order_str += f"\n  Grand Total: {config.constants.format_currency(o.grand_total)}"
     order_str += f"\n  Order Placed Date: {o.order_placed_date}"
     if o.recipient:
         order_str += f"\n  {o.recipient}"
@@ -387,7 +388,8 @@ def _transaction_output(t: Transaction,
                         config: AmazonOrdersConfig) -> str:
     transaction_str = f"Transaction: {t.completed_date}"
     transaction_str += f"\n  Order #{t.order_number}"
-    transaction_str += f"\n  Grand Total: {config.constants.format_currency(t.grand_total)}"
+    if t.grand_total:
+        transaction_str += f"\n  Grand Total: {config.constants.format_currency(t.grand_total)}"
     transaction_str += f"\n  Order Details Link: {t.order_details_link}"
 
     return transaction_str

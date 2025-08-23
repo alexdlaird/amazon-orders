@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.13...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.14...HEAD)
+
+## [4.0.14](https://github.com/alexdlaird/amazon-orders/compare/4.0.13...4.0.14) - 2025-08-23
+
+### Fixed
+
+- Issue printing cancelled orders in CLI.
 
 ## [4.0.13](https://github.com/alexdlaird/amazon-orders/compare/4.0.12...4.0.13) - 2025-07-28
 
