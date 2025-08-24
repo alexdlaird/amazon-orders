@@ -11,10 +11,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - Support for Amazon's new claim for in the auth flow.
+- Stability improvements to auth flow.
 
 ### Fixed
 
-- Improvements to auth flow stability.
 - Issue printing cancelled orders in CLI.
 
 ## [4.0.13](https://github.com/alexdlaird/amazon-orders/compare/4.0.12...4.0.13) - 2025-07-28
