@@ -62,6 +62,35 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, signout_response.call_count)
 
     @responses.activate
+    def test_login_claim_invalid_username(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "intent.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_CLAIM_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
+            self.amazon_session.login()
+
+        # THEN
+        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertIn("Error from Amazon: Looks like you're new to Amazon", str(cm.exception))
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+
+    @responses.activate
     def test_login_invalid_username(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:

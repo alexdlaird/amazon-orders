@@ -250,6 +250,28 @@ class ClaimForm(AuthForm):
         self.data.update(additional_attrs)
 
 
+class IntentForm(AuthForm):
+    def __init__(self,
+                 config: AmazonOrdersConfig,
+                 selector: Optional[str] = None) -> None:
+        if not selector:
+            selector = config.selectors.INTENT_FORM_SELECTOR
+
+        super().__init__(config, selector, critical=True)
+
+    def submit(self, last_response: Response) -> AmazonSessionResponse:
+        """
+        When we encounter this form, it's because the email doesn't exist, so prevent
+        form submission from continuing with the auth flow.
+
+        :param last_response: The response of the request that fetched the form.
+        :return: The response from the executed request.
+        """
+        raise AmazonOrdersAuthError(
+            "Error from Amazon: Looks like you're new to Amazon"
+        )
+
+
 class MfaDeviceSelectForm(AuthForm):
     """
     This will first echo the ``<form>`` device choices, then it will pass the list of choices
