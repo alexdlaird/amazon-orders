@@ -91,7 +91,7 @@ class TestIntegrationAuth(IntegrationTestCase):
 
     def test_login_no_account(self):
         amazon_username = os.environ["AMAZON_USERNAME"]
-        os.environ["AMAZON_USERNAME"] = "invalid-username"
+        os.environ["AMAZON_USERNAME"] = "08511698-9ff5-fake@gmail.com"
 
         # GIVEN
         amazon_session = AmazonSession(debug=self.debug,
@@ -103,7 +103,7 @@ class TestIntegrationAuth(IntegrationTestCase):
 
         # THEN
         self.assertFalse(amazon_session.is_authenticated)
-        self.assertIn("cannot find an account", str(cm.exception))
+        self.assertIn("Looks like you're new to Amazon", str(cm.exception))
 
         os.environ["AMAZON_USERNAME"] = amazon_username
 

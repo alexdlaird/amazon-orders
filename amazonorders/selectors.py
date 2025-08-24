@@ -35,6 +35,7 @@ class Selectors:
     ##########################################################################
 
     SIGN_IN_FORM_SELECTOR = "form[name='signIn']"
+    CLAIM_FORM_SELECTOR = "form[name='signIn'].auth-validate-form"
     MFA_DEVICE_SELECT_FORM_SELECTOR = "form#auth-select-device-form"
     MFA_DEVICE_SELECT_INPUT_SELECTOR = "input[name='otpDeviceContext']"
     MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE = "value"

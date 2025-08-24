@@ -216,6 +216,40 @@ class SignInForm(AuthForm):
         self.data.update(additional_attrs)
 
 
+class ClaimForm(AuthForm):
+    def __init__(self,
+                 config: AmazonOrdersConfig,
+                 selector: Optional[str] = None,
+                 solution_attr_key: str = "email") -> None:
+        if not selector:
+            selector = config.selectors.CLAIM_FORM_SELECTOR
+
+        super().__init__(config, selector, critical=True)
+
+        self.solution_attr_key = solution_attr_key
+
+    def fill_form(self,
+                  additional_attrs: Optional[Dict[str, Any]] = None) -> None:
+        if not self.amazon_session:
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
+
+        if not additional_attrs:
+            additional_attrs = {}
+        super().fill_form()
+        if not self.data:
+            raise AmazonOrdersError(
+                "ClaimForm data did not populate, but it's required. "
+                "Check if Amazon changed their login flow."
+            )  # pragma: no cover
+
+        additional_attrs.update({self.solution_attr_key: self.amazon_session.username,
+                                 "password": self.amazon_session.password,
+                                 "rememberMe": "true"})
+        self.data.update(additional_attrs)
+
+
 class MfaDeviceSelectForm(AuthForm):
     """
     This will first echo the ``<form>`` device choices, then it will pass the list of choices
