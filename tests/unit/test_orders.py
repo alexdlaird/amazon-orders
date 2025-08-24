@@ -22,7 +22,7 @@ class TestOrders(UnitTestCase):
     def setUp(self):
         super().setUp()
 
-        self.amazon_session = AmazonSession("some-username",
+        self.amazon_session = AmazonSession("some-username@gmail.com",
                                             "some-password",
                                             config=self.test_config)
 

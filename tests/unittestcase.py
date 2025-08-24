@@ -34,6 +34,14 @@ class UnitTestCase(TestCase):
             "max_auth_retries": 0
         })
 
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "index.html"), "r", encoding="utf-8") as f:
+            self.index_response = responses.add(
+                responses.GET,
+                self.test_config.constants.BASE_URL,
+                body=f.read(),
+                status=200,
+            )
+
         if os.path.exists(self.test_cookie_jar_path):
             os.remove(self.test_cookie_jar_path)
 
@@ -70,7 +78,59 @@ class UnitTestCase(TestCase):
                              "UNqDPv1JH_u6LxEOOdKkPIjDhH5yeZ_1OO0K_4Im2AUX6mYpNIu-hIio7WGMmMgANT98nQY8uNuRyPSQQ"
                              "x-TsboMC7T6ogs0xV-6aDyPDzlkCaOp-ZgDSwgrsy-1vxs_Ec0LTdMFSmL2E7zw.ZH7JT2vSuhaN7AGth"
                              "FkRXg",
-            "email": "some-username",
+            "email": "some-username@gmail.com",
+            "password": "some-password",
+            "rememberMe": "true"
+        }
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+            self.authenticated_response = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+                match=[urlencoded_params_matcher(request_data)],
+            )
+
+    def given_login_claim_responses_success(self):
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim.html"), "r", encoding="utf-8") as f:
+            self.signin_response = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        request_data = {
+            "appAction": "SIGNIN_CLAIM_COLLECT",
+            "subPageType": "FullPageUnifiedClaimCollect",
+            "claimCollectionWorkflow": "unified",
+            "metadata1": "true",
+            "isServerSideRouting": "true",
+            "unifiedAuthTreatment": "T2",
+            "signalUnknownCredentialUnifiedAuthWeblabActive": "false",
+            "anti-csrftoken-a2z": "hIQUpYKT9xnC6tPiep3YBWI+1WkSrEVHZnPVCyUYiHwyAAAAAGireQ0AAAAB",
+            "email": "some-username@gmail.com",
+            "password": "some-password",
+            "rememberMe": "true"
+        }
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "claim.html"), "r", encoding="utf-8") as f:
+            self.signin_response = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_CLAIM_URL,
+                body=f.read(),
+                status=200,
+                match=[urlencoded_params_matcher(request_data)]
+            )
+        request_data = {
+            "appActionToken": "BhG3tDd8XVGMlLyGRHU5EqkhrLEhPbSfbQWXNlTqvvc=:2",
+            "appAction": "SIGNIN_PWD_COLLECT",
+            "crossDomainRPIDCount": "NONE",
+            "metadata1": "ape:dHJ1ZQ==",
+            "webAuthnChallengeIdForButton": "01UWKHiU_J628QwHq5cbimyRHISxOmYp:NA",
+            "webAuthnGetParametersForButton": "eyJycElkIjoiYW1hem9uLmNvbSIsImNoYWxsZW5nZSI6IjAxVVdLSGlVX0o2MjhRd0hxNWNiaW15UkhJU3hPbVlwIiwidGltZW91dCI6OTAwMDAwLCJhbGxvd0NyZWRlbnRpYWxzIjpbeyJpZCI6IjQwQkZXSEd4Y21GUzc5OGRXejlyRk1aMFRLNG1SMmhncVFCckFOeXdpcGhycFV0cVd2YlhNdVRQNmFJXzRraksiLCJ0eXBlIjoicHVibGljLWtleSIsInRyYW5zcG9ydHMiOlsiaW50ZXJuYWwiLCJoeWJyaWQiXX1dLCJ1c2VyVmVyaWZpY2F0aW9uIjoicHJlZmVycmVkIn0=",
+            "openid.return_to": "ape:aHR0cHM6Ly93d3cuYW1hem9uLmNvbS8/cmVmXz1uYXZfY3VzdHJlY19zaWduaW4=",
+            "prevRID": "ape:UDVaQjE1WDlGWERWU1pRMTg2UEY=",
+            "workflowState": "eyJ6aXAiOiJERUYiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiQTI1NktXIn0.g7Bw9I91vy2ZUf9oGQWcmv6sSQq6NOqMVGiBPzS4Ids3xIZfM97jyw._6yBiSMIWGl_fqCG.OzgU6WgDOqPv_rsh9w-cgPEpoFS3uPKYGJjdTDTOKG4m2-Tjqr7zlm2H2p5dOdcY1nVcfiRsnm_bB6FQ8gSCOURrk3DvqyqsbK7fW3J_p6JqiDaIGDv1dpHNxPdy6ePWFVta5ZILtY5iiz8pKvUWmcDlQoPA1b40vEkx3t0ZEOgsTNWQdYhkzp5Lra_2VW3RnthX5Z-fl4Ikmv5zAIdesqk15TtKWN_UIMdl3hFgyhtMDjz1A_7ro0Sq_rS6tCDng08NoKpGRZ3twozqyvuF7QsO1UpTly29IahqdCOdeI8PgQL33DmTrMlnyDuBU82LSh4rjlJEBx2AhwjbFpJpZ4kPjF1yWpe1j2QugAOOStn1IgjzSGaICmrRKWIoFJql5yHJZhE_y3SIMljizg_EChZiYSCa7n_8lEOWWpolNNj2bt3mAjhMNeCi_RG7Yt1NHcHKVRVfsBJkd7ltpeYPkS9hxrN-l2w1K1jvvXDmskia7Dxkrx9IvpGXNG2jnACR7AtiEQ0S.51N-D0mkAliz3-kI3Um1Rg",
+            "email": "some-username@gmail.com",
             "password": "some-password",
             "rememberMe": "true"
         }

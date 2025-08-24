@@ -42,7 +42,7 @@ class TestCli(UnitTestCase):
         response = self.runner.invoke(amazon_orders_cli,
                                       [
                                           "--config-path", self.test_config.config_path,
-                                          "--username", "some-username",
+                                          "--username", "some-username@gmail.com",
                                           "--password", "some-password",
                                           "login"
                                       ])
@@ -95,7 +95,7 @@ class TestCli(UnitTestCase):
         response = self.runner.invoke(amazon_orders_cli,
                                       [
                                           "--config-path", self.test_config.config_path,
-                                          "--username", "some-username",
+                                          "--username", "some-username@gmail.com",
                                           "--password", "some-password",
                                           "history", "--year", year, "--start-index", start_index, "--single-page"])
 
@@ -132,7 +132,7 @@ class TestCli(UnitTestCase):
         response = self.runner.invoke(amazon_orders_cli,
                                       [
                                           "--config-path", self.test_config.config_path,
-                                          "--username", "some-username",
+                                          "--username", "some-username@gmail.com",
                                           "--password", "some-password",
                                           "order", order_id
                                       ])
@@ -164,7 +164,7 @@ class TestCli(UnitTestCase):
             amazon_orders_cli,
             [
                 "--config-path", self.test_config.config_path,
-                "--username", "some-username",
+                "--username", "some-username@gmail.com",
                 "--password", "some-password",
                 "transactions", "--days",
                 days,
@@ -201,7 +201,7 @@ class TestCli(UnitTestCase):
         response = self.runner.invoke(amazon_orders_cli,
                                       [
                                           "--config-path", self.test_config.config_path,
-                                          "--username", "some-username",
+                                          "--username", "some-username@gmail.com",
                                           "--password", "some-password",
                                           "history"
                                       ])
@@ -235,7 +235,7 @@ class TestCli(UnitTestCase):
         response = self.runner.invoke(amazon_orders_cli,
                                       [
                                           "--config-path", self.test_config.config_path,
-                                          "--username", "some-username",
+                                          "--username", "some-username@gmail.com",
                                           "--password", "some-password",
                                           "order", "1234-fake-id"
                                       ])
@@ -270,7 +270,7 @@ class TestCli(UnitTestCase):
             amazon_orders_cli,
             [
                 "--config-path", self.test_config.config_path,
-                "--username", "some-username",
+                "--username", "some-username@gmail.com",
                 "--password", "some-password",
                 "transactions"
             ],

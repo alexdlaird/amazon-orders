@@ -15,7 +15,8 @@ from requests.utils import dict_from_cookiejar
 
 from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file_lock, debug_output_file_lock
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersAuthRedirectError
-from amazonorders.forms import AuthForm, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm, SignInForm, ClaimForm
+from amazonorders.forms import (AuthForm, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm,
+                                SignInForm, ClaimForm)
 from amazonorders.util import AmazonSessionResponse
 
 logger = logging.getLogger(__name__)
@@ -223,6 +224,10 @@ class AmazonSession:
         If existing session data is already persisted, calling this function will still attempt to reauthenticate to
         refresh it.
         """
+        # Fetch the home page to set any base cookies, which will help us go down Amazon claim auth path instead (which
+        # is less susceptible to Captcha challenges)
+        self.get(self.config.constants.BASE_URL)
+
         last_response = self.get(self.config.constants.SIGN_IN_URL,
                                  params=self.config.constants.SIGN_IN_QUERY_PARAMS)
 

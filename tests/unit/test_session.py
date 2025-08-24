@@ -18,7 +18,7 @@ class TestSession(UnitTestCase):
     def setUp(self):
         super().setUp()
 
-        self.amazon_session = AmazonSession("some-username",
+        self.amazon_session = AmazonSession("some-username@gmail.com",
                                             "some-password",
                                             config=self.test_config)
 
@@ -26,6 +26,18 @@ class TestSession(UnitTestCase):
     def test_login(self):
         # GIVEN
         self.given_login_responses_success()
+
+        # WHEN
+        self.amazon_session.login()
+
+        # THEN
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assert_login_responses_success()
+
+    @responses.activate
+    def test_login_claim(self):
+        # GIVEN
+        self.given_login_claim_responses_success()
 
         # WHEN
         self.amazon_session.login()

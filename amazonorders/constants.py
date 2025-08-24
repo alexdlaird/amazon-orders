@@ -36,6 +36,7 @@ class Constants:
                             "openid.mode": "checkid_setup",
                             "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
                             "openid.ns": "http://specs.openid.net/auth/2.0"}
+    SIGN_IN_CLAIM_URL = f"{BASE_URL}/ax/claim"
     SIGN_OUT_URL = f"{BASE_URL}/gp/flex/sign-out.html"
 
     ##########################################################################
