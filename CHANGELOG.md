@@ -6,7 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.14...HEAD)
 
-## [4.0.14](https://github.com/alexdlaird/amazon-orders/compare/4.0.13...4.0.14) - 2025-08-23
+## [4.0.14](https://github.com/alexdlaird/amazon-orders/compare/4.0.13...4.0.14) - 2025-08-24
+
+### Added
+
+- Support for Amazon's new claim for in the auth flow.
 
 ### Fixed
 
