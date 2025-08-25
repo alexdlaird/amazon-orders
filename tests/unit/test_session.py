@@ -2,8 +2,6 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import os
-import sys
-import unittest
 from unittest.mock import patch
 
 import responses
@@ -256,6 +254,7 @@ class TestSession(UnitTestCase):
         self.assertIn("The page https://www.amazon.com/ap/signin returned 503. Amazon had an issue on "
                       "their end, or may be temporarily blocking your requests.", str(cm.exception))
 
+    @responses.activate
     def test_captcha_loop_retries_exhausted(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
