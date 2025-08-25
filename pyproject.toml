@@ -10,7 +10,6 @@ requires-python = ">=3.9"
 dependencies = [
     "click>=7.1",
     "requests>=2.23",
-    "amazoncaptcha>=0.4",
     "beautifulsoup4>=4.12",
     "PyYAML>=5.1",
     "python-dateutil>=2.8",
@@ -27,6 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
@@ -113,7 +113,3 @@ directory = "build/coverage"
 max-line-length = 119
 statistics = true
 exclude = "scripts/*,docs/*,venv/*,build/*,dist/*,.egg-info/*,.mypy_cache/*"
-
-[[tool.mypy.overrides]]
-module = "amazoncaptcha.*"
-ignore_missing_imports = true
