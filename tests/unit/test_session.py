@@ -588,7 +588,8 @@ class TestSession(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-key-in-form.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-key-in-form.html"), "r",
+                  encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_URL,
