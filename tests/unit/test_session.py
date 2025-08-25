@@ -277,10 +277,7 @@ class TestSession(UnitTestCase):
             status=302,
             headers={"Location": f"{self.test_config.constants.BASE_URL}/"},
             match=[query_string_matcher(
-                "amzn=Ozn2ONrAzGQc1ZETILqvvA%3D%3D&amzn-r=%2Fap%2Fsignin%3Fopenid.pape.max_auth_age%3D900%26"
-                "openid.return_to%3Dhttps%253A%252F%252Fwww.amazon.com%253F%26openid.assoc_handle%3Dusflex%2"
-                "6openid.mode%3Dcheckid_setup%26openid.ns%3Dhttp%253A%252F%252Fspecs.openid.net%252Fauth%252"
-                "F2.0&amzn-pt=AuthenticationPortal&field-keywords=FBJRAC")],
+                "amzn=JC7LJGBaJlGTFs1Ao3s3XA%3D%3D&amzn-r=%2F&field-keywords=CJYYPE")],
         )
         # Successful Captcha redirects us back to the home page, which should restart the auth flow
         with open(os.path.join(self.RESOURCES_DIR, "index.html"), "r", encoding="utf-8") as f:
