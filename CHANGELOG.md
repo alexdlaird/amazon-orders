@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.14...HEAD)
 
+### Changed
+
+- Renamed `selectors.CAPTCHA_OTP_FORM_SELECTOR` to `selectors.MFA_OTP_FORM_SELECTOR`.
+
 ## [4.0.14](https://github.com/alexdlaird/amazon-orders/compare/4.0.13...4.0.14) - 2025-08-24
 
 ### Added

@@ -83,13 +83,13 @@ class AmazonSession:
                           SignInForm(config),
                           MfaDeviceSelectForm(config),
                           MfaForm(config),
+                          MfaForm(config,
+                                  config.selectors.MFA_OTP_FORM_SELECTOR),
                           CaptchaForm(config),
                           CaptchaForm(config,
                                       config.selectors.CAPTCHA_2_FORM_SELECTOR,
                                       config.selectors.CAPTCHA_2_ERROR_SELECTOR,
                                       "field-keywords"),
-                          MfaForm(config,
-                                  config.selectors.CAPTCHA_OTP_FORM_SELECTOR),
                           JSAuthBlocker(config,
                                         config.constants.JS_ROBOT_TEXT_REGEX)]
 
