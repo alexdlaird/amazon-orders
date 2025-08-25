@@ -5,7 +5,7 @@ import os
 from unittest.mock import patch
 
 import responses
-from responses.matchers import query_string_matcher, urlencoded_params_matcher
+from responses.matchers import query_string_matcher
 
 from amazonorders.exception import AmazonOrdersAuthError
 from amazonorders.session import AmazonSession
