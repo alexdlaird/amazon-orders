@@ -34,7 +34,7 @@ class UnitTestCase(TestCase):
             "max_auth_retries": 0
         })
 
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "index.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "unauth-index.html"), "r", encoding="utf-8") as f:
             self.index_response = responses.add(
                 responses.GET,
                 self.test_config.constants.BASE_URL,
@@ -92,7 +92,7 @@ class UnitTestCase(TestCase):
             )
 
     def given_login_claim_responses_success(self):
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim-username.html"), "r", encoding="utf-8") as f:
             self.signin_response = responses.add(
                 responses.GET,
                 self.test_config.constants.SIGN_IN_URL,
@@ -112,7 +112,7 @@ class UnitTestCase(TestCase):
             "password": "some-password",
             "rememberMe": "true"
         }
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "claim.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim-password.html"), "r", encoding="utf-8") as f:
             self.signin_response = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_CLAIM_URL,

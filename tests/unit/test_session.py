@@ -64,14 +64,14 @@ class TestSession(UnitTestCase):
     @responses.activate
     def test_login_claim_invalid_username(self):
         # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim-username.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
                 self.test_config.constants.SIGN_IN_URL,
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "intent.html"), "r",
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-intent.html"), "r",
                   encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
@@ -577,6 +577,51 @@ class TestSession(UnitTestCase):
         self.assertEqual(5, resp4.call_count)
         self.assertEqual(5, resp5.call_count)
         self.assertIn("Authentication attempts exhausted.", str(cm.exception))
+
+    @responses.activate
+    def test_captcha_fields_keywords_in_form(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-key-in-form.html"), "r", encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200
+            )
+        resp3 = responses.add(
+            responses.GET,
+            f"{self.test_config.constants.BASE_URL}/errors/validateCaptcha",
+            status=302,
+            headers={"Location": f"{self.test_config.constants.BASE_URL}/"},
+            match=[query_string_matcher(
+                "amzn=JC7LJGBaJlGTFs1Ao3s3XA%3D%3D&amzn-r=%2F&field-keywords=CJYYPE")],
+        )
+        # Successful Captcha redirects us back to the home page, which should restart the auth flow
+        with open(os.path.join(self.RESOURCES_DIR, "index.html"), "r", encoding="utf-8") as f:
+            resp4 = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.BASE_URL}/",
+                body=f.read(),
+                status=200,
+            )
+        self.given_login_responses_success()
+
+        # WHEN
+        self.amazon_session.login()
+
+        # THEN
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(1, resp3.call_count)
+        self.assertEqual(1, resp4.call_count)
 
     @responses.activate
     @patch("builtins.input")
