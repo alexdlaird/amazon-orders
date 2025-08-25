@@ -15,7 +15,7 @@ from tests.testcase import TestCase
 
 class IntegrationTestCase(TestCase):
     """
-    This test class will prompt for challenges (2FA, Captcha) as necessary. To run fully automated (assuming
+    This test class will prompt for challenges (ex. 2FA) as necessary. To run fully automated (assuming
     no Captcha prompts are encountered), set all authentication environment variables:
 
     - AMAZON_USERNAME

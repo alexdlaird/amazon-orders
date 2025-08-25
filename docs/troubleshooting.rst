@@ -42,9 +42,8 @@ files are relevant to the issue, attach them to your request.
 Captcha Blocking Login
 ----------------------
 
-While ``amazon-orders`` can auto-solve some Captchas, others are opened so the user can input the solution manually,
-and still other—like `Amazon's puzzle-based WAF Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
-—require JavaScript and can't be solved at all by ``amazon-orders`` and block it from being able to log in (see `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_
+Captchas like `Amazon's puzzle-based WAF Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
+require JavaScript and block ``amazon-orders`` from being able to log in (see `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_
 for more details).
 
 To attempt to fully automate login, you need to minimize how often (if at all) you are presented with Captcha

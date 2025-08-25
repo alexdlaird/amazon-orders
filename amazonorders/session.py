@@ -15,7 +15,7 @@ from requests.utils import dict_from_cookiejar
 
 from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file_lock, debug_output_file_lock
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersAuthRedirectError
-from amazonorders.forms import (AuthForm, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm,
+from amazonorders.forms import (AuthForm, LegacyCaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm,
                                 SignInForm, ClaimForm, IntentForm)
 from amazonorders.util import AmazonSessionResponse
 
@@ -85,13 +85,9 @@ class AmazonSession:
                           MfaForm(config),
                           MfaForm(config,
                                   config.selectors.MFA_OTP_FORM_SELECTOR),
-                          CaptchaForm(config),
-                          CaptchaForm(config,
-                                      config.selectors.CAPTCHA_2_FORM_SELECTOR,
-                                      config.selectors.CAPTCHA_2_ERROR_SELECTOR,
-                                      "field-keywords"),
                           JSAuthBlocker(config,
-                                        config.constants.JS_ROBOT_TEXT_REGEX)]
+                                        config.constants.JS_ROBOT_TEXT_REGEX),
+                          LegacyCaptchaForm(config)]
 
         #: An Amazon username. Environment variable ``AMAZON_USERNAME`` will override passed in or config value.
         self.username: Optional[str] = os.environ.get("AMAZON_USERNAME") or username or config.username
@@ -217,8 +213,7 @@ class AmazonSession:
     def login(self) -> None:
         """
         Execute an Amazon login process. This will include the sign-in page, and may also include OTP (if 2FA is
-        enabled for your account), Captcha challenges, and any other forms in
-        :attr:`~amazonorders.session.AmazonSession.auth_forms`.
+        enabled for your account) and any other forms in :attr:`~amazonorders.session.AmazonSession.auth_forms`.
 
         If successful, ``is_authenticated`` will be set to ``True``.
 

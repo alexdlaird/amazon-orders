@@ -107,9 +107,8 @@ Known Limitations
       your own credentials with the ``integration.yml`` workflow to setup a nightly regression run, please
       `contact us <mailto:contact@alexlaird.com>`_ and we will start mentioning support for that version of the site.
     - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
-- Some Captchas are unsupported
-    - While some Captchas can be auto-solved, and static image-based ones are opened so the user can manually input
-      the solution, interactive Captchas—like `Amazon's puzzle-based Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
+- JavaScript-based Captchas are unsupported
+    - Interactive Captchas—like `Amazon's puzzle-based Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
       —require JavaScript to solve, and will block ``amazon-orders`` from being able to login.
     - See the troubleshooting steps for `reducing Captcha challenge frequency <troubleshooting.html#captcha-blocking-login>`_ for recommended workarounds.
     - See `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_ for more details.

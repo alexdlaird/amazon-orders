@@ -185,6 +185,44 @@ class TestSession(UnitTestCase):
 
     @responses.activate
     @patch("builtins.input")
+    def test_mfa_2(self, input_mock):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-mfa-2.html"),
+                  "r", encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"),
+                  "r", encoding="utf-8") as f:
+            resp3 = responses.add(
+                responses.POST,
+                f"{self.test_config.constants.BASE_URL}/ap/cvf/approval/verifyOtp",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        self.amazon_session.login()
+
+        # THEN
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assertEqual(1, input_mock.call_count)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(1, resp3.call_count)
+
+    @responses.activate
+    @patch("builtins.input")
     def test_new_otp(self, input_mock):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
@@ -264,7 +302,8 @@ class TestSession(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-field-keywords.html"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-field-keywords.html"), "r",
+                  encoding="utf-8") as f:
             resp2 = responses.add(
                 responses.POST,
                 self.test_config.constants.SIGN_IN_URL,
@@ -279,7 +318,6 @@ class TestSession(UnitTestCase):
             match=[query_string_matcher(
                 "amzn=JC7LJGBaJlGTFs1Ao3s3XA%3D%3D&amzn-r=%2F&field-keywords=CJYYPE")],
         )
-        # Successful Captcha redirects us back to the home page, which should restart the auth flow
         with open(os.path.join(self.RESOURCES_DIR, "index.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.GET,
@@ -326,7 +364,6 @@ class TestSession(UnitTestCase):
             match=[query_string_matcher(
                 "amzn=JC7LJGBaJlGTFs1Ao3s3XA%3D%3D&amzn-r=%2F&field-keywords=CJYYPE")],
         )
-        # Successful Captcha redirects us back to the home page, which should restart the auth flow
         with open(os.path.join(self.RESOURCES_DIR, "index.html"), "r", encoding="utf-8") as f:
             resp4 = responses.add(
                 responses.GET,
@@ -345,44 +382,6 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
         self.assertEqual(1, resp3.call_count)
         self.assertEqual(1, resp4.call_count)
-
-    @responses.activate
-    @patch("builtins.input")
-    def test_captcha_otp(self, input_mock):
-        # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
-            resp1 = responses.add(
-                responses.GET,
-                self.test_config.constants.SIGN_IN_URL,
-                body=f.read(),
-                status=200,
-            )
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-captcha-otp.html"),
-                  "r", encoding="utf-8") as f:
-            resp2 = responses.add(
-                responses.POST,
-                self.test_config.constants.SIGN_IN_URL,
-                body=f.read(),
-                status=200,
-            )
-        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"),
-                  "r", encoding="utf-8") as f:
-            resp3 = responses.add(
-                responses.POST,
-                f"{self.test_config.constants.BASE_URL}/ap/cvf/approval/verifyOtp",
-                body=f.read(),
-                status=200,
-            )
-
-        # WHEN
-        self.amazon_session.login()
-
-        # THEN
-        self.assertTrue(self.amazon_session.is_authenticated)
-        self.assertEqual(1, input_mock.call_count)
-        self.assertEqual(1, resp1.call_count)
-        self.assertEqual(1, resp2.call_count)
-        self.assertEqual(1, resp3.call_count)
 
     @responses.activate
     def test_js_waf_login_blocker(self):
