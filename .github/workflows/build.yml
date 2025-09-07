@@ -10,6 +10,11 @@ on:
   workflow_dispatch:
   workflow_call:
 
+permissions:
+  contents: read
+  issues: none
+  pull-requests: none
+
 jobs:
   build:
     name: Build

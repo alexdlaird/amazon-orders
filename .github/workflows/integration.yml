@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: "0 7 * * *"
 
+permissions:
+  contents: read
+  issues: none
+  pull-requests: none
+
 concurrency:
   group: amazon-orders-integration-singleton
 

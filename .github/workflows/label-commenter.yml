@@ -5,6 +5,11 @@ on:
     types:
       - labeled
 
+permissions:
+  issues: write
+  pull-requests: write
+  contents: none
+
 jobs:
   comment:
     runs-on: ubuntu-latest
