@@ -225,23 +225,29 @@ class ClaimForm(AuthForm):
 class IntentForm(AuthForm):
     def __init__(self,
                  config: AmazonOrdersConfig,
-                 selector: Optional[str] = None) -> None:
+                 selector: Optional[str] = None,
+                 error_selector: Optional[str] = None) -> None:
         if not selector:
             selector = config.selectors.INTENT_FORM_SELECTOR
+        if not error_selector:
+            error_selector = config.selectors.INTENT_MESSAGE_SELECTOR
 
-        super().__init__(config, selector, critical=True)
+        super().__init__(config, selector, error_selector, critical=True)
 
     def submit(self, last_response: Response) -> AmazonSessionResponse:
         """
-        When we encounter this form, it's because the email doesn't exist, so prevent
-        form submission from continuing with the auth flow.
+        When we encounter this form, we can't submit it, so we display its contents as the
+        error message, since within the context of this library, it is a termination event
+        for the auth flow.
 
         :param last_response: The response of the request that fetched the form.
         :return: The response from the executed request.
         """
-        raise AmazonOrdersAuthError(
-            "Error from Amazon: Looks like you're new to Amazon"
-        )
+        response = AmazonSessionResponse(last_response, self.config.bs4_parser)
+
+        self._handle_errors(response)
+
+        return response
 
 
 class MfaDeviceSelectForm(AuthForm):
