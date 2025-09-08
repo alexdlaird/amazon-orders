@@ -43,7 +43,7 @@ class Selectors:
     MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE = "value"
     MFA_FORM_SELECTOR = "form#auth-mfa-form"
     CAPTCHA_1_FORM_SELECTOR = "form.cvf-widget-form-captcha"
-    CAPTCHA_2_FORM_SELECTOR = ["form:has(input[id^='captchacharacters'])", "form:has(input[name='field-keywords'])"]
+    CAPTCHA_2_FORM_SELECTOR = ["form:has(input[id^='captchacharacters'])", "form[action$='validateCaptcha']"]
     CAPTCHA_OTP_FORM_SELECTOR = "form#verification-code-form"
     DEFAULT_ERROR_TAG_SELECTOR = "div#auth-error-message-box"
     CAPTCHA_1_ERROR_SELECTOR = "div.cvf-widget-alert"

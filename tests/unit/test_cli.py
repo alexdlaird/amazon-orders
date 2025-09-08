@@ -36,6 +36,7 @@ class TestCli(UnitTestCase):
     @responses.activate
     def test_login_command(self):
         # GIVEN
+        self.given_unauthenticated_home_page()
         self.given_login_responses_success()
 
         # WHEN
@@ -88,6 +89,7 @@ class TestCli(UnitTestCase):
         # GIVEN
         year = 2023
         start_index = 10
+        self.given_unauthenticated_home_page()
         self.given_login_responses_success()
         resp = self.given_order_history_exists(year, start_index)
 
@@ -118,6 +120,7 @@ class TestCli(UnitTestCase):
     def test_order_command(self):
         # GIVEN
         order_id = "112-2961628-4757846"
+        self.given_unauthenticated_home_page()
         self.given_login_responses_success()
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-112-2961628-4757846.html"), "r",
                   encoding="utf-8") as f:
@@ -149,6 +152,7 @@ class TestCli(UnitTestCase):
         # GIVEN
         mock_today.date.today.return_value = datetime.date(2024, 10, 11)
         days = 1
+        self.given_unauthenticated_home_page()
         self.given_login_responses_success()
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"),
                   "r", encoding="utf-8") as f:
@@ -181,6 +185,7 @@ class TestCli(UnitTestCase):
     @responses.activate
     def test_history_command_error(self):
         # GIVEN
+        self.given_unauthenticated_home_page()
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -215,6 +220,7 @@ class TestCli(UnitTestCase):
     @responses.activate
     def test_order_command_error(self):
         # GIVEN
+        self.given_unauthenticated_home_page()
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -249,6 +255,7 @@ class TestCli(UnitTestCase):
     @responses.activate
     def test_transactions_command_error(self):
         # GIVEN
+        self.given_unauthenticated_home_page()
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             resp1 = responses.add(
                 responses.GET,
@@ -286,6 +293,7 @@ class TestCli(UnitTestCase):
     def test_persisted_session_stale_logout(self):
         # GIVEN
         self.given_persisted_session_exists()
+        self.given_unauthenticated_home_page()
         self.given_login_responses_success()
         auth_redirect_response = self.given_authenticated_url_redirects_to_login()
         signout_response = self.given_logout_response_success()

@@ -227,7 +227,15 @@ class AmazonSession:
         """
         # Fetch the home page to set any base cookies, which will help us go down Amazon claim auth path instead (which
         # is less susceptible to Captcha challenges)
-        self.get(self.config.constants.BASE_URL)
+        last_response = self.get(self.config.constants.BASE_URL)
+
+        # The home page may still prompt us with a Captcha, so submit that before entering the auth flow
+        for form in self.auth_forms:
+            if form.select_form(self, last_response.parsed):
+                form.fill_form()
+                form.submit(last_response.response)
+
+                break
 
         last_response = self.get(self.config.constants.SIGN_IN_URL,
                                  params=self.config.constants.SIGN_IN_QUERY_PARAMS)

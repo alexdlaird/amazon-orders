@@ -34,14 +34,6 @@ class UnitTestCase(TestCase):
             "max_auth_retries": 0
         })
 
-        with open(os.path.join(self.RESOURCES_DIR, "auth", "unauth-index.html"), "r", encoding="utf-8") as f:
-            self.index_response = responses.add(
-                responses.GET,
-                self.test_config.constants.BASE_URL,
-                body=f.read(),
-                status=200,
-            )
-
         if os.path.exists(self.test_cookie_jar_path):
             os.remove(self.test_cookie_jar_path)
 
@@ -56,6 +48,16 @@ class UnitTestCase(TestCase):
             os.environ["AMAZON_PASSWORD"] = self.password
         if self.otp_secret_key:
             os.environ["AMAZON_OTP_SECRET_KEY"] = self.otp_secret_key
+
+    def given_unauthenticated_home_page(self,
+                                        auth_file="unauth-index.html"):
+        with open(os.path.join(self.RESOURCES_DIR, "auth", auth_file), "r", encoding="utf-8") as f:
+            self.index_response = responses.add(
+                responses.GET,
+                self.test_config.constants.BASE_URL,
+                body=f.read(),
+                status=200,
+            )
 
     def given_login_responses_success(self):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
