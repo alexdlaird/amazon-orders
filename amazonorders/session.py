@@ -230,6 +230,7 @@ class AmazonSession:
         last_response = self.get(self.config.constants.BASE_URL)
 
         # The home page may still prompt us with a Captcha, so submit that before entering the auth flow
+        # TODO: refactor this and bake it in to an existing auth flow to reuse code, improve maintainability
         for form in self.auth_forms:
             if form.select_form(self, last_response.parsed):
                 form.fill_form()
