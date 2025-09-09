@@ -251,9 +251,9 @@ class AmazonSession:
             attempts += 1
 
         if attempts == self.config.max_auth_attempts:
-            raise AmazonOrdersAuthError("Amazon is not returning a parsable home page. Try waiting a while, increasing "
-                                        "AmazonOrdersConfig.max_auth_attempts, or using a different IP address, as "
-                                        "this one may be flagged as a bot.")
+            raise AmazonOrdersAuthError("Amazon is not returning a parsable home page. Try waiting a while, "
+                                        "increasing AmazonOrdersConfig.max_auth_attempts, or using a different IP "
+                                        "address, as this one may be flagged as a bot.")
 
         last_response = self.get(self.config.constants.SIGN_IN_URL,
                                  params=self.config.constants.SIGN_IN_QUERY_PARAMS)
