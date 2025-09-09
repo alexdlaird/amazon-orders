@@ -226,16 +226,29 @@ class AmazonSession:
         refresh it.
         """
         # Fetch the home page to set any base cookies, which will help us go down Amazon claim auth path instead (which
-        # is less susceptible to Captcha challenges)
+        # is less susceptible to Captcha challenges). This home page may still fall in to a Captcha flow, and sometimes
+        # needs to be retried when a mobile version is rendered until the desktop version is returned.
         last_response = self.get(self.config.constants.BASE_URL)
+        attempts = 0
+        while (last_response.parsed.select_one(self.config.selectors.BAD_INDEX_SELECTOR) is not None
+               and attempts < self.config.max_auth_attempts):
+            # TODO: this duplicates some auth code below, should be redesigned for maintainability, but not doing now
+            #  as we're likely going to refactor the Captcha flows in the near future anyway
+            for form in self.auth_forms:
+                if form.select_form(self, last_response.parsed):
+                    form.fill_form()
+                    form.submit(last_response.response)
 
-        # The home page may still prompt us with a Captcha, so submit that before entering the auth flow
-        for form in self.auth_forms:
-            if form.select_form(self, last_response.parsed):
-                form.fill_form()
-                form.submit(last_response.response)
+                    break
 
-                break
+            last_response = self.get(self.config.constants.BASE_URL)
+
+            attempts += 1
+
+        if attempts == self.config.max_auth_attempts:
+            raise AmazonOrdersAuthError("Amazon is not returning a parsable home page. Try waiting a while, increasing "
+                                        "AmazonOrdersConfig.max_auth_attempts, or using a different IP address, as "
+                                        "this one may be flagged as a bot.")
 
         last_response = self.get(self.config.constants.SIGN_IN_URL,
                                  params=self.config.constants.SIGN_IN_QUERY_PARAMS)
