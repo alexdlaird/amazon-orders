@@ -64,27 +64,30 @@ class Constants:
         "Accept-Encoding": "gzip, deflate, br, zstd",
         "Accept-Language": "en-US,en;q=0.9",
         "Cache-Control": "max-age=0",
+        "Device-Memory": "8",
+        "Downlink": "10",
         "Dpr": "2",
         "Ect": "4g",
         "Origin": BASE_URL,
         "Host": BASE_URL.strip("https://"),
         "Priority": "u=0, i",
         "Referer": f"{SIGN_IN_URL}?{urlencode(SIGN_IN_QUERY_PARAMS)}",
-        "Rtt": "50",
+        "Rtt": "0",
+        "Sec-Ch-Device-Memory": "8",
         "Sec-Ch-Dpr": "2",
-        "Sec-Ch-Ua": "\"Google Chrome\";v=\"135\", \"Not-A.Brand\";v=\"8\", \"Chromium\";v=\"135\"",
+        "Sec-Ch-Ua": "Chromium\";v=\"140\", \"Not=A?Brand\";v=\"24\", \"Google Chrome\";v=\"140",
         "Sec-Ch-Ua-Mobile": "?0",
         "Sec-Ch-Ua-Platform": "macOS",
-        "Sec-Ch-Ua-Platform-Version": "15.3.2",
-        "Sec-Ch-Viewport-Width": "1181",
+        "Sec-Ch-Ua-Platform-Version": "15.6.1",
+        "Sec-Ch-Viewport-Width": "1512",
         "Sec-Fetch-Dest": "document",
         "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-Site": "none",
         "Sec-Fetch-User": "?1",
         "Upgrade-Insecure-Requests": "1",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/135.0.0.0 Safari/537.36",
-        "Viewport-Width": "1181"
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6_1) AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/140.0.0.0 Safari/537.36",
+        "Viewport-Width": "1512"
     }
 
     ##########################################################################

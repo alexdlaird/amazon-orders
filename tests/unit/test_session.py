@@ -49,6 +49,27 @@ class TestSession(UnitTestCase):
         self.assert_login_responses_success()
 
     @responses.activate
+    def test_login_bad_index_retries(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "unauth-bad-index.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.BASE_URL,
+                body=f.read(),
+                status=200,
+            )
+        self.given_unauthenticated_home_page()
+        self.given_login_claim_responses_success()
+
+        # WHEN
+        self.amazon_session.login()
+
+        # THEN
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assertEqual(1, resp1.call_count)
+        self.assert_login_responses_success()
+
+    @responses.activate
     def test_logout(self):
         # GIVEN
         signout_response = self.given_logout_response_success()

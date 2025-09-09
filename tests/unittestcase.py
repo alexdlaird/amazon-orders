@@ -226,6 +226,7 @@ class UnitTestCase(TestCase):
             f.write(json.dumps(cookies))
 
     def assert_login_responses_success(self):
+        self.assertEqual(1, self.index_response.call_count)
         self.assertEqual(1, self.signin_response.call_count)
         self.assertEqual(1, self.authenticated_response.call_count)
 
