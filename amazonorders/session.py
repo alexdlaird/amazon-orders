@@ -229,6 +229,14 @@ class AmazonSession:
         # is less susceptible to Captcha challenges). This home page may still fall in to a Captcha flow, and sometimes
         # needs to be retried when a mobile version is rendered until the desktop version is returned.
         last_response = self.get(self.config.constants.BASE_URL)
+
+        # TODO: this duplicates some auth code below, should be redesigned for maintainability, but not doing now
+        #  as we're likely going to refactor the Captcha flows in the near future anyway
+        for form in self.auth_forms:
+            if form.select_form(self, last_response.parsed):
+                form.fill_form()
+                form.submit(last_response.response)
+
         attempts = 0
         while (last_response.parsed.select_one(self.config.selectors.BAD_INDEX_SELECTOR) is not None
                and attempts < self.config.max_auth_attempts):
@@ -238,13 +246,6 @@ class AmazonSession:
                 if form.select_form(self, last_response.parsed):
                     form.fill_form()
                     form.submit(last_response.response)
-
-        # The home page may still prompt us with a Captcha, so submit that before entering the auth flow
-        # TODO: refactor this and bake it in to an existing auth flow to reuse code, improve maintainability
-        for form in self.auth_forms:
-            if form.select_form(self, last_response.parsed):
-                form.fill_form()
-                form.submit(last_response.response)
 
             last_response = self.get(self.config.constants.BASE_URL)
 
