@@ -225,36 +225,7 @@ class AmazonSession:
         If existing session data is already persisted, calling this function will still attempt to reauthenticate to
         refresh it.
         """
-        # Fetch the home page to set any base cookies, which will help us go down Amazon claim auth path instead (which
-        # is less susceptible to Captcha challenges). This home page may still fall in to a Captcha flow, and sometimes
-        # needs to be retried when a mobile version is rendered until the desktop version is returned.
-        last_response = self.get(self.config.constants.BASE_URL)
-
-        # TODO: this duplicates some auth code below, should be redesigned for maintainability, but not doing now
-        #  as we're likely going to refactor the Captcha flows in the near future anyway
-        for form in self.auth_forms:
-            if form.select_form(self, last_response.parsed):
-                form.fill_form()
-                form.submit(last_response.response)
-
-        attempts = 0
-        while (last_response.parsed.select_one(self.config.selectors.BAD_INDEX_SELECTOR) is not None
-               and attempts < self.config.max_auth_attempts):
-            # TODO: this duplicates some auth code below, should be redesigned for maintainability, but not doing now
-            #  as we're likely going to refactor the Captcha flows in the near future anyway
-            for form in self.auth_forms:
-                if form.select_form(self, last_response.parsed):
-                    form.fill_form()
-                    form.submit(last_response.response)
-
-            last_response = self.get(self.config.constants.BASE_URL)
-
-            attempts += 1
-
-        if attempts == self.config.max_auth_attempts:
-            raise AmazonOrdersAuthError("Amazon is not returning a parsable home page. Try waiting a while, "
-                                        "increasing AmazonOrdersConfig.max_auth_attempts, or using a different IP "
-                                        "address, as this one may be flagged as a bot.")
+        self._provision_cookies()
 
         last_response = self.get(self.config.constants.SIGN_IN_URL,
                                  params=self.config.constants.SIGN_IN_QUERY_PARAMS)
@@ -285,14 +256,11 @@ class AmazonSession:
 
                 form_found = False
 
-            for form in self.auth_forms:
-                if form.select_form(self, last_response.parsed):
-                    form_found = True
+            form_response = self._process_forms(last_response)
 
-                    form.fill_form()
-                    last_response = form.submit(last_response.response)
-
-                    break
+            if form_response:
+                last_response = form_response
+                form_found = True
 
             if not form_found:
                 self._raise_auth_error(last_response.response)
@@ -390,3 +358,37 @@ class AmazonSession:
                                                 pool_maxsize=self.config.connection_pool_size)
         session.mount('https://', adapter)
         return session
+
+    def _process_forms(self, last_response):
+        for form in self.auth_forms:
+            if form.select_form(self, last_response.parsed):
+                form.fill_form()
+                return form.submit(last_response.response)
+
+        return None
+
+    def _provision_cookies(self):
+        last_response = None
+        attempts = 0
+        # We have to retry for stability here, to ensure Amazon returns us the desktop version of the site; if we
+        # don't implement this logic, Amazon will sometimes return a mobile version of teh site (regardless of
+        # User-Agent headers)
+        while last_response is None or \
+                (last_response.parsed.select_one(self.config.selectors.BAD_INDEX_SELECTOR) is not None
+                 and attempts < self.config.max_cookie_attempts):
+            if attempts > 0:
+                logger.debug(f"Retrying cookie provisioning, attempt {attempts} in "
+                             f"{self.config.cookie_reattempt_wait} seconds ...")
+                time.sleep(self.config.cookie_reattempt_wait)
+
+            # To provision initial, unauthenticated cookies, fetch the Amazon home page
+            last_response = self.get(self.config.constants.BASE_URL)
+            # We process forms just in case Amazon presents a Captcha challenge on unauthenticated URLs
+            self._process_forms(last_response)
+
+            attempts += 1
+
+        if attempts == self.config.max_cookie_attempts:
+            raise AmazonOrdersAuthError("Amazon is not returning a parsable home page. Try waiting a while, "
+                                        "increasing AmazonOrdersConfig.max_cookie_attempts, or using a different IP "
+                                        "address, as this one may be flagged as a bot.")
