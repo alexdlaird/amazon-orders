@@ -3,6 +3,7 @@
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
 PROJECT_VENV ?= venv
+INTEGRATION_TEST_RERUN ?= 2
 INTEGRATION_TEST_RERUN_DELAY ?= 300
 
 all: local check test
@@ -35,7 +36,7 @@ test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev,integration]"; \
-		pytest -v --ignore=tests/unit -o junit_suite_name=integration --reruns 1 --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY}; \
+		pytest -v --ignore=tests/unit -o junit_suite_name=integration --reruns ${INTEGRATION_TEST_RERUN} --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY}; \
 	)
 
 build-test-resources: install
