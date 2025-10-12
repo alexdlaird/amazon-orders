@@ -103,7 +103,7 @@ Known Limitations
     - Some have reported success with some non-``.com`` sites (ex. ``amazon.ca`` in Canada), so other similar
       English-based versions of Amazon may work by chance. However, we do not run nightly regressions against
       other versions of the site, and as such do not say they are officially supported.
-    - If you fork the repo, override ``AMAZON_BASE_URL`` with an English, non-``.com`` version of the site, and use
+    - If you fork the repo, set ``AMAZON_BASE_URL`` with an English, non-``.com`` version of the site, and use
       your own credentials with the ``integration.yml`` workflow to setup a nightly regression run, please
       `contact us <mailto:contact@alexlaird.com>`_ and we will start mentioning support for that version of the site.
     - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
