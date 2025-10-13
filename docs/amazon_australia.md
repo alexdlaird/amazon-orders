@@ -111,6 +111,7 @@ amazon_session = AmazonSession(
 ```
 
 Debug mode saves HTML pages to the `output/` directory, allowing you to see:
+
 - Captcha challenges
 - MFA (Multi-Factor Authentication) prompts
 - Error messages from Amazon
@@ -121,6 +122,7 @@ Debug mode saves HTML pages to the `output/` directory, allowing you to see:
 
 **Problem**: Login fails with Amazon Australia
 **Solutions**:
+
 - Ensure you're using credentials for an Australian Amazon account
 - Check for captcha challenges in debug HTML files
 - Verify MFA is not required (or handle MFA prompts)
@@ -130,6 +132,7 @@ Debug mode saves HTML pages to the `output/` directory, allowing you to see:
 
 **Problem**: Parsing fails due to different HTML structure
 **Solutions**:
+
 - Australian Amazon might have different CSS selectors
 - Check the saved HTML files in debug mode
 - You may need to customize the selectors (see Advanced Configuration)
@@ -138,6 +141,7 @@ Debug mode saves HTML pages to the `output/` directory, allowing you to see:
 
 **Problem**: Too many requests error
 **Solutions**:
+
 - Australian Amazon might have stricter rate limits
 - Add delays between requests
 - Use fewer concurrent connections
