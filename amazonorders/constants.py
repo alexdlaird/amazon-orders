@@ -1,9 +1,5 @@
-__copyright__ = "Copyright (c) 2024-2025 Alex La        elif "amazon.com.au" in self.BASE_URL:
-            assoc_handle = "auflex"
-        elif "amazon.co.uk" in self.BASE_URL:
-            assoc_handle = "ukflex"
-        elif "amazon.ca" in self.BASE_URL:
-            assoc_handle = "caflex" = "MIT"
+__copyright__ = "Copyright (c) 2024-2025 Alex Laird"
+__license__ = "MIT"
 
 import os
 from urllib.parse import urlencode
