@@ -58,11 +58,6 @@ The library automatically detects and configures appropriate settings for:
 | Australia | `https://www.amazon.com.au` | A$ | en-AU |
 | United Kingdom | `https://www.amazon.co.uk` | £ | en-GB |
 | Canada | `https://www.amazon.ca` | C$ | en-CA |
-| Germany | `https://www.amazon.de` | € | de-DE |
-| France | `https://www.amazon.fr` | € | fr-FR |
-| Italy | `https://www.amazon.it` | € | it-IT |
-| Spain | `https://www.amazon.es` | € | es-ES |
-| Japan | `https://www.amazon.co.jp` | ¥ | ja-JP |
 | United States | `https://www.amazon.com` | $ | en-US |
 
 ## Configuration Options

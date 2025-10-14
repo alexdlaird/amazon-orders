@@ -1,5 +1,9 @@
-__copyright__ = "Copyright (c) 2024-2025 Alex Laird"
-__license__ = "MIT"
+__copyright__ = "Copyright (c) 2024-2025 Alex La        elif "amazon.com.au" in self.BASE_URL:
+            assoc_handle = "auflex"
+        elif "amazon.co.uk" in self.BASE_URL:
+            assoc_handle = "ukflex"
+        elif "amazon.ca" in self.BASE_URL:
+            assoc_handle = "caflex" = "MIT"
 
 import os
 from urllib.parse import urlencode
@@ -52,16 +56,7 @@ class Constants:
             assoc_handle = "ukflex"
         elif "amazon.ca" in self.BASE_URL:
             assoc_handle = "caflex"
-        elif "amazon.de" in self.BASE_URL:
-            assoc_handle = "deflex"
-        elif "amazon.fr" in self.BASE_URL:
-            assoc_handle = "frflex"
-        elif "amazon.it" in self.BASE_URL:
-            assoc_handle = "itflex"
-        elif "amazon.es" in self.BASE_URL:
-            assoc_handle = "esflex"
-        elif "amazon.co.jp" in self.BASE_URL:
-            assoc_handle = "jpflex"
+
         
         # Set sign-in query params
         self.SIGN_IN_QUERY_PARAMS = {
@@ -82,16 +77,6 @@ class Constants:
             accept_language = "en-GB,en;q=0.9,en-US;q=0.8"
         elif "amazon.ca" in self.BASE_URL:
             accept_language = "en-CA,en;q=0.9,fr-CA;q=0.8,en-US;q=0.7"
-        elif "amazon.de" in self.BASE_URL:
-            accept_language = "de-DE,de;q=0.9,en;q=0.8"
-        elif "amazon.fr" in self.BASE_URL:
-            accept_language = "fr-FR,fr;q=0.9,en;q=0.8"
-        elif "amazon.it" in self.BASE_URL:
-            accept_language = "it-IT,it;q=0.9,en;q=0.8"
-        elif "amazon.es" in self.BASE_URL:
-            accept_language = "es-ES,es;q=0.9,en;q=0.8"
-        elif "amazon.co.jp" in self.BASE_URL:
-            accept_language = "ja-JP,ja;q=0.9,en;q=0.8"
             
         # Set static headers (like original)
         self.BASE_HEADERS = {
@@ -126,7 +111,7 @@ class Constants:
             "Viewport-Width": "1512"
         }
         
-        # Set currency symbol
+        # Set currency symbol based on Amazon site
         currency_symbol = "$"  # Default
         env_symbol = os.environ.get("AMAZON_CURRENCY_SYMBOL")
         if env_symbol:
@@ -137,20 +122,8 @@ class Constants:
             currency_symbol = "£"
         elif "amazon.ca" in self.BASE_URL:
             currency_symbol = "C$"
-        elif "amazon.de" in self.BASE_URL:
-            currency_symbol = "€"
-        elif "amazon.fr" in self.BASE_URL:
-            currency_symbol = "€"
-        elif "amazon.it" in self.BASE_URL:
-            currency_symbol = "€"
-        elif "amazon.es" in self.BASE_URL:
-            currency_symbol = "€"
-        elif "amazon.co.jp" in self.BASE_URL:
-            currency_symbol = "¥"
             
-        self.CURRENCY_SYMBOL = currency_symbol
-
-    ##########################################################################
+        self.CURRENCY_SYMBOL = currency_symbol    ##########################################################################
     # General URL
     ##########################################################################
 
