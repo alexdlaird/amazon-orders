@@ -170,8 +170,17 @@ class Order(Parsable):
         value = self.to_currency(value)
 
         if value is None:
-            # Log warning instead of raising exception - some order types don't have parseable totals
-            logger.warning(f"Order {getattr(self, 'order_number', 'UNKNOWN')} grand_total could not be parsed, returning None")
+            if self.config.raise_on_missing_grand_total:
+                raise AmazonOrdersError(
+                    f"Order {getattr(self, 'order_number', 'UNKNOWN')} grand_total could not be parsed, "
+                    f"but it's required. Check if Amazon changed the HTML or set "
+                    f"raise_on_missing_grand_total=False in config."
+                )
+            else:
+                logger.warning(
+                    f"Order {getattr(self, 'order_number', 'UNKNOWN')} grand_total could not be parsed, "
+                    f"returning None"
+                )
 
         return value
 

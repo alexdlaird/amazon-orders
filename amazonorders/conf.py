@@ -57,7 +57,9 @@ class AmazonOrdersConfig:
             "thread_pool_size": (os.cpu_count() or 1) * 4,
             "connection_pool_size": thread_pool_size * 2,
             # The maximum number of failed attempts to allow before failing CLI authentication
-            "max_auth_retries": 1
+            "max_auth_retries": 1,
+            # Whether to raise an exception when grand_total cannot be parsed (True) or just log a warning (False)
+            "raise_on_missing_grand_total": True
         }
 
         with config_file_lock:

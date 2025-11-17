@@ -48,6 +48,7 @@ class TestConf(TestCase):
         self.assertEqual(self.test_output_dir, config.output_dir)
         self.assertEqual(self.test_cookie_jar_path, config.cookie_jar_path)
         self.assertEqual("html.parser", config.bs4_parser)
+        self.assertTrue(config.raise_on_missing_grand_total)
 
         # GIVEN
         config.save()
@@ -68,6 +69,7 @@ max_auth_retries: 1
 max_cookie_attempts: 10
 order_class: amazonorders.entity.order.Order
 output_dir: {output_dir}
+raise_on_missing_grand_total: true
 selectors_class: amazonorders.selectors.Selectors
 shipment_class: amazonorders.entity.shipment.Shipment
 thread_pool_size: {thread_pool_size}
