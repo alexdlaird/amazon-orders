@@ -162,14 +162,14 @@ class TestOrder(UnitTestCase):
             Order(parsed, self.test_config, full_details=True)
 
         self.assertIn("grand_total could not be parsed", str(context.exception))
-        self.assertIn("raise_on_missing_grand_total=False", str(context.exception))
+        self.assertIn("warn_on_missing_required_field=False", str(context.exception))
 
     def test_order_missing_grand_total_logs_warning_when_configured(self):
         # GIVEN
         config = AmazonOrdersConfig(data={
             "output_dir": self.test_output_dir,
             "cookie_jar_path": self.test_cookie_jar_path,
-            "raise_on_missing_grand_total": False
+            "warn_on_missing_required_field": True
         })
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-missing-grand-total-snippet.html"),
                   "r",

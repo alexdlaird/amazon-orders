@@ -56,22 +56,26 @@ class Transaction(Parsable):
 
         value = self.to_currency(value)
 
-        if value is None:
-            raise AmazonOrdersError(
-                "Order.grand_total did not populate, but it's required. "
-                "Check if Amazon changed the HTML."
-            )  # pragma: no cover
+        if value is None: # pragma: no cover
+            err_msg = ("Order.grand_total did not populate, but it's required. "
+                       "Check if Amazon changed the HTML.")
+            if not self.config.warn_on_missing_required_field:
+                raise AmazonOrdersError(err_msg)
+            else:
+                logger.warning(err_msg)
 
         return value
 
     def _parse_order_number(self) -> str:
         value = self.simple_parse(self.config.selectors.FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR)
 
-        if value is None:
-            raise AmazonOrdersError(
-                "Transaction.order_number did not populate, but it's required. "
-                "Check if Amazon changed the HTML."
-            )  # pragma: no cover
+        if value is None: # pragma: no cover
+            err_msg = ("Transaction.order_number did not populate, but it's required. "
+                "Check if Amazon changed the HTML.")
+            if not self.config.warn_on_missing_required_field:
+                raise AmazonOrdersError(err_msg)
+            else:
+                logger.warning(err_msg)
 
         match = re.match(".*#([0-9-]+)$", value)
         value = match.group(1) if match else ""

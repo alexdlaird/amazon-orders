@@ -58,8 +58,8 @@ class AmazonOrdersConfig:
             "connection_pool_size": thread_pool_size * 2,
             # The maximum number of failed attempts to allow before failing CLI authentication
             "max_auth_retries": 1,
-            # Whether to raise an exception when grand_total cannot be parsed (True) or just log a warning (False)
-            "raise_on_missing_grand_total": True
+            # Set ``True`` to log a warning message instead of raising an exception when a required field is missing.
+            "warn_on_missing_required_field": False
         }
 
         with config_file_lock:

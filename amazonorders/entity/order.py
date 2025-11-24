@@ -169,18 +169,14 @@ class Order(Parsable):
 
         value = self.to_currency(value)
 
-        if value is None:
-            if self.config.raise_on_missing_grand_total:
-                raise AmazonOrdersError(
-                    f"Order {getattr(self, 'order_number', 'UNKNOWN')} grand_total could not be parsed, "
-                    f"but it's required. Check if Amazon changed the HTML or set "
-                    f"raise_on_missing_grand_total=False in config."
-                )
+        if value is None: # pragma: no cover
+            err_msg = (f"Order {getattr(self, 'order_number', 'UNKNOWN')} grand_total could not be parsed, but it's "
+                       f"required. Check if Amazon changed the HTML or set "
+                       f"warn_on_missing_required_field=False in config.")
+            if not self.config.warn_on_missing_required_field:
+                raise AmazonOrdersError(err_msg)
             else:
-                logger.warning(
-                    f"Order {getattr(self, 'order_number', 'UNKNOWN')} grand_total could not be parsed, "
-                    f"returning None"
-                )
+                logger.warning(err_msg)
 
         return value
 
@@ -206,11 +202,13 @@ class Order(Parsable):
             #  a better CSS selector, we just need to make sure we have good test coverage around this path first
             parsed_parent = self.parsed.find_parent()
 
-            if parsed_parent is None:
-                raise AmazonOrdersError(
-                    "Recipient parent not found, but it's required. "
-                    "Check if Amazon changed the HTML."
-                )  # pragma: no cover
+            if parsed_parent is None: # pragma: no cover
+                err_msg = ("Recipient parent not found, but it's required. "
+                           "Check if Amazon changed the HTML.")
+                if not self.config.warn_on_missing_required_field:
+                    raise AmazonOrdersError(err_msg)
+                else:
+                    logger.warning(err_msg)
 
             parent_tag = util.select_one(
                 parsed_parent,
