@@ -50,6 +50,7 @@ class IOClick(IODefault):
 @click.group()
 @click.option("--username", help="An Amazon username.")
 @click.option("--password", help="An Amazon password.")
+@click.option("--domain", help="The Amazon domain (e.g. https://www.amazon.com, https://www.amazon.co.uk, https://www.amazon.de).")
 @click.option("--debug", is_flag=True, default=False,
               help="Enable debugging and send output to "
                    "command line.")
@@ -95,11 +96,13 @@ def amazon_orders_cli(ctx: Context,
 
     username = kwargs.get("username")
     password = kwargs.get("password")
+    domain   = kwargs.get("domain")
 
     amazon_session = AmazonSession(username,
                                    password,
                                    debug=kwargs["debug"],
                                    io=IOClick(),
+                                   base_url=domain if domain else "https://www.amazon.com",
                                    config=ctx.obj["conf"])
 
     ctx.obj["amazon_session"] = amazon_session
