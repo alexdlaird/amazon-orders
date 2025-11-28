@@ -107,8 +107,13 @@ def amazon_orders_cli(ctx: Context,
 
 @amazon_orders_cli.command()
 @click.pass_context
-@click.option("--year", default=datetime.date.today().year,
-              help="The year for which to get Order history, defaults to the current year.")
+@click.option("--year", type=int, default=None,
+              help="The year for which to get Order history. Defaults to the current year if no "
+                   "time filter is specified.")
+@click.option("--last-30-days", "last_30_days", is_flag=True, default=False,
+              help="Get Order history for the last 30 days.")
+@click.option("--last-3-months", "last_3_months", is_flag=True, default=False,
+              help="Get Order history for the past 3 months.")
 @click.option("--start-index",
               help="The index of the Order from which to start fetching in the history.")
 @click.option("--single-page", is_flag=True, default=False,
@@ -119,7 +124,7 @@ def amazon_orders_cli(ctx: Context,
 def history(ctx: Context,
             **kwargs: Any) -> None:
     """
-    Get the Amazon Order history for a given year.
+    Get the Amazon Order history for a given time period.
     """
     amazon_session = ctx.obj["amazon_session"]
 
@@ -127,16 +132,31 @@ def history(ctx: Context,
         _authenticate(amazon_session)
 
         year = kwargs["year"]
+        last_30_days = kwargs["last_30_days"]
+        last_3_months = kwargs["last_3_months"]
         start_index = kwargs["start_index"]
         single_page = kwargs["single_page"]
         full_details = kwargs["full_details"]
 
+        # Determine time filter
+        time_filter = None
+        if last_30_days:
+            time_filter = "last30"
+            filter_description = "last 30 days"
+        elif last_3_months:
+            time_filter = "months-3"
+            filter_description = "past 3 months"
+        else:
+            if year is None:
+                year = datetime.date.today().year
+            filter_description = str(year)
+
         optional_start_index = f", startIndex={start_index}, one page" if single_page else ", all pages"
         optional_full_details = ", with full details" if full_details else ""
         click.echo("""-----------------------------------------------------------------------
-Order History for {year}{optional_start_index}{optional_full_details}
+Order History for {filter_description}{optional_start_index}{optional_full_details}
 -----------------------------------------------------------------------\n"""
-                   .format(year=year,
+                   .format(filter_description=filter_description,
                            optional_start_index=optional_start_index,
                            optional_full_details=optional_full_details))
         click.echo("Info: Fetching Order history, this might take a minute ...")
@@ -147,10 +167,11 @@ Order History for {year}{optional_start_index}{optional_full_details}
 
         start_time = time.time()
         total = 0
-        for o in amazon_orders.get_order_history(year=kwargs["year"],
-                                                 start_index=kwargs["start_index"],
-                                                 full_details=kwargs["full_details"],
-                                                 keep_paging=not kwargs["single_page"]):
+        for o in amazon_orders.get_order_history(year=year,
+                                                 start_index=start_index,
+                                                 full_details=full_details,
+                                                 keep_paging=not single_page,
+                                                 time_filter=time_filter):
             click.echo(f"{_order_output(o, config)}\n")
             total += 1
         end_time = time.time()
