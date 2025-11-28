@@ -2,10 +2,13 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import os
+from unittest.mock import patch
 
 from bs4 import BeautifulSoup
 
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
+from amazonorders.exception import AmazonOrdersError
 from tests.unittestcase import UnitTestCase
 
 
@@ -146,3 +149,38 @@ class TestOrder(UnitTestCase):
 
         # THEN
         self.assertEqual(order.gift_card, -2.37)
+
+    def test_order_missing_grand_total_raises_exception_by_default(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-missing-grand-total-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN / THEN
+        with self.assertRaises(AmazonOrdersError) as context:
+            Order(parsed, self.test_config, full_details=True)
+
+        self.assertIn("grand_total could not be parsed", str(context.exception))
+        self.assertIn("warn_on_missing_required_field=False", str(context.exception))
+
+    def test_order_missing_grand_total_logs_warning_when_configured(self):
+        # GIVEN
+        config = AmazonOrdersConfig(data={
+            "output_dir": self.test_output_dir,
+            "cookie_jar_path": self.test_cookie_jar_path,
+            "warn_on_missing_required_field": True
+        })
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-missing-grand-total-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), config.bs4_parser)
+
+        # WHEN
+        with patch("amazonorders.entity.order.logger") as mock_logger:
+            order = Order(parsed, config, full_details=True)
+
+        # THEN
+        self.assertIsNone(order.grand_total)
+        mock_logger.warning.assert_called_once()
+        self.assertIn("grand_total could not be parsed", mock_logger.warning.call_args[0][0])

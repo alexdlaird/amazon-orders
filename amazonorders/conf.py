@@ -57,7 +57,9 @@ class AmazonOrdersConfig:
             "thread_pool_size": (os.cpu_count() or 1) * 4,
             "connection_pool_size": thread_pool_size * 2,
             # The maximum number of failed attempts to allow before failing CLI authentication
-            "max_auth_retries": 1
+            "max_auth_retries": 1,
+            # Set ``True`` to log a warning message instead of raising an exception when a required field is missing.
+            "warn_on_missing_required_field": False
         }
 
         with config_file_lock:

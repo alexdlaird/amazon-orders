@@ -6,11 +6,11 @@ import re
 from datetime import date
 from typing import Union, Optional
 
-from amazonorders.exception import AmazonOrdersError
 from bs4 import Tag
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
+from amazonorders.exception import AmazonOrdersError
 
 logger = logging.getLogger(__name__)
 
@@ -51,27 +51,33 @@ class Transaction(Parsable):
     def __str__(self) -> str:  # pragma: no cover
         return f"Transaction {self.completed_date}: Order #{self.order_number}, Grand Total: {self.grand_total}"
 
-    def _parse_grand_total(self) -> Union[float, int]:
+    def _parse_grand_total(self) -> Union[float, int, None]:
         value = self.simple_parse(self.config.selectors.FIELD_TRANSACTION_GRAND_TOTAL_SELECTOR)
 
         value = self.to_currency(value)
 
-        if value is None:
-            raise AmazonOrdersError(
-                "Order.grand_total did not populate, but it's required. "
-                "Check if Amazon changed the HTML."
-            )  # pragma: no cover
+        if value is None:  # pragma: no cover
+            err_msg = ("Order.grand_total did not populate, but it's required. "
+                       "Check if Amazon changed the HTML.")
+            if not self.config.warn_on_missing_required_field:
+                raise AmazonOrdersError(err_msg)
+            else:
+                logger.warning(err_msg)
 
         return value
 
-    def _parse_order_number(self) -> str:
+    def _parse_order_number(self) -> Optional[str]:
         value = self.simple_parse(self.config.selectors.FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR)
 
-        if value is None:
-            raise AmazonOrdersError(
-                "Transaction.order_number did not populate, but it's required. "
-                "Check if Amazon changed the HTML."
-            )  # pragma: no cover
+        if value is None:  # pragma: no cover
+            err_msg = ("Transaction.order_number did not populate, but it's required. "
+                       "Check if Amazon changed the HTML.")
+            if not self.config.warn_on_missing_required_field:
+                raise AmazonOrdersError(err_msg)
+            else:
+                logger.warning(err_msg)
+
+                return None
 
         match = re.match(".*#([0-9-]+)$", value)
         value = match.group(1) if match else ""

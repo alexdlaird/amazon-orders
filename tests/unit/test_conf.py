@@ -48,6 +48,7 @@ class TestConf(TestCase):
         self.assertEqual(self.test_output_dir, config.output_dir)
         self.assertEqual(self.test_cookie_jar_path, config.cookie_jar_path)
         self.assertEqual("html.parser", config.bs4_parser)
+        self.assertFalse(config.warn_on_missing_required_field)
 
         # GIVEN
         config.save()
@@ -71,6 +72,7 @@ output_dir: {output_dir}
 selectors_class: amazonorders.selectors.Selectors
 shipment_class: amazonorders.entity.shipment.Shipment
 thread_pool_size: {thread_pool_size}
+warn_on_missing_required_field: false
 """
                              .format(connection_pool_size=thread_pool_size * 2,
                                      cookie_jar_path=self.test_cookie_jar_path,

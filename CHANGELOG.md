@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.16...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.17...HEAD)
+
+## [4.0.17](https://github.com/alexdlaird/amazon-orders/compare/4.0.16...4.0.17) - 2025-11-23
+
+### Added
+
+- `warn_on_missing_required_field` to the config file, set to `True`  to log a warning message instead of raising an exception when a required fields are missing.
 
 ## [4.0.16](https://github.com/alexdlaird/amazon-orders/compare/4.0.15...4.0.16) - 2025-09-09
 
