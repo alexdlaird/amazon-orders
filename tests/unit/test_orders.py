@@ -809,3 +809,14 @@ class TestOrders(UnitTestCase):
         # THEN - should default to current year
         self.assertEqual(10, len(orders))
         self.assertEqual(1, resp.call_count)
+
+    def test_get_order_history_invalid_time_filter(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+
+        # WHEN/THEN - invalid time_filter should raise an error
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order_history(time_filter="last90")
+
+        self.assertIn("Invalid time_filter 'last90'", str(cm.exception))
+        self.assertIn("Valid values are 'last30', 'months-3', or 'year-YYYY'", str(cm.exception))

@@ -104,6 +104,14 @@ class AmazonOrders:
 
         # Determine the filter value to use
         if time_filter:
+            # Validate time_filter value
+            valid_filters = ["last30", "months-3"]
+            is_year_filter = time_filter.startswith("year-") and time_filter[5:].isdigit()
+            if time_filter not in valid_filters and not is_year_filter:
+                raise AmazonOrdersError(
+                    f"Invalid time_filter '{time_filter}'. "
+                    f"Valid values are 'last30', 'months-3', or 'year-YYYY'."
+                )
             filter_value = time_filter
         else:
             if year is None:
