@@ -783,18 +783,9 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
-    def test_get_order_history_time_filter_takes_precedence_over_year(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        # Set up response for last30, not for year-2020
-        resp = self.given_order_history_exists_for_time_filter("last30", "order-history-2024-0.html")
-
-        # WHEN - time_filter should take precedence over year
-        orders = self.amazon_orders.get_order_history(year=2020, time_filter="last30", keep_paging=False)
-
-        # THEN - should have used time_filter, not year
-        self.assertEqual(10, len(orders))
-        self.assertEqual(1, resp.call_count)
+    def test_get_order_history_time_filter_and_year_raises_error(self):
+        with self.assertRaises(AmazonOrdersError):
+            self.amazon_orders.get_order_history(year=2020, time_filter="last30", keep_paging=False)
 
     @responses.activate
     def test_get_order_history_default_year_when_no_params(self):

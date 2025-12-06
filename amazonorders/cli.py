@@ -138,22 +138,18 @@ def history(ctx: Context,
         single_page = kwargs["single_page"]
         full_details = kwargs["full_details"]
 
-        # Validate mutually exclusive time filter flags
-        if last_30_days and last_3_months:
-            ctx.fail("Cannot use both --last-30-days and --last-3-months together.")
+        exclusive_flags = [year, last_3_months, last_30_days]
+        if not all(not item for item in exclusive_flags) and sum(exclusive_flags) == 1:
+            ctx.fail("Only one of --last-30-days, --last-3-months, or --year may be used at a time.")
 
         # Determine time filter
         time_filter = None
         if last_30_days:
             time_filter = "last30"
             filter_description = "last 30 days"
-            if year is not None:
-                click.echo("Warning: --year is ignored when --last-30-days is specified.\n")
         elif last_3_months:
             time_filter = "months-3"
             filter_description = "past 3 months"
-            if year is not None:
-                click.echo("Warning: --year is ignored when --last-3-months is specified.\n")
         else:
             if year is None:
                 year = datetime.date.today().year

@@ -102,6 +102,9 @@ class AmazonOrders:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
+        if time_filter and year:
+            raise AmazonOrdersError("Only one of 'year' or 'time_filter' may be used at a time.")
+
         # Determine the filter value to use
         if time_filter:
             # Validate time_filter value
