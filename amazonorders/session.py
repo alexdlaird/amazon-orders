@@ -309,8 +309,9 @@ class AmazonSession:
                        meta: Optional[Dict[str, Any]] = None) -> None:
         """
         Check the response to ensure it appears to be returning a valid response, and that it is still authenticated.
-        We detect if authentication has expired by checking for redirects to the login page. Raise an error if the
-        response is not going to contain the requested data for parsing.
+        We detect if authentication has expired by checking for redirects to the login page, or by detecting that
+        the page indicates the user is not logged in. Raise an error if the response is not going to contain the
+        requested data for parsing.
 
         :param amazon_session_response: The response to check.
         :param meta: Metadata to be added to any errors raised.
@@ -324,6 +325,16 @@ class AmazonSession:
             self.logout()
             raise AmazonOrdersAuthRedirectError("Amazon redirected to login. Call AmazonSession.login() to "
                                                 "reauthenticate first.", meta=meta)
+        # Also check if the page indicates the session is not authenticated, even without a redirect to sign-in.
+        # Amazon may redirect to other pages (like order history) when the session is invalid.
+        if (self.is_authenticated and
+                "Hello, sign in" in amazon_session_response.response.text and
+                "nav-item-signout" not in amazon_session_response.response.text):
+            logger.debug("Amazon page indicates session is not authenticated, so persisted AmazonSession "
+                         "will be logged out.")
+            self.logout()
+            raise AmazonOrdersAuthRedirectError("Amazon session appears to be logged out. Call AmazonSession.login() "
+                                                "to reauthenticate first.", meta=meta)
 
     def _get_page_from_url(self,
                            output_dir: str,
