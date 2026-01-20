@@ -5,8 +5,8 @@ on:
     branches: [ main ]
   workflow_call:
   workflow_dispatch:
-  #schedule:
-  #  - cron: "0 7 * * *"
+  schedule:
+   - cron: "0 7 * * *"
 
 permissions:
   contents: read
