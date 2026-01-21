@@ -17,6 +17,7 @@ from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersAuthRedirectError
 from amazonorders.forms import (AuthForm, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm,
                                 SignInForm, ClaimForm, IntentForm)
+from amazonorders import util
 from amazonorders.util import AmazonSessionResponse
 
 logger = logging.getLogger(__name__)
@@ -74,7 +75,13 @@ class AmazonSession:
                  io: IODefault = IODefault(),
                  config: Optional[AmazonOrdersConfig] = None,
                  auth_forms: Optional[List] = None,
-                 otp_secret_key: Optional[str] = None) -> None:
+                 otp_secret_key: Optional[str] = None,
+                 base_url: Optional[str] = None) -> None:
+        # If base_url is provided, set it as environment variable BEFORE creating config
+        if base_url:
+            # Set the environment variable to mimic the old behavior exactly
+            os.environ["AMAZON_BASE_URL"] = base_url
+        
         if not config:
             config = AmazonOrdersConfig()
         if not auth_forms:
@@ -112,6 +119,7 @@ class AmazonSession:
         self.io: IODefault = io
         #: The config to use.
         self.config: AmazonOrdersConfig = config
+        
         #: The list of form implementations to use with authentication. If a value is passed for this when
         #: instantiating an AmazonSession, ensure that list is populated with the default form implementations.
         self.auth_forms: List[AuthForm] = auth_forms
