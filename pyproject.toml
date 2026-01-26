@@ -120,3 +120,7 @@ exclude = "scripts/*,docs/*,venv/*,build/*,dist/*,.egg-info/*,.mypy_cache/*"
 [[tool.mypy.overrides]]
 module = "amazoncaptcha.*"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "twocaptcha.*"
+ignore_missing_imports = true

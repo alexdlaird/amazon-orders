@@ -41,13 +41,13 @@ class TwoCaptchaSolver(CaptchaSolver):
         :param api_key: 2captcha API key
         """
         super().__init__(api_key)
-        
+
         if not TWOCAPTCHA_AVAILABLE:
             raise ImportError(
                 "2captcha-python library is required for 2captcha support. "
                 "Install with: pip install amazon-orders[twocaptcha]"
             )
-        
+
         self.solver = OfficialTwoCaptcha(api_key)
 
     def solve_amazon_waf(
@@ -70,14 +70,14 @@ class TwoCaptchaSolver(CaptchaSolver):
         :raises Exception: If submission fails or solving times out
         """
         logger.debug(f"Submitting Amazon WAF CAPTCHA to 2captcha for {page_url}")
-        
+
         try:
             # Convert parameters to the format expected by the official library
             # Map our parameter names to the official library parameter names
             kwargs = {}
             if challenge_script:
                 kwargs['challenge_script'] = challenge_script
-            
+
             result = self.solver.amazon_waf(
                 sitekey=sitekey,
                 iv=iv,
@@ -85,15 +85,15 @@ class TwoCaptchaSolver(CaptchaSolver):
                 url=page_url,
                 **kwargs
             )
-            
+
             logger.debug("CAPTCHA solved successfully by 2captcha")
-            
+
             # The official library returns the solution directly, we need to format it
             # to match the expected return format
             return {
                 "existing_token": json.loads(result.get("code", "{}")).get("existing_token")
             }
-            
+
         except Exception as e:
             logger.error(f"2captcha solving failed: {str(e)}")
             raise AmazonOrdersError(f"2captcha solving failed: {str(e)}")

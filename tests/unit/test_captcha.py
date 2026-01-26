@@ -8,7 +8,7 @@ from unittest.mock import patch, MagicMock, Mock
 import responses
 from bs4 import BeautifulSoup
 
-from amazonorders.captcha import CaptchaSolver, get_solver
+from amazonorders.captcha import get_solver
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError
 from amazonorders.forms import AmazonWafForm
 from amazonorders.session import AmazonSession
