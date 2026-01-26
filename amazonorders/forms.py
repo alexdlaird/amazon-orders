@@ -20,6 +20,7 @@ from amazonorders.util import AmazonSessionResponse
 
 if TYPE_CHECKING:
     from amazonorders.session import AmazonSession
+    from amazonorders.captcha import CaptchaSolver
 
 
 class AuthForm(ABC):
@@ -457,3 +458,142 @@ class JSAuthBlocker(AuthForm):
                 "https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login for more details.")
 
         return False
+
+
+class AmazonWafForm(AuthForm):
+    """
+    Handles Amazon WAF CAPTCHA challenges using an external solver service.
+
+    This form detects the WAF challenge page (containing ``window.gokuProps``)
+    and uses a configured CAPTCHA solver to obtain the ``aws-waf-token`` cookie.
+
+    The easiest way to use this is to pass ``captcha_solver`` and ``captcha_api_key``
+    directly to :class:`~amazonorders.session.AmazonSession`, which will automatically
+    configure this form::
+
+        session = AmazonSession(
+            username, password,
+            captcha_solver="2captcha",
+            captcha_api_key="your-api-key"
+        )
+
+    Requires the optional ``twocaptcha`` dependency::
+
+        pip install amazon-orders[twocaptcha]
+    """
+
+    GOKU_PROPS_REGEX = r'window\.gokuProps\s*=\s*\{'
+
+    def __init__(
+        self,
+        config: AmazonOrdersConfig,
+        solver: "CaptchaSolver"
+    ) -> None:
+        super().__init__(config, None)  # No CSS selector - we detect via regex
+        self.solver = solver
+        self._html: Optional[str] = None
+        self._goku_props: Optional[Dict[str, str]] = None
+        self._challenge_script: Optional[str] = None
+
+    def select_form(self,
+                    amazon_session: "AmazonSession",
+                    parsed: Tag) -> bool:
+        """Detect if this is an Amazon WAF challenge page with gokuProps."""
+        self.amazon_session = amazon_session
+        html = str(parsed)
+
+        if re.search(self.GOKU_PROPS_REGEX, html):
+            self._html = html
+            self._goku_props = self._extract_goku_props()
+            self._challenge_script = self._extract_challenge_script()
+            return self._goku_props is not None
+        return False
+
+    def fill_form(self,
+                  additional_attrs: Optional[Dict[str, Any]] = None) -> None:
+        """Prepare data for CAPTCHA solving (gokuProps already extracted in select_form)."""
+        if not self._goku_props or not self.amazon_session:
+            raise AmazonOrdersError("Call select_form() first.")
+
+        # Store in self.data for consistency with base class pattern
+        self.data = {
+            "goku_props": self._goku_props,
+            "challenge_script": self._challenge_script
+        }
+
+    def submit(self, last_response: Response) -> AmazonSessionResponse:
+        """Solve CAPTCHA via solver, set cookie, and retry the original request."""
+        if not self.amazon_session or not self.data:
+            raise AmazonOrdersError("Call fill_form() first.")
+
+        page_url = last_response.url
+        goku_props = self.data["goku_props"]
+        challenge_script = self.data["challenge_script"]
+
+        # Call the solver
+        result = self.solver.solve_amazon_waf(
+            sitekey=goku_props["key"],
+            iv=goku_props["iv"],
+            context=goku_props["context"],
+            page_url=page_url,
+            challenge_script=challenge_script
+        )
+
+        # Extract and set the aws-waf-token cookie
+        token = result.get("existing_token")
+        if not token:
+            raise AmazonOrdersAuthError(
+                "CAPTCHA solver did not return 'existing_token'. "
+                "The WAF challenge could not be bypassed."
+            )
+
+        # Set cookie on the session
+        self.amazon_session.session.cookies.set(
+            "aws-waf-token",
+            token,
+            domain=self.config.constants.BASE_URL.strip('https://')
+        )
+
+        # Retry the original request
+        response = self.amazon_session.get(page_url, persist_cookies=True)
+
+        self.clear_form()
+        return response
+
+    def clear_form(self) -> None:
+        """Clear form state for reuse."""
+        super().clear_form()
+        self._html = None
+        self._goku_props = None
+        self._challenge_script = None
+
+    def _extract_goku_props(self) -> Optional[Dict[str, str]]:
+        """Extract key, iv, context from window.gokuProps in HTML."""
+        if not self._html:
+            return None
+
+        match = re.search(
+            r'window\.gokuProps\s*=\s*\{([^}]+)\}',
+            self._html,
+            re.DOTALL
+        )
+        if not match:
+            return None
+
+        content = match.group(1)
+        result = {}
+        for key in ["key", "iv", "context"]:
+            key_match = re.search(rf'"{key}"\s*:\s*"([^"]+)"', content)
+            if key_match:
+                result[key] = key_match.group(1)
+
+        if all(k in result for k in ["key", "iv", "context"]):
+            return result
+        return None
+
+    def _extract_challenge_script(self) -> Optional[str]:
+        """Extract challenge.js URL from HTML."""
+        if not self._html:
+            return None
+        match = re.search(r'src="(https://[^"]+/challenge\.js)"', self._html)
+        return match.group(1) if match else None

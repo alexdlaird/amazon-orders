@@ -55,6 +55,9 @@ docs = [
     "types-PyYAML",
     "types-python-dateutil",
 ]
+twocaptcha = [
+    "2captcha-python>=1.0",
+]
 
 [project.scripts]
 amazon-orders = "amazonorders.cli:amazon_orders_cli"
