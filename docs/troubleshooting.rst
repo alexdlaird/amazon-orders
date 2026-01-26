@@ -70,6 +70,30 @@ Captcha challenges:
     - Captcha challenges are more often presented to unknown devices. If possible, first manually login from a browser on
       the device on which you're using ``amazon-orders``.
 
+Using a Third-Party CAPTCHA Solving Service (Opt-In)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For users who continue to encounter Amazon WAF CAPTCHA challenges that block login, ``amazon-orders`` offers
+**opt-in** integration with third-party CAPTCHA solving services. This is a workaround for advanced users
+who need fully automated login.
+
+.. important::
+
+    - This feature is **opt-in only** and disabled by default.
+    - Third-party CAPTCHA solving services are **paid services** with their own pricing and terms.
+    - **You must provide your own API key** from the service provider.
+    - ``amazon-orders`` is **not affiliated with** any third-party CAPTCHA solving service.
+    - **No support is offered** for issues related to third-party services; consult their documentation directly.
+    - The ``amazon-orders`` library itself remains free and open source.
+
+Currently supported services:
+
+- `2captcha <https://2captcha.com/>`_ - Requires the optional dependency: ``pip install amazon-orders[twocaptcha]``
+
+To enable, pass ``captcha_solver`` and ``captcha_api_key`` to :class:`~amazonorders.session.AmazonSession`,
+or set the ``AMAZON_CAPTCHA_SOLVER`` and ``AMAZON_CAPTCHA_API_KEY`` environment variables. See
+:class:`~amazonorders.session.AmazonSession` and :mod:`~amazonorders.captcha` for API details.
+
 Slow Parsing / Malformed Data
 -----------------------------
 

@@ -16,8 +16,9 @@ from requests.utils import dict_from_cookiejar
 from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file_lock, debug_output_file_lock
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersAuthRedirectError
 from amazonorders.forms import (AuthForm, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm,
-                                SignInForm, ClaimForm, IntentForm)
+                                SignInForm, ClaimForm, IntentForm, AmazonWafForm)
 from amazonorders.util import AmazonSessionResponse
+from amazonorders.captcha import get_solver, CaptchaSolver
 
 logger = logging.getLogger(__name__)
 
@@ -74,9 +75,25 @@ class AmazonSession:
                  io: IODefault = IODefault(),
                  config: Optional[AmazonOrdersConfig] = None,
                  auth_forms: Optional[List] = None,
-                 otp_secret_key: Optional[str] = None) -> None:
+                 otp_secret_key: Optional[str] = None,
+                 captcha_solver: Optional[str] = None,
+                 captcha_api_key: Optional[str] = None) -> None:
         if not config:
             config = AmazonOrdersConfig()
+
+        # Resolve captcha solver from environment, parameters, or config
+        captcha_solver = os.environ.get("AMAZON_CAPTCHA_SOLVER") or captcha_solver or config.captcha_solver
+        captcha_api_key = os.environ.get("AMAZON_CAPTCHA_API_KEY") or captcha_api_key or config.captcha_api_key
+
+        solver_instance: Optional[CaptchaSolver] = None
+        if captcha_solver:
+            if not captcha_api_key:
+                raise AmazonOrdersError(
+                    "captcha_api_key is required when captcha_solver is specified. "
+                    "Set it via parameter, AMAZON_CAPTCHA_API_KEY environment variable, or config."
+                )
+            solver_instance = get_solver(captcha_solver, captcha_api_key)
+
         if not auth_forms:
             auth_forms = [ClaimForm(config),
                           IntentForm(config),
@@ -92,6 +109,13 @@ class AmazonSession:
                                   config.selectors.CAPTCHA_OTP_FORM_SELECTOR),
                           JSAuthBlocker(config,
                                         config.constants.JS_ROBOT_TEXT_REGEX)]
+
+            # Auto-inject AmazonWafForm before JSAuthBlocker if solver is configured
+            if solver_instance:
+                # Insert before the last form (JSAuthBlocker)
+                waf_form = AmazonWafForm(config, solver=solver_instance)
+                auth_forms.insert(-1, waf_form)
+                logger.debug(f"CAPTCHA solver configured: {type(solver_instance).__name__}")
 
         #: An Amazon username. Environment variable ``AMAZON_USERNAME`` will override passed in or config value.
         self.username: Optional[str] = os.environ.get("AMAZON_USERNAME") or username or config.username
