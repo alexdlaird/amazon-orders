@@ -20,24 +20,7 @@ Example::
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
-from typing import TYPE_CHECKING
-
 from amazonorders.captcha.base import CaptchaSolver
-
-if TYPE_CHECKING:
-    from amazonorders.captcha.twocaptcha import TwoCaptchaSolver
-
-# Lazy-loaded solver class
-_TwoCaptchaSolver = None
-
-
-def _get_twocaptcha_solver():
-    """Lazily import and return TwoCaptchaSolver class."""
-    global _TwoCaptchaSolver
-    if _TwoCaptchaSolver is None:
-        from amazonorders.captcha.twocaptcha import TwoCaptchaSolver
-        _TwoCaptchaSolver = TwoCaptchaSolver
-    return _TwoCaptchaSolver
 
 
 def get_solver(service: str, api_key: str) -> CaptchaSolver:
@@ -51,16 +34,9 @@ def get_solver(service: str, api_key: str) -> CaptchaSolver:
     :raises ImportError: If required library is not installed
     """
     if service in {"2captcha"}:
-        solver_class = _get_twocaptcha_solver()
-        return solver_class(api_key)
+        from amazonorders.captcha.twocaptcha import TwoCaptchaSolver
+        return TwoCaptchaSolver(api_key)
     else:
         raise ValueError(
             f"Unsupported CAPTCHA solver '{service}'. Supported: 2captcha"
         )
-
-
-def __getattr__(name):
-    """Module-level __getattr__ for lazy loading of solver classes."""
-    if name == "TwoCaptchaSolver":
-        return _get_twocaptcha_solver()
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

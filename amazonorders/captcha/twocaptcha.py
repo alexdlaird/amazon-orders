@@ -30,18 +30,8 @@ class TwoCaptchaSolver(CaptchaSolver):
     """
     CAPTCHA solver using 2captcha.com service via official 2captcha-python library.
 
-    Example::
-
-        from amazonorders.captcha import TwoCaptchaSolver
-
-        solver = TwoCaptchaSolver("your-api-key")
-        result = solver.solve_amazon_waf(
-            sitekey="AQIDAHjcYu...",
-            iv="CgAHazE...",
-            context="aaaa...",
-            page_url="https://www.amazon.com/..."
-        )
-        # result["existing_token"] contains the aws-waf-token cookie value
+    This solver is used internally by :class:`~amazonorders.session.AmazonSession`
+    when configured with ``captcha_solver="2captcha"``.
     """
 
     def __init__(self, api_key: str):
