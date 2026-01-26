@@ -20,15 +20,12 @@ Example::
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
-import logging
 from typing import TYPE_CHECKING
 
 from amazonorders.captcha.base import CaptchaSolver
 
 if TYPE_CHECKING:
     from amazonorders.captcha.twocaptcha import TwoCaptchaSolver
-
-logger = logging.getLogger(__name__)
 
 # Lazy-loaded solver class
 _TwoCaptchaSolver = None
