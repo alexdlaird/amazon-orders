@@ -145,7 +145,7 @@ class TestAmazonSessionCaptchaIntegration(UnitTestCase):
 
     def test_session_captcha_solver_invalid_type(self):
         """Test that AmazonSession raises error for invalid captcha_solver type."""
-        with self.assertRaises(AmazonOrdersError) as cm:
+        with self.assertRaises(ValueError) as cm:
             AmazonSession(
                 "test@example.com",
                 "password",
@@ -153,7 +153,7 @@ class TestAmazonSessionCaptchaIntegration(UnitTestCase):
                 captcha_solver=12345,  # type: ignore  # Invalid type - intentional for test
                 captcha_api_key="test"
             )
-        self.assertIn("must be a service name", str(cm.exception))
+        self.assertIn("Unsupported CAPTCHA solver", str(cm.exception))
 
     @patch.dict(os.environ, {"AMAZON_CAPTCHA_SOLVER": "2captcha", "AMAZON_CAPTCHA_API_KEY": "env-api-key"})
     @patch("amazonorders.captcha.twocaptcha.TWOCAPTCHA_AVAILABLE", True)
@@ -322,6 +322,11 @@ class TestAmazonWafForm(UnitTestCase):
         waf_form.select_form(self.amazon_session, parsed)
         waf_form.fill_form()
 
+        # Capture expected values BEFORE submit (since clear_form is called after)
+        expected_sitekey = waf_form._goku_props["key"]
+        expected_iv = waf_form._goku_props["iv"]
+        expected_context = waf_form._goku_props["context"]
+
         # Mock response for the retry request
         mock_last_response = Mock()
         mock_last_response.url = "https://www.amazon.com/some-page"
@@ -340,9 +345,9 @@ class TestAmazonWafForm(UnitTestCase):
         # THEN - verify solver was called with correct params
         mock_solver.solve_amazon_waf.assert_called_once()
         call_kwargs = mock_solver.solve_amazon_waf.call_args[1]
-        self.assertEqual(call_kwargs["sitekey"], waf_form._goku_props["key"])
-        self.assertEqual(call_kwargs["iv"], waf_form._goku_props["iv"])
-        self.assertEqual(call_kwargs["context"], waf_form._goku_props["context"])
+        self.assertEqual(call_kwargs["sitekey"], expected_sitekey)
+        self.assertEqual(call_kwargs["iv"], expected_iv)
+        self.assertEqual(call_kwargs["context"], expected_context)
         self.assertEqual(call_kwargs["page_url"], "https://www.amazon.com/some-page")
 
         # Verify cookie was set on the session
