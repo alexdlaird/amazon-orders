@@ -55,6 +55,9 @@ docs = [
     "types-PyYAML",
     "types-python-dateutil",
 ]
+twocaptcha = [
+    "2captcha-python>=1.0",
+]
 
 [project.scripts]
 amazon-orders = "amazonorders.cli:amazon_orders_cli"
@@ -116,4 +119,8 @@ exclude = "scripts/*,docs/*,venv/*,build/*,dist/*,.egg-info/*,.mypy_cache/*"
 
 [[tool.mypy.overrides]]
 module = "amazoncaptcha.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "twocaptcha.*"
 ignore_missing_imports = true

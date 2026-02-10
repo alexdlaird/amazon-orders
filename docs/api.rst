@@ -30,6 +30,24 @@ Session Management
     :private-members:
     :show-inheritance:
 
+CAPTCHA Solving (Opt-In)
+------------------------
+
+.. automodule:: amazonorders.captcha
+    :members:
+    :private-members:
+    :show-inheritance:
+
+.. automodule:: amazonorders.captcha.base
+    :members:
+    :private-members:
+    :show-inheritance:
+
+.. automodule:: amazonorders.captcha.twocaptcha
+    :members:
+    :private-members:
+    :show-inheritance:
+
 Configuration
 -------------
 .. automodule:: amazonorders.conf
