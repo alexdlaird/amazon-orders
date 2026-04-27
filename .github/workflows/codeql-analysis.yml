@@ -9,3 +9,7 @@ on:
 jobs:
   codeql:
     uses: alexdlaird/.github/.github/workflows/codeql.yml@main
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
