@@ -82,6 +82,21 @@ jobs:
 
           echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
+      - name: Merge main to develop
+        run: |
+          if git ls-remote --exit-code --heads origin develop > /dev/null 2>&1; then
+            git fetch origin develop
+            git checkout -B develop origin/develop
+            if git merge --no-ff -m "Merge main into develop" origin/main; then
+              git push origin develop
+              echo "Successfully merged main to develop"
+            else
+              echo "::warning::Merge conflict merging main to develop. Manual merge required."
+              git merge --abort
+            fi
+            git checkout main
+          fi
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
