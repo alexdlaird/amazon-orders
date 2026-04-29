@@ -25,11 +25,9 @@ jobs:
       bump_type: ${{ inputs.bump_type }}
       version_file: 'amazonorders/__init__.py'
       version_pattern: 's/^__version__ = ".*"/__version__ = "${VERSION}"/'
-      additional_bump_command: |
-        sed -i "s/==${OLD_VERSION}/==${NEW_VERSION}/g" docs/index.rst
-        grep -q "==${NEW_VERSION}" docs/index.rst || { echo "::error::Version bump failed in docs/index.rst"; exit 1; }
-        sed -i "s/==${OLD_VERSION}/==${NEW_VERSION}/g" README.md
-        grep -q "==${NEW_VERSION}" README.md || { echo "::error::Version bump failed in README.md"; exit 1; }
+      additional_bump_files: |
+        docs/index.rst
+        README.md
       repo_slug: alexdlaird/amazon-orders
     secrets:
       bot_app_id: ${{ secrets.RELEASE_BOT_APP_ID }}
