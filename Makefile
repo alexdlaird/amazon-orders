@@ -77,6 +77,11 @@ validate-release:
 	@if [[ $$(grep "``==${VERSION}``" docs/index.rst) == "" ]] ; then echo "Version not bumped in docs/index.rst" & exit 1 ; fi
 	@if [[ $$(grep "``==${VERSION}``" README.md) == "" ]] ; then echo "Version not bumped in README.md" & exit 1 ; fi
 
+	@if [ -f SECURITY.md ]; then \
+		MAJOR_MINOR=$$(echo "${VERSION}" | cut -d. -f1-2); \
+		if [[ $$(grep "| $${MAJOR_MINOR}\.x" SECURITY.md) == "" ]] ; then echo "SECURITY.md missing supported-versions entry for $${MAJOR_MINOR}.x" & exit 1 ; fi; \
+	fi
+
 upload: local
 	@( \
         $(PYTHON_BIN) -m pip install --upgrade twine; \
