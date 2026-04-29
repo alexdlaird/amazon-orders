@@ -17,7 +17,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: read
 
 jobs:
   prereq:
@@ -98,8 +97,6 @@ jobs:
     needs: [prereq, release]
     if: always() && needs.prereq.result == 'success'
     uses: alexdlaird/.github/.github/workflows/release-cleanup.yml@main
-    with:
-      squash_boundary: ${{ needs.prereq.outputs.squash_boundary }}
     secrets:
       bot_app_id: ${{ secrets.RELEASE_BOT_APP_ID }}
       bot_private_key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
