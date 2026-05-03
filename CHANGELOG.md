@@ -4,7 +4,21 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.19...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.1.0...HEAD)
+
+## [4.1.0](https://github.com/alexdlaird/amazon-orders/compare/4.0.19...4.1.0) - 2026-05-03
+
+### Added
+
+- Python 3.13 support.
+
+### Changed
+
+- `amazoncaptcha` is now an optional dependency. Install with `pip install amazon-orders[captcha]` to enable Captcha auto-solve (only compatible with Python <=3.12. When not installed, Captcha challenges fall back to manual entry.
+
+### Deprecated
+
+- Captcha auto-solve via `amazoncaptcha` is likely to be removed in the future, since Amazon has continued to phase out OCR-style Captchas in favor of WAF.
 
 ### Added
 
