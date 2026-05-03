@@ -32,7 +32,7 @@ class AuthForm(ABC):
 
     The base implementation will attempt to auto-solve Captcha when the optional
     ``amazoncaptcha`` dependency is installed (``pip install amazon-orders[captcha]``,
-    available on Python 3.9-3.12 only). If auto-solve is unavailable or fails, it will
+    available on Python <=3.12 only). If auto-solve is unavailable or fails, it will
     use the default image view to show the Captcha prompt, and it will also pass the
     image URL to :func:`~amazonorders.session.IODefault.prompt` as ``img_url``.
     """
@@ -150,8 +150,7 @@ class AuthForm(ABC):
             if AmazonCaptcha is None:
                 self.amazon_session.io.echo(
                     "Info: Captcha auto-solve is unavailable. Install with "
-                    "`pip install amazon-orders[captcha]` to enable it (requires Python 3.9-3.12; "
-                    "the upstream `amazoncaptcha` dependency does not yet support Python 3.13+).")
+                    "`pip install amazon-orders[captcha]` to enable it (only compatible with Python <=3.12.")
             else:
                 self.amazon_session.io.echo("Info: The Captcha couldn't be auto-solved.")
 

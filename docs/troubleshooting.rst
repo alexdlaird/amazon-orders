@@ -48,7 +48,7 @@ and still other—like `Amazon's puzzle-based WAF Captchas <https://docs.aws.ama
 for more details).
 
 Auto-solving of legacy text-based Captchas is provided by the `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_
-library, which is now an optional dependency. To enable it on **Python 3.9–3.12**, install with the ``captcha``
+library, which is an optional dependency. To enable it on **Python <=3.12**, install with the ``captcha``
 extra:
 
 .. code-block:: shell
@@ -57,12 +57,10 @@ extra:
 
 .. note::
 
-   The ``[captcha]`` extra is **not available on Python 3.13+**. ``amazoncaptcha`` pins ``pillow<9.6.0``, which has
-   no Python 3.13 wheels, so ``pip install amazon-orders[captcha]`` will fail to resolve on 3.13+ until that
-   upstream constraint is lifted (see `upstream issue #127 <https://github.com/a-maliarov/amazoncaptcha/issues/127>`_).
-   On 3.13+, install ``amazon-orders`` without the extra; Captcha challenges fall back to manual entry.
+   The ``[captcha]`` extra is **only available on Python <=3.12+**. ``amazoncaptcha`` pins ``pillow<9.6.0``, which is
+   incompatible with Python 3.13 until that constraint is lifted from the upstream dependency.
 
-When this extra is not installed (on any Python version), Captcha challenges fall back to manually entering the
+When this extra is not installed, Captcha challenges fall back to manually entering the
 solution. As Amazon has largely phased out this style of Captcha in favor of WAF, auto-solve may be removed
 entirely in a future major release.
 

@@ -12,11 +12,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- `amazoncaptcha` is now an optional dependency. Install with `pip install amazon-orders[captcha]` to enable Captcha auto-solve. When not installed, Captcha challenges fall back to manual entry. This is what unblocks Python 3.13, since `amazoncaptcha`'s pinned `pillow<9.6.0` is incompatible with 3.13. See `troubleshooting.html#captcha-blocking-login` for details.
+- `amazoncaptcha` is now an optional dependency. Install with `pip install amazon-orders[captcha]` to enable Captcha auto-solve (only compatible with Python <=3.12. When not installed, Captcha challenges fall back to manual entry.
 
 ### Deprecated
 
-- Captcha auto-solve via `amazoncaptcha` may be removed in a future major release as Amazon continues to phase out OCR-style Captchas in favor of WAF.
+- Captcha auto-solve via `amazoncaptcha` is likely to be removed in the future, since Amazon has continued to phase out OCR-style Captchas in favor of WAF.
 
 ## [4.0.19](https://github.com/alexdlaird/amazon-orders/compare/4.0.18...4.0.19) - 2026-04-29
 
