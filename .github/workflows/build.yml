@@ -30,6 +30,8 @@ jobs:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
         python-version: [ "3.12" ]
         include:
+          - python-version: "3.13"
+            os: ubuntu-latest
           - python-version: "3.11"
             os: ubuntu-latest
           - python-version: "3.9"
@@ -50,6 +52,31 @@ jobs:
         run: make install
       - name: Test
         run: make test
+
+  build-captcha:
+    name: Build (3.12, [captcha] extra)
+
+    env:
+      FORCE_COLOR: 1
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install jpeg
+        run: sudo apt-get install -y libjpeg-dev zlib1g-dev
+      - name: Install with [captcha] extra
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev,captcha]"
+      - name: Test
+        run: python -m pytest -v --ignore=tests/integration
 
   validate:
     name: Validate
