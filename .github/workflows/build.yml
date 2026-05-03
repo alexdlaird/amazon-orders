@@ -54,7 +54,7 @@ jobs:
         run: make test
 
   build-captcha:
-    name: Build with [captcha] extra
+    name: Build (3.12, [captcha] extra)
 
     env:
       FORCE_COLOR: 1
