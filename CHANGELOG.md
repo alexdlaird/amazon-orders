@@ -16,7 +16,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Deprecated
 
-- Captcha auto-solve via `amazoncaptcha` is likely to be removed in the future, since Amazon has continued to phase out OCR-style Captchas in favor of WAF.
+- Captcha auto-solve is likely to be removed in the future, since Amazon has continued to phase out OCR-style Captchas in favor of WAF.
 
 ## [4.0.19](https://github.com/alexdlaird/amazon-orders/compare/4.0.18...4.0.19) - 2026-04-29
 

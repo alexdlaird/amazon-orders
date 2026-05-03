@@ -47,22 +47,19 @@ and still other—like `Amazon's puzzle-based WAF Captchas <https://docs.aws.ama
 —require JavaScript and can't be solved at all by ``amazon-orders`` and block it from being able to log in (see `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_
 for more details).
 
-Auto-solving of legacy text-based Captchas is provided by the `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_
-library, which is an optional dependency. To enable it on **Python <=3.12**, install with the ``captcha``
-extra:
+To enable support for auto-solving Captchas on **Python <=3.12**, you must install ``amazon-orders`` with the
+``captcha`` extra:
 
 .. code-block:: shell
 
-    pip install amazon-orders[captcha]
+    pip install amazon-orders[captcha] --upgrade
 
 .. note::
 
-   The ``[captcha]`` extra is **only available on Python <=3.12+**. ``amazoncaptcha`` pins ``pillow<9.6.0``, which is
-   incompatible with Python 3.13 until that constraint is lifted from the upstream dependency.
-
-When this extra is not installed, Captcha challenges fall back to manually entering the
-solution. As Amazon has largely phased out this style of Captcha in favor of WAF, auto-solve may be removed
-entirely in a future major release.
+   This feature is provided through the ``amazoncaptcha`` library, which is **incompatible with Python 3.13+** since it
+   pins ``pillow<9.6.0``. We will add Captcha support for Python 3.13 in the future, if this upstream loosens this
+   constraint, though the more likely route is that Captcha support will be removed entirely in the future in favor
+   of WAF, since that appears to be the direction Amazon itself is going.
 
 To attempt to fully automate login, you need to minimize how often (if at all) you are presented with Captcha
 challenges. There is no perfect workaround to this, as when and how challenges are presented is at the discretion of
