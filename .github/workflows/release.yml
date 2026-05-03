@@ -17,7 +17,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: read
 
 jobs:
   prereq:
@@ -26,11 +25,9 @@ jobs:
       bump_type: ${{ inputs.bump_type }}
       version_file: 'amazonorders/__init__.py'
       version_pattern: 's/^__version__ = ".*"/__version__ = "${VERSION}"/'
-      additional_bump_command: |
-        sed -i "s/==${OLD_VERSION}/==${NEW_VERSION}/g" docs/index.rst
-        grep -q "==${NEW_VERSION}" docs/index.rst || { echo "::error::Version bump failed in docs/index.rst"; exit 1; }
-        sed -i "s/==${OLD_VERSION}/==${NEW_VERSION}/g" README.md
-        grep -q "==${NEW_VERSION}" README.md || { echo "::error::Version bump failed in README.md"; exit 1; }
+      additional_bump_files: |
+        docs/index.rst
+        README.md
       repo_slug: alexdlaird/amazon-orders
     secrets:
       bot_app_id: ${{ secrets.RELEASE_BOT_APP_ID }}
@@ -98,8 +95,6 @@ jobs:
     needs: [prereq, release]
     if: always() && needs.prereq.result == 'success'
     uses: alexdlaird/.github/.github/workflows/release-cleanup.yml@main
-    with:
-      squash_boundary: ${{ needs.prereq.outputs.squash_boundary }}
     secrets:
       bot_app_id: ${{ secrets.RELEASE_BOT_APP_ID }}
       bot_private_key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}

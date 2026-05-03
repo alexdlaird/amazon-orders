@@ -10,7 +10,7 @@ requires-python = ">=3.9"
 dependencies = [
     "click>=7.1",
     "requests>=2.23",
-    "amazoncaptcha>=0.4",
+    "Pillow>=9.0.1",
     "beautifulsoup4>=4.12",
     "PyYAML>=5.1",
     "python-dateutil>=2.8",
@@ -27,10 +27,14 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [project.optional-dependencies]
+captcha = [
+    "amazoncaptcha>=0.4",
+]
 dev = [
     "pytest",
     "coverage[toml]",
@@ -38,7 +42,8 @@ dev = [
     "flake8-pyproject",
     "pep8-naming",
     "responses",
-    "lxml"
+    "lxml",
+    "amazoncaptcha>=0.4; python_version < '3.13'",
 ]
 integration = [
     "pytest-rerunfailures",
