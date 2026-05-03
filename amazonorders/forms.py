@@ -9,9 +9,13 @@ from urllib.parse import urlparse
 
 import pyotp
 from PIL import Image
-from amazoncaptcha import AmazonCaptcha
 from bs4 import Tag
 from requests import Response
+
+try:
+    from amazoncaptcha import AmazonCaptcha
+except ImportError:  # pragma: no cover
+    AmazonCaptcha = None  # type: ignore[assignment, misc]
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
@@ -26,7 +30,9 @@ class AuthForm(ABC):
     """
     The base class of an authentication ``<form>`` that can be submitted.
 
-    The base implementation will attempt to auto-solve Captcha. If this fails, it will
+    The base implementation will attempt to auto-solve Captcha when the optional
+    ``amazoncaptcha`` dependency is installed (``pip install amazon-orders[captcha]``,
+    available on Python 3.9-3.12 only). If auto-solve is unavailable or fails, it will
     use the default image view to show the Captcha prompt, and it will also pass the
     image URL to :func:`~amazonorders.session.IODefault.prompt` as ``img_url``.
     """
@@ -131,13 +137,23 @@ class AuthForm(ABC):
                 "Call AuthForm.select_form() first."
             )  # pragma: no cover
 
-        captcha_response = AmazonCaptcha.fromlink(url).solve()
+        if AmazonCaptcha is not None:
+            captcha_response = AmazonCaptcha.fromlink(url).solve()
+        else:
+            captcha_response = None
+
         if not captcha_response or captcha_response.lower() == "not solved":
             img_response = self.amazon_session.session.get(url)
             img = Image.open(BytesIO(img_response.content))
             img.show()
 
-            self.amazon_session.io.echo("Info: The Captcha couldn't be auto-solved.")
+            if AmazonCaptcha is None:
+                self.amazon_session.io.echo(
+                    "Info: Captcha auto-solve is unavailable. Install with "
+                    "`pip install amazon-orders[captcha]` to enable it (requires Python 3.9-3.12; "
+                    "the upstream `amazoncaptcha` dependency does not yet support Python 3.13+).")
+            else:
+                self.amazon_session.io.echo("Info: The Captcha couldn't be auto-solved.")
 
             captcha_response = self.amazon_session.io.prompt("Enter the characters shown in the image",
                                                              img_url=url)

@@ -13,6 +13,13 @@ from amazonorders.exception import AmazonOrdersAuthError
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
 
+try:
+    import amazoncaptcha  # noqa: F401
+
+    HAS_AMAZONCAPTCHA = True
+except ImportError:
+    HAS_AMAZONCAPTCHA = False
+
 
 class TestSession(UnitTestCase):
     def setUp(self):
@@ -285,6 +292,7 @@ class TestSession(UnitTestCase):
         self.assertIn("The page https://www.amazon.com/ap/signin returned 503. Amazon had an issue on "
                       "their end, or may be temporarily blocking your requests.", str(cm.exception))
 
+    @unittest.skipUnless(HAS_AMAZONCAPTCHA, "amazoncaptcha optional dependency not installed")
     @responses.activate
     def test_captcha_1(self):
         # GIVEN
@@ -357,6 +365,7 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp4.call_count)
         self.assertEqual(1, resp5.call_count)
 
+    @unittest.skipUnless(HAS_AMAZONCAPTCHA, "amazoncaptcha optional dependency not installed")
     @responses.activate
     def test_captcha_2(self):
         # GIVEN
@@ -416,6 +425,7 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp5.call_count)
         self.given_login_responses_success()
 
+    @unittest.skipUnless(HAS_AMAZONCAPTCHA, "amazoncaptcha optional dependency not installed")
     @responses.activate
     def test_captcha_3(self):
         # GIVEN
@@ -514,9 +524,12 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
         self.assertEqual(1, resp3.call_count)
-        self.assertEqual(2, resp4.call_count)
+        # When amazoncaptcha is installed, the image URL is fetched twice (once by the solver,
+        # once by the manual-prompt fallback); without it, only the fallback fetch happens.
+        self.assertEqual(2 if HAS_AMAZONCAPTCHA else 1, resp4.call_count)
         self.assertEqual(1, resp5.call_count)
 
+    @unittest.skipUnless(HAS_AMAZONCAPTCHA, "amazoncaptcha optional dependency not installed")
     @responses.activate
     def test_captcha_loop_retries_exhausted(self):
         # GIVEN
