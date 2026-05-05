@@ -242,7 +242,7 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
         order = orders[9]
         self.assertEqual("113-9085096-9353021", order.order_number)
-        self.assertEqual(15.78, order.grand_total)
+        self.assertIsNone(order.grand_total)  # Amazon Store orders are unsupported order types
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2025, 2, 28), order.order_placed_date)
         self.assertEqual(0, len(order.items))
@@ -294,7 +294,7 @@ class TestOrders(UnitTestCase):
         order = orders[4]
         self.assertEqual("111-2072777-8279433", order.order_number)
         self.assertEqual(4, order.index)
-        self.assertEqual(80.27, order.grand_total)
+        self.assertIsNone(order.grand_total)  # Amazon Fresh orders are unsupported order types
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2025, 1, 3), order.order_placed_date)
         self.assertEqual(0, len(order.items))
@@ -321,7 +321,7 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
         order = orders[7]
         self.assertEqual("113-6307059-7336242", order.order_number)
-        self.assertEqual(62.92, order.grand_total)
+        self.assertIsNone(order.grand_total)  # Whole Foods orders are unsupported order types
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2024, 12, 12), order.order_placed_date)
         self.assertEqual(0, len(order.items))
@@ -755,3 +755,59 @@ class TestOrders(UnitTestCase):
         # THEN, assert the primary fields are populated without regression
         self.assert_populated_generic(order, full_details=False)
         self.assertIsNone(order.index)
+
+    @responses.activate
+    def test_get_order_history_last30(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_order_history_exists_for_time_filter("last30", "order-history-2024-0.html")
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(time_filter="last30", keep_paging=False)
+
+        # THEN
+        self.assertEqual(10, len(orders))
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
+    def test_get_order_history_months_3(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_order_history_exists_for_time_filter("months-3", "order-history-2024-0.html")
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(time_filter="months-3", keep_paging=False)
+
+        # THEN
+        self.assertEqual(10, len(orders))
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
+    def test_get_order_history_time_filter_and_year_raises_error(self):
+        with self.assertRaises(AmazonOrdersError):
+            self.amazon_orders.get_order_history(year=2020, time_filter="last30", keep_paging=False)
+
+    @responses.activate
+    def test_get_order_history_default_year_when_no_params(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        current_year = date.today().year
+        resp = self.given_order_history_exists_for_time_filter(f"year-{current_year}", "order-history-2024-0.html")
+
+        # WHEN - no year or time_filter provided
+        orders = self.amazon_orders.get_order_history(keep_paging=False)
+
+        # THEN - should default to current year
+        self.assertEqual(10, len(orders))
+        self.assertEqual(1, resp.call_count)
+
+    def test_get_order_history_invalid_time_filter(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+
+        # WHEN/THEN - invalid time_filter should raise an error
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order_history(time_filter="last90")
+
+        self.assertIn("Invalid time_filter 'last90'", str(cm.exception))
+        self.assertIn("Valid values are 'last30', 'months-3', or 'year-YYYY'", str(cm.exception))

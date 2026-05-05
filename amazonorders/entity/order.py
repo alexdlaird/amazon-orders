@@ -60,7 +60,7 @@ class Order(Parsable):
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
             self._parse_order_details_link)
         #: The Order grand total.
-        self.grand_total: float = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
+        self.grand_total: Optional[float] = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
         #: The Order placed date.
         self.order_placed_date: date = clone.order_placed_date if clone else self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR,
@@ -150,7 +150,12 @@ class Order(Parsable):
         return value
 
     def _parse_grand_total(self) -> Optional[float]:
+        # Skip totals parsing for cancelled orders
         if len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS)) > 0:
+            return None
+
+        # Skip totals parsing for unsupported order types (Fresh, Whole Foods, physical stores)
+        if len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
             return None
 
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
@@ -164,11 +169,14 @@ class Order(Parsable):
 
         value = self.to_currency(value)
 
-        if value is None:
-            raise AmazonOrdersError(
-                "Order.grand_total did not populate, but it's required. "
-                "Check if Amazon changed the HTML."
-            )  # pragma: no cover
+        if value is None:  # pragma: no cover
+            err_msg = (f"Order {getattr(self, 'order_number', 'UNKNOWN')} grand_total could not be parsed, but it's "
+                       f"required. Check if Amazon changed the HTML or set "
+                       f"warn_on_missing_required_field=False in config.")
+            if not self.config.warn_on_missing_required_field:
+                raise AmazonOrdersError(err_msg)
+            else:
+                logger.warning(err_msg)
 
         return value
 
@@ -194,11 +202,15 @@ class Order(Parsable):
             #  a better CSS selector, we just need to make sure we have good test coverage around this path first
             parsed_parent = self.parsed.find_parent()
 
-            if parsed_parent is None:
-                raise AmazonOrdersError(
-                    "Recipient parent not found, but it's required. "
-                    "Check if Amazon changed the HTML."
-                )  # pragma: no cover
+            if parsed_parent is None:  # pragma: no cover
+                err_msg = ("Recipient parent not found, but it's required. "
+                           "Check if Amazon changed the HTML.")
+                if not self.config.warn_on_missing_required_field:
+                    raise AmazonOrdersError(err_msg)
+                else:
+                    logger.warning(err_msg)
+
+                    return None
 
             parent_tag = util.select_one(
                 parsed_parent,

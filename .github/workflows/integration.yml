@@ -1,12 +1,12 @@
 name: Integration Test
 
+run-name: Integration Test ${{ github.ref_name }}
+
 on:
-  push:
-    branches: [ main ]
   workflow_call:
   workflow_dispatch:
   schedule:
-    - cron: "0 7 * * *"
+   - cron: "0 7 * * *"
 
 permissions:
   contents: read
@@ -41,9 +41,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Install jpeg
@@ -52,7 +52,7 @@ jobs:
         run: make test-integration
       - name: Upload test output
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: integration-test-output
           include-hidden-files: true
@@ -60,7 +60,8 @@ jobs:
           retention-days: 7
       - name: Upload test results
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./build/test-results
+          report_type: test_results

@@ -4,7 +4,55 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.0.16...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.1.0...HEAD)
+
+## [4.1.0](https://github.com/alexdlaird/amazon-orders/compare/4.0.19...4.1.0) - 2026-05-03
+
+### Added
+
+- Python 3.13 support.
+
+### Changed
+
+- `amazoncaptcha` is now an optional dependency. Install with `pip install amazon-orders[captcha]` to enable Captcha auto-solve (only compatible with Python <=3.12. When not installed, Captcha challenges fall back to manual entry.
+
+### Deprecated
+
+- Captcha auto-solve via `amazoncaptcha` is likely to be removed in the future, since Amazon has continued to phase out OCR-style Captchas in favor of WAF.
+
+### Added
+
+- Python 3.13 support.
+
+### Changed
+
+- `amazoncaptcha` is now an optional dependency. Install with `pip install amazon-orders[captcha]` to enable Captcha auto-solve (only compatible with Python <=3.12. When not installed, Captcha challenges fall back to manual entry.
+
+### Deprecated
+
+- Captcha auto-solve via `amazoncaptcha` is likely to be removed in the future, since Amazon has continued to phase out OCR-style Captchas in favor of WAF.
+
+## [4.0.19](https://github.com/alexdlaird/amazon-orders/compare/4.0.18...4.0.19) - 2026-04-29
+
+### Added
+
+- Build and stability improvements.
+
+### Added
+
+- Build and stability improvements.
+
+## [4.0.18](https://github.com/alexdlaird/amazon-orders/compare/4.0.17...4.0.18) - 2025-12-06
+
+### Added
+
+- Order history can now be fetched by `last30` or `months-3` in addition to year-based filtering. Args added to CLI for this functionality are `--last-30-days` and `--last-3-months`.
+
+## [4.0.17](https://github.com/alexdlaird/amazon-orders/compare/4.0.16...4.0.17) - 2025-11-23
+
+### Added
+
+- `warn_on_missing_required_field` to the config file, set to `True`  to log a warning message instead of raising an exception when a required fields are missing.
 
 ## [4.0.16](https://github.com/alexdlaird/amazon-orders/compare/4.0.15...4.0.16) - 2025-09-09
 

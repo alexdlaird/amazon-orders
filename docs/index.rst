@@ -44,7 +44,7 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (ex. ``==4.0.*``, not ``==4.0.16``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (ex. ``==4.0.*``, not ``==4.1.0``)
 to ensure you always get the latest stable release.
 
 Basic Usage
@@ -65,7 +65,13 @@ account data. :func:`~amazonorders.orders.AmazonOrders.get_order_history` and
     amazon_session.login()
 
     amazon_orders = AmazonOrders(amazon_session)
+
+    # Get orders from a specific year
     orders = amazon_orders.get_order_history(year=2023)
+
+    # Or use time filters for recent orders
+    orders = amazon_orders.get_order_history(time_filter="last30")  # Last 30 days
+    orders = amazon_orders.get_order_history(time_filter="months-3")  # Past 3 months
 
     for order in orders:
         print(f"{order.order_number} - {order.grand_total}")
@@ -84,6 +90,8 @@ You can also run any command available to the main Python interface from the com
 
     amazon-orders login
     amazon-orders history --year 2023
+    amazon-orders history --last-30-days
+    amazon-orders history --last-3-months
 
 Automating Authentication
 -------------------------

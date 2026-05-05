@@ -1,35 +1,17 @@
 name: "CodeQL"
 
+run-name: CodeQL ${{ github.ref_name }}
+
 on:
   push:
-    branches: [ main ]
+    branches: [ develop ]
   pull_request:
-    branches: [ main ]
-
-permissions:
-  security-events: write
-  contents: read
-  actions: read
-  issues: none
-  pull-requests: none
+    branches: [ develop ]
 
 jobs:
-  analyse:
-    name: Analyse
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # Initializes the CodeQL tools for scanning.
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-
-      # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java)
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+  codeql:
+    uses: alexdlaird/.github/.github/workflows/codeql.yml@main
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
