@@ -35,6 +35,9 @@ classifiers = [
 captcha = [
     "amazoncaptcha>=0.4",
 ]
+lxml = [
+    "lxml",
+]
 dev = [
     "pytest",
     "coverage[toml]",

@@ -113,6 +113,17 @@ some_custom_config: {custom_config}
         self.assertEqual(test_cookie_jar_path, config.cookie_jar_path)
         self.assertEqual("my-custom-config", config.some_custom_config)
 
+    def test_unavailable_bs4_parser_falls_back_to_html_parser(self):
+        # GIVEN / WHEN
+        with self.assertLogs("amazonorders.conf", level="DEBUG") as logs:
+            config = AmazonOrdersConfig(data={
+                "bs4_parser": "this-parser-does-not-exist"
+            })
+
+        # THEN
+        self.assertEqual("html.parser", config.bs4_parser)
+        self.assertTrue(any("this-parser-does-not-exist" in m for m in logs.output))
+
     def test_update_config(self):
         # GIVEN
         config = AmazonOrdersConfig(data={

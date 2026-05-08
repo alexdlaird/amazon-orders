@@ -4,6 +4,8 @@ import threading
 from typing import Any, Dict, Optional, Union
 
 import yaml
+from bs4 import BeautifulSoup
+from bs4.exceptions import FeatureNotFound
 
 from amazonorders import util
 
@@ -79,6 +81,8 @@ class AmazonOrdersConfig:
         # Overload defaults if values passed
         self._data.update(data or {})
 
+        self._validate_bs4_parser()
+
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
@@ -98,6 +102,38 @@ class AmazonOrdersConfig:
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
         self.item_cls = util.load_class(item_class_split[:-1], item_class_split[-1])
+
+    def _validate_bs4_parser(self) -> None:
+        try:
+            BeautifulSoup("", self._data["bs4_parser"])
+        except FeatureNotFound:
+            logger.debug(
+                f"Configured bs4_parser '{self._data['bs4_parser']}' is unavailable; "
+                f"using the default 'html.parser'. To use it, install the parser "
+                f"(e.g. `pip install amazon-orders[lxml]`)."
+            )
+            self._data["bs4_parser"] = "html.parser"
+
+    def _instantiate_constants(self) -> Any:
+        constants_class_split = self.constants_class.split(".")
+        constants_cls = util.load_class(constants_class_split[:-1], constants_class_split[-1])
+        # Pass ``self`` only when the constants class accepts a config arg, to keep backward
+        # compatibility with existing zero-arg ``constants_class`` subclasses.
+        init_params = inspect.signature(constants_cls.__init__).parameters
+        if len(init_params) > 1:
+            return constants_cls(self)
+        return constants_cls()
+
+    def set_domain(self,
+                   domain: str) -> None:
+        """
+        Set the active Amazon domain and rebuild :attr:`~constants` so URL-derived attributes and
+        region-sensitive headers reflect the change.
+
+        :param domain: The Amazon domain (e.g. ``amazon.com.au``) or full URL.
+        """
+        self._data["domain"] = domain
+        self.constants = self._instantiate_constants()
 
     def __getattr__(self,
                     key: str) -> Any:
