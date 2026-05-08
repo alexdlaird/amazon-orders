@@ -108,12 +108,18 @@ Known Limitations
 -----------------
 
 - Non-English, non-``.com`` versions of Amazon are unsupported
-    - Some have reported success with some non-``.com`` sites (ex. ``amazon.ca`` in Canada), so other similar
-      English-based versions of Amazon may work by chance. However, we do not run nightly regressions against
-      other versions of the site, and as such do not say they are officially supported.
-    - If you fork the repo, set ``AMAZON_BASE_URL`` with an English, non-``.com`` version of the site, and use
-      your own credentials with the ``integration.yml`` workflow to setup a nightly regression run, please
-      `contact us <mailto:contact@alexlaird.com>`_ and we will start mentioning support for that version of the site.
+    - Pass ``domain`` to :class:`~amazonorders.session.AmazonSession` (or set ``domain`` in
+      :class:`~amazonorders.conf.AmazonOrdersConfig`, or pass ``--domain`` on the CLI) to point at another
+      Amazon site. URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are rewritten from
+      the domain, and ``Accept-Language`` is adjusted for a small set of English-locale TLDs, so other
+      English-based versions of Amazon (ex. ``amazon.ca``) may work by chance. Other values such as the
+      OpenID ``assoc_handle`` are not adjusted — subclass :class:`~amazonorders.constants.Constants` and
+      set ``constants_class`` to override them if a particular site requires it. The ``AMAZON_BASE_URL``
+      environment variable continues to work as a fallback.
+    - We do not run nightly regressions against non-``.com`` versions of the site, and as such do not say
+      they are officially supported. If you fork the repo, point the ``integration.yml`` workflow at a
+      different domain with your own credentials, please `contact us <mailto:contact@alexlaird.com>`_ and
+      we will start mentioning support for that version of the site.
     - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
 - Some Captchas are unsupported
     - While some Captchas can be auto-solved, and static image-based ones are opened so the user can manually input

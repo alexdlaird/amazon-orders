@@ -1,3 +1,4 @@
+import inspect
 import logging
 import os
 import threading
@@ -87,17 +88,37 @@ class AmazonOrdersConfig:
             if not os.path.exists(cookie_jar_dir):
                 os.makedirs(cookie_jar_dir)
 
-        constants_class_split = self.constants_class.split(".")
         selectors_class_split = self.selectors_class.split(".")
         order_class_split = self.order_class.split(".")
         shipment_class_split = self.shipment_class.split(".")
         item_class_split = self.item_class.split(".")
 
-        self.constants = util.load_class(constants_class_split[:-1], constants_class_split[-1])()
+        self.constants = self._instantiate_constants()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
         self.item_cls = util.load_class(item_class_split[:-1], item_class_split[-1])
+
+    def _instantiate_constants(self) -> Any:
+        constants_class_split = self.constants_class.split(".")
+        constants_cls = util.load_class(constants_class_split[:-1], constants_class_split[-1])
+        # Pass ``self`` only when the constants class accepts a config arg, to keep backward
+        # compatibility with existing zero-arg ``constants_class`` subclasses.
+        init_params = inspect.signature(constants_cls.__init__).parameters
+        if len(init_params) > 1:
+            return constants_cls(self)
+        return constants_cls()
+
+    def set_domain(self,
+                   domain: str) -> None:
+        """
+        Set the active Amazon domain and rebuild :attr:`~constants` so URL-derived attributes and
+        region-sensitive headers reflect the change.
+
+        :param domain: The Amazon domain (e.g. ``amazon.com.au``) or full URL.
+        """
+        self._data["domain"] = domain
+        self.constants = self._instantiate_constants()
 
     def __getattr__(self,
                     key: str) -> Any:
@@ -113,13 +134,12 @@ class AmazonOrdersConfig:
     def __setstate__(self,
                      state: Dict[str, Any]) -> None:
         self._data = state
-        constants_class_split = self.constants_class.split(".")
         selectors_class_split = self.selectors_class.split(".")
         order_class_split = self.order_class.split(".")
         shipment_class_split = self.shipment_class.split(".")
         item_class_split = self.item_class.split(".")
 
-        self.constants = util.load_class(constants_class_split[:-1], constants_class_split[-1])()
+        self.constants = self._instantiate_constants()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
