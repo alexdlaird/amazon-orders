@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import json
+from typing import Any, Dict
 
 from amazonorders.contrib.waf.base import AwsWafForm
 from amazonorders.exception import AmazonOrdersError
@@ -21,13 +22,17 @@ class TwoCaptchaWafForm(AwsWafForm):
     PROVIDER_NAME = "2Captcha"
 
     def _solve_token(self,
-                     url: str) -> str:
+                     url: str,
+                     goku: Dict[str, Any],
+                     challenge_script: str) -> str:
         """
         Solve the AWS WAF challenge via 2Captcha's ``amazon_waf`` method and
         return the ``aws-waf-token`` cookie value (extracted from the
         ``existing_token`` field in 2Captcha's response).
 
         :param url: The URL of the WAF-challenged page.
+        :param goku: The parsed ``window.gokuProps`` payload.
+        :param challenge_script: The ``src`` of the AWS WAF ``challenge.js`` script tag.
         :return: The ``aws-waf-token`` cookie value.
         :raises AmazonOrdersError: if the ``2captcha-python`` package is not
             installed, or if 2Captcha's response is malformed or missing the
@@ -41,16 +46,14 @@ class TwoCaptchaWafForm(AwsWafForm):
                 "Install it with: pip install amazon-orders[2captcha]"
             ) from e
 
-        assert self._goku is not None and self._challenge_script is not None
-
         solver = TwoCaptcha(self.api_key)
         try:
             result = solver.amazon_waf(
-                sitekey=self._goku["key"],
-                iv=self._goku["iv"],
-                context=self._goku["context"],
+                sitekey=goku["key"],
+                iv=goku["iv"],
+                context=goku["context"],
                 url=url,
-                challenge_script=self._challenge_script,
+                challenge_script=challenge_script,
             )
         except Exception as e:
             raise AmazonOrdersError(

@@ -110,7 +110,7 @@ class AwsWafForm(AuthForm):
                 "Call AwsWafForm.select_form() first."
             )  # pragma: no cover
 
-        token = self._solve_token(last_response.url)
+        token = self._solve_token(last_response.url, self._goku, self._challenge_script)
 
         # Always surface that a paid third-party service was used, regardless of debug mode.
         message = (
@@ -125,13 +125,19 @@ class AwsWafForm(AuthForm):
         return self.amazon_session.get(last_response.url)
 
     def _solve_token(self,
-                     url: str) -> str:
+                     url: str,
+                     goku: Dict[str, Any],
+                     challenge_script: str) -> str:
         """
-        Subclass hook. Call the third-party solver using :attr:`_goku` and
-        :attr:`_challenge_script`, and return the resulting ``aws-waf-token``
-        cookie value to be set on the session.
+        Subclass hook. Call the third-party solver with the supplied challenge
+        parameters and return the resulting ``aws-waf-token`` cookie value to be
+        set on the session.
 
         :param url: The URL of the WAF-challenged page.
+        :param goku: The parsed ``window.gokuProps`` payload (typically contains
+            ``key``, ``iv``, and ``context``).
+        :param challenge_script: The ``src`` of the AWS WAF ``challenge.js``
+            script tag from the challenge page.
         :return: The ``aws-waf-token`` cookie value.
         :raises NotImplementedError: if a subclass does not override this method.
         """

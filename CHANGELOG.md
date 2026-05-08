@@ -8,12 +8,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- Optional third-party AWS WAF solver integrations under `amazonorders.contrib.waf`. Three providers ship as opt-in extras: CapSolver (`pip install amazon-orders[capsolver]`), Anti-Captcha (`pip install amazon-orders[anticaptcha]`), and 2Captcha (`pip install amazon-orders[2captcha]`). Each is enabled by adding the form's dotted path to `auth_forms_classes` in the config. See [the docs](https://amazon-orders.readthedocs.io/waf.html) for setup. Inspired by [PR #72](https://github.com/alexdlaird/amazon-orders/pull/72) from @blytheaw.
+- Support for AWS WAF solving via third-party providers like CapSolver (`pip install amazon-orders[capsolver]`), Anti-Captcha (`pip install amazon-orders[anticaptcha]`), and 2Captcha (`pip install amazon-orders[2captcha]`). See [the docs](https://amazon-orders.readthedocs.io/waf.html) for setup.
 - `auth_forms_classes` config option for plugging custom `AuthForm` subclasses into the auth chain without code changes.
-- `AmazonSession.default_auth_forms()` static helper that returns the default form chain so callers extending it stay in sync with future releases.
-- Configurable Amazon domain for non-`.com` sites via the `domain` parameter on `AmazonSession`, the `domain` config field, and the `--domain` CLI flag. Inspired by [PR #67](https://github.com/alexdlaird/amazon-orders/pull/67) from @sh00t2kill.
+- `AmazonSession.default_auth_forms()` static helper that returns the default form chain so callers can more easily extend it.
+- Configurable Amazon domain for non-`.com` sites via the `domain` parameter on `AmazonSession`, the `domain` config field, and the `--domain` CLI flag.
 - Improved currency parsing for English non-`.com` Amazon sites.
-- `lxml` extra (`pip install amazon-orders[lxml]`) for users who configure `bs4_parser: lxml`. The library now validates the configured parser at config load and falls back to `html.parser` (the default) if the configured parser is unavailable.
 
 ## [4.1.0](https://github.com/alexdlaird/amazon-orders/compare/4.0.19...4.1.0) - 2026-05-03
 

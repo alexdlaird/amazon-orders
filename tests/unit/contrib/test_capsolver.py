@@ -79,12 +79,12 @@ class TestCapSolverWafForm(UnitTestCase):
         fake_capsolver.solve.return_value = {"cookie": "waf-token-value"}
 
         form = CapSolverWafForm(self.test_config)
-        form._goku = {"key": "k123", "iv": "i123", "context": "c123"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k123", "iv": "i123", "context": "c123"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN
         with patch.dict(sys.modules, {"capsolver": fake_capsolver}):
-            token = form._solve_token("https://www.amazon.com/login")
+            token = form._solve_token("https://www.amazon.com/login", goku, challenge_script)
 
         # THEN
         self.assertEqual("waf-token-value", token)
@@ -105,13 +105,13 @@ class TestCapSolverWafForm(UnitTestCase):
         fake_capsolver.solve.return_value = {"unexpected": "shape"}
 
         form = CapSolverWafForm(self.test_config)
-        form._goku = {"key": "k", "iv": "i", "context": "c"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN / THEN
         with patch.dict(sys.modules, {"capsolver": fake_capsolver}):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login")
+                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("cookie", str(cm.exception))
 
     @patch.dict(os.environ, {"CAPSOLVER_API_KEY": "test-api-key"})
@@ -181,13 +181,13 @@ class TestCapSolverWafForm(UnitTestCase):
         fake_capsolver.solve.side_effect = RuntimeError("ERROR_NO_FUNDS")
 
         form = CapSolverWafForm(self.test_config)
-        form._goku = {"key": "k", "iv": "i", "context": "c"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN / THEN
         with patch.dict(sys.modules, {"capsolver": fake_capsolver}):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login")
+                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("CapSolver", str(cm.exception))
         self.assertIn("ERROR_NO_FUNDS", str(cm.exception))
 
@@ -195,11 +195,11 @@ class TestCapSolverWafForm(UnitTestCase):
     def test_solve_token_missing_capsolver_package_raises(self):
         # GIVEN
         form = CapSolverWafForm(self.test_config)
-        form._goku = {"key": "k", "iv": "i", "context": "c"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN / THEN: simulate import failure by injecting None
         with patch.dict(sys.modules, {"capsolver": None}):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login")
+                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("capsolver", str(cm.exception).lower())

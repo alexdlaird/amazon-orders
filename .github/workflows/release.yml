@@ -43,7 +43,7 @@ jobs:
     if: ${{ vars.AMAZON_INTEGRATION_SKIP_ON_RELEASE != 'true' }}
     uses: alexdlaird/amazon-orders/.github/workflows/integration.yml@main
     with:
-      use_captcha_solver: true
+      use_waf_solver: true
     secrets: inherit
 
   release:

@@ -1,6 +1,8 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+from typing import Any, Dict
+
 from amazonorders.contrib.waf.base import AwsWafForm
 from amazonorders.exception import AmazonOrdersError
 
@@ -18,12 +20,16 @@ class CapSolverWafForm(AwsWafForm):
     PROVIDER_NAME = "CapSolver"
 
     def _solve_token(self,
-                     url: str) -> str:
+                     url: str,
+                     goku: Dict[str, Any],
+                     challenge_script: str) -> str:
         """
         Solve the AWS WAF challenge via CapSolver's ``AntiAwsWafTaskProxyLess``
         task type and return the ``aws-waf-token`` cookie value.
 
         :param url: The URL of the WAF-challenged page.
+        :param goku: The parsed ``window.gokuProps`` payload.
+        :param challenge_script: The ``src`` of the AWS WAF ``challenge.js`` script tag.
         :return: The ``aws-waf-token`` cookie value.
         :raises AmazonOrdersError: if the ``capsolver`` package is not installed,
             or if CapSolver's response does not contain the expected
@@ -39,15 +45,14 @@ class CapSolverWafForm(AwsWafForm):
 
         capsolver.api_key = self.api_key
 
-        assert self._goku is not None and self._challenge_script is not None
         try:
             solution = capsolver.solve({
                 "type": "AntiAwsWafTaskProxyLess",
                 "websiteURL": url,
-                "awsKey": self._goku["key"],
-                "awsIv": self._goku["iv"],
-                "awsContext": self._goku["context"],
-                "awsChallengeJS": self._challenge_script,
+                "awsKey": goku["key"],
+                "awsIv": goku["iv"],
+                "awsContext": goku["context"],
+                "awsChallengeJS": challenge_script,
             })
         except Exception as e:
             raise AmazonOrdersError(

@@ -66,15 +66,15 @@ class TestAntiCaptchaWafForm(UnitTestCase):
         fake_module.amazonProxyless = MagicMock(return_value=fake_solver_instance)
 
         form = AntiCaptchaWafForm(self.test_config)
-        form._goku = {"key": "k123", "iv": "i123", "context": "c123"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k123", "iv": "i123", "context": "c123"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN
         with patch.dict(sys.modules, {
             "anticaptchaofficial": MagicMock(),
             "anticaptchaofficial.amazonproxyless": fake_module,
         }):
-            token = form._solve_token("https://www.amazon.com/login")
+            token = form._solve_token("https://www.amazon.com/login", goku, challenge_script)
 
         # THEN
         self.assertEqual("waf-token-value", token)
@@ -97,8 +97,8 @@ class TestAntiCaptchaWafForm(UnitTestCase):
         fake_module.amazonProxyless = MagicMock(return_value=fake_solver_instance)
 
         form = AntiCaptchaWafForm(self.test_config)
-        form._goku = {"key": "k", "iv": "i", "context": "c"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN / THEN
         with patch.dict(sys.modules, {
@@ -106,7 +106,7 @@ class TestAntiCaptchaWafForm(UnitTestCase):
             "anticaptchaofficial.amazonproxyless": fake_module,
         }):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login")
+                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("Anti-Captcha", str(cm.exception))
         self.assertIn("ERROR_NO_SLOT_AVAILABLE", str(cm.exception))
 
@@ -121,8 +121,8 @@ class TestAntiCaptchaWafForm(UnitTestCase):
         fake_module.amazonProxyless = MagicMock(return_value=fake_solver_instance)
 
         form = AntiCaptchaWafForm(self.test_config)
-        form._goku = {"key": "k", "iv": "i", "context": "c"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN / THEN
         with patch.dict(sys.modules, {
@@ -130,7 +130,7 @@ class TestAntiCaptchaWafForm(UnitTestCase):
             "anticaptchaofficial.amazonproxyless": fake_module,
         }):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login")
+                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("Anti-Captcha", str(cm.exception))
         self.assertIn("Network unreachable", str(cm.exception))
 
@@ -138,11 +138,11 @@ class TestAntiCaptchaWafForm(UnitTestCase):
     def test_solve_token_missing_anticaptcha_package_raises(self):
         # GIVEN
         form = AntiCaptchaWafForm(self.test_config)
-        form._goku = {"key": "k", "iv": "i", "context": "c"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN / THEN: simulate import failure
         with patch.dict(sys.modules, {"anticaptchaofficial.amazonproxyless": None}):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login")
+                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("anticaptchaofficial", str(cm.exception).lower())

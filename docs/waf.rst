@@ -92,8 +92,9 @@ Writing Your Own
 
 The ``auth_forms_classes`` config option accepts any
 :class:`~amazonorders.forms.AuthForm` subclass, so you can integrate any provider you like. Subclass
-:class:`~amazonorders.contrib.waf.base.AwsWafForm` and implement ``_solve_token(url) -> str`` to call the
-service of your choice and return the resulting ``aws-waf-token`` cookie value:
+:class:`~amazonorders.contrib.waf.base.AwsWafForm` and implement
+``_solve_token(url, goku, challenge_script) -> str`` to call the service of your choice and return the
+resulting ``aws-waf-token`` cookie value:
 
 .. code-block:: python
 
@@ -103,7 +104,7 @@ service of your choice and return the resulting ``aws-waf-token`` cookie value:
     class MyCustomWafForm(AwsWafForm):
         API_KEY_ENV_VAR = "MY_PROVIDER_API_KEY"
 
-        def _solve_token(self, url):
+        def _solve_token(self, url, goku, challenge_script):
             ...
 
 Once registered in ``auth_forms_classes``, your form participates in the same auth chain as the built-in providers.

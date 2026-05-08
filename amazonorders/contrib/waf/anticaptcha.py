@@ -1,6 +1,8 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+from typing import Any, Dict
+
 from amazonorders.contrib.waf.base import AwsWafForm
 from amazonorders.exception import AmazonOrdersError
 
@@ -19,12 +21,16 @@ class AntiCaptchaWafForm(AwsWafForm):
     PROVIDER_NAME = "Anti-Captcha"
 
     def _solve_token(self,
-                     url: str) -> str:
+                     url: str,
+                     goku: Dict[str, Any],
+                     challenge_script: str) -> str:
         """
         Solve the AWS WAF challenge via Anti-Captcha's ``AmazonTaskProxyless``
         task type and return the ``aws-waf-token`` cookie value.
 
         :param url: The URL of the WAF-challenged page.
+        :param goku: The parsed ``window.gokuProps`` payload.
+        :param challenge_script: The ``src`` of the AWS WAF ``challenge.js`` script tag.
         :return: The ``aws-waf-token`` cookie value.
         :raises AmazonOrdersError: if the ``anticaptchaofficial`` package is
             not installed, or if Anti-Captcha returns no token.
@@ -37,15 +43,13 @@ class AntiCaptchaWafForm(AwsWafForm):
                 "Install it with: pip install amazon-orders[anticaptcha]"
             ) from e
 
-        assert self._goku is not None and self._challenge_script is not None
-
         solver = amazonProxyless()
         solver.set_key(self.api_key)
         solver.set_website_url(url)
-        solver.set_website_key(self._goku["key"])
-        solver.set_iv(self._goku["iv"])
-        solver.set_context(self._goku["context"])
-        solver.set_challenge_script(self._challenge_script)
+        solver.set_website_key(goku["key"])
+        solver.set_iv(goku["iv"])
+        solver.set_context(goku["context"])
+        solver.set_challenge_script(challenge_script)
 
         try:
             token = solver.solve_and_return_solution()

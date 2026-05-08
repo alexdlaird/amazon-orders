@@ -73,12 +73,12 @@ class TestTwoCaptchaWafForm(UnitTestCase):
         fake_module.TwoCaptcha = MagicMock(return_value=fake_solver_instance)
 
         form = TwoCaptchaWafForm(self.test_config)
-        form._goku = {"key": "k123", "iv": "i123", "context": "c123"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k123", "iv": "i123", "context": "c123"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN
         with patch.dict(sys.modules, {"twocaptcha": fake_module}):
-            token = form._solve_token("https://www.amazon.com/login")
+            token = form._solve_token("https://www.amazon.com/login", goku, challenge_script)
 
         # THEN
         self.assertEqual("waf-token-value", token)
@@ -101,13 +101,13 @@ class TestTwoCaptchaWafForm(UnitTestCase):
         fake_module.TwoCaptcha = MagicMock(return_value=fake_solver_instance)
 
         form = TwoCaptchaWafForm(self.test_config)
-        form._goku = {"key": "k", "iv": "i", "context": "c"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN / THEN
         with patch.dict(sys.modules, {"twocaptcha": fake_module}):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login")
+                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("existing_token", str(cm.exception))
 
     @patch.dict(os.environ, {"TWOCAPTCHA_API_KEY": "test-api-key"})
@@ -122,13 +122,13 @@ class TestTwoCaptchaWafForm(UnitTestCase):
         fake_module.TwoCaptcha = MagicMock(return_value=fake_solver_instance)
 
         form = TwoCaptchaWafForm(self.test_config)
-        form._goku = {"key": "k", "iv": "i", "context": "c"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN / THEN
         with patch.dict(sys.modules, {"twocaptcha": fake_module}):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login")
+                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("existing_token", str(cm.exception))
 
     @patch.dict(os.environ, {"TWOCAPTCHA_API_KEY": "test-api-key"})
@@ -141,13 +141,13 @@ class TestTwoCaptchaWafForm(UnitTestCase):
         fake_module.TwoCaptcha = MagicMock(return_value=fake_solver_instance)
 
         form = TwoCaptchaWafForm(self.test_config)
-        form._goku = {"key": "k", "iv": "i", "context": "c"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN / THEN
         with patch.dict(sys.modules, {"twocaptcha": fake_module}):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login")
+                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("2Captcha", str(cm.exception))
         self.assertIn("ERROR_ZERO_BALANCE", str(cm.exception))
 
@@ -155,11 +155,11 @@ class TestTwoCaptchaWafForm(UnitTestCase):
     def test_solve_token_missing_twocaptcha_package_raises(self):
         # GIVEN
         form = TwoCaptchaWafForm(self.test_config)
-        form._goku = {"key": "k", "iv": "i", "context": "c"}
-        form._challenge_script = "https://example.token.awswaf.com/challenge.js"
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        challenge_script = "https://example.token.awswaf.com/challenge.js"
 
         # WHEN / THEN
         with patch.dict(sys.modules, {"twocaptcha": None}):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login")
+                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("2captcha-python", str(cm.exception))
