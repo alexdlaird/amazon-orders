@@ -47,6 +47,16 @@ That's it! ``amazon-orders`` is now available as a package to your Python projec
 If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (ex. ``==4.0.*``, not ``==4.1.0``)
 to ensure you always get the latest stable release.
 
+To enable **WAF auto-solve** via a third-party integration, install with the relevant extra
+(ex. ``pip install amazon-orders[capsolver]``). See `Solving WAF Challenges <https://amazon-orders.readthedocs.io/waf.html>`_
+for more details on setup.
+
+To enable **Captcha auto-solve** on Python <=3.12 (via the optional
+`amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_ dependency), install with the ``captcha`` extra
+(ex. ``pip install "amazon-orders[captcha]"``). Without this extra, Captcha challenges fall back to manual entry.
+``amazoncaptcha`` is not available on Python 3.13+; see
+`Captcha Blocking Login <https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login>`_ for details.
+
 Basic Usage
 ===========
 
