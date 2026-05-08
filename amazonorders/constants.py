@@ -20,6 +20,16 @@ _REGION_LANGUAGES = {
     "sg": "en-SG,en;q=0.9,en-US;q=0.8",
 }
 
+#: ``CURRENCY_SYMBOL`` values for English-locale Amazon sites where the storefront actually
+#: prefixes prices with a non-``$`` symbol. amazon.com.au and amazon.ca render prices as
+#: plain ``$`` (single-currency context), so they keep the default and are intentionally
+#: omitted here. Skipped when ``AMAZON_CURRENCY_SYMBOL`` is set.
+_REGION_CURRENCIES = {
+    "co.uk": "£",
+    "in": "₹",
+    "sg": "S$",
+}
+
 
 def _normalize_base_url(value: str) -> str:
     value = value.strip().rstrip("/")
@@ -41,8 +51,9 @@ class Constants:
         config = AmazonOrdersConfig(data={"constants_class": "my_module.MyConstants"})
 
     URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are derived from the active
-    Amazon domain. ``Accept-Language`` is adjusted for a small set of English-locale TLDs. The domain
-    is resolved in this precedence order:
+    Amazon domain. ``Accept-Language`` and ``CURRENCY_SYMBOL`` are adjusted for a small set of
+    English-locale TLDs (``CURRENCY_SYMBOL`` only when ``AMAZON_CURRENCY_SYMBOL`` is unset). The
+    domain is resolved in this precedence order:
 
     1. The ``domain`` key on :class:`~amazonorders.conf.AmazonOrdersConfig`.
     2. The ``AMAZON_BASE_URL`` environment variable.
@@ -185,6 +196,9 @@ class Constants:
         if tld in _REGION_LANGUAGES:
             headers["Accept-Language"] = _REGION_LANGUAGES[tld]
         self.BASE_HEADERS = headers
+
+        if not os.environ.get("AMAZON_CURRENCY_SYMBOL") and tld in _REGION_CURRENCIES:
+            self.CURRENCY_SYMBOL = _REGION_CURRENCIES[tld]
 
     def format_currency(self,
                         amount: float) -> str:

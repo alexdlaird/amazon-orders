@@ -187,6 +187,10 @@ class Parsable:
         """
         Clean up a currency, stripping non-numeric values and returning it as a primitive.
 
+        Recognizes the ``$``, ``£``, ``€``, and ``₹`` symbols (and leading currency-code
+        letters such as ``A$`` or ``CDN$``), accepts accounting-style negatives in parentheses
+        (e.g. ``($1.99)``), and treats a literal ``FREE`` as ``0.0``.
+
         :param value: The currency to parse.
         :return: The currency as a primitive.
         """
@@ -197,7 +201,14 @@ class Parsable:
             return None
 
         value = value.strip()
-        value = re.sub("[a-zA-Z$£€,]+", "", value)
+
+        if value.lower() == "free":
+            return 0.0
+
+        if value.startswith("(") and value.endswith(")"):
+            value = "-" + value[1:-1]
+
+        value = re.sub("[a-zA-Z$£€₹,]+", "", value)
         currency = util.to_type(value)
 
         if isinstance(currency, str):
