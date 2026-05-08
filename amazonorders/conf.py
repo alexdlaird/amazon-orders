@@ -1,3 +1,4 @@
+import inspect
 import logging
 import os
 import threading
@@ -91,13 +92,12 @@ class AmazonOrdersConfig:
             if not os.path.exists(cookie_jar_dir):
                 os.makedirs(cookie_jar_dir)
 
-        constants_class_split = self.constants_class.split(".")
         selectors_class_split = self.selectors_class.split(".")
         order_class_split = self.order_class.split(".")
         shipment_class_split = self.shipment_class.split(".")
         item_class_split = self.item_class.split(".")
 
-        self.constants = util.load_class(constants_class_split[:-1], constants_class_split[-1])()
+        self.constants = self._instantiate_constants()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
@@ -149,13 +149,12 @@ class AmazonOrdersConfig:
     def __setstate__(self,
                      state: Dict[str, Any]) -> None:
         self._data = state
-        constants_class_split = self.constants_class.split(".")
         selectors_class_split = self.selectors_class.split(".")
         order_class_split = self.order_class.split(".")
         shipment_class_split = self.shipment_class.split(".")
         item_class_split = self.item_class.split(".")
 
-        self.constants = util.load_class(constants_class_split[:-1], constants_class_split[-1])()
+        self.constants = self._instantiate_constants()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])

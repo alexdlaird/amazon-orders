@@ -74,9 +74,12 @@ class AmazonSession:
                  io: IODefault = IODefault(),
                  config: Optional[AmazonOrdersConfig] = None,
                  auth_forms: Optional[List] = None,
-                 otp_secret_key: Optional[str] = None) -> None:
+                 otp_secret_key: Optional[str] = None,
+                 domain: Optional[str] = None) -> None:
         if not config:
-            config = AmazonOrdersConfig()
+            config = AmazonOrdersConfig(data={"domain": domain} if domain else None)
+        elif domain:
+            config.set_domain(domain)
         if not auth_forms:
             auth_forms = [ClaimForm(config),
                           IntentForm(config),
