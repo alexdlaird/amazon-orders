@@ -59,6 +59,9 @@ class IOClick(IODefault):
               help="The max auth loop attempts to make (successes and failures), passing this overrides config value.")
 @click.option("--output-dir",
               help="The directory where any output files should be produced, passing this overrides config value.")
+@click.option("--domain",
+              help="The Amazon domain to target (e.g. amazon.com, amazon.co.uk, amazon.com.au). "
+                   "Defaults to amazon.com.")
 @click.pass_context
 def amazon_orders_cli(ctx: Context,
                       **kwargs: Any) -> None:
@@ -90,6 +93,8 @@ def amazon_orders_cli(ctx: Context,
         data["output_dir"] = kwargs["output_dir"]
     if kwargs.get("max_auth_attempts"):
         data["max_auth_attempts"] = kwargs["max_auth_attempts"]
+    if kwargs.get("domain"):
+        data["domain"] = kwargs["domain"]
     ctx.obj["conf"] = AmazonOrdersConfig(config_path=kwargs.get("config_path"),
                                          data=data)
 

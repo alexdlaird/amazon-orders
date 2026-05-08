@@ -13,7 +13,10 @@ This package works by parsing data from Amazon's consumer-facing website. A peri
 to ensure its stability, but as Amazon provides no official API to use, this package may break at any time (so check
 often to ensure you're on the latest version).
 
-Only the English, `.com` version of Amazon is officially supported.
+Only the English, `.com` version of Amazon is officially supported. Other Amazon domains can be
+targeted by passing `domain` to [`AmazonSession`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession)
+(or `--domain` on the CLI), and other English-based sites may work by chance — see
+[Known Limitations](https://amazon-orders.readthedocs.io/index.html#known-limitations) for details.
 
 ## Installation
 
