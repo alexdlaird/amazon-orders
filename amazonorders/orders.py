@@ -72,7 +72,8 @@ class AmazonOrders:
         if not order_details_tag:
             raise AmazonOrdersError(f"Could not parse details for Order {order_id}. Check if Amazon changed the HTML.")
 
-        order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=clone)
+        order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=clone,
+                                             order_number=order_id)
 
         return order
 
@@ -189,6 +190,9 @@ class AmazonOrders:
             if len(util.select(order.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
                 logger.warning(f"Order {order.order_number} was partially populated, "
                                f"since it is an unsupported Order type.")
+            elif not order.order_number:
+                logger.warning(f"Order at index {current_index} was partially populated, "
+                               f"since its order number could not be parsed from the history page.")
             else:
                 order = self.get_order(order.order_number, clone=order)
 

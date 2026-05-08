@@ -14,9 +14,14 @@ class TestCase(unittest.TestCase):
 
     def assert_populated_generic(self, order, full_details):
         self.assertIsNotNone(order.order_number)
-        self.assertIsNotNone(order.grand_total)
         self.assertIsNotNone(order.order_details_link)
         self.assertIsNotNone(order.order_placed_date)
+        self.assertEqual(order.full_details, full_details)
+
+        if order.cancelled:
+            return
+
+        self.assertIsNotNone(order.grand_total)
         if order.recipient:
             self.assertIsNotNone(order.recipient.name)
             self.assertIsNotNone(order.recipient.address)
@@ -31,8 +36,6 @@ class TestCase(unittest.TestCase):
         for item in order.items:
             self.assertIsNotNone(item.title)
             self.assertIsNotNone(item.link)
-
-        self.assertEqual(order.full_details, full_details)
 
         if full_details:
             self.assertIsNotNone(order.payment_method)

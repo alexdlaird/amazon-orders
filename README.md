@@ -32,18 +32,19 @@ If pinning, be sure to use a wildcard for the [minor version](https://semver.org
 ensure you always get the latest stable release.
 
 If Amazon presents a Captcha or AWS WAF challenge during login, `amazon-orders` ships built-in support for
-solving these via several third-party solver services as opt-in optional installs (CapSolver, Anti-Captcha,
-2Captcha). See [Solving Captcha and WAF](https://amazon-orders.readthedocs.io/captcha.html) for setup.
+solving these via several third-party solver services as opt-in extras (CapSolver, Anti-Captcha, 2Captcha).
+See [Solving Captcha and WAF](https://amazon-orders.readthedocs.io/captcha.html) for setup.
 
-The legacy text-based image Captcha auto-solver is also available on Python <=3.12 via the `[captcha]`
-optional install:
+To enable Captcha auto-solve on Python <=3.12 (via the optional [`amazoncaptcha`](https://pypi.org/project/amazoncaptcha/)
+dependency), install with the `captcha` extra:
 
 ```sh
 pip install "amazon-orders[captcha]" --upgrade
 ```
 
-See [Captcha Blocking Login](https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login)
-for details.
+Without this extra, Captcha challenges fall back to manual entry. `amazoncaptcha` is not available on Python 3.13+;
+see [Captcha Blocking Login](https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login) for
+details.
 
 ## Basic Usage
 

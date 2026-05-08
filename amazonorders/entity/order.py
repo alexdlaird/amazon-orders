@@ -33,7 +33,8 @@ class Order(Parsable):
                  config: AmazonOrdersConfig,
                  full_details: bool = False,
                  clone: Optional[OrderEntity] = None,
-                 index: Optional[int] = None) -> None:
+                 index: Optional[int] = None,
+                 order_number: Optional[str] = None) -> None:
         super().__init__(parsed, config)
 
         #: If the Orders full details were populated from its details page.
@@ -46,16 +47,22 @@ class Order(Parsable):
         #: the ``clone`` has its ``index`` set.
         self.index: Optional[int] = index if index is not None else (clone.index if clone else None)
 
+        #: ``True`` if the Order was cancelled. When ``True``, fields like ``grand_total`` and the totals on the
+        #: details page may be ``None`` because Amazon stops rendering them.
+        self.cancelled: bool = clone.cancelled if clone else bool(
+            self.parsed and util.select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS))
+
         #: The Order Shipments.
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
         #: The Order Items.
         self.items: List[Item] = clone.items if clone and not full_details else self._parse_items()
-        #: The Order number.
-        self.order_number: str = clone.order_number if clone else self.safe_simple_parse(
+        #: The Order number. May be ``None`` only when the Order is :attr:`cancelled` and Amazon stripped the order
+        #: number from the details page (the ``order_number`` parameter is used as a fallback in that case).
+        self.order_number: Optional[str] = clone.order_number if clone else self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR,
-            required=True,
+            required=not self.cancelled,
             prefix_split="#",
-            prefix_split_fuzzy=True)
+            prefix_split_fuzzy=True) or order_number
         #: The Order details link.
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
             self._parse_order_details_link)
