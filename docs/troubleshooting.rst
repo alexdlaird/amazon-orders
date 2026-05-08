@@ -42,10 +42,11 @@ files are relevant to the issue, attach them to your request.
 Captcha Blocking Login
 ----------------------
 
-While ``amazon-orders`` can auto-solve some Captchas, others are opened so the user can input the solution manually,
-and still other—like `Amazon's puzzle-based WAF Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
-—require JavaScript and can't be solved at all by ``amazon-orders`` and block it from being able to log in (see `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_
-for more details).
+Amazon may present an AWS WAF JavaScript challenge during login. ``amazon-orders`` ships built-in
+support for solving these via third-party solver services as opt-in extras — see :doc:`waf` for
+setup. If a supported extra isn't working for you, please
+`open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_
+or a `pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.
 
 Auto-solving of legacy text-based Captchas is provided by the `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_
 library, which is an optional dependency. To enable it on **Python <=3.12**, install with the ``captcha``

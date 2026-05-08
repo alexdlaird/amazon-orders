@@ -1,10 +1,12 @@
-.PHONY: all install nopyc clean test test-integration build-test-resources docs check local validate-release upload
+.PHONY: all install nopyc clean test test-integration build-test-resources docs check local validate-release upload install-waf
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
 PROJECT_VENV ?= venv
 INTEGRATION_TEST_RERUN ?= 2
 INTEGRATION_TEST_RERUN_DELAY ?= 300
+
+WAF_EXTRAS := capsolver,anticaptcha,2captcha
 
 all: local check test
 
@@ -16,6 +18,12 @@ install: venv
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install .; \
+	)
+
+install-waf:
+	@( \
+		source $(PROJECT_VENV)/bin/activate; \
+		python -m pip install ".[$(WAF_EXTRAS)]"; \
 	)
 
 nopyc:
@@ -67,7 +75,7 @@ local:
 		$(PYTHON_BIN) -m pip install --upgrade pip; \
         $(PYTHON_BIN) -m pip install --upgrade build; \
 		$(PYTHON_BIN) -m build; \
-		$(PYTHON_BIN) -m pip install dist/*.tar.gz; \
+		$(PYTHON_BIN) -m pip install "$$(ls dist/*.tar.gz)"; \
 	)
 
 validate-release:

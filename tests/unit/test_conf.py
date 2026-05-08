@@ -57,7 +57,8 @@ class TestConf(TestCase):
         thread_pool_size = os.cpu_count() * 4
         self.assertTrue(os.path.exists(config_path))
         with open(config.config_path, "r") as f:
-            self.assertEqual("""auth_reattempt_wait: 5
+            self.assertEqual("""auth_forms_classes: []
+auth_reattempt_wait: 5
 bs4_parser: html.parser
 connection_pool_size: {connection_pool_size}
 constants_class: amazonorders.constants.Constants
@@ -112,6 +113,17 @@ some_custom_config: {custom_config}
         self.assertEqual(test_output_dir, config.output_dir)
         self.assertEqual(test_cookie_jar_path, config.cookie_jar_path)
         self.assertEqual("my-custom-config", config.some_custom_config)
+
+    def test_unavailable_bs4_parser_falls_back_to_html_parser(self):
+        # GIVEN / WHEN
+        with self.assertLogs("amazonorders.conf", level="DEBUG") as logs:
+            config = AmazonOrdersConfig(data={
+                "bs4_parser": "this-parser-does-not-exist"
+            })
+
+        # THEN
+        self.assertEqual("html.parser", config.bs4_parser)
+        self.assertTrue(any("this-parser-does-not-exist" in m for m in logs.output))
 
     def test_update_config(self):
         # GIVEN

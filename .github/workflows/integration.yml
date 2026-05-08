@@ -4,7 +4,19 @@ run-name: Integration Test ${{ github.ref_name }}
 
 on:
   workflow_call:
+    inputs:
+      use_waf_solver:
+        description: 'Use third-party WAF solver (CapSolver)'
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
+    inputs:
+      use_waf_solver:
+        description: 'Use third-party WAF solver (CapSolver)'
+        required: false
+        type: boolean
+        default: false
   schedule:
    - cron: "0 7 * * *"
 
@@ -28,6 +40,7 @@ jobs:
       AMAZON_USERNAME: ${{ secrets.AMAZON_USERNAME }}
       AMAZON_PASSWORD: ${{ secrets.AMAZON_PASSWORD }}
       AMAZON_OTP_SECRET_KEY: ${{ secrets.AMAZON_OTP_SECRET_KEY }}
+      CAPSOLVER_API_KEY: ${{ (inputs.use_waf_solver || github.event_name == 'schedule') && secrets.CAPSOLVER_API_KEY || '' }}
       # The following variables are not required, defaults will be used if they are not defined
       AMAZON_BASE_URL: ${{ vars.AMAZON_BASE_URL }}
       AMAZON_INTEGRATION_TEST_JSON: ${{ vars.AMAZON_INTEGRATION_TEST_JSON }}
@@ -48,6 +61,24 @@ jobs:
           python-version: "3.12"
       - name: Install jpeg
         run: sudo apt-get install -y libjpeg-dev zlib1g-dev
+      - name: Verify WAF solver secret is set
+        if: ${{ inputs.use_waf_solver || github.event_name == 'schedule' }}
+        run: |
+          if [ -z "$CAPSOLVER_API_KEY" ]; then
+            echo "::error::WAF solver enabled but CAPSOLVER_API_KEY is empty. Set the CAPSOLVER_API_KEY repo secret or disable the toggle."
+            exit 1
+          fi
+      - name: Configure third-party WAF solver
+        if: ${{ inputs.use_waf_solver || github.event_name == 'schedule' }}
+        run: |
+          mkdir -p tests/.integration-config
+          cat > tests/.integration-config/config.yml <<'EOF'
+          auth_forms_classes:
+            - amazonorders.contrib.waf.capsolver.CapSolverWafForm
+          EOF
+      - name: Install WAF solver extras
+        if: ${{ inputs.use_waf_solver || github.event_name == 'schedule' }}
+        run: make install install-waf
       - name: Integration test
         run: make test-integration
       - name: Upload test output

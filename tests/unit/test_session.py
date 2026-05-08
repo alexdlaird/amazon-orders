@@ -9,8 +9,11 @@ from unittest.mock import patch
 import responses
 from responses.matchers import query_string_matcher, urlencoded_params_matcher
 
-from amazonorders.exception import AmazonOrdersAuthError
+from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
+from amazonorders.forms import JSAuthBlocker
 from amazonorders.session import AmazonSession
+from tests._auth_form_stubs import OtherStubAuthForm, StubAuthForm
 from tests.unittestcase import UnitTestCase
 
 try:
@@ -734,3 +737,84 @@ class TestSession(UnitTestCase):
         self.assertIn("A JavaScript-based authentication challenge page has been found.", str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
+
+    def _config_with(self, **extra):
+        return AmazonOrdersConfig(data={
+            "output_dir": self.test_output_dir,
+            "cookie_jar_path": self.test_cookie_jar_path,
+            "auth_reattempt_wait": 0,
+            "max_auth_retries": 0,
+            **extra,
+        })
+
+    def test_auth_forms_classes_loads_single_class(self):
+        # GIVEN
+        config = self._config_with(auth_forms_classes=["tests._auth_form_stubs.StubAuthForm"])
+
+        # WHEN
+        session = AmazonSession("user", "pass", config=config)
+
+        # THEN
+        self.assertIsInstance(session.auth_forms[-2], StubAuthForm)
+        self.assertIsInstance(session.auth_forms[-1], JSAuthBlocker)
+
+    def test_auth_forms_classes_preserves_order(self):
+        # GIVEN
+        config = self._config_with(auth_forms_classes=[
+            "tests._auth_form_stubs.StubAuthForm",
+            "tests._auth_form_stubs.OtherStubAuthForm",
+        ])
+
+        # WHEN
+        session = AmazonSession("user", "pass", config=config)
+
+        # THEN
+        self.assertIsInstance(session.auth_forms[-3], StubAuthForm)
+        self.assertIsInstance(session.auth_forms[-2], OtherStubAuthForm)
+        self.assertIsInstance(session.auth_forms[-1], JSAuthBlocker)
+
+    def test_auth_forms_classes_non_authform_class_raises(self):
+        # GIVEN
+        config = self._config_with(auth_forms_classes=["tests._auth_form_stubs.NotAnAuthForm"])
+
+        # WHEN / THEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonSession("user", "pass", config=config)
+        self.assertIn("NotAnAuthForm", str(cm.exception))
+        self.assertIn("AuthForm", str(cm.exception))
+
+    def test_auth_forms_classes_bad_path_raises(self):
+        # GIVEN
+        config = self._config_with(auth_forms_classes=["nonexistent.module.NotAClass"])
+
+        # WHEN / THEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonSession("user", "pass", config=config)
+        self.assertIn("nonexistent.module.NotAClass", str(cm.exception))
+
+    def test_auth_forms_classes_empty_matches_default(self):
+        # GIVEN
+        config_empty = self._config_with(auth_forms_classes=[])
+        config_default = self._config_with()
+
+        # WHEN
+        session_empty = AmazonSession("user", "pass", config=config_empty)
+        session_default = AmazonSession("user", "pass", config=config_default)
+
+        # THEN
+        self.assertEqual(
+            [type(f) for f in session_empty.auth_forms],
+            [type(f) for f in session_default.auth_forms],
+        )
+
+    def test_auth_forms_kwarg_bypasses_config(self):
+        # GIVEN
+        config = self._config_with(auth_forms_classes=["tests._auth_form_stubs.StubAuthForm"])
+        custom_forms = [JSAuthBlocker(config, "robot")]
+
+        # WHEN
+        session = AmazonSession("user", "pass", config=config, auth_forms=custom_forms)
+
+        # THEN: config's auth_forms_classes is ignored when auth_forms is passed explicitly
+        self.assertEqual(custom_forms, session.auth_forms)
+        self.assertEqual(1, len(session.auth_forms))

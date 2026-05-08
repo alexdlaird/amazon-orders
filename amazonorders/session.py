@@ -17,7 +17,7 @@ from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersAuthRedirectError
 from amazonorders.forms import (AuthForm, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm,
                                 SignInForm, ClaimForm, IntentForm)
-from amazonorders.util import AmazonSessionResponse
+from amazonorders.util import AmazonSessionResponse, load_class
 
 logger = logging.getLogger(__name__)
 
@@ -74,24 +74,31 @@ class AmazonSession:
                  io: IODefault = IODefault(),
                  config: Optional[AmazonOrdersConfig] = None,
                  auth_forms: Optional[List] = None,
-                 otp_secret_key: Optional[str] = None) -> None:
+                 otp_secret_key: Optional[str] = None,
+                 domain: Optional[str] = None) -> None:
         if not config:
-            config = AmazonOrdersConfig()
+            config = AmazonOrdersConfig(data={"domain": domain} if domain else None)
+        elif domain:
+            config.set_domain(domain)
         if not auth_forms:
-            auth_forms = [ClaimForm(config),
-                          IntentForm(config),
-                          SignInForm(config),
-                          MfaDeviceSelectForm(config),
-                          MfaForm(config),
-                          CaptchaForm(config),
-                          CaptchaForm(config,
-                                      config.selectors.CAPTCHA_2_FORM_SELECTOR,
-                                      config.selectors.CAPTCHA_2_ERROR_SELECTOR,
-                                      "field-keywords"),
-                          MfaForm(config,
-                                  config.selectors.CAPTCHA_OTP_FORM_SELECTOR),
-                          JSAuthBlocker(config,
-                                        config.constants.JS_ROBOT_TEXT_REGEX)]
+            auth_forms = AmazonSession.default_auth_forms(config)
+            for path in config.auth_forms_classes or []:
+                try:
+                    module_path, class_name = path.rsplit(".", 1)
+                    cls = load_class(module_path.split("."), class_name)
+                except (ImportError, AttributeError, ValueError) as e:
+                    raise AmazonOrdersError(
+                        f"Could not load auth_forms_classes entry '{path}': {e}"
+                    ) from e
+                if not (isinstance(cls, type) and issubclass(cls, AuthForm)):
+                    raise AmazonOrdersError(
+                        f"auth_forms_classes entry '{path}' must be a subclass of "
+                        f"{AuthForm.__module__}.{AuthForm.__name__}."
+                    )
+                # AuthForm subclasses registered via auth_forms_classes are expected to take
+                # only ``config`` (e.g. AwsWafForm subclasses); the base AuthForm signature
+                # additionally requires ``selector``
+                auth_forms.insert(-1, cls(config))  # type: ignore[call-arg]
 
         #: An Amazon username. Environment variable ``AMAZON_USERNAME`` will override passed in or config value.
         self.username: Optional[str] = os.environ.get("AMAZON_USERNAME") or username or config.username
@@ -114,6 +121,8 @@ class AmazonSession:
         self.config: AmazonOrdersConfig = config
         #: The list of form implementations to use with authentication. If a value is passed for this when
         #: instantiating an AmazonSession, ensure that list is populated with the default form implementations.
+        #: :func:`~amazonorders.session.AmazonSession.default_auth_forms` returns the default chain so callers can
+        #: extend it instead of duplicating it.
         self.auth_forms: List[AuthForm] = auth_forms
 
         #: The shared session to be used across all requests.
@@ -131,6 +140,32 @@ class AmazonSession:
                     data = json.loads(f.read())
                     cookies = requests.utils.cookiejar_from_dict(data)
                     self.session.cookies.update(cookies)
+
+    @staticmethod
+    def default_auth_forms(config: AmazonOrdersConfig) -> List[AuthForm]:
+        """
+        Build the default ordered list of :class:`~amazonorders.forms.AuthForm` instances used by
+        :class:`AmazonSession`. Callers wishing to inject a custom form (e.g. a third-party WAF
+        Captcha solver) can call this and insert their own handler before passing the list as
+        ``auth_forms``.
+
+        :param config: The config to bind to each form.
+        :return: The default ordered list of :class:`~amazonorders.forms.AuthForm` instances.
+        """
+        return [ClaimForm(config),
+                IntentForm(config),
+                SignInForm(config),
+                MfaDeviceSelectForm(config),
+                MfaForm(config),
+                CaptchaForm(config),
+                CaptchaForm(config,
+                            config.selectors.CAPTCHA_2_FORM_SELECTOR,
+                            config.selectors.CAPTCHA_2_ERROR_SELECTOR,
+                            "field-keywords"),
+                MfaForm(config,
+                        config.selectors.CAPTCHA_OTP_FORM_SELECTOR),
+                JSAuthBlocker(config,
+                              config.constants.JS_ROBOT_TEXT_REGEX)]
 
     def request(self,
                 method: str,

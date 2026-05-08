@@ -4,9 +4,31 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.1.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.2.0...HEAD)
+
+## [4.2.0](https://github.com/alexdlaird/amazon-orders/compare/4.1.0...4.2.0) - 2026-05-08
+
+### Added
+
+- Support for AWS WAF solving via third-party providers like CapSolver (`pip install amazon-orders[capsolver]`), Anti-Captcha (`pip install amazon-orders[anticaptcha]`), and 2Captcha (`pip install amazon-orders[2captcha]`). See [the docs](https://amazon-orders.readthedocs.io/waf.html) for setup.
+- `auth_forms_classes` config option for plugging custom `AuthForm` subclasses into the auth chain without code changes.
+- `AmazonSession.default_auth_forms()` static helper that returns the default form chain so callers can more easily extend it.
+- Configurable Amazon domain for non-`.com` sites via the `domain` parameter on `AmazonSession`, the `domain` config field, and the `--domain` CLI flag.
+- Improved currency parsing for English non-`.com` Amazon sites.
 
 ## [4.1.0](https://github.com/alexdlaird/amazon-orders/compare/4.0.19...4.1.0) - 2026-05-03
+
+### Added
+
+- Python 3.13 support.
+
+### Changed
+
+- `amazoncaptcha` is now an optional dependency. Install with `pip install amazon-orders[captcha]` to enable Captcha auto-solve (only compatible with Python <=3.12. When not installed, Captcha challenges fall back to manual entry.
+
+### Deprecated
+
+- Captcha auto-solve via `amazoncaptcha` is likely to be removed in the future, since Amazon has continued to phase out OCR-style Captchas in favor of WAF.
 
 ### Added
 

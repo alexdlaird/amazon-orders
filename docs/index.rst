@@ -44,8 +44,28 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (ex. ``==4.0.*``, not ``==4.1.0``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (ex. ``==4.0.*``, not ``==4.2.0``)
 to ensure you always get the latest stable release.
+
+To enable **WAF auto-solve** via a third-party integration, install with the relevant extra:
+
+.. code:: sh
+
+    pip install amazon-orders[capsolver]
+    pip install amazon-orders[anticaptcha]
+    pip install amazon-orders[2captcha]
+
+See `Solving WAF Challenges <https://amazon-orders.readthedocs.io/waf.html>`_ for details.
+
+To enable **Captcha auto-solve** on Python <=3.12 (via the optional
+`amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_ dependency), install with the ``captcha`` extra:
+
+.. code:: sh
+
+    pip install amazon-orders[captcha]
+
+Without this extra, Captcha challenges fall back to manual entry. ``amazoncaptcha`` is not available on Python 3.13+; see
+`Captcha Blocking Login <https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login>`_ for details.
 
 Basic Usage
 ===========
@@ -108,19 +128,19 @@ Known Limitations
 -----------------
 
 - Non-English, non-``.com`` versions of Amazon are unsupported
-    - Some have reported success with some non-``.com`` sites (ex. ``amazon.ca`` in Canada), so other similar
-      English-based versions of Amazon may work by chance. However, we do not run nightly regressions against
-      other versions of the site, and as such do not say they are officially supported.
-    - If you fork the repo, set ``AMAZON_BASE_URL`` with an English, non-``.com`` version of the site, and use
-      your own credentials with the ``integration.yml`` workflow to setup a nightly regression run, please
-      `contact us <mailto:contact@alexlaird.com>`_ and we will start mentioning support for that version of the site.
+    - Pass ``domain`` to :class:`~amazonorders.session.AmazonSession` (or set ``domain`` in
+      :class:`~amazonorders.conf.AmazonOrdersConfig`, or pass ``--domain`` on the CLI) to point at another
+      Amazon site. URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are rewritten from
+      the domain, and ``Accept-Language`` is adjusted for a small set of English-locale TLDs, so other
+      English-based versions of Amazon (ex. ``amazon.ca``) may work by chance. Other values such as the
+      OpenID ``assoc_handle`` are not adjusted — subclass :class:`~amazonorders.constants.Constants` and
+      set ``constants_class`` to override them if a particular site requires it. The ``AMAZON_BASE_URL``
+      environment variable continues to work as a fallback.
+    - We do not run nightly regressions against non-``.com`` versions of the site, and as such do not say
+      they are officially supported. If you fork the repo, point the ``integration.yml`` workflow at a
+      different domain with your own credentials, please `contact us <mailto:contact@alexlaird.com>`_ and
+      we will start mentioning support for that version of the site.
     - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
-- Some Captchas are unsupported
-    - While some Captchas can be auto-solved, and static image-based ones are opened so the user can manually input
-      the solution, interactive Captchas—like `Amazon's puzzle-based Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
-      —require JavaScript to solve, and will block ``amazon-orders`` from being able to login.
-    - See the troubleshooting steps for `reducing Captcha challenge frequency <troubleshooting.html#captcha-blocking-login>`_ for recommended workarounds.
-    - See `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_ for more details.
 - Device not remembered for OTP
     - Amazon will sometimes re-prompt for OTP even when a device has been remembered.
     - The recommended workaround for this is persisting the :attr:`~amazonorders.session.AmazonSession.otp_secret_key`
@@ -136,6 +156,7 @@ For more advanced usage, dive deeper in to the rest of the documentation.
    :maxdepth: 2
 
    api
+   waf
    troubleshooting
 
 .. include:: ../CONTRIBUTING.rst

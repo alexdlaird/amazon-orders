@@ -1,9 +1,12 @@
+import inspect
 import logging
 import os
 import threading
 from typing import Any, Dict, Optional, Union
 
 import yaml
+from bs4 import BeautifulSoup
+from bs4.exceptions import FeatureNotFound
 
 from amazonorders import util
 
@@ -36,7 +39,7 @@ class AmazonOrdersConfig:
 
         # Provision default configs
         thread_pool_size = (os.cpu_count() or 1) * 4
-        self._data = {
+        self._data: Dict[str, Any] = {
             # The maximum number of times to retry provisioning initial cookies before failing
             "max_cookie_attempts": 10,
             # The number of seconds to wait before retrying to provision initial cookies
@@ -54,6 +57,7 @@ class AmazonOrdersConfig:
             "shipment_class": "amazonorders.entity.shipment.Shipment",
             "item_class": "amazonorders.entity.item.Item",
             "bs4_parser": "html.parser",
+            "auth_forms_classes": [],
             "thread_pool_size": (os.cpu_count() or 1) * 4,
             "connection_pool_size": thread_pool_size * 2,
             # The maximum number of failed attempts to allow before failing CLI authentication
@@ -79,6 +83,8 @@ class AmazonOrdersConfig:
         # Overload defaults if values passed
         self._data.update(data or {})
 
+        self._validate_bs4_parser()
+
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
@@ -87,17 +93,48 @@ class AmazonOrdersConfig:
             if not os.path.exists(cookie_jar_dir):
                 os.makedirs(cookie_jar_dir)
 
-        constants_class_split = self.constants_class.split(".")
         selectors_class_split = self.selectors_class.split(".")
         order_class_split = self.order_class.split(".")
         shipment_class_split = self.shipment_class.split(".")
         item_class_split = self.item_class.split(".")
 
-        self.constants = util.load_class(constants_class_split[:-1], constants_class_split[-1])()
+        self.constants = self._instantiate_constants()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
         self.item_cls = util.load_class(item_class_split[:-1], item_class_split[-1])
+
+    def _validate_bs4_parser(self) -> None:
+        try:
+            BeautifulSoup("", str(self._data["bs4_parser"]))
+        except FeatureNotFound:
+            logger.debug(
+                f"Configured bs4_parser '{self._data['bs4_parser']}' is unavailable; "
+                f"using the default 'html.parser'. To use it, install the parser "
+                f"(e.g. `pip install amazon-orders[lxml]`)."
+            )
+            self._data["bs4_parser"] = "html.parser"
+
+    def _instantiate_constants(self) -> Any:
+        constants_class_split = self.constants_class.split(".")
+        constants_cls = util.load_class(constants_class_split[:-1], constants_class_split[-1])
+        # Pass ``self`` only when the constants class accepts a config arg, to keep backward
+        # compatibility with existing zero-arg ``constants_class`` subclasses.
+        init_params = inspect.signature(constants_cls.__init__).parameters
+        if len(init_params) > 1:
+            return constants_cls(self)
+        return constants_cls()
+
+    def set_domain(self,
+                   domain: str) -> None:
+        """
+        Set the active Amazon domain and rebuild :attr:`~constants` so URL-derived attributes and
+        region-sensitive headers reflect the change.
+
+        :param domain: The Amazon domain (e.g. ``amazon.com.au``) or full URL.
+        """
+        self._data["domain"] = domain
+        self.constants = self._instantiate_constants()
 
     def __getattr__(self,
                     key: str) -> Any:
@@ -113,13 +150,12 @@ class AmazonOrdersConfig:
     def __setstate__(self,
                      state: Dict[str, Any]) -> None:
         self._data = state
-        constants_class_split = self.constants_class.split(".")
         selectors_class_split = self.selectors_class.split(".")
         order_class_split = self.order_class.split(".")
         shipment_class_split = self.shipment_class.split(".")
         item_class_split = self.item_class.split(".")
 
-        self.constants = util.load_class(constants_class_split[:-1], constants_class_split[-1])()
+        self.constants = self._instantiate_constants()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
