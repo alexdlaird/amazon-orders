@@ -57,7 +57,6 @@ class AmazonOrdersConfig:
             "shipment_class": "amazonorders.entity.shipment.Shipment",
             "item_class": "amazonorders.entity.item.Item",
             "bs4_parser": "html.parser",
-            # Dotted paths to AuthForm subclasses inserted before JSAuthBlocker in the default auth chain
             "auth_forms_classes": [],
             "thread_pool_size": (os.cpu_count() or 1) * 4,
             "connection_pool_size": thread_pool_size * 2,

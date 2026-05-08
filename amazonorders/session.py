@@ -97,7 +97,7 @@ class AmazonSession:
                     )
                 # AuthForm subclasses registered via auth_forms_classes are expected to take
                 # only ``config`` (e.g. AwsWafForm subclasses); the base AuthForm signature
-                # additionally requires ``selector``, hence the type: ignore.
+                # additionally requires ``selector``
                 auth_forms.insert(-1, cls(config))  # type: ignore[call-arg]
 
         #: An Amazon username. Environment variable ``AMAZON_USERNAME`` will override passed in or config value.

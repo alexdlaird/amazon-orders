@@ -4,7 +4,7 @@ Solving Captcha and WAF
 
 Amazon may present an `AWS WAF <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
 JavaScript challenge during login. ``amazon-orders`` ships built-in support for solving these via third-party
-solver services as opt-in optional installs. Once one is configured, ``amazon-orders login`` clears the challenge
+solver services as opt-in extras. Once one is configured, ``amazon-orders login`` clears the challenge
 automatically.
 
 The supported providers are:
@@ -13,13 +13,13 @@ The supported providers are:
 - `Anti-Captcha <https://anti-captcha.com>`_
 - `2Captcha <https://2captcha.com>`_
 
-Each provider follows the same setup: add its optional install, set its API key as an environment variable, and
+Each provider follows the same setup: add its extra, set its API key as an environment variable, and
 register the form in your config.
 
 CapSolver
 ---------
 
-Add the ``[capsolver]`` optional install:
+Add the ``[capsolver]`` extra:
 
 .. code-block:: shell
 
@@ -43,7 +43,7 @@ Now ``amazon-orders login`` will clear any AWS WAF challenge it encounters durin
 Anti-Captcha
 ------------
 
-Add the ``[anticaptcha]`` optional install:
+Add the ``[anticaptcha]`` extra:
 
 .. code-block:: shell
 
@@ -65,7 +65,7 @@ Register the form in your ``~/.config/amazonorders/config.yml``:
 2Captcha
 --------
 
-Add the ``[2captcha]`` optional install:
+Add the ``[2captcha]`` extra:
 
 .. code-block:: shell
 
@@ -105,7 +105,7 @@ service of your choice and return the resulting ``aws-waf-token`` cookie value:
 
 Once registered in ``auth_forms_classes``, your form participates in the same auth chain as the built-in providers.
 
-If a supported optional install isn't working for you, please
+If a supported extra isn't working for you, please
 `open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_
 or a `pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.
 

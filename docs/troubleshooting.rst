@@ -43,13 +43,13 @@ Captcha Blocking Login
 ----------------------
 
 Amazon may present a Captcha or AWS WAF JavaScript challenge during login. ``amazon-orders`` ships built-in
-support for solving these via third-party solver services as opt-in optional installs — see :doc:`captcha` for
-setup. If a supported optional install isn't working for you, please
+support for solving these via third-party solver services as opt-in extras — see :doc:`captcha` for
+setup. If a supported extra isn't working for you, please
 `open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_
 or a `pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.
 
 Auto-solving of legacy text-based image Captchas is also available on **Python <=3.12** via the ``[captcha]``
-optional install, which uses the `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_ library:
+extra, which uses the `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_ library:
 
 .. code-block:: shell
 
@@ -57,14 +57,14 @@ optional install, which uses the `amazoncaptcha <https://pypi.org/project/amazon
 
 .. note::
 
-   The ``[captcha]`` optional install is **only available on Python <=3.12**. ``amazoncaptcha`` pins ``pillow<9.6.0``,
+   The ``[captcha]`` extra is **only available on Python <=3.12**. ``amazoncaptcha`` pins ``pillow<9.6.0``,
    which is incompatible with Python 3.13 until that constraint is lifted from the upstream dependency.
 
-When this optional install is not present, image Captcha challenges fall back to manually entering the solution.
+When this extra is not present, image Captcha challenges fall back to manually entering the solution.
 As Amazon has largely phased out this style of Captcha in favor of WAF, auto-solve may be removed entirely in a
 future major release.
 
-Beyond installing the appropriate optional install, you can also reduce how often Amazon presents Captcha
+Beyond installing the appropriate extra, you can also reduce how often Amazon presents Captcha
 challenges in the first place. There is no perfect workaround—when and how challenges are presented is at
 Amazon's discretion—but a few habits help:
 
