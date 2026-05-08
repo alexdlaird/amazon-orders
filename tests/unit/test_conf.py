@@ -57,7 +57,8 @@ class TestConf(TestCase):
         thread_pool_size = os.cpu_count() * 4
         self.assertTrue(os.path.exists(config_path))
         with open(config.config_path, "r") as f:
-            self.assertEqual("""auth_reattempt_wait: 5
+            self.assertEqual("""auth_forms_classes: []
+auth_reattempt_wait: 5
 bs4_parser: html.parser
 connection_pool_size: {connection_pool_size}
 constants_class: amazonorders.constants.Constants

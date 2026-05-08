@@ -42,14 +42,14 @@ files are relevant to the issue, attach them to your request.
 Captcha Blocking Login
 ----------------------
 
-While ``amazon-orders`` can auto-solve some Captchas, others are opened so the user can input the solution manually,
-and still other—like `Amazon's puzzle-based WAF Captchas <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
-—require JavaScript and can't be solved at all by ``amazon-orders`` and block it from being able to log in (see `issue #45 <https://github.com/alexdlaird/amazon-orders/issues/45>`_
-for more details).
+Amazon may present a Captcha or AWS WAF JavaScript challenge during login. ``amazon-orders`` ships built-in
+support for solving these via third-party solver services as opt-in optional installs — see :doc:`captcha` for
+setup. If a supported optional install isn't working for you, please
+`open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_
+or a `pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.
 
-Auto-solving of legacy text-based Captchas is provided by the `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_
-library, which is an optional dependency. To enable it on **Python <=3.12**, install with the ``captcha``
-extra:
+Auto-solving of legacy text-based image Captchas is also available on **Python <=3.12** via the ``[captcha]``
+optional install, which uses the `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_ library:
 
 .. code-block:: shell
 
@@ -57,17 +57,16 @@ extra:
 
 .. note::
 
-   The ``[captcha]`` extra is **only available on Python <=3.12+**. ``amazoncaptcha`` pins ``pillow<9.6.0``, which is
-   incompatible with Python 3.13 until that constraint is lifted from the upstream dependency.
+   The ``[captcha]`` optional install is **only available on Python <=3.12**. ``amazoncaptcha`` pins ``pillow<9.6.0``,
+   which is incompatible with Python 3.13 until that constraint is lifted from the upstream dependency.
 
-When this extra is not installed, Captcha challenges fall back to manually entering the
-solution. As Amazon has largely phased out this style of Captcha in favor of WAF, auto-solve may be removed
-entirely in a future major release.
+When this optional install is not present, image Captcha challenges fall back to manually entering the solution.
+As Amazon has largely phased out this style of Captcha in favor of WAF, auto-solve may be removed entirely in a
+future major release.
 
-To attempt to fully automate login, you need to minimize how often (if at all) you are presented with Captcha
-challenges. There is no perfect workaround to this, as when and how challenges are presented is at the discretion of
-Amazon, but there are at least a few ways you can try to reduce the likelihood you will be presented with
-Captcha challenges:
+Beyond installing the appropriate optional install, you can also reduce how often Amazon presents Captcha
+challenges in the first place. There is no perfect workaround—when and how challenges are presented is at
+Amazon's discretion—but a few habits help:
 
 - Ensure credentials are correct. Too many failed login attempts in a short period of time increases the chances of
   being given a Captcha challenge. Persisting authentication in the config or the environment (see `docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.username>`_)
