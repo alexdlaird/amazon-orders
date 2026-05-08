@@ -1,7 +1,7 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
-from amazonorders.contrib.captcha.base import AwsWafForm
+from amazonorders.contrib.waf.base import AwsWafForm
 from amazonorders.exception import AmazonOrdersError
 
 

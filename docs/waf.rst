@@ -1,11 +1,14 @@
-=======================
-Solving Captcha and WAF
-=======================
+======================
+Solving WAF Challenges
+======================
 
 Amazon may present an `AWS WAF <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
 JavaScript challenge during login. ``amazon-orders`` ships built-in support for solving these via third-party
 solver services as opt-in extras. Once one is configured, ``amazon-orders login`` clears the challenge
 automatically.
+
+(For the legacy OCR-based image Captcha, see the ``[captcha]`` extra in :doc:`troubleshooting`. WAF
+challenges and image Captchas are distinct mechanisms — this page covers the JavaScript-based WAF flow only.)
 
 The supported providers are:
 
@@ -36,7 +39,7 @@ Register the form in your ``~/.config/amazonorders/config.yml``:
 .. code-block:: yaml
 
     auth_forms_classes:
-      - amazonorders.contrib.captcha.capsolver.CapSolverWafForm
+      - amazonorders.contrib.waf.capsolver.CapSolverWafForm
 
 Now ``amazon-orders login`` will clear any AWS WAF challenge it encounters during authentication.
 
@@ -60,7 +63,7 @@ Register the form in your ``~/.config/amazonorders/config.yml``:
 .. code-block:: yaml
 
     auth_forms_classes:
-      - amazonorders.contrib.captcha.anticaptcha.AntiCaptchaWafForm
+      - amazonorders.contrib.waf.anticaptcha.AntiCaptchaWafForm
 
 2Captcha
 --------
@@ -82,19 +85,19 @@ Register the form in your ``~/.config/amazonorders/config.yml``:
 .. code-block:: yaml
 
     auth_forms_classes:
-      - amazonorders.contrib.captcha.twocaptcha.TwoCaptchaWafForm
+      - amazonorders.contrib.waf.twocaptcha.TwoCaptchaWafForm
 
 Writing Your Own
 ----------------
 
 The ``auth_forms_classes`` config option accepts any
 :class:`~amazonorders.forms.AuthForm` subclass, so you can integrate any provider you like. Subclass
-:class:`~amazonorders.contrib.captcha.base.AwsWafForm` and implement ``_solve_token(url) -> str`` to call the
+:class:`~amazonorders.contrib.waf.base.AwsWafForm` and implement ``_solve_token(url) -> str`` to call the
 service of your choice and return the resulting ``aws-waf-token`` cookie value:
 
 .. code-block:: python
 
-    from amazonorders.contrib.captcha.base import AwsWafForm
+    from amazonorders.contrib.waf.base import AwsWafForm
 
 
     class MyCustomWafForm(AwsWafForm):
@@ -111,6 +114,6 @@ or a `pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.
 
 .. note::
 
-   ``amazon-orders`` does not maintain or recommend any specific Captcha solver. You're responsible for evaluating
+   ``amazon-orders`` does not maintain or recommend any specific WAF solver. You're responsible for evaluating
    the security, pricing, and reliability of any third-party service you choose, and for any costs associated with
    the API calls those services make on your behalf.

@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- Optional third-party AWS WAF solver integrations under `amazonorders.contrib.captcha`. Three providers ship as opt-in extras: CapSolver (`pip install amazon-orders[capsolver]`), Anti-Captcha (`pip install amazon-orders[anticaptcha]`), and 2Captcha (`pip install amazon-orders[2captcha]`). Each is enabled by adding the form's dotted path to `auth_forms_classes` in the config. See [the docs](https://amazon-orders.readthedocs.io/captcha.html) for the recipe. Inspired by [PR #72](https://github.com/alexdlaird/amazon-orders/pull/72) from @blytheaw.
+- Optional third-party AWS WAF solver integrations under `amazonorders.contrib.waf`. Three providers ship as opt-in extras: CapSolver (`pip install amazon-orders[capsolver]`), Anti-Captcha (`pip install amazon-orders[anticaptcha]`), and 2Captcha (`pip install amazon-orders[2captcha]`). Each is enabled by adding the form's dotted path to `auth_forms_classes` in the config. See [the docs](https://amazon-orders.readthedocs.io/waf.html) for setup. Inspired by [PR #72](https://github.com/alexdlaird/amazon-orders/pull/72) from @blytheaw.
 - `auth_forms_classes` config option for plugging custom `AuthForm` subclasses into the auth chain without code changes.
 - `AmazonSession.default_auth_forms()` static helper that returns the default form chain so callers extending it stay in sync with future releases.
 - Configurable Amazon domain for non-`.com` sites via the `domain` parameter on `AmazonSession`, the `domain` config field, and the `--domain` CLI flag. Inspired by [PR #67](https://github.com/alexdlaird/amazon-orders/pull/67) from @sh00t2kill.

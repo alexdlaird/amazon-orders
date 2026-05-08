@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 from bs4 import BeautifulSoup
 
-from amazonorders.contrib.captcha.anticaptcha import AntiCaptchaWafForm
+from amazonorders.contrib.waf.anticaptcha import AntiCaptchaWafForm
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase

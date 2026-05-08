@@ -42,8 +42,8 @@ files are relevant to the issue, attach them to your request.
 Captcha Blocking Login
 ----------------------
 
-Amazon may present a Captcha or AWS WAF JavaScript challenge during login. ``amazon-orders`` ships built-in
-support for solving these via third-party solver services as opt-in extras — see :doc:`captcha` for
+Amazon may present an AWS WAF JavaScript challenge during login. ``amazon-orders`` ships built-in
+support for solving these via third-party solver services as opt-in extras — see :doc:`waf` for
 setup. If a supported extra isn't working for you, please
 `open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_
 or a `pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.

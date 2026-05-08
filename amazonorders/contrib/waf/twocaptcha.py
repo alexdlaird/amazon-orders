@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import json
 
-from amazonorders.contrib.captcha.base import AwsWafForm
+from amazonorders.contrib.waf.base import AwsWafForm
 from amazonorders.exception import AmazonOrdersError
 
 

@@ -136,7 +136,7 @@ For more advanced usage, dive deeper in to the rest of the documentation.
    :maxdepth: 2
 
    api
-   captcha
+   waf
    troubleshooting
 
 .. include:: ../CONTRIBUTING.rst

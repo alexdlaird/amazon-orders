@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 from bs4 import BeautifulSoup
 
-from amazonorders.contrib.captcha.capsolver import CapSolverWafForm
+from amazonorders.contrib.waf.capsolver import CapSolverWafForm
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
@@ -161,7 +161,7 @@ class TestCapSolverWafForm(UnitTestCase):
 
         # WHEN
         with patch.dict(sys.modules, {"capsolver": fake_capsolver}):
-            with self.assertLogs("amazonorders.contrib.captcha.base", level="INFO") as logs:
+            with self.assertLogs("amazonorders.contrib.waf.base", level="INFO") as logs:
                 form.submit(last_response)
 
         # THEN
