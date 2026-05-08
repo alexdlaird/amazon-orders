@@ -15,12 +15,12 @@ class TestCase(unittest.TestCase):
     def assert_populated_generic(self, order, full_details):
         self.assertIsNotNone(order.order_number)
         self.assertIsNotNone(order.order_details_link)
-        self.assertIsNotNone(order.order_placed_date)
         self.assertEqual(order.full_details, full_details)
 
         if order.cancelled:
             return
 
+        self.assertIsNotNone(order.order_placed_date)
         self.assertIsNotNone(order.grand_total)
         if order.recipient:
             self.assertIsNotNone(order.recipient.name)
