@@ -17,7 +17,7 @@ from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersAuthRedirectError
 from amazonorders.forms import (AuthForm, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm,
                                 SignInForm, ClaimForm, IntentForm)
-from amazonorders.util import AmazonSessionResponse
+from amazonorders.util import AmazonSessionResponse, load_class
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +82,23 @@ class AmazonSession:
             config.set_domain(domain)
         if not auth_forms:
             auth_forms = AmazonSession.default_auth_forms(config)
+            for path in config.auth_forms_classes or []:
+                try:
+                    module_path, class_name = path.rsplit(".", 1)
+                    cls = load_class(module_path.split("."), class_name)
+                except (ImportError, AttributeError, ValueError) as e:
+                    raise AmazonOrdersError(
+                        f"Could not load auth_forms_classes entry '{path}': {e}"
+                    ) from e
+                if not (isinstance(cls, type) and issubclass(cls, AuthForm)):
+                    raise AmazonOrdersError(
+                        f"auth_forms_classes entry '{path}' must be a subclass of "
+                        f"{AuthForm.__module__}.{AuthForm.__name__}."
+                    )
+                # AuthForm subclasses registered via auth_forms_classes are expected to take
+                # only ``config`` (e.g. AwsWafForm subclasses); the base AuthForm signature
+                # additionally requires ``selector``
+                auth_forms.insert(-1, cls(config))  # type: ignore[call-arg]
 
         #: An Amazon username. Environment variable ``AMAZON_USERNAME`` will override passed in or config value.
         self.username: Optional[str] = os.environ.get("AMAZON_USERNAME") or username or config.username

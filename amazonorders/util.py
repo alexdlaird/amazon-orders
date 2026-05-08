@@ -26,6 +26,14 @@ class AmazonSessionResponse:
         self.parsed: Tag = BeautifulSoup(self.response.text, bs4_parser)
 
 
+def _selector_text_matches(tag: Tag, selector: Selector) -> bool:
+    if selector.text is not None:
+        return tag.text.strip() == selector.text
+    if selector.text_contains is not None:
+        return selector.text_contains.lower() in tag.text.lower()
+    return False
+
+
 def select(parsed: Tag, selector: Union[List[Union[str, Selector]], Union[str, Selector]]) -> List[Tag]:
     """
     This is a helper function that extends BeautifulSoup's `select() <https://www.crummy.com/software/
@@ -45,7 +53,7 @@ def select(parsed: Tag, selector: Union[List[Union[str, Selector]], Union[str, S
 
         if isinstance(s, Selector):
             for t in parsed.select(s.css_selector):
-                if t and t.text.strip() == s.text:
+                if t and _selector_text_matches(t, s):
                     tag += t
         elif isinstance(s, str):
             tag = parsed.select(s)
@@ -78,7 +86,7 @@ def select_one(parsed: Tag,
 
         if isinstance(s, Selector):
             t = parsed.select_one(s.css_selector)
-            if t and t.text.strip() == s.text:
+            if t and _selector_text_matches(t, s):
                 tag = t
         elif isinstance(s, str):
             tag = parsed.select_one(s)

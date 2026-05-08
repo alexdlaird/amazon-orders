@@ -39,7 +39,7 @@ class AmazonOrdersConfig:
 
         # Provision default configs
         thread_pool_size = (os.cpu_count() or 1) * 4
-        self._data = {
+        self._data: Dict[str, Any] = {
             # The maximum number of times to retry provisioning initial cookies before failing
             "max_cookie_attempts": 10,
             # The number of seconds to wait before retrying to provision initial cookies
@@ -57,6 +57,7 @@ class AmazonOrdersConfig:
             "shipment_class": "amazonorders.entity.shipment.Shipment",
             "item_class": "amazonorders.entity.item.Item",
             "bs4_parser": "html.parser",
+            "auth_forms_classes": [],
             "thread_pool_size": (os.cpu_count() or 1) * 4,
             "connection_pool_size": thread_pool_size * 2,
             # The maximum number of failed attempts to allow before failing CLI authentication
@@ -105,7 +106,7 @@ class AmazonOrdersConfig:
 
     def _validate_bs4_parser(self) -> None:
         try:
-            BeautifulSoup("", self._data["bs4_parser"])
+            BeautifulSoup("", str(self._data["bs4_parser"]))
         except FeatureNotFound:
             logger.debug(
                 f"Configured bs4_parser '{self._data['bs4_parser']}' is unavailable; "

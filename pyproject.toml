@@ -35,6 +35,15 @@ classifiers = [
 captcha = [
     "amazoncaptcha>=0.4",
 ]
+capsolver = [
+    "capsolver",
+]
+anticaptcha = [
+    "anticaptchaofficial",
+]
+2captcha = [
+    "2captcha-python",
+]
 lxml = [
     "lxml",
 ]

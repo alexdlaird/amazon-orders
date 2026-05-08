@@ -12,11 +12,15 @@ class Selector:
 
     def __init__(self,
                  css_selector: str,
-                 text: Optional[str] = None) -> None:
+                 text: Optional[str] = None,
+                 text_contains: Optional[str] = None) -> None:
         #: The CSS selector.
         self.css_selector: str = css_selector
-        #: The text within the tag that must match.
+        #: The text within the tag that must match exactly (after stripping).
         self.text: Optional[str] = text
+        #: A substring within the tag's text that must be present (case-insensitive). Evaluated only when
+        #: :attr:`text` is not set.
+        self.text_contains: Optional[str] = text_contains
 
 
 class Selectors:
@@ -94,8 +98,10 @@ class Selectors:
     ]
     # Selectors defined here mean the Order will not have parsable totals
     ORDER_SKIP_TOTALS = [
-        # Identifies as order that was cancelled
-        Selector("div.yohtmlc-shipment-status-primaryText", "Cancelled")
+        # Identifies a cancelled order on the history page
+        Selector("div.yohtmlc-shipment-status-primaryText", "Cancelled"),
+        # Identifies a cancelled order on the details page
+        Selector("h4.a-alert-heading", text_contains="cancelled")
     ]
 
     #####################################
