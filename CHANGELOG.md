@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.1.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.2.0...HEAD)
+
+## [4.2.0](https://github.com/alexdlaird/amazon-orders/compare/4.1.0...4.2.0) - 2026-05-08
+
+### Added
+
+- Support for AWS WAF solving via third-party providers like CapSolver (`pip install amazon-orders[capsolver]`), Anti-Captcha (`pip install amazon-orders[anticaptcha]`), and 2Captcha (`pip install amazon-orders[2captcha]`). See [the docs](https://amazon-orders.readthedocs.io/waf.html) for setup.
+- `auth_forms_classes` config option for plugging custom `AuthForm` subclasses into the auth chain without code changes.
+- `AmazonSession.default_auth_forms()` static helper that returns the default form chain so callers can more easily extend it.
+- Configurable Amazon domain for non-`.com` sites via the `domain` parameter on `AmazonSession`, the `domain` config field, and the `--domain` CLI flag.
+- Improved currency parsing for English non-`.com` Amazon sites.
 
 ### Added
 
