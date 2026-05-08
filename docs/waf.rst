@@ -31,7 +31,7 @@ Add the ``[capsolver]`` extra:
 
     pip install amazon-orders[capsolver]
 
-Set your API key as an environment variable:
+Set your API key as an environment variable (or via :class:`~amazonorders.conf.AmazonOrdersConfig`):
 
 .. code-block:: shell
 
@@ -55,7 +55,7 @@ Add the ``[anticaptcha]`` extra:
 
     pip install amazon-orders[anticaptcha]
 
-Set your API key as an environment variable:
+Set your API key as an environment variable (or via :class:`~amazonorders.conf.AmazonOrdersConfig`):
 
 .. code-block:: shell
 
@@ -77,7 +77,7 @@ Add the ``[2captcha]`` extra:
 
     pip install amazon-orders[2captcha]
 
-Set your API key as an environment variable:
+Set your API key as an environment variable (or via :class:`~amazonorders.conf.AmazonOrdersConfig`):
 
 .. code-block:: shell
 

@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.2.0...HEAD)
 
+### Changed
+
+- WAF solver API keys can now also be set via `AmazonOrdersConfig` (under the lowercased env var name, e.g. `capsolver_api_key`), matching the precedence pattern used for other credentials.
+
 ## [4.2.0](https://github.com/alexdlaird/amazon-orders/compare/4.1.0...4.2.0) - 2026-05-08
 
 ### Added

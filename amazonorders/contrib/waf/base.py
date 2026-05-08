@@ -46,13 +46,18 @@ class AwsWafForm(AuthForm):
     def __init__(self,
                  config: AmazonOrdersConfig) -> None:
         super().__init__(config, selector=None)
-        api_key = os.environ.get(self.API_KEY_ENV_VAR, "")
+        config_key = self.API_KEY_ENV_VAR.lower()
+        api_key = (os.environ.get(self.API_KEY_ENV_VAR)
+                   or getattr(config, config_key, None)
+                   or "")
         if not api_key:
             raise AmazonOrdersError(
                 f"{type(self).__name__} requires the {self.API_KEY_ENV_VAR} "
-                f"environment variable to be set."
+                f"environment variable, or the {config_key} config key, to be set."
             )
-        #: The third-party solver API key, sourced from :attr:`API_KEY_ENV_VAR`.
+        #: The third-party solver API key. Resolved (in order of precedence) from the
+        #: :attr:`API_KEY_ENV_VAR` environment variable, then from the lowercase config key
+        #: of the same name on :class:`~amazonorders.conf.AmazonOrdersConfig`.
         self.api_key: str = api_key
         self._goku: Optional[Dict[str, Any]] = None
         self._challenge_script: Optional[str] = None

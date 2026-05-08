@@ -28,28 +28,8 @@ pip install amazon-orders --upgrade
 
 That's it! `amazon-orders` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (ex. `==4.0.*`, not `==4.2.0`) to
+If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (ex. `==4.2.*`, not `==4.2.1`) to
 ensure you always get the latest stable release.
-
-To enable **WAF auto-solve** via a third-party integration, install with the relevant extra:
-
-```sh
-pip install amazon-orders[capsolver]
-pip install amazon-orders[anticaptcha]
-pip install amazon-orders[2captcha]
-```
-
-See [Solving WAF Challenges](https://amazon-orders.readthedocs.io/waf.html) for details.
-
-To enable **Captcha auto-solve** on Python <=3.12 (via the optional [`amazoncaptcha`](https://pypi.org/project/amazoncaptcha/)
-dependency), install with the `captcha` extra:
-
-```sh
-pip install amazon-orders[captcha]
-```
-
-Without this extra, Captcha challenges fall back to manual entry. `amazoncaptcha` is not available on Python 3.13+; see
-[Captcha Blocking Login](https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login) for details.
 
 ## Basic Usage
 
@@ -106,6 +86,26 @@ environment variables `amazon-orders` looks for are:
 - `AMAZON_USERNAME`
 - `AMAZON_PASSWORD`
 - `AMAZON_OTP_SECRET_KEY` (see [docs for usage](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key))
+
+To enable **WAF auto-solve** via a third-party integration, install with the relevant extra:
+
+```sh
+pip install amazon-orders[capsolver]
+pip install amazon-orders[anticaptcha]
+pip install amazon-orders[2captcha]
+```
+
+See [Solving WAF Challenges](https://amazon-orders.readthedocs.io/waf.html) for details.
+
+To enable **Captcha auto-solve** on Python <=3.12 (via the optional [`amazoncaptcha`](https://pypi.org/project/amazoncaptcha/)
+dependency), install with the `captcha` extra:
+
+```sh
+pip install amazon-orders[captcha]
+```
+
+Without this extra, Captcha challenges fall back to manual entry. `amazoncaptcha` is not available on Python 3.13+; see
+[Captcha Blocking Login](https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login) for details.
 
 ## Documentation
 
