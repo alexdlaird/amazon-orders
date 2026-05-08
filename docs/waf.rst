@@ -7,8 +7,11 @@ JavaScript challenge during login. ``amazon-orders`` ships built-in support for 
 solver services as opt-in extras. Once one is configured, ``amazon-orders login`` clears the challenge
 automatically.
 
-(For the legacy OCR-based image Captcha, see the ``[captcha]`` extra in :doc:`troubleshooting`. WAF
-challenges and image Captchas are distinct mechanisms — this page covers the JavaScript-based WAF flow only.)
+.. note::
+
+    For the legacy OCR-based image Captcha, see the ``[captcha]`` extra in :doc:`troubleshooting`. WAF
+    challenges and image Captchas are distinct mechanisms — this page covers the JavaScript-based WAF
+    flow only.
 
 The supported providers are:
 
@@ -112,9 +115,3 @@ Once registered in ``auth_forms_classes``, your form participates in the same au
 If a supported extra isn't working for you, please
 `open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_
 or a `pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.
-
-.. note::
-
-   ``amazon-orders`` does not maintain or recommend any specific WAF solver. You're responsible for evaluating
-   the security, pricing, and reliability of any third-party service you choose, and for any costs associated with
-   the API calls those services make on your behalf.
