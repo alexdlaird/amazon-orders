@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 from bs4 import BeautifulSoup
 
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.contrib.waf.twocaptcha import TwoCaptchaWafForm
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import AmazonSession
@@ -42,6 +43,40 @@ class TestTwoCaptchaWafForm(UnitTestCase):
 
         # THEN
         self.assertEqual("test-api-key", form.api_key)
+
+    def test_init_with_config_key(self):
+        # GIVEN
+        prior = os.environ.pop("TWOCAPTCHA_API_KEY", None)
+        try:
+            config = AmazonOrdersConfig(data={
+                "output_dir": self.test_output_dir,
+                "cookie_jar_path": self.test_cookie_jar_path,
+                "twocaptcha_api_key": "config-api-key"
+            })
+
+            # WHEN
+            form = TwoCaptchaWafForm(config)
+
+            # THEN
+            self.assertEqual("config-api-key", form.api_key)
+        finally:
+            if prior is not None:
+                os.environ["TWOCAPTCHA_API_KEY"] = prior
+
+    @patch.dict(os.environ, {"TWOCAPTCHA_API_KEY": "env-api-key"})
+    def test_init_env_var_takes_precedence_over_config(self):
+        # GIVEN
+        config = AmazonOrdersConfig(data={
+            "output_dir": self.test_output_dir,
+            "cookie_jar_path": self.test_cookie_jar_path,
+            "twocaptcha_api_key": "config-api-key"
+        })
+
+        # WHEN
+        form = TwoCaptchaWafForm(config)
+
+        # THEN
+        self.assertEqual("env-api-key", form.api_key)
 
     @patch.dict(os.environ, {"TWOCAPTCHA_API_KEY": "test-api-key"})
     def test_select_form_detects_waf_challenge(self):
