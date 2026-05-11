@@ -5,6 +5,7 @@ import json
 import os
 import time
 import unittest
+from unittest import mock
 
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersNotFoundError, \
     AmazonOrdersAuthRedirectError
@@ -91,45 +92,37 @@ class TestIntegrationAuth(IntegrationTestCase):
         self.assertNotEqual(old_session, amazon_session.session)
 
     def test_login_no_account(self):
-        amazon_username = os.environ["AMAZON_USERNAME"]
-        os.environ["AMAZON_USERNAME"] = "08511698-9ff5-fake@gmail.com"
+        with mock.patch.dict(os.environ, {"AMAZON_USERNAME": "08511698-9ff5-fake@gmail.com"}):
+            # GIVEN
+            amazon_session = AmazonSession(debug=self.debug,
+                                           config=self.test_config)
 
-        # GIVEN
-        amazon_session = AmazonSession(debug=self.debug,
-                                       config=self.test_config)
+            # WHEN
+            with self.assertRaises(AmazonOrdersAuthError) as cm:
+                amazon_session.login()
 
-        # WHEN
-        with self.assertRaises(AmazonOrdersAuthError) as cm:
-            amazon_session.login()
-
-        # THEN
-        self.assertFalse(amazon_session.is_authenticated)
-        self.assertIn("Looks like you're new to Amazon", str(cm.exception))
-
-        os.environ["AMAZON_USERNAME"] = amazon_username
+            # THEN
+            self.assertFalse(amazon_session.is_authenticated)
+            self.assertIn("Looks like you're new to Amazon", str(cm.exception))
 
     @unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD", "False") == "True",
                      "Running this test too too frequently will trigger the Captcha flow instead (causing"
                      "the test to fail), and also may lock the Amazon account. Set "
                      "AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD=True explicitly to run.")
     def test_login_wrong_password(self):
-        amazon_password = os.environ["AMAZON_PASSWORD"]
-        os.environ["AMAZON_PASSWORD"] = "invalid-password"
+        with mock.patch.dict(os.environ, {"AMAZON_PASSWORD": "invalid-password"}):
+            # GIVEN
+            amazon_session = AmazonSession(debug=self.debug,
+                                           config=self.test_config)
 
-        # GIVEN
-        amazon_session = AmazonSession(debug=self.debug,
-                                       config=self.test_config)
+            # WHEN
+            with self.assertRaises(AmazonOrdersError) as cm:
+                amazon_session.login()
 
-        # WHEN
-        with self.assertRaises(AmazonOrdersError) as cm:
-            amazon_session.login()
-
-        # THEN
-        self.assertFalse(amazon_session.is_authenticated)
-        if isinstance(cm.exception, AmazonOrdersAuthError):
-            self.assertIn("Error from Amazon:", str(cm.exception))
-            self.assertIn("password", str(cm.exception))
-        else:
-            self.assertIn("CaptchaForm", str(cm.exception))
-
-        os.environ["AMAZON_PASSWORD"] = amazon_password
+            # THEN
+            self.assertFalse(amazon_session.is_authenticated)
+            if isinstance(cm.exception, AmazonOrdersAuthError):
+                self.assertIn("Error from Amazon:", str(cm.exception))
+                self.assertIn("password", str(cm.exception))
+            else:
+                self.assertIn("CaptchaForm", str(cm.exception))
