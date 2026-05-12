@@ -72,6 +72,7 @@ docs = [
     "types-PyYAML",
     "types-python-dateutil",
     "sphinx-sitemap",
+    "sphinxext-opengraph",
 ]
 
 [project.scripts]
