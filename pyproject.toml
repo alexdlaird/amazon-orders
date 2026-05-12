@@ -71,6 +71,7 @@ docs = [
     "types-Pillow",
     "types-PyYAML",
     "types-python-dateutil",
+    "sphinx-sitemap",
 ]
 
 [project.scripts]
