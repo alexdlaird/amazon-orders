@@ -1,3 +1,4 @@
 User-agent: *
+Allow: /
 
 Sitemap: https://amazon-orders.readthedocs.io/sitemap.xml
