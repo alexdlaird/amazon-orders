@@ -30,8 +30,12 @@ class Item(Parsable):
         super().__init__(parsed, config)
 
         #: The Item title.
-        self.title: str = self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_TITLE_SELECTOR,
-                                                 required=True)
+        self.title: str = (
+            self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_TITLE_SELECTOR)
+            or self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_TITLE_IMG_SELECTOR,
+                                      attr_name="alt",
+                                      required=True)
+        )
         #: The Item link.
         self.link: str = self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_LINK_SELECTOR,
                                                 attr_name="href", required=True)
