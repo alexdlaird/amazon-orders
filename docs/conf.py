@@ -81,7 +81,7 @@ sitemap_url_scheme = "{link}"
 
 ogp_site_url = html_baseurl
 ogp_image = f"{html_baseurl}logo.png"
-ogp_image_alt = "amazon-orders - A Python libray (and CLI) for Amazon order history"
+ogp_image_alt = "amazon-orders - A Python library (and CLI) for Amazon order history; line items, prices, and receipts"
 ogp_type = "website"
 ogp_social_cards = {"enable": False}
 
@@ -190,7 +190,7 @@ man_pages = [
 texinfo_documents = [
     (master_doc, "amazonorders", "amazon-orders Documentation",
      author, "amazon-orders",
-     "A Python libray (and CLI) for Amazon order history",
+     "A Python library (and CLI) for Amazon order history; line items, prices, and receipts",
      "Miscellaneous"),
 ]
 

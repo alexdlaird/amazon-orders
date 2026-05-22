@@ -1,11 +1,11 @@
 .. rst-class:: hide-header
 
-******************************************************************
-Amazon Orders - A Python libray (and CLI) for Amazon order history
-******************************************************************
+*****************************************************************************************************
+Amazon Orders - A Python library (and CLI) for Amazon order history; line items, prices, and receipts
+*****************************************************************************************************
 
 .. image:: _html/logo.png
-   :alt: amazon-orders - A Python libray (and CLI) for Amazon order history
+   :alt: amazon-orders - A Python library (and CLI) for Amazon order history; line items, prices, and receipts
    :align: center
 
 |
