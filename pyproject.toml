@@ -1,9 +1,10 @@
 [project]
 name = "amazon-orders"
 dynamic = ["version"]
-description = "A Python libray (and CLI) for Amazon order history"
+description = "A Python library (and CLI) for Amazon order history"
 readme = "README.md"
 license = "MIT"
+keywords = ["amazon", "orders", "order-history", "scraper", "web-scraping", "receipts", "cli"]
 authors = [{ name = "Alex Laird", email = "contact@alexlaird.com" }]
 maintainers = [{ name = "Alex Laird", email = "contact@alexlaird.com" }]
 requires-python = ">=3.9"
@@ -20,6 +21,7 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Environment :: Web Environment",
+    "Framework :: Click",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -28,7 +30,10 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP :: Browsers",
+    "Topic :: Office/Business :: Financial",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup :: HTML",
 ]
 
 [project.optional-dependencies]
