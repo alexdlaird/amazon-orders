@@ -23,7 +23,7 @@ Amazon Orders - A Python library (and CLI) for Amazon order history, line items,
 .. image:: https://img.shields.io/github/license/alexdlaird/amazon-orders
    :target: https://github.com/alexdlaird/amazon-orders
 
-``amazon-orders`` is an unofficial library that provides a Python API (and CLI) for Amazon order history.
+``amazon-orders`` is an unofficial library that provides a Python API (and CLI) for Amazon order history, line items, and transactions.
 
 Only the English, ``.com`` version of Amazon is officially supported. Other Amazon domains can be targeted by passing
 ``domain`` to :class:`~amazonorders.session.AmazonSession` (or ``--domain`` on the CLI), and other English-based sites

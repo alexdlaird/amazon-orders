@@ -7,7 +7,7 @@
 [![Docs](https://img.shields.io/readthedocs/amazon-orders)](https://amazon-orders.readthedocs.io)
 [![GitHub License](https://img.shields.io/github/license/alexdlaird/amazon-orders)](https://github.com/alexdlaird/amazon-orders/blob/main/LICENSE)
 
-`amazon-orders` is an unofficial library that provides a Python API (and CLI) for Amazon order history.
+`amazon-orders` is an unofficial library that provides a Python API (and CLI) for Amazon order history, line items, and transactions.
 
 Only the English, `.com` version of Amazon is officially supported. Other Amazon domains can be
 targeted by passing `domain` to [`AmazonSession`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession)
