@@ -1,11 +1,11 @@
 .. rst-class:: hide-header
 
-*****************************************************************************************************
-Amazon Orders - A Python library (and CLI) for Amazon order history; line items, prices, and receipts
-*****************************************************************************************************
+*************************************************************************************************
+Amazon Orders - A Python library (and CLI) for Amazon order history, line items, and transactions
+*************************************************************************************************
 
 .. image:: _html/logo.png
-   :alt: amazon-orders - A Python library (and CLI) for Amazon order history; line items, prices, and receipts
+   :alt: amazon-orders - A Python library (and CLI) for Amazon order history, line items, and transactions
    :align: center
 
 |
@@ -23,13 +23,17 @@ Amazon Orders - A Python library (and CLI) for Amazon order history; line items,
 .. image:: https://img.shields.io/github/license/alexdlaird/amazon-orders
    :target: https://github.com/alexdlaird/amazon-orders
 
-``amazon-orders`` is an unofficial library that provides a Python API (and CLI) for Amazon order history
+``amazon-orders`` is an unofficial library that provides a Python API (and CLI) for Amazon order history.
 
-This package works by parsing data from Amazon's consumer-facing website. A periodic build validates functionality
-to ensure its stability, but as Amazon provides no official API to use, this package may break at any time (so check
-often to ensure you're on the latest version).
+Only the English, ``.com`` version of Amazon is officially supported. Other Amazon domains can be targeted by passing
+``domain`` to :class:`~amazonorders.session.AmazonSession` (or ``--domain`` on the CLI), and other English-based sites
+may work by chance -- see :ref:`Known Limitations <known-limitations>` for details.
 
-Only the English, ``.com`` version of Amazon is officially supported.
+.. note::
+
+    This package works by parsing data from Amazon's consumer-facing website. A periodic build validates
+    functionality to ensure its stability, but as Amazon provides no official API to use, older versions of
+    this package may break at any time, so it's recommended that you use the latest version.
 
 Installation
 ============
@@ -97,7 +101,7 @@ Automating Authentication
 -------------------------
 
 Authentication can be automated by (in order of precedence) storing credentials in environment variables, passing them
-to :class:`~amazonorders.session.AmazonSession`, or storing them :class:`~amazonorders.conf.AmazonOrdersConfig`. The
+to :class:`~amazonorders.session.AmazonSession`, or storing them in :class:`~amazonorders.conf.AmazonOrdersConfig`. The
 environment variables ``amazon-orders`` looks for are:
 
 - ``AMAZON_USERNAME``
@@ -122,7 +126,9 @@ To enable **Captcha auto-solve** on Python <=3.12 (via the optional
     pip install amazon-orders[captcha]
 
 Without this extra, Captcha challenges fall back to manual entry. ``amazoncaptcha`` is not available on Python 3.13+; see
-`Captcha Blocking Login <https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login>`_ for details.
+:doc:`troubleshooting` for details.
+
+.. _known-limitations:
 
 Known Limitations
 -----------------
