@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.2.1...HEAD)
 
+### Fixed
+
+- Improved error messaging for known JavaScript-based authentication challenges.
+
 ## [4.2.1](https://github.com/alexdlaird/amazon-orders/compare/4.2.0...4.2.1) - 2026-05-08
 
 ### Changed

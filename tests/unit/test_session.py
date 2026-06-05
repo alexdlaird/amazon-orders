@@ -738,6 +738,35 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
 
+    @responses.activate
+    def test_acic_login_blocker(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "acic-challenge.html"), "r", encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
+            self.amazon_session.login()
+
+        # THEN
+        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertIn("A JavaScript-based authentication challenge page has been found.", str(cm.exception))
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+
     def _config_with(self, **extra):
         return AmazonOrdersConfig(data={
             "output_dir": self.test_output_dir,
