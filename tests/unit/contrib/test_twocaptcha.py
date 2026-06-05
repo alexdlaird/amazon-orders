@@ -25,16 +25,14 @@ class TestTwoCaptchaWafForm(UnitTestCase):
             self.waf_html = f.read()
 
     def test_init_missing_env_var_raises(self):
-        # GIVEN
-        prior = os.environ.pop("TWOCAPTCHA_API_KEY", None)
-        try:
+        with patch.dict(os.environ):
+            # GIVEN
+            os.environ.pop("TWOCAPTCHA_API_KEY", None)
+
             # WHEN / THEN
             with self.assertRaises(AmazonOrdersError) as cm:
                 TwoCaptchaWafForm(self.test_config)
             self.assertIn("TWOCAPTCHA_API_KEY", str(cm.exception))
-        finally:
-            if prior is not None:
-                os.environ["TWOCAPTCHA_API_KEY"] = prior
 
     @patch.dict(os.environ, {"TWOCAPTCHA_API_KEY": "test-api-key"})
     def test_init_with_env_var(self):
@@ -45,9 +43,9 @@ class TestTwoCaptchaWafForm(UnitTestCase):
         self.assertEqual("test-api-key", form.api_key)
 
     def test_init_with_config_key(self):
-        # GIVEN
-        prior = os.environ.pop("TWOCAPTCHA_API_KEY", None)
-        try:
+        with patch.dict(os.environ):
+            # GIVEN
+            os.environ.pop("TWOCAPTCHA_API_KEY", None)
             config = AmazonOrdersConfig(data={
                 "output_dir": self.test_output_dir,
                 "cookie_jar_path": self.test_cookie_jar_path,
@@ -59,9 +57,6 @@ class TestTwoCaptchaWafForm(UnitTestCase):
 
             # THEN
             self.assertEqual("config-api-key", form.api_key)
-        finally:
-            if prior is not None:
-                os.environ["TWOCAPTCHA_API_KEY"] = prior
 
     @patch.dict(os.environ, {"TWOCAPTCHA_API_KEY": "env-api-key"})
     def test_init_env_var_takes_precedence_over_config(self):

@@ -4,9 +4,19 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.2.1...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.2.2...HEAD)
+
+## [4.2.2](https://github.com/alexdlaird/amazon-orders/compare/4.2.1...4.2.2) - 2026-06-05
+
+### Fixed
+
+- Improved error messaging for known JavaScript-based authentication challenges.
 
 ## [4.2.1](https://github.com/alexdlaird/amazon-orders/compare/4.2.0...4.2.1) - 2026-05-08
+
+### Changed
+
+- WAF solver API keys can now also be set via `AmazonOrdersConfig` (under the lowercased env var name, e.g. `capsolver_api_key`), matching the precedence pattern used for other credentials.
 
 ### Changed
 

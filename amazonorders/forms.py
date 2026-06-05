@@ -451,6 +451,22 @@ class CaptchaForm(AuthForm):
         self.data.update(additional_attrs)
 
 
+class AcicAuthBlocker(AuthForm):
+    def __init__(self,
+                 config: AmazonOrdersConfig) -> None:
+        super().__init__(config, None)
+
+    def select_form(self,
+                    amazon_session: "AmazonSession",
+                    parsed: Tag) -> bool:
+        if parsed.find(id="aa-challenge-page-captcha-container"):
+            raise AmazonOrdersAuthError(
+                "Amazon returned a JavaScript-based authentication challenge that this library cannot solve. See "
+                "https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login for help.")
+
+        return False
+
+
 class JSAuthBlocker(AuthForm):
     def __init__(self,
                  config: AmazonOrdersConfig,
@@ -467,8 +483,7 @@ class JSAuthBlocker(AuthForm):
 
         if re.search(self.regex, parsed.text):
             raise AmazonOrdersAuthError(
-                "A JavaScript-based authentication challenge page has been found. This library cannot solve these "
-                "challenges. See "
-                "https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login for more details.")
+                "Amazon returned a JavaScript-based authentication challenge that this library cannot solve. See "
+                "https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login for help.")
 
         return False

@@ -44,7 +44,9 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "notfound.extension",
-    "sphinx_autodoc_typehints"
+    "sphinx_autodoc_typehints",
+    "sphinx_sitemap",
+    "sphinxext.opengraph",
 ]
 autodoc_member_order = "bysource"
 
@@ -73,6 +75,15 @@ add_function_parentheses = False
 pygments_style = "sphinx"
 
 # -- Options for HTML output -------------------------------------------------
+
+html_baseurl = "https://amazon-orders.readthedocs.io/"
+sitemap_url_scheme = "{link}"
+
+ogp_site_url = html_baseurl
+ogp_image = f"{html_baseurl}logo.png"
+ogp_image_alt = "amazon-orders - A Python library (and CLI) for Amazon order history, line items, and transactions"
+ogp_type = "website"
+ogp_social_cards = {"enable": False}
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -179,7 +190,7 @@ man_pages = [
 texinfo_documents = [
     (master_doc, "amazonorders", "amazon-orders Documentation",
      author, "amazon-orders",
-     "A Python libray (and CLI) for Amazon order history",
+     "A Python library (and CLI) for Amazon order history, line items, and transactions",
      "Miscellaneous"),
 ]
 

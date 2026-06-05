@@ -1,4 +1,4 @@
-<p align="center"><img alt="amazon-orders - A Python libray (and CLI) for Amazon order history" src="https://amazon-orders.readthedocs.io/_images/logo.png" /></p>
+<p align="center"><img alt="amazon-orders - A Python library (and CLI) for Amazon order history" src="https://amazon-orders.readthedocs.io/_images/logo.png" /></p>
 
 [![Version](https://img.shields.io/pypi/v/amazon-orders)](https://pypi.org/project/amazon-orders)
 [![Python Versions](https://img.shields.io/pypi/pyversions/amazon-orders.svg)](https://pypi.org/project/amazon-orders)
@@ -7,16 +7,16 @@
 [![Docs](https://img.shields.io/readthedocs/amazon-orders)](https://amazon-orders.readthedocs.io)
 [![GitHub License](https://img.shields.io/github/license/alexdlaird/amazon-orders)](https://github.com/alexdlaird/amazon-orders/blob/main/LICENSE)
 
-`amazon-orders` is an unofficial library that provides a Python API (and CLI) for Amazon order history.
-
-This package works by parsing data from Amazon's consumer-facing website. A periodic build validates functionality
-to ensure its stability, but as Amazon provides no official API to use, this package may break at any time (so check
-often to ensure you're on the latest version).
+`amazon-orders` is an unofficial library that provides a Python API (and CLI) for Amazon order history, line items, and transactions.
 
 Only the English, `.com` version of Amazon is officially supported. Other Amazon domains can be
 targeted by passing `domain` to [`AmazonSession`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession)
 (or `--domain` on the CLI), and other English-based sites may work by chance — see
 [Known Limitations](https://amazon-orders.readthedocs.io/index.html#known-limitations) for details.
+
+> **Note:** This package works by parsing data from Amazon's consumer-facing website. A periodic build validates
+> functionality to ensure its stability, but as Amazon provides no official API to use, older versions of this
+> package may break at any time, so it's recommended that you use the latest version.
 
 ## Installation
 
@@ -28,7 +28,7 @@ pip install amazon-orders --upgrade
 
 That's it! `amazon-orders` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (ex. `==4.2.*`, not `==4.2.1`) to
+If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (ex. `==4.2.*`, not `==4.2.2`) to
 ensure you always get the latest stable release.
 
 ## Basic Usage
