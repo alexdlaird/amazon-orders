@@ -734,7 +734,7 @@ class TestSession(UnitTestCase):
 
         # THEN
         self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertIn("A JavaScript-based authentication challenge page has been found.", str(cm.exception))
+        self.assertIn("Amazon returned a JavaScript-based authentication challenge that this library cannot solve.", str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
 
@@ -763,7 +763,7 @@ class TestSession(UnitTestCase):
 
         # THEN
         self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertIn("A JavaScript-based authentication challenge page has been found.", str(cm.exception))
+        self.assertIn("Amazon returned a JavaScript-based authentication challenge that this library cannot solve.", str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
 
