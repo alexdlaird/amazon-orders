@@ -1,12 +1,31 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import logging
 import os
-from typing import Optional, TYPE_CHECKING
+from typing import Dict, Optional, TYPE_CHECKING
 from urllib.parse import urlencode, urlparse
 
 if TYPE_CHECKING:
     from amazonorders.conf import AmazonOrdersConfig
+
+logger = logging.getLogger(__name__)
+
+#: Browser-specific header overrides applied on top of the class-level ``BASE_HEADERS``
+#: (which already reflects the Chromium fingerprint). A ``None`` value removes the key
+#: (used to strip headers absent in that engine). ``Accept-Language`` here is the browser
+#: default; domain-specific TLD overrides still apply on top via :func:`~Constants._apply_domain`.
+_BROWSER_PRESETS: Dict[str, Dict[str, Optional[str]]] = {
+    "chromium": {},  # BASE_HEADERS already reflects the Chromium fingerprint; no overrides needed.
+    "firefox": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Sec-Ch-Ua": None,
+        "Sec-Ch-Ua-Mobile": None,
+        "Sec-Ch-Ua-Platform": None,
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) Gecko/20100101 Firefox/146.0",
+    },
+}
 
 #: ``Accept-Language`` values for English-locale Amazon sites, keyed by the TLD suffix that
 #: follows ``amazon.``. Looked up dynamically from the user-supplied domain; unknown TLDs keep
@@ -105,35 +124,21 @@ class Constants:
     ##########################################################################
 
     BASE_HEADERS = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,"
-                  "application/signed-exchange;v=b3;q=0.7",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",  # noqa: E501
         "Accept-Encoding": "gzip, deflate, br, zstd",
         "Accept-Language": "en-US,en;q=0.9",
-        "Cache-Control": "max-age=0",
-        "Device-Memory": "8",
-        "Downlink": "10",
-        "Dpr": "2",
-        "Ect": "4g",
-        "Origin": BASE_URL,
         "Host": urlparse(BASE_URL).netloc,
-        "Priority": "u=0, i",
+        "Origin": BASE_URL,
         "Referer": f"{SIGN_IN_URL}?{urlencode(SIGN_IN_QUERY_PARAMS)}",
-        "Rtt": "0",
-        "Sec-Ch-Device-Memory": "8",
-        "Sec-Ch-Dpr": "2",
-        "Sec-Ch-Ua": "Chromium\";v=\"140\", \"Not=A?Brand\";v=\"24\", \"Google Chrome\";v=\"140",
+        "Sec-Ch-Ua": '"Chromium";v="149", "Google Chrome";v="149", "Not.A/Brand";v="24"',
         "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": "macOS",
-        "Sec-Ch-Ua-Platform-Version": "15.6.1",
-        "Sec-Ch-Viewport-Width": "1512",
+        "Sec-Ch-Ua-Platform": '"macOS"',
         "Sec-Fetch-Dest": "document",
         "Sec-Fetch-Mode": "navigate",
         "Sec-Fetch-Site": "none",
         "Sec-Fetch-User": "?1",
         "Upgrade-Insecure-Requests": "1",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6_1) AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/140.0.0.0 Safari/537.36",
-        "Viewport-Width": "1512"
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",  # noqa: E501
     }
 
     ##########################################################################
@@ -152,12 +157,40 @@ class Constants:
     def __init__(self,
                  config: Optional["AmazonOrdersConfig"] = None) -> None:
         domain = None
+        browser = None
         if config is not None:
             domain = config._data.get("domain")
+            browser = config._data.get("browser")
         if not domain:
             domain = os.environ.get("AMAZON_BASE_URL")
+        if not browser:
+            browser = os.environ.get("AMAZON_BROWSER")
+        self._apply_browser(browser or "chromium")
         if domain:
             self._apply_domain(domain)
+
+    def _apply_browser(self,
+                       browser: str) -> None:
+        """
+        Apply browser-specific header overrides for the given browser engine.
+
+        :param browser: Browser engine name — ``"firefox"`` or ``"chromium"``. Unknown values
+            log a warning and leave ``BASE_HEADERS`` unchanged.
+        """
+        preset = _BROWSER_PRESETS.get(browser)
+        if preset is None:
+            logger.warning(
+                f"Unknown browser value {browser!r}; "
+                f"valid values are: {', '.join(_BROWSER_PRESETS)}. Using default headers."
+            )
+            return
+        headers = dict(type(self).BASE_HEADERS)
+        for key, value in preset.items():
+            if value is None:
+                headers.pop(key, None)
+            else:
+                headers[key] = value
+        self.BASE_HEADERS = headers
 
     def _apply_domain(self,
                       domain: str) -> None:
@@ -168,8 +201,8 @@ class Constants:
         """
         base_url = _normalize_base_url(domain)
 
-        # Read non-URL fields from the class so subclass-level overrides (assoc_handle,
-        # Accept-Language, etc.) are preserved; only rewrite the URL-shaped values.
+        # Build from the instance-level BASE_HEADERS if _apply_browser has already set it;
+        # otherwise fall back to the class-level definition.
         sign_in_query_params = dict(type(self).SIGN_IN_QUERY_PARAMS)
         sign_in_query_params["openid.return_to"] = f"{base_url}/?ref_=nav_custrec_signin"
 
@@ -189,7 +222,7 @@ class Constants:
             host = host[len("www."):]
         tld = host[len("amazon."):] if host.startswith("amazon.") else ""
 
-        headers = dict(type(self).BASE_HEADERS)
+        headers = dict(vars(self).get("BASE_HEADERS", type(self).BASE_HEADERS))
         headers["Origin"] = base_url
         headers["Host"] = urlparse(base_url).netloc
         headers["Referer"] = f"{sign_in_url}?{urlencode(sign_in_query_params)}"

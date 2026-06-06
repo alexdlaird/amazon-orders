@@ -13,7 +13,17 @@ automatically.
     challenges and image Captchas are distinct mechanisms — this page covers the JavaScript-based WAF
     flow only.
 
-The supported providers are:
+    Amazon's ACIC challenge (``/ax/aaut/verify/ap/challenge``) sometimes *embeds* a WAF challenge inside
+    its page. The :doc:`browser` extra handles the ACIC challenge automatically, and when a WAF solver
+    extra is also configured it will solve the embedded WAF challenge as part of the same flow without any
+    additional configuration.
+
+If a display is available and you prefer to handle the challenge interactively, the ``[browser]``
+extra provides :class:`~amazonorders.contrib.browser.playwright.PlaywrightManualWafForm`, which
+opens a **visible** browser window so you can solve the WAF challenge yourself. See :ref:`manual-waf-solving`
+in :doc:`browser` for setup.
+
+The supported API-based providers are:
 
 - `CapSolver <https://capsolver.com>`_
 - `Anti-Captcha <https://anti-captcha.com>`_

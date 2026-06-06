@@ -39,12 +39,23 @@ website's HTML. Before submitting a bug report or requesting a new feature, try 
 ``amazon-orders`` one of the ways described above, and if any console output or generated HTML
 files are relevant to the issue, attach them to your request.
 
-Captcha Blocking Login
-----------------------
+Login Challenges
+----------------
 
-Amazon may present an AWS WAF JavaScript challenge during login. ``amazon-orders`` ships built-in
-support for solving these via third-party solver services as opt-in extras — see :doc:`waf` for
-setup. If a supported extra isn't working for you, please
+Amazon may present JavaScript-based challenges during login that ``amazon-orders`` cannot solve via
+HTTP requests alone. Several opt-in extras address these:
+
+- **AWS WAF JavaScript challenge** — a ``[capsolver]``, ``[anticaptcha]``, or ``[2captcha]`` extra
+  solves this automatically via a third-party API. See :doc:`waf` for setup.
+- **AWS WAF JavaScript challenge (manual)** — the ``[browser]`` extra opens a visible browser
+  window for you to solve the challenge yourself. Suitable when a display is available and you
+  are able to handle the challenge interactively. See :ref:`manual-waf-solving` in :doc:`browser` for setup.
+- **ACIC challenge** (``/ax/aaut/verify/ap/challenge``) or **JS bot-detection page** — the
+  ``[browser]`` extra handles these by running a headless browser. When the
+  ACIC page also embeds a WAF challenge, a configured WAF solver extra solves it automatically as
+  part of the same flow. See :doc:`browser` for setup.
+
+If a supported extra isn't working for you, please
 `open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_
 or a `pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.
 
@@ -58,7 +69,7 @@ extra:
 
 .. note::
 
-   The ``[captcha]`` extra is **only available on Python <=3.12+**. ``amazoncaptcha`` pins ``pillow<9.6.0``, which is
+   The ``[captcha]`` extra is **only available on Python <=3.12**. ``amazoncaptcha`` pins ``pillow<9.6.0``, which is
    incompatible with Python 3.13 until that constraint is lifted from the upstream dependency.
 
 When this extra is not installed, Captcha challenges fall back to manually entering the

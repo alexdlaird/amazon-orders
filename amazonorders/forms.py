@@ -461,8 +461,9 @@ class AcicAuthBlocker(AuthForm):
                     parsed: Tag) -> bool:
         if parsed.find(id="aa-challenge-page-captcha-container"):
             raise AmazonOrdersAuthError(
-                "Amazon returned a JavaScript-based authentication challenge that this library cannot solve. See "
-                "https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login for help.")
+                "Amazon returned a JavaScript-based authentication challenge. Install the [browser] extra to "
+                "handle this automatically: `pip install amazon-orders[browser]`, then `playwright install chromium`. "
+                "See https://amazon-orders.readthedocs.io/browser.html for details.")
 
         return False
 
@@ -483,7 +484,8 @@ class JSAuthBlocker(AuthForm):
 
         if re.search(self.regex, parsed.text):
             raise AmazonOrdersAuthError(
-                "Amazon returned a JavaScript-based authentication challenge that this library cannot solve. See "
-                "https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login for help.")
+                "Amazon returned a JavaScript-based authentication challenge. Install the [browser] extra to "
+                "handle this automatically: `pip install amazon-orders[browser]`, then `playwright install chromium`. "
+                "See https://amazon-orders.readthedocs.io/browser.html for details.")
 
         return False

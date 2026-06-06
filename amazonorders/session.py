@@ -82,6 +82,7 @@ class AmazonSession:
             config.set_domain(domain)
         if not auth_forms:
             auth_forms = AmazonSession.default_auth_forms(config)
+            custom_forms = []
             for path in config.auth_forms_classes or []:
                 try:
                     module_path, class_name = path.rsplit(".", 1)
@@ -97,8 +98,13 @@ class AmazonSession:
                     )
                 # AuthForm subclasses registered via auth_forms_classes are expected to take
                 # only ``config`` (e.g. AwsWafForm subclasses); the base AuthForm signature
-                # additionally requires ``selector``
-                auth_forms.insert(-1, cls(config))  # type: ignore[call-arg]
+                # additionally requires ``selector``.
+                custom_forms.append(cls(config))  # type: ignore[call-arg]
+            # Insert as a block before the blocker pair (AcicAuthBlocker, JSAuthBlocker)
+            # so that solver forms run first while preserving auth_forms_classes order.
+            insert_pos = len(auth_forms) - 2
+            for offset, form_instance in enumerate(custom_forms):
+                auth_forms.insert(insert_pos + offset, form_instance)
 
         #: An Amazon username. Environment variable ``AMAZON_USERNAME`` will override passed in or config value.
         self.username: Optional[str] = os.environ.get("AMAZON_USERNAME") or username or config.username

@@ -118,6 +118,16 @@ To enable **WAF auto-solve** via a third-party integration, install with the rel
 
 See :doc:`waf` for details.
 
+To enable **browser-based challenge handling** (ACIC — Amazon Challenge and Identity Component — and JavaScript bot-detection pages) via
+a headless browser, install with the ``browser`` extra:
+
+.. code:: sh
+
+    pip install amazon-orders[browser]
+    playwright install chromium
+
+See :doc:`browser` for details.
+
 To enable **Captcha auto-solve** on Python <=3.12 (via the optional
 `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_ dependency), install with the ``captcha`` extra:
 
@@ -163,6 +173,7 @@ For more advanced usage, dive deeper in to the rest of the documentation.
 
    api
    waf
+   browser
    troubleshooting
 
 .. include:: ../CONTRIBUTING.rst

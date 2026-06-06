@@ -21,7 +21,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Environment :: Web Environment",
-    "Framework :: Click",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -48,6 +47,9 @@ anticaptcha = [
 ]
 2captcha = [
     "2captcha-python",
+]
+browser = [
+    "playwright>=1.47.0",
 ]
 lxml = [
     "lxml",

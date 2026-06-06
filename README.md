@@ -97,6 +97,16 @@ pip install amazon-orders[2captcha]
 
 See [Solving WAF Challenges](https://amazon-orders.readthedocs.io/waf.html) for details.
 
+To enable **browser-based challenge handling** (ACIC and JavaScript bot-detection pages) via
+a headless browser, install with the `browser` extra:
+
+```sh
+pip install amazon-orders[browser]
+playwright install chromium
+```
+
+See [Browser Automation](https://amazon-orders.readthedocs.io/browser.html) for details.
+
 To enable **Captcha auto-solve** on Python <=3.12 (via the optional [`amazoncaptcha`](https://pypi.org/project/amazoncaptcha/)
 dependency), install with the `captcha` extra:
 
@@ -105,7 +115,7 @@ pip install amazon-orders[captcha]
 ```
 
 Without this extra, Captcha challenges fall back to manual entry. `amazoncaptcha` is not available on Python 3.13+; see
-[Captcha Blocking Login](https://amazon-orders.readthedocs.io/troubleshooting.html#captcha-blocking-login) for details.
+[Login Challenges](https://amazon-orders.readthedocs.io/troubleshooting.html#login-challenges) for details.
 
 ## Documentation
 

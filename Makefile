@@ -1,4 +1,4 @@
-.PHONY: all install nopyc clean test test-integration build-test-resources docs check local validate-release upload install-waf
+.PHONY: all install nopyc clean test test-integration build-test-resources docs check local validate-release upload install-waf install-browser
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -24,6 +24,13 @@ install-waf:
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[$(WAF_EXTRAS)]"; \
+	)
+
+install-browser:
+	@( \
+		source $(PROJECT_VENV)/bin/activate; \
+		python -m pip install ".[browser]"; \
+		playwright install chromium --with-deps; \
 	)
 
 nopyc:
