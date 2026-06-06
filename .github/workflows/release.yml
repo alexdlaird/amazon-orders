@@ -14,6 +14,11 @@ on:
           - patch
           - minor
           - major
+      run_integration_tests:
+        description: 'Run integration tests'
+        required: true
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -40,7 +45,7 @@ jobs:
 
   integration:
     needs: prereq
-    if: ${{ vars.AMAZON_INTEGRATION_SKIP_ON_RELEASE != 'true' }}
+    if: ${{ vars.AMAZON_INTEGRATION_SKIP_ON_RELEASE != 'true' && inputs.run_integration_tests }}
     uses: ./.github/workflows/integration.yml
     with:
       use_waf_solver: true
