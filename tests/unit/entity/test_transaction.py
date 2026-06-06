@@ -23,6 +23,7 @@ class TestTransaction(UnitTestCase):
         # THEN
         self.assertEqual(transaction.completed_date, date(2024, 1, 1))
         self.assertEqual(transaction.payment_method, "My Payment Method")
+        self.assertIsNone(transaction.payment_method_last_4)
         self.assertEqual(transaction.order_number, "123-4567890-1234567")
         self.assertEqual(transaction.order_details_link,
                          "https://www.amazon.com/gp/css/summary/edit.html?orderID=123-4567890-1234567")  # noqa
@@ -46,6 +47,7 @@ class TestTransaction(UnitTestCase):
         # THEN
         self.assertEqual(transaction.completed_date, date(2024, 1, 1))
         self.assertEqual(transaction.payment_method, "My Payment Method")
+        self.assertIsNone(transaction.payment_method_last_4)
         self.assertEqual(transaction.order_number, "123-4567890-1234567")
         self.assertEqual(transaction.order_details_link,
                          "https://www.amazon.com/gp/css/summary/edit.html?orderID=123-4567890-1234567")  # noqa
