@@ -110,6 +110,7 @@ class Constants:
 
     ORDER_HISTORY_URL = f"{BASE_URL}/your-orders/orders"
     ORDER_DETAILS_URL = f"{BASE_URL}/gp/your-account/order-details"
+    ORDER_INVOICE_URL = f"{BASE_URL}/gp/css/summary/print.html"
     HISTORY_FILTER_QUERY_PARAM = "timeFilter"
 
     ##########################################################################
@@ -215,6 +216,7 @@ class Constants:
         self.SIGN_OUT_URL = f"{base_url}/gp/flex/sign-out.html"
         self.ORDER_HISTORY_URL = f"{base_url}/your-orders/orders"
         self.ORDER_DETAILS_URL = f"{base_url}/gp/your-account/order-details"
+        self.ORDER_INVOICE_URL = f"{base_url}/gp/css/summary/print.html"
         self.TRANSACTION_HISTORY_URL = f"{base_url}{self.TRANSACTION_HISTORY_ROUTE}"
 
         host = urlparse(base_url).netloc.lower().split(":")[0]

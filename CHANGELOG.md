@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- `AmazonOrders.get_invoice(order_id)`, which fetches an Order's print-friendly invoice page and returns the response (including its parsed HTML) for rendering or printing.
 - `AmazonTransactions.get_transactions()` now accepts an optional `order_id` to return only that Order's transactions, scoped server-side via Amazon's `transactionTag` filter, instead of fetching the full feed and filtering client-side.
 
 ## [4.3.0](https://github.com/alexdlaird/amazon-orders/compare/4.2.2...4.3.0) - 2026-06-07
