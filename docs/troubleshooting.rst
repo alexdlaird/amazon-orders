@@ -54,27 +54,13 @@ HTTP requests alone. Several opt-in extras address these:
   ``[browser]`` extra handles these by running a headless browser. When the
   ACIC page also embeds a WAF challenge, a configured WAF solver extra solves it automatically as
   part of the same flow. See :doc:`browser` for setup.
+- **Legacy text-based Captcha** — the ``[captcha]`` extra auto-solves via
+  `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_ (Python <=3.12 only;
+  incompatible with Python 3.13+). Falls back to manual entry without this extra.
 
 If a supported extra isn't working for you, please
 `open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_
 or a `pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.
-
-Auto-solving of legacy text-based Captchas is provided by the `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_
-library, which is an optional dependency. To enable it on **Python <=3.12**, install with the ``captcha``
-extra:
-
-.. code-block:: shell
-
-    pip install amazon-orders[captcha]
-
-.. note::
-
-   The ``[captcha]`` extra is **only available on Python <=3.12**. ``amazoncaptcha`` pins ``pillow<9.6.0``, which is
-   incompatible with Python 3.13 until that constraint is lifted from the upstream dependency.
-
-When this extra is not installed, Captcha challenges fall back to manually entering the
-solution. As Amazon has largely phased out this style of Captcha in favor of WAF, auto-solve may be removed
-entirely in a future major release.
 
 To attempt to fully automate login, you need to minimize how often (if at all) you are presented with Captcha
 challenges. There is no perfect workaround to this, as when and how challenges are presented is at the discretion of

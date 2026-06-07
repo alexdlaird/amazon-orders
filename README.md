@@ -28,7 +28,7 @@ pip install amazon-orders --upgrade
 
 That's it! `amazon-orders` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (ex. `==4.2.*`, not `==4.2.1`) to
+If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (ex. `==4.3.*`, not `==4.2.1`) to
 ensure you always get the latest stable release.
 
 ## Basic Usage
@@ -107,16 +107,7 @@ playwright install chromium
 
 See [Browser Automation](https://amazon-orders.readthedocs.io/browser.html) for details.
 
-To enable **Captcha auto-solve** on Python <=3.12 (via the optional [`amazoncaptcha`](https://pypi.org/project/amazoncaptcha/)
-dependency), install with the `captcha` extra:
-
-```sh
-pip install amazon-orders[captcha]
-```
-
-Without this extra, Captcha challenges fall back to manual entry. `amazoncaptcha` is not available on Python 3.13+.
-
-See [Login Challenges](https://amazon-orders.readthedocs.io/troubleshooting.html#login-challenges) for details.
+For **legacy Captcha auto-solve** on Python <=3.12, install `amazon-orders[captcha]` (see [Login Challenges](https://amazon-orders.readthedocs.io/troubleshooting.html#login-challenges) for details).
 
 ## Documentation
 
