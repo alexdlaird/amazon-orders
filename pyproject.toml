@@ -36,8 +36,8 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-captcha = [
-    "amazoncaptcha>=0.4",
+browser = [
+    "playwright>=1.47.0",
 ]
 capsolver = [
     "capsolver",
@@ -48,11 +48,11 @@ anticaptcha = [
 2captcha = [
     "2captcha-python",
 ]
-browser = [
-    "playwright>=1.47.0",
-]
 lxml = [
     "lxml",
+]
+captcha = [
+    "amazoncaptcha>=0.4",
 ]
 dev = [
     "pytest",
@@ -62,7 +62,6 @@ dev = [
     "pep8-naming",
     "responses",
     "lxml",
-    "amazoncaptcha>=0.4; python_version < '3.13'",
 ]
 integration = [
     "pytest-rerunfailures",
