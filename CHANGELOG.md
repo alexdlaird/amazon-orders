@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.3.0...HEAD)
 
+### Added
+
+- `AmazonTransactions.get_transactions()` now accepts an optional `order_id` to return only that Order's transactions, scoped server-side via Amazon's `transactionTag` filter, instead of fetching the full feed and filtering client-side.
+
 ## [4.3.0](https://github.com/alexdlaird/amazon-orders/compare/4.2.2...4.3.0) - 2026-06-07
 
 ### Added
