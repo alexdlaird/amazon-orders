@@ -2,7 +2,7 @@
 Solving WAF Challenges
 ======================
 
-Amazon may present an `AWS WAF <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
+Amazon may present an `AWS WAF (Web Application Firewall) <https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-puzzle-examples.html>`_
 JavaScript challenge during login. ``amazon-orders`` ships built-in support for solving these via third-party
 solver services as opt-in extras. Once one is configured, ``amazon-orders login`` clears the challenge
 automatically.

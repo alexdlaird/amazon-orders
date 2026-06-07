@@ -118,7 +118,7 @@ To enable **WAF auto-solve** via a third-party integration, install with the rel
 
 See :doc:`waf` for details.
 
-To enable **browser-based challenge handling** (ACIC — Amazon Challenge and Identity Component — and JavaScript bot-detection pages) via
+To enable **browser-based challenge handling** (ACIC and JavaScript bot-detection pages) via
 a headless browser, install with the ``browser`` extra:
 
 .. code:: sh
@@ -128,7 +128,9 @@ a headless browser, install with the ``browser`` extra:
 
 See :doc:`browser` for details.
 
-For **legacy Captcha auto-solve** on Python <=3.12, install ``amazon-orders[captcha]`` (see :doc:`troubleshooting` for details).
+For **legacy Captcha auto-solve** on Python <=3.12, install ``amazon-orders[captcha]``
+
+See :doc:`troubleshooting` for details.
 
 .. _known-limitations:
 
