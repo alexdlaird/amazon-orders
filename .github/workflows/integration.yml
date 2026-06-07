@@ -68,17 +68,28 @@ jobs:
             echo "::error::WAF solver enabled but CAPSOLVER_API_KEY is empty. Set the CAPSOLVER_API_KEY repo secret or disable the toggle."
             exit 1
           fi
-      - name: Configure third-party WAF solver
-        if: ${{ inputs.use_waf_solver || github.event_name == 'schedule' }}
+      - name: Configure integration test
+        env:
+          USE_WAF_SOLVER: ${{ inputs.use_waf_solver }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           mkdir -p tests/.integration-config
-          cat > tests/.integration-config/config.yml <<'EOF'
-          auth_forms_classes:
-            - amazonorders.contrib.waf.capsolver.CapSolverWafForm
-          EOF
+          echo "auth_forms_classes:" > tests/.integration-config/config.yml
+          # PlaywrightAcicForm handles the ACIC challenge silently via headless browser.
+          echo "  - amazonorders.contrib.browser.playwright.PlaywrightAcicForm" >> tests/.integration-config/config.yml
+          if [[ "$USE_WAF_SOLVER" != "true" && "$EVENT_NAME" != "schedule" ]]; then
+            # PlaywrightJSAuthForm is a best-effort fallback for the JS bot page when no
+            # paid WAF solver is configured. On schedule, CapSolverWafForm handles this.
+            echo "  - amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm" >> tests/.integration-config/config.yml
+          fi
+          if [[ "$USE_WAF_SOLVER" == "true" || "$EVENT_NAME" == "schedule" ]]; then
+            echo "  - amazonorders.contrib.waf.capsolver.CapSolverWafForm" >> tests/.integration-config/config.yml
+          fi
       - name: Install WAF solver extras
         if: ${{ inputs.use_waf_solver || github.event_name == 'schedule' }}
         run: make install install-waf
+      - name: Install browser extras
+        run: make install install-browser
       - name: Integration test
         run: make test-integration
       - name: Upload test output

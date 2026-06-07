@@ -32,6 +32,9 @@ class Transaction(Parsable):
         self.payment_method: str = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_TRANSACTION_PAYMENT_METHOD_SELECTOR
         )
+        #: The Transaction payment method's last digits, parsed from :attr:`payment_method`.
+        #: ``None`` if no masked digits.
+        self.payment_method_last_4: Optional[str] = self.safe_parse(self._parse_payment_method_last_4)
         #: The Transaction grand total.
         self.grand_total: float = self.safe_parse(self._parse_grand_total)
         #: The Transaction was a refund or not.
@@ -91,3 +94,11 @@ class Transaction(Parsable):
             value = f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
 
         return value
+
+    def _parse_payment_method_last_4(self) -> Optional[str]:
+        if not self.payment_method:
+            return None
+
+        match = re.search(r"\*+(\d+)$", self.payment_method)
+
+        return match.group(1) if match else None

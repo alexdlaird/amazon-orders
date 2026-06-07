@@ -43,7 +43,7 @@ class TwoCaptchaWafForm(AwsWafForm):
         except ImportError as e:
             raise AmazonOrdersError(
                 "TwoCaptchaWafForm requires the '2captcha-python' package. "
-                "Install it with: pip install amazon-orders[2captcha]"
+                "Install it with: `pip install amazon-orders[2captcha]`"
             ) from e
 
         solver = TwoCaptcha(self.api_key)

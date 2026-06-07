@@ -1,4 +1,4 @@
-.PHONY: all install nopyc clean test test-integration build-test-resources docs check local validate-release upload install-waf
+.PHONY: all install nopyc clean test test-integration build-test-resources docs check local validate-release upload install-waf install-browser
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -24,6 +24,13 @@ install-waf:
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[$(WAF_EXTRAS)]"; \
+	)
+
+install-browser:
+	@( \
+		source $(PROJECT_VENV)/bin/activate; \
+		python -m pip install ".[browser]"; \
+		playwright install chromium --with-deps; \
 	)
 
 nopyc:
@@ -82,8 +89,7 @@ validate-release:
 	@if [[ "${VERSION}" == "" ]]; then echo "VERSION is not set" & exit 1 ; fi
 
 	@if [[ $$(grep "__version__ = \"${VERSION}\"" amazonorders/__init__.py) == "" ]] ; then echo "Version not bumped in amazonorders/__init__.py" & exit 1 ; fi
-	@if [[ $$(grep "``==${VERSION}``" docs/index.rst) == "" ]] ; then echo "Version not bumped in docs/index.rst" & exit 1 ; fi
-	@if [[ $$(grep "``==${VERSION}``" README.md) == "" ]] ; then echo "Version not bumped in README.md" & exit 1 ; fi
+	@bash .github/scripts/bump-wildcard-pins.sh "${VERSION}" docs/index.rst README.md
 
 	@if [ -f SECURITY.md ]; then \
 		MAJOR_MINOR=$$(echo "${VERSION}" | cut -d. -f1-2); \

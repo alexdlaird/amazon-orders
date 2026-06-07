@@ -734,7 +734,7 @@ class TestSession(UnitTestCase):
 
         # THEN
         self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertIn("Amazon returned a JavaScript-based authentication challenge that this library cannot solve.",
+        self.assertIn("Amazon returned a JavaScript-based authentication challenge.",
                       str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
@@ -764,7 +764,7 @@ class TestSession(UnitTestCase):
 
         # THEN
         self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertIn("Amazon returned a JavaScript-based authentication challenge that this library cannot solve.",
+        self.assertIn("Amazon returned a JavaScript-based authentication challenge.",
                       str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
@@ -786,7 +786,7 @@ class TestSession(UnitTestCase):
         session = AmazonSession("user", "pass", config=config)
 
         # THEN
-        self.assertIsInstance(session.auth_forms[-2], StubAuthForm)
+        self.assertIsInstance(session.auth_forms[-3], StubAuthForm)
         self.assertIsInstance(session.auth_forms[-1], JSAuthBlocker)
 
     def test_auth_forms_classes_preserves_order(self):
@@ -800,8 +800,8 @@ class TestSession(UnitTestCase):
         session = AmazonSession("user", "pass", config=config)
 
         # THEN
-        self.assertIsInstance(session.auth_forms[-3], StubAuthForm)
-        self.assertIsInstance(session.auth_forms[-2], OtherStubAuthForm)
+        self.assertIsInstance(session.auth_forms[-4], StubAuthForm)
+        self.assertIsInstance(session.auth_forms[-3], OtherStubAuthForm)
         self.assertIsInstance(session.auth_forms[-1], JSAuthBlocker)
 
     def test_auth_forms_classes_non_authform_class_raises(self):

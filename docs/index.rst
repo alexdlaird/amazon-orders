@@ -48,7 +48,7 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (ex. ``==4.2.*``, not ``==4.2.2``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (ex. ``==4.3.*``, not ``==4.2.1``)
 to ensure you always get the latest stable release.
 
 Basic Usage
@@ -118,6 +118,16 @@ To enable **WAF auto-solve** via a third-party integration, install with the rel
 
 See :doc:`waf` for details.
 
+To enable **browser-based challenge handling** (ACIC — Amazon Challenge and Identity Component — and JavaScript bot-detection pages) via
+a headless browser, install with the ``browser`` extra:
+
+.. code:: sh
+
+    pip install amazon-orders[browser]
+    playwright install chromium
+
+See :doc:`browser` for details.
+
 To enable **Captcha auto-solve** on Python <=3.12 (via the optional
 `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_ dependency), install with the ``captcha`` extra:
 
@@ -163,6 +173,7 @@ For more advanced usage, dive deeper in to the rest of the documentation.
 
    api
    waf
+   browser
    troubleshooting
 
 .. include:: ../CONTRIBUTING.rst

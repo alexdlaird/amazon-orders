@@ -30,9 +30,6 @@ jobs:
       bump_type: ${{ inputs.bump_type }}
       version_file: 'amazonorders/__init__.py'
       version_pattern: 's/^__version__ = ".*"/__version__ = "${VERSION}"/'
-      additional_bump_files: |
-        docs/index.rst
-        README.md
       repo_slug: alexdlaird/amazon-orders
     secrets:
       bot_app_id: ${{ secrets.RELEASE_BOT_APP_ID }}
