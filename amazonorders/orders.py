@@ -80,7 +80,7 @@ class AmazonOrders:
     def get_invoice(self,
                     order_id: str) -> util.AmazonSessionResponse:
         """
-        Fetch the print-friendly invoice page for a given Amazon Order ID, returning the response
+        Get the print-friendly invoice page for a given Amazon Order ID, returning the response
         (including its parsed HTML) so callers can render or print the page.
 
         :param order_id: The Amazon Order ID to lookup.

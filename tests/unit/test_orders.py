@@ -107,7 +107,7 @@ class TestOrders(UnitTestCase):
         )
         resp2 = responses.add(responses.GET, self.test_config.constants.ORDER_HISTORY_URL, status=200)
 
-        # WHEN / THEN
+        # WHEN
         with self.assertRaises(AmazonOrdersNotFoundError) as cm:
             self.amazon_orders.get_invoice(order_id)
         self.assertIn("was not found", str(cm.exception))

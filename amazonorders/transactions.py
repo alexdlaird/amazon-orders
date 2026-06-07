@@ -101,11 +101,11 @@ class AmazonTransactions:
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        min_date = datetime.date.today() - datetime.timedelta(days=days)
-
         url = self.config.constants.TRANSACTION_HISTORY_URL
         if order_id:
             url = f"{url}?transactionTag={order_id}"
+        else:
+            min_date = datetime.date.today() - datetime.timedelta(days=days)
 
         transactions: List[Transaction] = []
         first_page = True

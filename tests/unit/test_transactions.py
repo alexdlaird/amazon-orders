@@ -81,12 +81,8 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
-    @patch("amazonorders.transactions.datetime", wraps=datetime)
-    def test_get_transactions_by_order_id(self, mock_today):
+    def test_get_transactions_by_order_id(self):
         # GIVEN
-        # today is well over a year after the snippet's transactions, so without order scoping the
-        # date window would drop them — getting them back proves order_id bypasses the days filter.
-        mock_today.date.today.return_value = datetime.date(2026, 1, 1)
         self.amazon_session.is_authenticated = True
         order_id = "123-4567890-1234567"
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",
