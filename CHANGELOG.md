@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.3.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.3.1...HEAD)
+
+## [4.3.1](https://github.com/alexdlaird/amazon-orders/compare/4.3.0...4.3.1) - 2026-06-07
+
+### Added
+
+- `AmazonOrders.get_invoice()` to fetch an Order's print-friendly invoice page, returning the response (including its parsed HTML) for rendering or printing.
+- `AmazonTransactions.get_transactions()` `order_id` parameter to scope results to a single Order server-side via Amazon's `transactionTag` filter, bypassing the `days` window.
 
 ### Added
 
