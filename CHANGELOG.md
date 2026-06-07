@@ -9,16 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `[browser]` optional extra (`pip install amazon-orders[browser]`) for handling JavaScript-based authentication challenges via a headless browser. See [the docs](https://amazon-orders.readthedocs.io/browser.html) for setup.
-  - `PlaywrightAcicForm` handles the ACIC challenge page. If an embedded AWS WAF CAPTCHA is present, it delegates automatically to any configured WAF solver extra.
-  - `PlaywrightJSAuthForm` is a best-effort handler for the JS robot-detection page.
-  - `PlaywrightManualWafForm` opens a **visible** browser window for manual WAF CAPTCHA solving — a free alternative to the paid `[waf]` extras for local/interactive use.
-- `browser` config key and `AMAZON_BROWSER` environment variable to select between `chromium` (default) and `firefox` browser fingerprints.
+  - `PlaywrightAcicForm` handles the ACIC challenge page. If an embedded WAF is present, it delegates automatically to any configured WAF solver extra.
+  - `PlaywrightJSAuthForm` is a best-effort handler for the JS bot-detection page.
+  - `PlaywrightManualWafForm` opens a **visible** browser window for you to solve the challenge yourself, suitable when a display is available.
+- `browser` config key and `AMAZON_BROWSER` environment variable to select between `chromium` (default) and `firefox` browser user agents.
 - `Transaction.payment_method_last_4`, the masked card digits parsed from `payment_method`, mirroring the existing field on `Order`.
-
-### Changed
-
-- JavaScript-based authentication challenge errors now direct users to the `[browser]` extra rather than reporting the challenge as unsolvable.
-- All user-facing error messages that include install commands now wrap those commands in backticks.
 
 ## [4.2.2](https://github.com/alexdlaird/amazon-orders/compare/4.2.1...4.2.2) - 2026-06-06
 

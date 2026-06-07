@@ -114,8 +114,9 @@ dependency), install with the `captcha` extra:
 pip install amazon-orders[captcha]
 ```
 
-Without this extra, Captcha challenges fall back to manual entry. `amazoncaptcha` is not available on Python 3.13+; see
-[Login Challenges](https://amazon-orders.readthedocs.io/troubleshooting.html#login-challenges) for details.
+Without this extra, Captcha challenges fall back to manual entry. `amazoncaptcha` is not available on Python 3.13+.
+
+See [Login Challenges](https://amazon-orders.readthedocs.io/troubleshooting.html#login-challenges) for details.
 
 ## Documentation
 
