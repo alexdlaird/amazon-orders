@@ -32,7 +32,8 @@ class Transaction(Parsable):
         self.payment_method: str = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_TRANSACTION_PAYMENT_METHOD_SELECTOR
         )
-        #: The Transaction payment method's last digits, parsed from :attr:`payment_method`. ``None`` if no masked digits.
+        #: The Transaction payment method's last digits, parsed from :attr:`payment_method`.
+        #: ``None`` if no masked digits.
         self.payment_method_last_4: Optional[str] = self.safe_parse(self._parse_payment_method_last_4)
         #: The Transaction grand total.
         self.grand_total: float = self.safe_parse(self._parse_grand_total)
