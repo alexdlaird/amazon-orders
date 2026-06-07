@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - `PlaywrightJSAuthForm` is a best-effort handler for the JS robot-detection page.
   - `PlaywrightManualWafForm` opens a **visible** browser window for manual WAF CAPTCHA solving — a free alternative to the paid `[waf]` extras for local/interactive use.
 - `browser` config key and `AMAZON_BROWSER` environment variable to select between `chromium` (default) and `firefox` browser fingerprints.
+- `Transaction.payment_method_last_4`, the masked card digits parsed from `payment_method` (for example, `"Visa ****1234"` becomes `"1234"`), mirroring the existing field on `Order`.
 
 ### Changed
 

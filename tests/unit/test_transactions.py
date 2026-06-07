@@ -71,6 +71,7 @@ class TestTransactions(UnitTestCase):
         transaction = transactions[0]
         self.assertEqual(transaction.completed_date, datetime.date(2024, 10, 11))
         self.assertEqual(transaction.payment_method, "Visa ****1234")
+        self.assertEqual(transaction.payment_method_last_4, "1234")
         self.assertEqual(transaction.grand_total, -45.19)
         self.assertFalse(transaction.is_refund)
         self.assertEqual(transaction.order_number, "123-4567890-1234567")
@@ -143,6 +144,7 @@ class TestTransactions(UnitTestCase):
         transaction = transactions[0]
         self.assertEqual(transaction.completed_date, datetime.date(2025, 2, 28))
         self.assertEqual(transaction.payment_method, "WELLS FARGO BANK NATIONAL ASSOCIATION ***863")
+        self.assertEqual(transaction.payment_method_last_4, "863")
         self.assertEqual(transaction.grand_total, 55.96)
         self.assertTrue(transaction.is_refund)
         self.assertEqual(transaction.order_number, "0000000019080621061")
@@ -209,6 +211,7 @@ class TestTransactions(UnitTestCase):
         transaction = transactions[0]
         self.assertEqual(transaction.completed_date, datetime.date(2025, 2, 12))
         self.assertEqual(transaction.payment_method, "Prime Visa ****1111")
+        self.assertEqual(transaction.payment_method_last_4, "1111")
         self.assertEqual(transaction.grand_total, -26.29)
         self.assertFalse(transaction.is_refund)
         self.assertEqual(transaction.order_number, "234-8832881-7100260")
@@ -218,6 +221,7 @@ class TestTransactions(UnitTestCase):
         transaction = transactions[1]
         self.assertEqual(transaction.completed_date, datetime.date(2025, 2, 7))
         self.assertEqual(transaction.payment_method, "Prime Visa ****1111")
+        self.assertEqual(transaction.payment_method_last_4, "1111")
         self.assertEqual(transaction.grand_total, 43.94)
         self.assertTrue(transaction.is_refund)
         self.assertEqual(transaction.order_number, "234-3017692-4601031")
