@@ -81,6 +81,29 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
+    def test_get_transactions_by_order_id(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "123-4567890-1234567"
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.POST,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}?transactionTag={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        transactions = self.amazon_transactions.get_transactions(order_id=order_id, keep_paging=False)
+
+        # THEN
+        self.assertEqual(2, len(transactions))
+        self.assertEqual(order_id, transactions[0].order_number)
+        self.assertEqual(1, resp.call_count)
+        self.assertIn(f"transactionTag={order_id}", resp.calls[0].request.url)
+
+    @responses.activate
     def test_get_transactions_errors_with_meta(self):
         # GIVEN
         self.amazon_session.is_authenticated = True

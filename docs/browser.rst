@@ -15,15 +15,14 @@ resulting session back into ``amazon-orders``.
 
 Three challenge types are covered:
 
-- **ACIC** — the ``#aa-challenge-page-captcha-container``
+- **ACIC** (Amazon Challenge and Identity Component) — the ``#aa-challenge-page-captcha-container``
   challenge page. If an embedded WAF challenge is present inside the ACIC page, it can be solved
   automatically when a WAF solver extra is also configured, or handled manually (see below).
 - **JS bot detection** — the ``"verify that you're not a robot / Enable JavaScript"`` page.
   :class:`~amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm` is a best-effort handler
   for this; effectiveness depends on whether the challenge resolves in a real browser without a
   visual puzzle.
-- **AWS WAF challenge (manual)** —
-  :class:`~amazonorders.contrib.browser.playwright.PlaywrightManualWafForm` opens a visible browser
+- **AWS WAF (manual)** (Web Application Firewall) — :class:`~amazonorders.contrib.browser.playwright.PlaywrightManualWafForm` opens a visible browser
   window for you to solve the challenge yourself, suitable when a display is available.
 
 Installation

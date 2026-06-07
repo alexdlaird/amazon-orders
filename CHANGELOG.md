@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.3.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.3.1...HEAD)
+
+## [4.3.1](https://github.com/alexdlaird/amazon-orders/compare/4.3.0...4.3.1) - 2026-06-07
+
+### Added
+
+- `AmazonOrders.get_invoice()` to fetch an Order's print-friendly invoice page, returning the response (including its parsed HTML) for rendering or printing.
+- `AmazonTransactions.get_transactions()` `order_id` parameter to scope results to a single Order server-side via Amazon's `transactionTag` filter, bypassing the `days` window.
 
 ## [4.3.0](https://github.com/alexdlaird/amazon-orders/compare/4.2.2...4.3.0) - 2026-06-07
 
@@ -21,6 +28,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - JavaScript-based authentication challenge errors now direct users to the `[browser]` extra rather than reporting the challenge as unsolvable.
 - All user-facing error messages that include install commands now wrap those commands in backticks.
+
+### Added
+
+- `[browser]` optional extra (`pip install amazon-orders[browser]`) for handling JavaScript-based authentication challenges via a headless browser. See [the docs](https://amazon-orders.readthedocs.io/browser.html) for setup.
+  - `PlaywrightAcicForm` handles the ACIC challenge page. If an embedded WAF is present, it delegates automatically to any configured WAF solver extra.
+  - `PlaywrightJSAuthForm` is a best-effort handler for the JS bot-detection page.
+  - `PlaywrightManualWafForm` opens a **visible** browser window for you to solve the challenge yourself, suitable when a display is available.
+- `browser` config key and `AMAZON_BROWSER` environment variable to select between `chromium` (default) and `firefox` browser user agents.
+- `Transaction.payment_method_last_4`, the masked card digits parsed from `payment_method`, mirroring the existing field on `Order`.
 
 ## [4.2.2](https://github.com/alexdlaird/amazon-orders/compare/4.2.1...4.2.2) - 2026-06-06
 

@@ -57,6 +57,63 @@ class TestOrders(UnitTestCase):
         self.assertFalse(self.amazon_session.is_authenticated)
         self.assertEqual(2, resp.call_count)
 
+    def test_get_invoice_unauthenticated(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_invoice("1234-fake-id")
+
+        self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
+
+    @responses.activate
+    def test_get_invoice(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_any_invoice_exists("get-invoice.html")
+
+        # WHEN
+        invoice = self.amazon_orders.get_invoice("123-4567890-1234567")
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("Grand Total", invoice.response.text)
+        self.assertEqual("Order Details", invoice.parsed.find("title").text.strip())
+
+    @responses.activate
+    def test_get_invoice_session_expires(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_authenticated_url_redirects_to_login()
+        self.given_login_responses_success()
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthRedirectError) as cm:
+            self.amazon_orders.get_invoice("1234-fake-id")
+
+        self.assertIn("Amazon redirected to login.", str(cm.exception))
+        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertEqual(2, resp.call_count)
+
+    @responses.activate
+    def test_get_invoice_not_found(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "123-4567890-1234567"
+        # A redirect away from the invoice URL (not to login) simulates a not-found order
+        resp1 = responses.add(
+            responses.GET,
+            f"{self.test_config.constants.ORDER_INVOICE_URL}?orderID={order_id}",
+            status=302,
+            headers={"Location": self.test_config.constants.ORDER_HISTORY_URL},
+        )
+        resp2 = responses.add(responses.GET, self.test_config.constants.ORDER_HISTORY_URL, status=200)
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+            self.amazon_orders.get_invoice(order_id)
+        self.assertIn("was not found", str(cm.exception))
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+
     @responses.activate
     def test_get_order_history_session_expires(self):
         # GIVEN

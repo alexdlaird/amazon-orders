@@ -85,28 +85,34 @@ class AmazonTransactions:
     def get_transactions(self,
                          days: int = 365,
                          next_page_data: Optional[Dict[str, Any]] = None,
-                         keep_paging: bool = True) -> List[Transaction]:
+                         keep_paging: bool = True,
+                         order_id: Optional[str] = None) -> List[Transaction]:
         """
-        Get Amazon Transaction history for a given number of days.
+        Get Amazon Transaction history for a given number of days, or for a single Order.
 
-        :param days: The number of days worth of Transactions to get.
+        :param days: The number of days worth of Transactions to get. Ignored when ``order_id`` is given.
         :param next_page_data: If a call to this method previously errored out, passing the exception's
             :attr:`~amazonorders.exception.AmazonOrdersError.meta` will continue paging where it left off.
         :param keep_paging: ``False`` if only one page should be fetched.
+        :param order_id: If given, only Transactions for this Amazon Order ID are returned, scoped
+            server-side via Amazon's ``transactionTag`` filter (the ``days`` window does not apply).
         :return: A list of the requested Transactions.
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        min_date = datetime.date.today() - datetime.timedelta(days=days)
+        url = self.config.constants.TRANSACTION_HISTORY_URL
+        if order_id:
+            url = f"{url}?transactionTag={order_id}"
+        else:
+            min_date = datetime.date.today() - datetime.timedelta(days=days)
 
         transactions: List[Transaction] = []
         first_page = True
         while first_page or keep_paging:
             first_page = False
 
-            page_response = self.amazon_session.post(self.config.constants.TRANSACTION_HISTORY_URL,
-                                                     data=next_page_data)
+            page_response = self.amazon_session.post(url, data=next_page_data)
             self.amazon_session.check_response(page_response, meta=next_page_data)
 
             form_tag = util.select_one(page_response.parsed,
@@ -125,7 +131,7 @@ class AmazonTransactions:
             )
 
             for transaction in loaded_transactions:
-                if transaction.completed_date >= min_date:
+                if order_id or transaction.completed_date >= min_date:
                     transactions.append(transaction)
                 else:
                     next_page_data = None

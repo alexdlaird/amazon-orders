@@ -107,15 +107,13 @@ playwright install chromium
 
 See [Browser Automation](https://amazon-orders.readthedocs.io/browser.html) for details.
 
-To enable **Captcha auto-solve** on Python <=3.12 (via the optional [`amazoncaptcha`](https://pypi.org/project/amazoncaptcha/)
-dependency), install with the `captcha` extra:
+For **legacy Captcha auto-solve** on Python <=3.12, install with `captcha` extra:
 
 ```sh
 pip install amazon-orders[captcha]
 ```
 
-Without this extra, Captcha challenges fall back to manual entry. `amazoncaptcha` is not available on Python 3.13+; see
-[Login Challenges](https://amazon-orders.readthedocs.io/troubleshooting.html#login-challenges) for details.
+See [Login Challenges](https://amazon-orders.readthedocs.io/troubleshooting.html#login-challenges) for details.
 
 ## Documentation
 
