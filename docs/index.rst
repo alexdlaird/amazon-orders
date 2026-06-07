@@ -128,9 +128,13 @@ a headless browser, install with the ``browser`` extra:
 
 See :doc:`browser` for details.
 
-For **legacy Captcha auto-solve** on Python <=3.12, install ``amazon-orders[captcha]``
+For **legacy Captcha auto-solve** on Python <=3.12, install with ```[captcha]`` extra:
 
-See :doc:`troubleshooting` for details.
+.. code:: sh
+
+    pip install amazon-orders[captcha]
+
+See :ref:`Login Challenges <login-challenges>` for details.
 
 .. _known-limitations:
 

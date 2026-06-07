@@ -39,6 +39,8 @@ website's HTML. Before submitting a bug report or requesting a new feature, try 
 ``amazon-orders`` one of the ways described above, and if any console output or generated HTML
 files are relevant to the issue, attach them to your request.
 
+.. _login-challenges:
+
 Login Challenges
 ----------------
 
