@@ -77,6 +77,27 @@ class AmazonOrders:
 
         return order
 
+    def get_invoice(self,
+                    order_id: str) -> util.AmazonSessionResponse:
+        """
+        Fetch the print-friendly invoice page for a given Amazon Order ID, returning the response
+        (including its parsed HTML) so callers can render or print the page.
+
+        :param order_id: The Amazon Order ID to lookup.
+        :return: The invoice page response.
+        """
+        if not self.amazon_session.is_authenticated:
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
+
+        invoice_response = self.amazon_session.get(
+            f"{self.config.constants.ORDER_INVOICE_URL}?orderID={order_id}")
+        self.amazon_session.check_response(invoice_response)
+
+        if not invoice_response.response.url.startswith(self.config.constants.ORDER_INVOICE_URL):
+            raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.")
+
+        return invoice_response
+
     def get_order_history(self,
                           year: Optional[int] = None,
                           start_index: Optional[int] = None,

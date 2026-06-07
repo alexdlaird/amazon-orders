@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.3.0...HEAD)
 
+### Added
+
+- `AmazonOrders.get_invoice(order_id)`, which fetches an Order's print-friendly invoice page and returns the response (including its parsed HTML) for rendering or printing.
+
 ## [4.3.0](https://github.com/alexdlaird/amazon-orders/compare/4.2.2...4.3.0) - 2026-06-07
 
 ### Added
