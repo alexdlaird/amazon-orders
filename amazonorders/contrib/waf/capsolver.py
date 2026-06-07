@@ -36,7 +36,7 @@ class CapSolverWafForm(AwsWafForm):
             ``cookie`` field.
         """
         try:
-            import capsolver  # type: ignore[import-untyped]
+            import capsolver
         except ImportError as e:
             raise AmazonOrdersError(
                 "CapSolverWafForm requires the 'capsolver' package. "
