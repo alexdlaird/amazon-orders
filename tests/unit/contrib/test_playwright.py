@@ -289,6 +289,7 @@ class TestPlaywrightAcicForm(UnitTestCase):
 
         goku = {"key": "k", "iv": "i", "context": "c"}
         mock_sync_playwright, mock_page, mock_context, _ = _make_mock_playwright()
+        mock_page.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
         mock_page.evaluate.side_effect = [goku, "https://challenge.awswaf.com/challenge.js"]
         fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
 
@@ -382,6 +383,7 @@ class TestPlaywrightAcicForm(UnitTestCase):
         goku_2 = {"key": "k2", "iv": "i2", "context": "c2"}
 
         mock_sync_playwright, mock_page, mock_context, _ = _make_mock_playwright()
+        mock_page.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
 
         # wait_for_function is called each loop iteration to detect gokuProps.
         # Succeed twice (two challenges), then timeout (no more challenges).

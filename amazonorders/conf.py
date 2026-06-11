@@ -58,6 +58,8 @@ class AmazonOrdersConfig:
             "item_class": "amazonorders.entity.item.Item",
             "bs4_parser": "html.parser",
             "auth_forms_classes": [],
+            # Timeout in seconds for browser-based challenge detection and resolution
+            "browser_timeout": 30,
             "thread_pool_size": (os.cpu_count() or 1) * 4,
             "connection_pool_size": thread_pool_size * 2,
             # The maximum number of failed attempts to allow before failing CLI authentication

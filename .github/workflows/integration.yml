@@ -10,6 +10,11 @@ on:
         required: false
         type: boolean
         default: false
+      retry_failures:
+        description: 'Retry failed tests (uncheck to fail fast)'
+        required: false
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       use_waf_solver:
@@ -17,6 +22,11 @@ on:
         required: false
         type: boolean
         default: false
+      retry_failures:
+        description: 'Retry failed tests (uncheck to fail fast)'
+        required: false
+        type: boolean
+        default: true
   schedule:
    - cron: "0 7 * * *"
 
@@ -91,7 +101,10 @@ jobs:
       - name: Install browser extras
         run: make install install-browser
       - name: Integration test
-        run: make test-integration
+        env:
+          INTEGRATION_TEST_RERUN: ${{ inputs.retry_failures == false && '0' || '2' }}
+          INTEGRATION_TEST_FAIL_FAST: ${{ inputs.retry_failures == false && '-x' || '' }}
+        run: make test-integration PYTEST_EXTRA_ARGS="${INTEGRATION_TEST_FAIL_FAST}"
       - name: Upload test output
         if: ${{ always() }}
         uses: actions/upload-artifact@v7

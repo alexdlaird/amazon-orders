@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import base64
 import json
 import logging
 import os
@@ -13,7 +14,6 @@ from bs4 import Tag
 from requests import Response
 
 from amazonorders.conf import AmazonOrdersConfig
-from amazonorders.contrib.waf.base import _GOKU_PROPS_RE
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.forms import AuthForm
 from amazonorders.util import AmazonSessionResponse
@@ -81,8 +81,6 @@ class PlaywrightAuthForm(AuthForm):
             ) from e
 
         debug = self.amazon_session.debug
-        if debug:
-            logger.setLevel(logging.DEBUG)
 
         message = "Info: A browser is handling a JavaScript authentication challenge."
         logger.info(message)
@@ -113,7 +111,7 @@ class PlaywrightAuthForm(AuthForm):
             try:
                 page.wait_for_url(
                     lambda url: not self._is_challenge_url(url, original_url),
-                    timeout=30000
+                    timeout=self.config.browser_timeout * 1000
                 )
             except PlaywrightTimeoutError as e:
                 logger.debug(f"Browser timed out at URL: {page.url}")
@@ -137,7 +135,7 @@ class PlaywrightAuthForm(AuthForm):
         """
         Hook called after navigating to the challenge page and saving the initial
         snapshot, but before waiting for the challenge URL to resolve. Override in
-        subclasses to take additional action (e.g. solving an embedded CAPTCHA).
+        subclasses to take additional action (e.g. solving an embedded Puzzle).
 
         :param page: The Playwright ``Page`` currently on the challenge URL.
         :param context: The Playwright ``BrowserContext``.
@@ -226,13 +224,20 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
         :return: ``True`` if an ACIC challenge was detected, ``False`` otherwise.
         """
         self.amazon_session = amazon_session
-        return bool(parsed.find(id="aa-challenge-page-captcha-container"))
+        return bool(parsed.select_one(self.config.selectors.ACIC_CHALLENGE_SELECTOR))
 
     def _on_challenge_page(self, page: Any, context: Any, output_dir: Optional[str]) -> None:
         max_solves = self.config.max_auth_attempts
         solves = 0
-        while solves < max_solves and self._try_solve_embedded_waf(page, context, output_dir):
-            solves += 1
+        while solves < max_solves:
+            if not self._is_challenge_url(page.url, page.url):
+                break
+            if self._try_solve_embedded_waf(page, context, output_dir):
+                solves += 1
+            elif self._try_solve_visual_captcha(page, context, output_dir):
+                solves += 1
+            else:
+                break
 
     def _try_solve_embedded_waf(self, page: Any, context: Any, output_dir: Optional[str]) -> bool:
         """
@@ -252,9 +257,12 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
             return False  # pragma: no cover
 
         try:
-            page.wait_for_function("() => typeof window.gokuProps !== 'undefined'", timeout=8000)
+            page.wait_for_function(
+                "() => typeof window.gokuProps !== 'undefined'",
+                timeout=self.config.browser_timeout * 1000
+            )
         except PlaywrightTimeoutError:
-            logger.debug("No window.gokuProps in ACIC page — no embedded WAF challenge to solve.")
+            logger.debug("No window.gokuProps detected in ACIC page.")
             return False
 
         try:
@@ -268,7 +276,6 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
             return False
 
         if not goku or not challenge_script:
-            logger.debug("Incomplete WAF props in ACIC page — goku=%r, script=%r.", goku, challenge_script)
             return False
 
         if not self.amazon_session:
@@ -280,13 +287,13 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
             None,
         )
         if not waf_form:
-            logger.debug("Embedded WAF challenge found but no AwsWafForm configured — skipping solve.")
+            logger.debug("No AwsWafForm configured, skipping WAF challenge.")
             return False
 
         try:
             token = waf_form._solve_token(page.url, goku, challenge_script)
         except Exception:
-            logger.debug("WAF solver raised an exception solving embedded ACIC CAPTCHA.", exc_info=True)
+            logger.info("WAF solver failed to solve embedded WAF challenge.", exc_info=True)
             return False
 
         message = f"Info: Solved embedded WAF challenge via {waf_form.PROVIDER_NAME}."
@@ -301,12 +308,129 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
             "path": "/",
         }])
         page.reload(wait_until="load")
-        logger.debug("Reloaded ACIC page after WAF token injection.")
         self._save_debug_snapshot(page, output_dir, "browser-waf-injected")
         return True
 
+    def _try_solve_visual_captcha(self, page: Any, context: Any, output_dir: Optional[str]) -> bool:
+        """
+        If the ACIC challenge page contains a visual grid Puzzle rendered by
+        ``CaptchaScript.renderCaptcha``, extract the challenge images and question,
+        solve it via the configured :class:`~amazonorders.contrib.waf.base.AwsWafForm`,
+        and submit the answer.
+
+        :param page: The Playwright ``Page`` on the ACIC challenge URL.
+        :param context: The Playwright ``BrowserContext``.
+        :param output_dir: Directory for debug snapshots, or ``None``.
+        :return: ``True`` if the Puzzle was solved and submitted, ``False`` otherwise.
+        """
+        try:
+            from playwright.sync_api import TimeoutError as PlaywrightTimeoutError  # type: ignore[import-not-found]
+        except ImportError:
+            return False  # pragma: no cover
+
+        canvas_selector = self.config.selectors.ACIC_VISUAL_CAPTCHA_CANVAS_SELECTOR
+        try:
+            page.wait_for_selector(canvas_selector, state="attached",
+                                   timeout=self.config.browser_timeout * 1000)
+        except PlaywrightTimeoutError:
+            logger.debug("No Puzzle canvas detected on ACIC page.")
+            return False
+
+        if not self.amazon_session:
+            return False  # pragma: no cover
+
+        from amazonorders.contrib.waf.base import AwsWafForm
+        waf_form = next(
+            (f for f in self.amazon_session.auth_forms if isinstance(f, AwsWafForm)),
+            None,
+        )
+        if not waf_form:
+            logger.debug("No AwsWafForm configured, skipping Puzzle.")
+            return False
+
+        question_selector = self.config.selectors.ACIC_VISUAL_CAPTCHA_QUESTION_SELECTOR
+        try:
+            canvas_locator = page.locator(canvas_selector).first
+            box = canvas_locator.bounding_box()
+            cols, rows = 3, 3
+            tw = box["width"] / cols
+            th = box["height"] / rows
+            challenge_images = []
+            for r in range(rows):
+                for c in range(cols):
+                    tile_bytes = page.screenshot(
+                        clip={"x": box["x"] + c * tw, "y": box["y"] + r * th,
+                              "width": tw, "height": th}
+                    )
+                    challenge_images.append(base64.b64encode(tile_bytes).decode())
+
+            question = page.evaluate(
+                "(sel) => {"
+                "  const el = document.querySelector(sel);"
+                "  return el ? el.textContent.trim() : null;"
+                "}",
+                question_selector,
+            )
+        except Exception:
+            logger.debug("Failed to extract Puzzle data from page.", exc_info=True)
+            return False
+
+        if not challenge_images or not question:
+            return False
+
+        try:
+            answer = waf_form._solve_visual_captcha(page.url, challenge_images, question)
+        except Exception:
+            logger.info("WAF solver failed to solve Puzzle.", exc_info=True)
+            return False
+
+        if answer is None:
+            logger.info(f"{waf_form.PROVIDER_NAME} does not support Puzzle solving.")
+            return False
+
+        message = f"Info: Puzzle solved via {waf_form.PROVIDER_NAME}."
+        logger.info(message)
+        self.amazon_session.io.echo(message)
+
+        verify_selector = self.config.selectors.ACIC_VISUAL_CAPTCHA_VERIFY_SELECTOR
+        try:
+            indices = answer if isinstance(answer[0], int) else [
+                i for i, v in enumerate(answer) if v]
+
+            page.evaluate(
+                "([sel, indices]) => {"
+                "  const canvas = document.querySelector(sel);"
+                "  if (!canvas) return;"
+                "  const rect = canvas.getBoundingClientRect();"
+                "  const cols = 3, rows = 3;"
+                "  const tw = rect.width / cols, th = rect.height / rows;"
+                "  indices.forEach(idx => {"
+                "    const r = Math.floor(idx / cols), c = idx % cols;"
+                "    const x = c * tw + tw / 2, y = r * th + th / 2;"
+                "    const evt = new MouseEvent('click', {"
+                "      bubbles: true, clientX: rect.left + x, clientY: rect.top + y"
+                "    });"
+                "    canvas.dispatchEvent(evt);"
+                "  });"
+                "}",
+                [canvas_selector, indices],
+            )
+
+            page.locator(verify_selector).click()
+        except Exception:
+            logger.debug("Failed to submit Puzzle answer.", exc_info=True)
+            return False
+
+        try:
+            page.wait_for_load_state("load", timeout=10000)
+        except PlaywrightTimeoutError:
+            pass
+
+        self._save_debug_snapshot(page, output_dir, "browser-visual-captcha-solved")
+        return True
+
     def _is_challenge_url(self, url: str, original_url: str) -> bool:
-        return "/ax/aaut/verify/ap/challenge" in url
+        return self.config.constants.ACIC_CHALLENGE_PATH in url
 
 
 class PlaywrightJSAuthForm(PlaywrightAuthForm):
@@ -353,7 +477,7 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
 class PlaywrightManualWafForm(PlaywrightAuthForm):
     """
     Handles Amazon's AWS WAF JavaScript challenge by opening a **visible** browser
-    window so the user can solve the CAPTCHA manually. Once the challenge
+    window so the user can solve the Puzzle manually. Once the challenge
     resolves and the browser navigates away, cookies are harvested back into the
     session automatically.
 
@@ -392,7 +516,8 @@ class PlaywrightManualWafForm(PlaywrightAuthForm):
         """
         self.amazon_session = amazon_session
 
-        match = _GOKU_PROPS_RE.search(str(parsed))
+        goku_re = re.compile(self.config.constants.GOKU_PROPS_REGEX, re.DOTALL)
+        match = goku_re.search(str(parsed))
         if not match:
             return False
         try:
@@ -400,12 +525,12 @@ class PlaywrightManualWafForm(PlaywrightAuthForm):
         except (json.JSONDecodeError, ValueError):
             return False
 
-        challenge_tag = parsed.select_one('script[src*="awswaf.com"]')
+        challenge_tag = parsed.select_one(self.config.selectors.AWS_WAF_CHALLENGE_SCRIPT_SELECTOR)
         return challenge_tag is not None and isinstance(challenge_tag.get("src"), str)
 
     def _on_challenge_page(self, page: Any, context: Any, output_dir: Optional[str]) -> None:
         message = (
-            "Info: A browser window has opened — solve the CAPTCHA, then return here when done."
+            "Info: A browser window has opened — solve the Puzzle, then return here when done."
         )
         logger.info(message)
         if self.amazon_session:

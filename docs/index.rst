@@ -48,7 +48,7 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (ex. ``==4.3.*``, not ``==4.2.1``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==4.3.*``, not ``==4.2.1``)
 to ensure you always get the latest stable release.
 
 Basic Usage
@@ -146,7 +146,7 @@ Known Limitations
       :class:`~amazonorders.conf.AmazonOrdersConfig`, or pass ``--domain`` on the CLI) to point at another
       Amazon site. URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are rewritten from
       the domain, and ``Accept-Language`` is adjusted for a small set of English-locale TLDs, so other
-      English-based versions of Amazon (ex. ``amazon.ca``) may work by chance. Other values such as the
+      English-based versions of Amazon (e.g. ``amazon.ca``) may work by chance. Other values such as the
       OpenID ``assoc_handle`` are not adjusted — subclass :class:`~amazonorders.constants.Constants` and
       set ``constants_class`` to override them if a particular site requires it. The ``AMAZON_BASE_URL``
       environment variable continues to work as a fallback.

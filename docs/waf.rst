@@ -13,10 +13,10 @@ automatically.
     challenges and image Captchas are distinct mechanisms — this page covers the JavaScript-based WAF
     flow only.
 
-    Amazon's ACIC challenge (``/ax/aaut/verify/ap/challenge``) sometimes *embeds* a WAF challenge inside
-    its page. The :doc:`browser` extra handles the ACIC challenge automatically, and when a WAF solver
-    extra is also configured it will solve the embedded WAF challenge as part of the same flow without any
-    additional configuration.
+    Amazon's ACIC challenge (``/ax/aaut/verify/ap/challenge``) may embed a WAF token challenge, a
+    visual grid Puzzle, or both inside its page. The :doc:`browser` extra handles the ACIC page
+    automatically, and when a WAF solver extra is also configured it will solve any embedded
+    challenges as part of the same flow without any additional configuration.
 
 If a display is available and you prefer to handle the challenge interactively, the ``[browser]``
 extra provides :class:`~amazonorders.contrib.browser.playwright.PlaywrightManualWafForm`, which
@@ -118,6 +118,16 @@ resulting ``aws-waf-token`` cookie value:
         API_KEY_ENV_VAR = "MY_PROVIDER_API_KEY"
 
         def _solve_token(self, url, goku, challenge_script):
+            ...
+
+To also support visual grid Puzzles, override ``_solve_visual_captcha(url, image_data, question)``
+and return a list of zero-based grid cell indices that match the target object:
+
+.. code-block:: python
+
+        def _solve_visual_captcha(self, url, image_data, question):
+            # image_data is a list of 9 base64-encoded PNG tile images
+            # question is the target object (e.g. "the buckets")
             ...
 
 Once registered in ``auth_forms_classes``, your form participates in the same auth chain as the built-in providers.

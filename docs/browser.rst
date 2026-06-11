@@ -16,8 +16,9 @@ resulting session back into ``amazon-orders``.
 Three challenge types are covered:
 
 - **ACIC** (Amazon Challenge and Identity Component) — the ``#aa-challenge-page-captcha-container``
-  challenge page. If an embedded WAF challenge is present inside the ACIC page, it can be solved
-  automatically when a WAF solver extra is also configured, or handled manually (see below).
+  challenge page. Amazon may embed a WAF token challenge, a visual grid Puzzle (e.g. "Choose all the
+  buckets"), or both. These can be solved automatically when a WAF solver extra is also configured,
+  or handled manually (see below).
 - **JS bot detection** — the ``"verify that you're not a robot / Enable JavaScript"`` page.
   :class:`~amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm` is a best-effort handler
   for this; effectiveness depends on whether the challenge resolves in a real browser without a
@@ -122,8 +123,9 @@ and a standalone WAF challenge (manual):
 Combining with a WAF Solver
 ---------------------------
 
-Amazon sometimes embeds a WAF challenge inside the ACIC challenge page. When this happens, the
-headless browser alone cannot solve it. Two options are available:
+Amazon sometimes embeds challenges inside the ACIC page — either a WAF token challenge, a visual
+grid Puzzle (e.g. "Choose all the buckets"), or both. When this happens, the headless browser alone
+cannot solve them. Two options are available:
 
 - **Manual** — register ``PlaywrightManualWafForm`` alongside ``PlaywrightAcicForm``. A visible
   browser window opens for you to solve the embedded WAF challenge yourself. No WAF solver extra
@@ -136,8 +138,8 @@ headless browser alone cannot solve it. Two options are available:
         - amazonorders.contrib.browser.playwright.PlaywrightManualWafForm
 
 - **Automated** — register a :doc:`WAF solver extra <waf>` alongside ``PlaywrightAcicForm``.
-  ``PlaywrightAcicForm`` will detect the embedded WAF challenge, delegate to the solver, and inject
-  the resulting token before the challenge resolves — all without additional configuration.
+  ``PlaywrightAcicForm`` will detect and solve embedded challenges automatically — whether WAF
+  token or Puzzle — all without additional configuration.
 
   .. code-block:: yaml
 

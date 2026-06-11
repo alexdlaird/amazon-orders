@@ -21,8 +21,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_GOKU_PROPS_RE = re.compile(r"window\.gokuProps\s*=\s*(\{.*?\});", re.DOTALL)
-
 
 class AwsWafForm(AuthForm):
     """
@@ -77,7 +75,8 @@ class AwsWafForm(AuthForm):
         """
         self.amazon_session = amazon_session
 
-        match = _GOKU_PROPS_RE.search(str(parsed))
+        goku_re = re.compile(self.config.constants.GOKU_PROPS_REGEX, re.DOTALL)
+        match = goku_re.search(str(parsed))
         if not match:
             return False
         try:
@@ -85,7 +84,7 @@ class AwsWafForm(AuthForm):
         except json.JSONDecodeError:
             return False
 
-        challenge_tag = parsed.select_one('script[src*="awswaf.com"]')
+        challenge_tag = parsed.select_one(self.config.selectors.AWS_WAF_CHALLENGE_SCRIPT_SELECTOR)
         if not challenge_tag:
             return False
         src = challenge_tag.get("src")
@@ -147,3 +146,19 @@ class AwsWafForm(AuthForm):
         :raises NotImplementedError: if a subclass does not override this method.
         """
         raise NotImplementedError
+
+    def _solve_visual_captcha(self,
+                              url: str,
+                              image_data: list,
+                              question: str) -> Optional[list]:
+        """
+        Subclass hook. Solve a visual grid Puzzle (e.g. "Choose all the buckets")
+        and return the indices of the correct grid cells.
+
+        :param url: The URL of the page containing the Puzzle.
+        :param image_data: List of base64-encoded data URLs, one per grid tile.
+        :param question: The object to identify (e.g. ``"the buckets"``).
+        :return: A list of zero-based grid cell indices to select, or ``None`` if
+            this solver does not support Puzzle classification.
+        """
+        return None

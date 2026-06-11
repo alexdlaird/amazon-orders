@@ -44,6 +44,13 @@ class Selectors:
     # CSS selectors for AuthForms
     ##########################################################################
 
+    ACIC_CHALLENGE_SELECTOR = "#aa-challenge-page-captcha-container"
+    ACIC_VISUAL_CAPTCHA_MODAL_SELECTOR = ".amzn-captcha-modal"
+    ACIC_VISUAL_CAPTCHA_CANVAS_SELECTOR = ".amzn-captcha-modal canvas"
+    ACIC_VISUAL_CAPTCHA_QUESTION_SELECTOR = ".amzn-captcha-modal em"
+    ACIC_VISUAL_CAPTCHA_VERIFY_SELECTOR = "#amzn-btn-verify-internal"
+    AWS_WAF_CHALLENGE_SCRIPT_SELECTOR = 'script[src*="awswaf.com"]'
+
     SIGN_IN_FORM_SELECTOR = "form[name='signIn']"
     CLAIM_FORM_SELECTOR = "form[name='signIn'].auth-validate-form"
     INTENT_FORM_SELECTOR = "form#intent-confirmation-form"
