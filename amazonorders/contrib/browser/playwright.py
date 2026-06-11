@@ -229,7 +229,10 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
         return bool(parsed.find(id="aa-challenge-page-captcha-container"))
 
     def _on_challenge_page(self, page: Any, context: Any, output_dir: Optional[str]) -> None:
-        self._try_solve_embedded_waf(page, context, output_dir)
+        max_solves = self.config.max_auth_attempts
+        solves = 0
+        while solves < max_solves and self._try_solve_embedded_waf(page, context, output_dir):
+            solves += 1
 
     def _try_solve_embedded_waf(self, page: Any, context: Any, output_dir: Optional[str]) -> bool:
         """
