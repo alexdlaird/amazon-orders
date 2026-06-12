@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.3.1...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.0...HEAD)
+
+## [4.4.0](https://github.com/alexdlaird/amazon-orders/compare/4.3.1...4.4.0) - 2026-06-12
+
+### Added
+
+- `PlaywrightAcicForm` now solves visual grid Puzzles (e.g. "Choose all the buckets") automatically when a WAF solver extra is configured. Puzzles are detected and solved in a loop alongside the existing WAF token challenge, handling any combination Amazon presents.
+- `AwsWafForm._solve_visual_captcha()` subclass hook for Puzzle classification. `CapSolverWafForm` implements this via the `AwsWafClassification` task type.
+- `browser_timeout` config key (defaults to 30s) controlling how long the browser waits for challenge elements to appear.
+- `retry_failures` input on the integration test workflow for fail-fast CI runs.
+- Build and stability improvements.
 
 ### Added
 
