@@ -289,6 +289,7 @@ class TestPlaywrightAcicForm(UnitTestCase):
 
         goku = {"key": "k", "iv": "i", "context": "c"}
         mock_sync_playwright, mock_page, mock_context, _ = _make_mock_playwright()
+        mock_page.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
         mock_page.evaluate.side_effect = [goku, "https://challenge.awswaf.com/challenge.js"]
         fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
 
@@ -356,6 +357,64 @@ class TestPlaywrightAcicForm(UnitTestCase):
 
         # THEN
         mock_page.reload.assert_not_called()
+        self.assertEqual("refetched", result)
+
+    def test_visual_captcha_solved_after_waf_token(self):
+        """
+        After the WAF token challenge is solved and the page reloads, Amazon may
+        escalate to a visual grid CAPTCHA (still delivered via gokuProps). The
+        library should loop and pass the new challenge to the solver again.
+        """
+        # GIVEN
+        form = PlaywrightAcicForm(self.test_config)
+        parsed = BeautifulSoup(self.acic_html, self.test_config.bs4_parser)
+        form.select_form(self.amazon_session, parsed)
+
+        last_response = MagicMock()
+        last_response.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        self.amazon_session.get = MagicMock(return_value="refetched")
+
+        mock_waf = MagicMock(spec=AwsWafForm)
+        mock_waf.PROVIDER_NAME = "CapSolver"
+        mock_waf._solve_token.return_value = "waf-token-value"
+        self.amazon_session.auth_forms.append(mock_waf)
+
+        goku_1 = {"key": "k1", "iv": "i1", "context": "c1"}
+        goku_2 = {"key": "k2", "iv": "i2", "context": "c2"}
+
+        mock_sync_playwright, mock_page, mock_context, _ = _make_mock_playwright()
+        mock_page.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+
+        # wait_for_function is called each loop iteration to detect gokuProps.
+        # Succeed twice (two challenges), then timeout (no more challenges).
+        wait_calls = [None, None, _FakeTimeoutError("no more challenges")]
+
+        def wait_for_function_side_effect(*args, **kwargs):
+            action = wait_calls.pop(0)
+            if action is not None:
+                raise action
+
+        mock_page.wait_for_function.side_effect = wait_for_function_side_effect
+
+        # evaluate is called twice per solve: once for gokuProps, once for challenge_script
+        mock_page.evaluate.side_effect = [
+            goku_1, "https://challenge.awswaf.com/challenge.js",
+            goku_2, "https://challenge.awswaf.com/challenge.js",
+        ]
+
+        fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            result = form.submit(last_response)
+
+        # THEN
+        self.assertEqual(2, mock_waf._solve_token.call_count)
+        self.assertEqual(
+            mock_waf._solve_token.call_args_list[0][0][1], goku_1)
+        self.assertEqual(
+            mock_waf._solve_token.call_args_list[1][0][1], goku_2)
+        self.assertEqual(2, mock_page.reload.call_count)
         self.assertEqual("refetched", result)
 
 

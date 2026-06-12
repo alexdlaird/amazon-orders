@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head><title>Challenge Page</title>
+<script src="https://ait.00000000.us-east-1.captcha.awswaf.com/ait/ait/ait/captcha.js"></script>
+</head>
+<body>
+<div id="aa-challenge-page-captcha-container">
+<script>
+    P.when('A', 'ready').execute(function (A) {
+        var $ = A.$;
+        const container = document.querySelector("#captcha-container");
+        const wafInputProperties = Object.assign({"width":230,"skipInitialScreen":true,"dynamicWidth":true,"problem":"gridcaptcha-5-0.2-0","visualSolutionsRequired":3,"skipTitle":true,"disableLanguageAutoSelection":true,"defaultLocale":"en-US","id":"eyJ1bmlxdWVWYWxpZGF0aW9uSWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiLCJ0eXBlIjoiQkFTRTY0X0pTT04ifQ"});
+        CaptchaScript.renderCaptcha(container, async (voucher) => {
+            console.log("Captcha solved, voucher=" + voucher);
+            postChallengeEvent("aa-challenge-complete", voucher);
+        }, wafInputProperties);
+    });
+</script>
+<div id="captcha-container" dir="ltr">
+<div id="root">
+<div class="amzn-captcha-modal">
+<form>
+<div style="margin-bottom: 10px;">
+<div>Choose all <em style="font-weight: bold; text-decoration: underline; font-style: normal;">the buckets</em></div>
+<div style="position: relative;"><canvas width="324" height="324"></canvas></div>
+</div>
+<div>Solved: <span>0</span> Required: <span>3</span></div>
+</form>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

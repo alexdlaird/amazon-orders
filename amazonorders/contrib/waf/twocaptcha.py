@@ -39,7 +39,7 @@ class TwoCaptchaWafForm(AwsWafForm):
             expected ``existing_token`` field.
         """
         try:
-            from twocaptcha import TwoCaptcha  # type: ignore[import-untyped]
+            from twocaptcha import TwoCaptcha
         except ImportError as e:
             raise AmazonOrdersError(
                 "TwoCaptchaWafForm requires the '2captcha-python' package. "

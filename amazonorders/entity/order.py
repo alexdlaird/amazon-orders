@@ -40,7 +40,7 @@ class Order(Parsable):
         #: If the Orders full details were populated from its details page.
         self.full_details: bool = full_details
 
-        #: Where the Order appeared in the history when it was queried. This will inevitably change (ex. when a new
+        #: Where the Order appeared in the history when it was queried. This will inevitably change (e.g. when a new
         #: Order is placed, all indexes will then be off by one), but is still captured as it may be applicable in
         #: various use-cases. Populated when the Order was fetched through
         #: :func:`~amazonorders.orders.AmazonOrders.get_order_history` (use ``start_index`` to correlate), or when

@@ -59,6 +59,7 @@ class TestConf(TestCase):
         with open(config.config_path, "r") as f:
             self.assertEqual("""auth_forms_classes: []
 auth_reattempt_wait: 5
+browser_timeout: 30
 bs4_parser: html.parser
 connection_pool_size: {connection_pool_size}
 constants_class: amazonorders.constants.Constants

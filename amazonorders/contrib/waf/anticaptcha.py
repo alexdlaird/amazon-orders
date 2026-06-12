@@ -36,7 +36,7 @@ class AntiCaptchaWafForm(AwsWafForm):
             not installed, or if Anti-Captcha returns no token.
         """
         try:
-            from anticaptchaofficial.amazonproxyless import amazonProxyless  # type: ignore[import-untyped]
+            from anticaptchaofficial.amazonproxyless import amazonProxyless
         except ImportError as e:
             raise AmazonOrdersError(
                 "AntiCaptchaWafForm requires the 'anticaptchaofficial' package. "

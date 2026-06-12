@@ -148,6 +148,8 @@ class Constants:
 
     COOKIES_SET_WHEN_AUTHENTICATED = ["x-main"]
     JS_ROBOT_TEXT_REGEX = r"[.\s\S]*verify that you're not a robot[.\s\S]*Enable JavaScript[.\s\S]*"
+    GOKU_PROPS_REGEX = r"window\.gokuProps\s*=\s*(\{.*?\});"
+    ACIC_CHALLENGE_PATH = "/ax/aaut/verify/ap/challenge"
 
     ##########################################################################
     # Currency
