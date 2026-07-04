@@ -34,11 +34,7 @@ class TestOrder(UnitTestCase):
         self.assertEqual(order.grand_total, 7777.99)
 
     def test_order_chargesummary_layout_grand_total_row_selected_by_label(self):
-        # GIVEN the chargeSummary layout with a subtotal and grand total that DIFFER, so the
-        # assertion proves the Grand Total row is selected by its label and not the
-        # identically-shaped subtotal row. The real full-page fixture for this layout is a
-        # digital order where subtotal == grand_total (see test_orders.py), so it can't
-        # prove the row disambiguation on its own.
+        # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-old-summary-grand-total-snippet.html"),
                   "r",
                   encoding="utf-8") as f:

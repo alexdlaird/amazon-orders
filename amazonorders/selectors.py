@@ -155,13 +155,6 @@ class Selectors:
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"
     FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["[data-component='orderSubtotals'] div.a-row",
                                                    "div#od-subtotals div.a-row",
-                                                   # Some order-summary pages render totals as labeled
-                                                   # od-line-item rows inside the chargeSummary component
-                                                   # rather than the orderSubtotals/od-subtotals component.
-                                                   # Scope to chargeSummary so the fallback can't match
-                                                   # unrelated od-line-item rows elsewhere on the page;
-                                                   # _parse_currency keys on each row's label text to pick
-                                                   # the right one (e.g. "Grand Total").
                                                    "[data-component='chargeSummary'] div.od-line-item-row"]
     FIELD_ORDER_SUBTOTALS_TAG_POPOVER_PRELOAD_SELECTOR = ".a-popover-preload"
     FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR = "div.a-span-last"

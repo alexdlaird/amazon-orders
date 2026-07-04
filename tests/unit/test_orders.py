@@ -538,9 +538,7 @@ class TestOrders(UnitTestCase):
 
     @responses.activate
     def test_get_order_chargesummary_totals(self):
-        # GIVEN a real (PII-scrubbed) order-details page whose totals render as labeled
-        # od-line-item rows inside the chargeSummary component rather than the modern
-        # orderSubtotals/od-subtotals component
+        # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "112-3456789-0123456"
         with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
@@ -555,7 +553,7 @@ class TestOrders(UnitTestCase):
         # WHEN
         order = self.amazon_orders.get_order(order_id)
 
-        # THEN the required grand_total parses (previously raised) along with the other totals
+        # THEN
         self.assertEqual(order_id, order.order_number)
         self.assertEqual(47.99, order.grand_total)
         self.assertEqual(47.99, order.subtotal)

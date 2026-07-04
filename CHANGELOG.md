@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- `Order.grand_total`, `subtotal`, and `total_before_tax` are now parsed on order-summary pages where totals render as labeled `od-line-item-row` rows inside the `chargeSummary` component (rather than the `orderSubtotals`/`od-subtotals` component). Previously these orders raised "grand_total could not be parsed, but it's required".
+- Fixed parsing of some `Order` fields on older order pages using the `chargeSummary` layout.
 
 ## [4.4.0](https://github.com/alexdlaird/amazon-orders/compare/4.3.1...4.4.0) - 2026-06-12
 
