@@ -154,7 +154,8 @@ class Selectors:
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"
     FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["[data-component='orderSubtotals'] div.a-row",
-                                                   "div#od-subtotals div.a-row"]
+                                                   "div#od-subtotals div.a-row",
+                                                   "[data-component='chargeSummary'] div.od-line-item-row"]
     FIELD_ORDER_SUBTOTALS_TAG_POPOVER_PRELOAD_SELECTOR = ".a-popover-preload"
     FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR = "div.a-span-last"
     FIELD_ORDER_ADDRESS_SELECTOR = ["div.displayAddressDiv", "[data-component='shippingAddress']"]
