@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.1...HEAD)
+
+## [4.4.1](https://github.com/alexdlaird/amazon-orders/compare/4.4.0...4.4.1) - 2026-07-04
+
+### Fixed
+
+- Fixed parsing of some `Order` fields on older order pages using the `chargeSummary` layout.
 
 ### Fixed
 
