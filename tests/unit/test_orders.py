@@ -537,6 +537,34 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
+    def test_get_order_chargesummary_totals(self):
+        # GIVEN a real (PII-scrubbed) order-details page whose totals render as labeled
+        # od-line-item rows inside the chargeSummary component rather than the modern
+        # orderSubtotals/od-subtotals component
+        self.amazon_session.is_authenticated = True
+        order_id = "112-3456789-0123456"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN the required grand_total parses (previously raised) along with the other totals
+        self.assertEqual(order_id, order.order_number)
+        self.assertEqual(47.99, order.grand_total)
+        self.assertEqual(47.99, order.subtotal)
+        self.assertEqual(47.99, order.total_before_tax)
+        self.assertEqual(0.0, order.estimated_tax)
+        self.assertEqual(0.0, order.shipping_total)
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
     def test_get_order_not_found_errors_with_meta(self):
         # GIVEN
         self.amazon_session.is_authenticated = True

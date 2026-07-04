@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from bs4 import BeautifulSoup
 
+from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError
@@ -31,6 +32,26 @@ class TestOrder(UnitTestCase):
         self.assertIsNone(order.refund_total)
         self.assertIsNone(order.subscription_discount)
         self.assertEqual(order.grand_total, 7777.99)
+
+    def test_order_chargesummary_layout_grand_total_row_selected_by_label(self):
+        # GIVEN the chargeSummary layout with a subtotal and grand total that DIFFER, so the
+        # assertion proves the Grand Total row is selected by its label and not the
+        # identically-shaped subtotal row. The real full-page fixture for this layout is a
+        # digital order where subtotal == grand_total (see test_orders.py), so it can't
+        # prove the row disambiguation on its own.
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-old-summary-grand-total-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+        tag = util.select_one(parsed, self.test_config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+
+        # WHEN
+        order = Order(tag, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual(45.50, order.grand_total)
+        self.assertEqual(42.00, order.subtotal)
+        self.assertEqual(42.00, order.total_before_tax)
 
     def test_order_promotion_applied(self):
         # GIVEN
