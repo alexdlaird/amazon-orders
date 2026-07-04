@@ -66,7 +66,8 @@ class Order(Parsable):
             prefix_split="#",
             prefix_split_fuzzy=True)
         if _parsed_order_number is None and order_number is not None:
-            logger.debug(f"Order number could not be parsed from the page; using supplied order_number={order_number}.")
+            logger.debug(f"Order number could not be parsed from the page; "
+                         f"using supplied order_number={order_number}.")
         self.order_number: Optional[str] = clone.order_number if clone else _parsed_order_number or order_number
         #: The Order details link.
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
