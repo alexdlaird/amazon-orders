@@ -61,3 +61,21 @@ class TestItem(UnitTestCase):
 
         # THEN
         self.assertEqual(item.title, "&And Per Se Lined")
+
+    def test_quantity_parsed_from_qty_element(self):
+        # GIVEN an item with a whole-number quantity element
+        html = """
+<div class="a-fixed-left-grid-col yohtmlc-item a-col-right">
+<div class="a-row">
+<a class="a-link-normal" href="/dp/B0018CJYCO/ref=x">Item Title</a>
+</div>
+<div class="od-item-view-qty">3</div>
+</div>
+"""
+        parsed = BeautifulSoup(html, self.test_config.bs4_parser)
+
+        # WHEN
+        item = Item(parsed, self.test_config)
+
+        # THEN
+        self.assertEqual(3, item.quantity)

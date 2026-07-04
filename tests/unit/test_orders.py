@@ -299,6 +299,7 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
         order = orders[9]
         self.assertEqual("113-9085096-9353021", order.order_number)
+        self.assertFalse(order.is_whole_foods)
         self.assertIsNone(order.grand_total)  # Amazon Store orders are unsupported order types
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2025, 2, 28), order.order_placed_date)
@@ -351,6 +352,7 @@ class TestOrders(UnitTestCase):
         order = orders[4]
         self.assertEqual("111-2072777-8279433", order.order_number)
         self.assertEqual(4, order.index)
+        self.assertFalse(order.is_whole_foods)
         self.assertIsNone(order.grand_total)  # Amazon Fresh orders are unsupported order types
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2025, 1, 3), order.order_placed_date)
@@ -378,16 +380,18 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
         order = orders[7]
         self.assertEqual("113-6307059-7336242", order.order_number)
-        self.assertIsNone(order.grand_total)  # Whole Foods orders are unsupported order types
+        self.assertTrue(order.is_whole_foods)
+        self.assertEqual(62.92, order.grand_total)  # Whole Foods totals are shown on the history page
+        self.assertEqual(10, order.item_count)
         self.assertIsNotNone(order.order_details_link)
         self.assertEqual(date(2024, 12, 12), order.order_placed_date)
-        self.assertEqual(0, len(order.items))
+        self.assertEqual(0, len(order.items))  # Per-item details require the Whole Foods receipt page
 
-    @responses.activate
-    def test_get_order_history_full_details_wholefood_skip(self):
-        # GIVEN
+    def _get_order_history_full_details_wholefoods(self,
+                                                   whole_foods_details="order-details-fopo-147-7999693-6862434.html"):
+        # A catering history page with three FOPO orders and six standard orders, plus the details pages
+        # each links to. Returns the fetched Orders and the mocked responses so callers can assert on them.
         self.amazon_session.is_authenticated = True
-        year = 2024
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-wholefoods-catering.html"), "r",
                   encoding="utf-8") as f:
             resp1 = responses.add(
@@ -397,14 +401,146 @@ class TestOrders(UnitTestCase):
                 status=200,
             )
         resp2 = self.given_any_order_details_exists("order-details-114-9460922-7737063.html")
+        resp3 = self.given_any_whole_foods_details_exists(whole_foods_details)
+
+        orders = self.amazon_orders.get_order_history(year=2024, keep_paging=False, full_details=True)
+        return orders, resp1, resp2, resp3
+
+    @responses.activate
+    def test_get_order_history_full_details_wholefoods(self):
+        # WHEN
+        orders, resp1, resp2, resp3 = self._get_order_history_full_details_wholefoods()
+
+        # THEN
+        self.assertEqual(10, len(orders))
+        self.assertEqual(1, resp1.call_count)
+        # The six non-Whole Foods orders fetch the standard details page
+        self.assertEqual(6, resp2.call_count)
+        # The three Whole Foods orders that link to a FOPO details page fetch it for full details
+        self.assertEqual(3, resp3.call_count)
+        wfm_orders = [order for order in orders if order.is_whole_foods]
+        self.assertEqual(4, len(wfm_orders))
+        self.assertTrue(all(order.grand_total is not None for order in wfm_orders))
+
+    @responses.activate
+    def test_get_order_history_full_details_wholefoods_items(self):
+        # GIVEN
+        orders, *_ = self._get_order_history_full_details_wholefoods()
+
+        # WHEN a FOPO order is enriched with per-item details and the receipt's subtotal/tax
+        fopo_order = next(order for order in orders if order.order_number == "777-5719845-2377811")
+
+        # THEN
+        self.assertEqual(125.67, fopo_order.grand_total)  # from the history page
+        self.assertEqual(64.15, fopo_order.subtotal)
+        self.assertEqual(1.96, fopo_order.estimated_tax)
+        self.assertEqual(10, len(fopo_order.items))
+        items_by_title = {item.title: item for item in fopo_order.items}
+        self.assertIn("Emmi, Raw Kaltbach Cave Aged Gruyere", items_by_title)
+        gruyere = items_by_title["Emmi, Raw Kaltbach Cave Aged Gruyere"]
+        self.assertEqual(7.75, gruyere.price)
+        self.assertTrue(gruyere.link.endswith("/dp/B07887281X?ref_=wfmInStore_food_od_product_details"))
+        self.assertIsNotNone(gruyere.image_link)
+        self.assertIsNone(gruyere.quantity)  # sold by weight (Qty: 0.31 lb), so no whole-unit count
+        croissants = next(item for item in fopo_order.items
+                          if item.title.startswith("Whole Foods Market, Croissant"))
+        self.assertEqual(1, croissants.quantity)
+
+    @responses.activate
+    def test_get_order_history_full_details_wholefoods_unparseable_details(self):
+        # GIVEN a Whole Foods order whose FOPO details page returns no parseable order-details container
+        orders, *_ = self._get_order_history_full_details_wholefoods("order-details-wholefoods-unparseable.html")
+
+        # WHEN the FOPO details cannot be parsed
+        fopo_order = next(order for order in orders if order.order_number == "777-5719845-2377811")
+
+        # THEN the history-page grand_total is kept, but per-item details are left unpopulated
+        self.assertTrue(fopo_order.is_whole_foods)
+        self.assertIsNotNone(fopo_order.grand_total)
+        self.assertEqual(0, len(fopo_order.items))
+
+    @responses.activate
+    def test_get_order_history_full_details_whole_foods_without_details_link(self):
+        # GIVEN a Whole Foods order identified by its shipment text but with no linkable details page
+        self.amazon_session.is_authenticated = True
+        history = (
+            "<html><body>"
+            "<div class='order-card'>"
+            "<div data-component='orderId'>111-2222222-3333333</div>"
+            "<div class='yohtmlc-order-total'><span class='value'>$25.00</span></div>"
+            "<div class='yohtmlc-shipment-status-primaryText'>Purchased at Whole Foods Market</div>"
+            "</div>"
+            "</body></html>"
+        )
+        responses.add(responses.GET, self.test_config.constants.ORDER_HISTORY_URL, body=history, status=200)
+
+        # WHEN full details are requested but no FOPO/receipt link is present to fetch
+        orders = self.amazon_orders.get_order_history(year=2024, keep_paging=False, full_details=True)
+
+        # THEN the order is returned partially populated from the history page
+        self.assertEqual(1, len(orders))
+        order = orders[0]
+        self.assertTrue(order.is_whole_foods)
+        self.assertEqual(25.00, order.grand_total)
+        self.assertEqual(0, len(order.items))
+
+    @responses.activate
+    def test_get_order_history_full_details_wholefoods_payment(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2024
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-wholefoods-catering.html"), "r",
+                  encoding="utf-8") as f:
+            responses.add(
+                responses.GET,
+                self.test_config.constants.ORDER_HISTORY_URL,
+                body=f.read(),
+                status=200,
+            )
+        self.given_any_order_details_exists("order-details-114-9460922-7737063.html")
+        self.given_any_whole_foods_details_exists("order-details-fopo-113-4055495-4107437.html")
 
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year, keep_paging=False, full_details=True)
 
         # THEN
-        self.assertEqual(10, len(orders))
-        self.assertEqual(1, resp1.call_count)
-        self.assertEqual(6, resp2.call_count)
+        fopo_order = next(order for order in orders if order.order_number == "777-5719845-2377811")
+        # The receipt's first payment method maps onto the existing Order payment fields
+        self.assertEqual("Visa", fopo_order.payment_method)
+        self.assertEqual(9790, fopo_order.payment_method_last_4)
+        self.assertEqual(27.96, fopo_order.subtotal)
+        self.assertEqual(0.54, fopo_order.estimated_tax)
+        # An ASINLESS line item (no Amazon detail page) still parses, with a title but no link
+        self.assertEqual(3, len(fopo_order.items))
+        grapes = next(item for item in fopo_order.items if item.title == "Moon Drop Grapes")
+        self.assertIsNone(grapes.link)
+        self.assertIsNone(grapes.quantity)  # sold by weight (Qty: 2.44 lb)
+        self.assertIsNotNone(grapes.image_link)
+
+    @responses.activate
+    def test_get_order_history_full_details_unsupported_type(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2024
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-fresh.html"), "r",
+                  encoding="utf-8") as f:
+            responses.add(
+                responses.GET,
+                self.test_config.constants.ORDER_HISTORY_URL,
+                body=f.read(),
+                status=200,
+            )
+        self.given_any_order_details_exists("order-details-114-9460922-7737063.html")
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, keep_paging=False, full_details=True)
+
+        # THEN
+        # An Amazon Fresh order is an unsupported type (not Whole Foods), so it stays partially populated
+        fresh_order = next(order for order in orders if order.order_number == "111-2072777-8279433")
+        self.assertFalse(fresh_order.is_whole_foods)
+        self.assertIsNone(fresh_order.grand_total)
+        self.assertEqual(0, len(fresh_order.items))
 
     @responses.activate
     def test_get_order_history_full_details(self):
