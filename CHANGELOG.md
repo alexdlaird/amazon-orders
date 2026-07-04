@@ -28,6 +28,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - `Order.order_number` now uses the caller-supplied value as a fallback when the order number cannot be parsed from the details page; previously documented but unintuitive behavior.
 
+### Added
+
+- `Item.asin`, the product's ASIN parsed from `Item.link` (`None` for items whose link is not a product detail page, e.g. a "Buy it again" or offer-listing URL).
+
 ## [4.4.1](https://github.com/alexdlaird/amazon-orders/compare/4.4.0...4.4.1) - 2026-07-04
 
 ### Fixed

@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import logging
+import re
 from datetime import date
 from typing import Optional, TypeVar
 
@@ -35,6 +36,10 @@ class Item(Parsable):
         #: The Item link.
         self.link: str = self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_LINK_SELECTOR,
                                                 attr_name="href", required=True)
+        #: The Item's ASIN (Amazon Standard Identification Number), a best-effort derivation from :attr:`link`.
+        #: ``None`` when the link does not point at a product page (e.g. a "Buy it again" or offer-listing
+        #: URL). Parsing never raises; a failure yields ``None``.
+        self.asin: Optional[str] = self.safe_parse(self._parse_asin)
         #: The Item price.
         self.price: Optional[float] = self.to_currency(
             self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_PRICE_SELECTOR)
@@ -70,3 +75,11 @@ class Item(Parsable):
     def __lt__(self,
                other: ItemEntity) -> bool:
         return self.title < other.title
+
+    def _parse_asin(self) -> Optional[str]:
+        # Amazon's order pages don't expose the ASIN in a keyed element (no ``data-asin``); it lives in the
+        # item's product link, as the canonical ``/dp/<ASIN>`` or ``/gp/product/<ASIN>`` path segment -- a URL
+        # form Amazon has used for 20+ years. Encapsulated here so it can adopt a structured source if one ever
+        # appears on these pages. Any link that isn't a product page (or an empty one) simply yields no match.
+        match = re.search(r"/(?:dp|gp/product|product)/([A-Z0-9]{10})(?:[/?]|$)", self.link)
+        return match.group(1) if match else None
