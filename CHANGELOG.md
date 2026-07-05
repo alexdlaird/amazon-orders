@@ -18,11 +18,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- Fixed parsing of some `Order` fields on older order pages using the `chargeSummary` layout.
-
-### Fixed
-
-- Fixed parsing of some `Order` fields on older order pages using the `chargeSummary` layout.
+- Parsing of some `Order` fields on older order pages using the `chargeSummary` layout.
 
 ## [4.4.0](https://github.com/alexdlaird/amazon-orders/compare/4.3.1...4.4.0) - 2026-06-12
 
