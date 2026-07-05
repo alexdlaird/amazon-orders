@@ -44,11 +44,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `AmazonOrders.get_invoice()` to fetch an Order's print-friendly invoice page, returning the response (including its parsed HTML) for rendering or printing.
 - `AmazonTransactions.get_transactions()` `order_id` parameter to scope results to a single Order server-side via Amazon's `transactionTag` filter, bypassing the `days` window.
 
-### Added
-
-- `AmazonOrders.get_invoice()` to fetch an Order's print-friendly invoice page, returning the response (including its parsed HTML) for rendering or printing.
-- `AmazonTransactions.get_transactions()` `order_id` parameter to scope results to a single Order server-side via Amazon's `transactionTag` filter, bypassing the `days` window.
-
 ## [4.3.0](https://github.com/alexdlaird/amazon-orders/compare/4.2.2...4.3.0) - 2026-06-07
 
 ### Added
