@@ -4,7 +4,7 @@ __license__ = "MIT"
 import os
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import responses
 from responses.matchers import query_string_matcher, urlencoded_params_matcher
@@ -849,3 +849,43 @@ class TestSession(UnitTestCase):
         # THEN: config's auth_forms_classes is ignored when auth_forms is passed explicitly
         self.assertEqual(custom_forms, session.auth_forms)
         self.assertEqual(1, len(session.auth_forms))
+
+    def test_request_timeout_forwarded(self):
+        # GIVEN
+        config = self._config_with(request_timeout=10)
+        session = AmazonSession("user", "pass", config=config)
+        mock_response = MagicMock()
+        mock_response.text = ""
+
+        with patch.object(session.session, "request", return_value=mock_response) as mock_request:
+            # WHEN
+            session.request("GET", "https://www.amazon.com/")
+
+            # THEN
+            self.assertEqual(10, mock_request.call_args.kwargs["timeout"])
+
+    def test_request_timeout_not_set_by_default(self):
+        # GIVEN
+        mock_response = MagicMock()
+        mock_response.text = ""
+
+        with patch.object(self.amazon_session.session, "request", return_value=mock_response) as mock_request:
+            # WHEN
+            self.amazon_session.request("GET", "https://www.amazon.com/")
+
+            # THEN
+            self.assertNotIn("timeout", mock_request.call_args.kwargs)
+
+    def test_request_timeout_caller_kwarg_wins(self):
+        # GIVEN
+        config = self._config_with(request_timeout=10)
+        session = AmazonSession("user", "pass", config=config)
+        mock_response = MagicMock()
+        mock_response.text = ""
+
+        with patch.object(session.session, "request", return_value=mock_response) as mock_request:
+            # WHEN
+            session.request("GET", "https://www.amazon.com/", timeout=5)
+
+            # THEN
+            self.assertEqual(5, mock_request.call_args.kwargs["timeout"])
