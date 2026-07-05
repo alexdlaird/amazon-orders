@@ -200,6 +200,9 @@ class AmazonSession:
                     url_to_log += "?" + encoded_params
             logger.debug(f"{method} request: {url_to_log}")
 
+        if self.config.request_timeout is not None:
+            kwargs.setdefault("timeout", self.config.request_timeout)
+
         response = self.session.request(method, url, **kwargs)
         amazon_session_response = AmazonSessionResponse(response,
                                                         self.config.bs4_parser)

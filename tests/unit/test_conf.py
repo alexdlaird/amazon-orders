@@ -49,6 +49,7 @@ class TestConf(TestCase):
         self.assertEqual(self.test_cookie_jar_path, config.cookie_jar_path)
         self.assertEqual("html.parser", config.bs4_parser)
         self.assertFalse(config.warn_on_missing_required_field)
+        self.assertIsNone(config.request_timeout)
 
         # GIVEN
         config.save()
@@ -71,6 +72,7 @@ max_auth_retries: 1
 max_cookie_attempts: 10
 order_class: amazonorders.entity.order.Order
 output_dir: {output_dir}
+request_timeout: null
 selectors_class: amazonorders.selectors.Selectors
 shipment_class: amazonorders.entity.shipment.Shipment
 thread_pool_size: {thread_pool_size}
@@ -85,10 +87,12 @@ warn_on_missing_required_field: false
         # GIVEN
         # Default is 10
         config = AmazonOrdersConfig(data={
-            "max_auth_attempts": 11
+            "max_auth_attempts": 11,
+            "request_timeout": 15
         })
 
         self.assertEqual(11, config.max_auth_attempts)
+        self.assertEqual(15, config.request_timeout)
 
     def test_load_from_file(self):
         # GIVEN

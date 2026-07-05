@@ -60,6 +60,8 @@ class AmazonOrdersConfig:
             "auth_forms_classes": [],
             # Timeout in seconds for browser-based challenge detection and resolution
             "browser_timeout": 30,
+            # Timeout in seconds for HTTP requests; ``None`` leaves requests with no timeout
+            "request_timeout": None,
             "thread_pool_size": (os.cpu_count() or 1) * 4,
             "connection_pool_size": thread_pool_size * 2,
             # The maximum number of failed attempts to allow before failing CLI authentication
