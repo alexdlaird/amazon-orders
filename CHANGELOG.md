@@ -6,15 +6,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.2...HEAD)
 
-## [4.4.2](https://github.com/alexdlaird/amazon-orders/compare/4.4.1...4.4.2) - 2026-07-05
-
 ### Added
 
-- `request_timeout` config key (defaults to `None`) controlling the timeout passed to each HTTP request.
+- `AmazonOrders.get_order_history()` `order_filter` parameter to filter by order type via Amazon's `orderFilter` query parameter. `--order-filter` added to the `history` CLI command.
+- `invoice` and `order-transactions` CLI commands, adding parity with `AmazonOrders.get_invoice()` and `AmazonTransactions.get_transactions(order_id=)`.
 
-### Changed
-
-- `Order.order_number` now uses the caller-supplied value as a fallback when the order number cannot be parsed from the details page; previously documented but unintuitive behavior.
+## [4.4.2](https://github.com/alexdlaird/amazon-orders/compare/4.4.1...4.4.2) - 2026-07-05
 
 ### Added
 

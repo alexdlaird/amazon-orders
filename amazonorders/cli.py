@@ -126,6 +126,8 @@ def amazon_orders_cli(ctx: Context,
 @click.option("--full-details", is_flag=True, default=False,
               help="Get the full details for each Order in the history. "
                    "This will execute an additional request per Order.")
+@click.option("--order-filter", "order_filter", default=None,
+              help="The order type filter to use.")
 def history(ctx: Context,
             **kwargs: Any) -> None:
     """
@@ -142,6 +144,7 @@ def history(ctx: Context,
         start_index = kwargs["start_index"]
         single_page = kwargs["single_page"]
         full_details = kwargs["full_details"]
+        order_filter = kwargs["order_filter"]
 
         exclusive_flags = [year, last_3_months, last_30_days]
         if not all(not item for item in exclusive_flags) and sum(exclusive_flags) == 1:
@@ -180,7 +183,8 @@ Order History for {filter_description}{optional_start_index}{optional_full_detai
                                                  start_index=start_index,
                                                  full_details=full_details,
                                                  keep_paging=not single_page,
-                                                 time_filter=time_filter):
+                                                 time_filter=time_filter,
+                                                 order_filter=order_filter):
             click.echo(f"{_order_output(o, config)}\n")
             total += 1
         end_time = time.time()
@@ -215,6 +219,67 @@ def order(ctx: Context,
         o = amazon_orders.get_order(order_id)
 
         click.echo(f"{_order_output(o, config)}\n")
+    except AmazonOrdersAuthRedirectError:
+        _prompt_to_reauth_flow()
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+
+@amazon_orders_cli.command()
+@click.pass_context
+@click.argument("order_id")
+def invoice(ctx: Context,
+            order_id: str) -> None:
+    """
+    Get the invoice for a given Amazon Order ID.
+    """
+    amazon_session = ctx.obj["amazon_session"]
+
+    try:
+        _authenticate(amazon_session)
+
+        config = ctx.obj["conf"]
+        amazon_orders = AmazonOrders(amazon_session,
+                                     config=config)
+
+        invoice_response = amazon_orders.get_invoice(order_id)
+
+        click.echo(invoice_response.response.text)
+    except AmazonOrdersAuthRedirectError:
+        _prompt_to_reauth_flow()
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+
+@amazon_orders_cli.command("order-transactions")
+@click.pass_context
+@click.argument("order_id")
+def order_transactions(ctx: Context,
+                       order_id: str) -> None:
+    """
+    Get the Transactions for a given Amazon Order ID.
+    """
+    amazon_session = ctx.obj["amazon_session"]
+
+    try:
+        _authenticate(amazon_session)
+
+        config = ctx.obj["conf"]
+        amazon_transactions = AmazonTransactions(amazon_session,
+                                                 config=config)
+
+        start_time = time.time()
+        total = 0
+        for t in amazon_transactions.get_transactions(order_id=order_id):
+            click.echo(f"{_transaction_output(t, config)}\n")
+            total += 1
+        end_time = time.time()
+
+        click.echo(
+            "... {total} Transactions parsed in {time} seconds.\n".format(total=total,
+                                                                          time=int(end_time - start_time)))
     except AmazonOrdersAuthRedirectError:
         _prompt_to_reauth_flow()
     except AmazonOrdersError as e:
