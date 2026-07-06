@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.2...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.3...HEAD)
+
+## [4.4.3](https://github.com/alexdlaird/amazon-orders/compare/4.4.2...4.4.3) - 2026-07-06
+
+### Added
+
+- `AmazonOrders.get_order_history()` `order_filter` parameter to filter by order type via Amazon's `orderFilter` query parameter. `--order-filter` added to the `history` CLI command.
+- `invoice` and `order-transactions` CLI commands, adding parity with `AmazonOrders.get_invoice()` and `AmazonTransactions.get_transactions(order_id=)`.
 
 ### Added
 
