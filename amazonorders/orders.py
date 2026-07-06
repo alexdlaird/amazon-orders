@@ -147,7 +147,10 @@ class AmazonOrders:
             filter_value = f"year-{year}"
 
         optional_start_index = f"&startIndex={start_index}" if start_index else ""
-        optional_order_filter = f"&{self.config.constants.ORDER_FILTER_QUERY_PARAM}={quote(order_filter, safe='')}" if order_filter else ""
+        optional_order_filter = (
+            f"&{self.config.constants.ORDER_FILTER_QUERY_PARAM}={quote(order_filter, safe='')}"
+            if order_filter else ""
+        )
         next_page: Optional[str] = (
             "{url}?{query_param}={filter_value}{optional_order_filter}{optional_start_index}"
         ).format(
