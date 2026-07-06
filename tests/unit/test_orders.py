@@ -894,3 +894,20 @@ class TestOrders(UnitTestCase):
 
         self.assertIn("Invalid time_filter 'last90'", str(cm.exception))
         self.assertIn("Valid values are 'last30', 'months-3', or 'year-YYYY'", str(cm.exception))
+
+    @responses.activate
+    def test_get_order_history_with_order_filter(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2018
+        resp = self.given_any_order_history_exists("order-history-2018-0.html")
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, order_filter="digital-orders", keep_paging=False)
+
+        # THEN - URL must include both timeFilter and orderFilter
+        self.assertEqual(1, resp.call_count)
+        request_url = resp.calls[0].request.url
+        self.assertIn(f"timeFilter=year-{year}", request_url)
+        self.assertIn("orderFilter=digital-orders", request_url)
+        self.assertEqual(10, len(orders))
