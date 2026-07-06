@@ -117,6 +117,55 @@ class TestCli(UnitTestCase):
         self.assertIn("Order #112-9733602-9062669", response.output)
 
     @responses.activate
+    def test_history_command_with_order_filter(self):
+        # GIVEN
+        year = 2018
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        resp = self.given_any_order_history_exists("order-history-2018-0.html")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "history", "--year", year, "--order-filter", "digital-orders",
+                                          "--single-page"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assert_login_responses_success()
+        self.assertEqual(1, resp.call_count)
+        request_url = resp.calls[0].request.url
+        self.assertIn(f"timeFilter=year-{year}", request_url)
+        self.assertIn("orderFilter=digital-orders", request_url)
+
+    @responses.activate
+    def test_invoice_command(self):
+        # GIVEN
+        order_id = "123-4567890-1234567"
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        resp = self.given_any_invoice_exists("get-invoice.html")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "invoice", order_id
+                                      ])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assert_login_responses_success()
+        self.assertEqual(1, resp.call_count)
+        self.assertIn(f"orderID={order_id}", resp.calls[0].request.url)
+        self.assertIn("Order Details", response.output)
+
+    @responses.activate
     def test_order_command(self):
         # GIVEN
         order_id = "112-2961628-4757846"
@@ -181,6 +230,39 @@ class TestCli(UnitTestCase):
         self.assert_login_responses_success()
         self.assertIn("1 Transactions parsed", response.output)
         self.assertIn("Transaction: 2024-10-11\n  Order #123-4567890-1234567\n  Grand Total: -$45.19", response.output)
+
+    @responses.activate
+    def test_order_transactions_command(self):
+        # GIVEN
+        order_id = "123-4567890-1234567"
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"),
+                  "r", encoding="utf-8") as f:
+            resp = responses.add(
+                responses.POST,
+                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}?transactionTag={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(
+            amazon_orders_cli,
+            [
+                "--config-path", self.test_config.config_path,
+                "--username", "some-username@gmail.com",
+                "--password", "some-password",
+                "order-transactions", order_id,
+            ],
+        )
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, resp.call_count)
+        self.assert_login_responses_success()
+        self.assertIn(f"transactionTag={order_id}", resp.calls[0].request.url)
+        self.assertIn("2 Transactions parsed", response.output)
 
     @responses.activate
     def test_history_command_error(self):

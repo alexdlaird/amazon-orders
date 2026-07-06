@@ -6,6 +6,7 @@ import concurrent.futures
 import datetime
 import logging
 from typing import Any, Callable, List, Optional
+from urllib.parse import quote
 
 from bs4 import Tag
 
@@ -103,7 +104,8 @@ class AmazonOrders:
                           start_index: Optional[int] = None,
                           full_details: bool = False,
                           keep_paging: bool = True,
-                          time_filter: Optional[str] = None) -> List[Order]:
+                          time_filter: Optional[str] = None,
+                          order_filter: Optional[str] = None) -> List[Order]:
         """
         Get the Amazon Order history for a given time period.
 
@@ -119,6 +121,7 @@ class AmazonOrders:
         :param time_filter: The time filter to use. Supported values are ``"last30"`` (last 30 days),
             ``"months-3"`` (past 3 months), or ``"year-YYYY"`` (specific year). If provided, this takes
             precedence over the ``year`` parameter.
+        :param order_filter: The order type filter to use. If provided, appended alongside the time filter.
         :return: A list of the requested Orders.
         """
         if not self.amazon_session.is_authenticated:
@@ -144,12 +147,17 @@ class AmazonOrders:
             filter_value = f"year-{year}"
 
         optional_start_index = f"&startIndex={start_index}" if start_index else ""
+        optional_order_filter = (
+            f"&{self.config.constants.ORDER_FILTER_QUERY_PARAM}={quote(order_filter, safe='')}"
+            if order_filter else ""
+        )
         next_page: Optional[str] = (
-            "{url}?{query_param}={filter_value}{optional_start_index}"
+            "{url}?{query_param}={filter_value}{optional_order_filter}{optional_start_index}"
         ).format(
             url=self.config.constants.ORDER_HISTORY_URL,
             query_param=self.config.constants.HISTORY_FILTER_QUERY_PARAM,
             filter_value=filter_value,
+            optional_order_filter=optional_order_filter,
             optional_start_index=optional_start_index
         )
 
