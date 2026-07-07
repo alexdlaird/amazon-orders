@@ -231,6 +231,16 @@ class UnitTestCase(TestCase):
                 status=200,
             )
 
+    def given_any_whole_foods_details_exists(self, order_details_html_file):
+        with open(os.path.join(self.RESOURCES_DIR, "orders", order_details_html_file), "r",
+                  encoding="utf-8") as f:
+            return responses.add(
+                responses.GET,
+                re.compile(r"^https?://[^/]+/(fopo/order-details|wholefoodsmarket/receipts/order)\b.*"),
+                body=f.read(),
+                status=200,
+            )
+
     def given_any_invoice_exists(self, invoice_html_file):
         with open(os.path.join(self.RESOURCES_DIR, "invoices", invoice_html_file), "r",
                   encoding="utf-8") as f:
