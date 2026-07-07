@@ -38,9 +38,7 @@ class Item(Parsable):
         #: Market line items).
         self.link: Optional[str] = self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_LINK_SELECTOR,
                                                           attr_name="href")
-        #: The Item's ASIN (Amazon Standard Identification Number), a best-effort derivation from :attr:`link`.
-        #: ``None`` when the link does not point at a product page (e.g. a "Buy it again" or offer-listing
-        #: URL). Parsing never raises; a failure yields ``None``.
+        #: The product ASIN, derived from :attr:`link`; ``None`` when the link is not a product page.
         self.asin: Optional[str] = self.safe_parse(self._parse_asin)
         #: The Item price.
         self.price: Optional[float] = self.to_currency(
@@ -64,8 +62,7 @@ class Item(Parsable):
         self.image_link: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_IMG_LINK_SELECTOR,
             attr_name="src")
-        #: The Item quantity. For items sold by weight (e.g. Whole Foods Market produce priced per
-        #: pound, rendered as "Qty: 0.31 lb"), which have no whole-unit count, this is ``None``.
+        #: The Item quantity. ``None`` for items sold by weight (e.g. Whole Foods), which have no whole-unit count.
         self.quantity: Optional[int] = self.safe_parse(self._parse_quantity)
 
     def __repr__(self) -> str:
@@ -79,10 +76,9 @@ class Item(Parsable):
         return self.title < other.title
 
     def _parse_asin(self) -> Optional[str]:
-        # Amazon's order pages don't expose the ASIN in a keyed element (no ``data-asin``); it lives in the
-        # item's product link, as the canonical ``/dp/<ASIN>`` or ``/gp/product/<ASIN>`` path segment -- a URL
-        # form Amazon has used for 20+ years. Encapsulated here so it can adopt a structured source if one ever
-        # appears on these pages. Any link that isn't a product page (or an empty one) simply yields no match.
+        if not self.link:
+            return None
+        # ASIN only appears in the product URL path (/dp/, /gp/product/); no keyed attribute exists on order pages.
         match = re.search(r"/(?:dp|gp/product|product)/([A-Z0-9]{10})(?:[/?]|$)", self.link)
         return match.group(1) if match else None
 

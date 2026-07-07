@@ -86,6 +86,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
             self.assert_populated_generic(orders[0], True)
             self.assertIsNotNone(orders[0].index)
             self.assert_orders_list_index(orders)
+            self.assertIsNotNone(orders[0].items[0].asin)
 
     def test_get_transactions(self):
         # WHEN

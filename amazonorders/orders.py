@@ -240,16 +240,7 @@ class AmazonOrders:
     def _get_whole_foods_order(self,
                                order: Order,
                                url: str) -> Order:
-        """
-        Fetch and parse a Whole Foods Market order's dedicated details page (the in-store/FOPO
-        ``/fopo/order-details`` page or the ``/wholefoodsmarket/receipts/order`` receipt page),
-        which the standard Order details endpoint does not serve. The history-derived ``order`` is
-        used as the ``clone`` so its fields are preserved and enriched with the per-item details.
-
-        :param order: The Whole Foods Market Order parsed from the history page.
-        :param url: The Whole Foods Market details page URL to fetch.
-        :return: The Order, enriched with full details if they could be parsed.
-        """
+        """Fetches the WFM dedicated details page and returns the order enriched with per-item details."""
         details_response = self.amazon_session.get(url)
         self.amazon_session.check_response(details_response, meta={"index": order.index})
 

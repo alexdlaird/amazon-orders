@@ -55,8 +55,7 @@ class Order(Parsable):
 
         #: ``True`` if this is a Whole Foods Market purchase (an in-store/FOPO purchase or a Whole Foods receipt
         #: order). Unlike other unsupported order types, these expose a :attr:`grand_total` and (often) an
-        #: :attr:`item_count` on the history page, so those fields are populated; per-item details, however, are
-        #: only available on the Whole Foods receipt page and are not yet parsed, so :attr:`items` stays empty.
+        #: :attr:`item_count` on the history page, so those fields are populated.
         self.is_whole_foods: bool = clone.is_whole_foods if clone else bool(
             self.parsed and util.select(self.parsed, self.config.selectors.ORDER_WHOLE_FOODS))
 

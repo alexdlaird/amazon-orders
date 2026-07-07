@@ -6,12 +6,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.3...HEAD)
 
-## [4.4.3](https://github.com/alexdlaird/amazon-orders/compare/4.4.2...4.4.3) - 2026-07-06
-
 ### Added
 
-- `AmazonOrders.get_order_history()` `order_filter` parameter to filter by order type via Amazon's `orderFilter` query parameter. `--order-filter` added to the `history` CLI command.
-- `invoice` and `order-transactions` CLI commands, adding parity with `AmazonOrders.get_invoice()` and `AmazonTransactions.get_transactions(order_id=)`.
+- `Order.is_whole_foods`, identifying Whole Foods Market in-store and receipt orders.
+- `Order.item_count`, for orders where Amazon shows an item count rather than a line-item list (e.g. Whole Foods Market, eGift orders).
+- Full-details parsing for Whole Foods Market in-store (FOPO) orders via their dedicated `/fopo/order-details` page, populating `items`, `subtotal`, `estimated_tax`, and `payment_method`.
+- `Item.asin`, the product ASIN parsed from `Item.link` (`None` when the link is not a product page).
+
+### Changed
+
+- `Order.grand_total` now populated for Whole Foods Market orders (previously skipped as unsupported).
+- `Item.link` is now `Optional[str]` (`None` for items without an Amazon detail page).
+
+## [4.4.3](https://github.com/alexdlaird/amazon-orders/compare/4.4.2...4.4.3) - 2026-07-06
 
 ## [4.4.2](https://github.com/alexdlaird/amazon-orders/compare/4.4.1...4.4.2) - 2026-07-05
 
@@ -27,10 +34,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `Order.order_number` now uses the caller-supplied value as a fallback when the order number cannot be parsed from the details page; previously documented but unintuitive behavior.
 - `Order.grand_total` is now populated for Whole Foods Market orders from the order history page (previously skipped as an unsupported order type).
 - `Item.link` is now optional (`None` for line items without an Amazon detail page, such as ASINLESS Whole Foods Market items) rather than raising when no link is present.
-
-### Added
-
-- `Item.asin`, the product's ASIN parsed from `Item.link` (`None` for items whose link is not a product detail page, e.g. a "Buy it again" or offer-listing URL).
 
 ## [4.4.1](https://github.com/alexdlaird/amazon-orders/compare/4.4.0...4.4.1) - 2026-07-04
 

@@ -87,12 +87,11 @@ class Selectors:
     ORDER_HISTORY_COUNT_SELECTOR = ".js-yo-container span.num-orders"
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer",
-                                     # The Whole Foods Market in-store (FOPO) order details page
                                      "div#odp-main-section"]
     ITEM_ENTITY_SELECTOR = ["[data-component='purchasedItems'] .a-fixed-left-grid",
                             "div:has(> div.yohtmlc-item)",
                             ".item-box",
-                            # Whole Foods Market in-store (FOPO) order details line items
+                            # WFM in-store line items
                             "div.a-row.a-spacing-base:has(img.ufpo-itemListWidget-image)"]
     SHIPMENT_ENTITY_SELECTOR = ["[data-component='orderCard'] [data-component='shipments'] .a-box",
                                 "div.shipment",
@@ -100,24 +99,19 @@ class Selectors:
     # Selectors defined here mean we don't have a reliable way to parse all details in an Order, so Items and
     # Shipments will be skipped
     ORDER_SKIP_ITEMS = [
-        # Identifies an Amazon Fresh order (also matched by Whole Foods in-store purchases, which
-        # render the same brand-logo box; those are distinguished via ORDER_WHOLE_FOODS below)
+        # Identifies an Amazon Fresh order (also matched by WFM in-store; distinguished via ORDER_WHOLE_FOODS)
         ".brand-info-box .brand-logo img",
         # Identifies a Whole Foods Market receipt order
         "a.yohtmlc-order-details-link[href^='/wholefoodsmarket']",
         # Identifies an order from a physical Amazon store
         Selector("div.yohtmlc-shipment-status-primaryText", "Purchased at Amazon")
     ]
-    # Selectors that identify a Whole Foods Market purchase. In-store (FOPO) purchases link to
-    # ``/fopo/order-details`` and tag the shipment "Purchased at Whole Foods Market"; receipt orders
-    # link to the external ``/wholefoodsmarket/receipts/order`` page. Unlike the ORDER_SKIP_ITEMS
-    # entries, these orders expose a grand total (and often an item count) on the history page, so
-    # those fields are parsed even though per-item details require the Whole Foods receipt page.
+    # Selectors identifying a Whole Foods Market purchase. Unlike ORDER_SKIP_ITEMS entries, WFM orders
+    # expose a grand_total (and often item_count) on the history page, so those fields are populated.
     ORDER_WHOLE_FOODS = [
         "a[href*='/wholefoodsmarket/receipts/order/']",
         "a[href*='/fopo/order-details']",
         Selector("div.yohtmlc-shipment-status-primaryText", text_contains="Whole Foods Market"),
-        # The item list widget on the Whole Foods in-store (FOPO) order details page
         "img.ufpo-itemListWidget-image"
     ]
     # Selectors defined here mean the Order will not have parsable totals
@@ -132,20 +126,18 @@ class Selectors:
     # CSS selectors for Item fields
     #####################################
 
-    # The trailing entries (``ufpo``/``a-span10``) match Whole Foods Market in-store (FOPO) line items
+    # Last entry matches WFM in-store line items
     FIELD_ITEM_IMG_LINK_SELECTOR = ["a img",
                                     "img.ufpo-itemListWidget-image"]
     FIELD_ITEM_QUANTITY_SELECTOR = [".od-item-view-qty",
                                     "span.item-view-qty",
                                     "span.product-image__qty"]
-    # Whole Foods Market in-store (FOPO) line items render quantity as "Qty: 1" / "Qty: 0.31 lb"; the
-    # whole-count value (if any) is extracted from the matching span in ``Item._parse_quantity``.
+    # WFM items render "Qty: N" or "Qty: 0.31 lb"; extracted in Item._parse_quantity
     FIELD_ITEM_WHOLE_FOODS_QUANTITY_SELECTOR = ["span.a-size-small"]
     FIELD_ITEM_TITLE_SELECTOR = ["[data-component='itemTitle']",
                                  ".yohtmlc-item a", ".yohtmlc-product-title",
                                  "div.a-column.a-span10 > a",
-                                 # Whole Foods Market line items without an Amazon detail page (ASINLESS)
-                                 # render the title in a span rather than a link
+                                 # ASINLESS WFM items render the title in a span rather than a link
                                  "div.a-column.a-span10 > span"]
     FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a",
                                 ".yohtmlc-item a",
@@ -166,8 +158,7 @@ class Selectors:
     FIELD_ORDER_DETAILS_LINK_SELECTOR = ["a.yohtmlc-order-details-link",
                                          # Would like to use this or similar, but not yet sure how consistent it is
                                          # ".order-header__header-link-list-item:first-of-type a"
-                                         # Whole Foods Market receipt orders and in-store (FOPO) purchases link to
-                                         # dedicated detail pages rather than the standard order-details endpoint
+                                         # WFM receipt and FOPO orders link to dedicated pages, not standard endpoint
                                          "a[href*='/wholefoodsmarket/receipts/order/']",
                                          "a[href*='/fopo/order-details']"]
     FIELD_ORDER_NUMBER_SELECTOR = ["[data-component='orderId']",
@@ -178,12 +169,10 @@ class Selectors:
     FIELD_ORDER_GRAND_TOTAL_SELECTOR = ["div.yohtmlc-order-total span.value",
                                         "div.order-header div.a-column.a-span2",
                                         "div.order-header div.a-col-left .a-span9",
-                                        # Whole Foods Market in-store (FOPO) order details page
                                         "#wfm-grand-total-amount"]
-    # The "Purchase Summary" amounts on the Whole Foods Market in-store (FOPO) order details page
+    # WFM in-store (FOPO) details page amounts
     FIELD_ORDER_WHOLE_FOODS_SUBTOTAL_SELECTOR = "#wfm-subtotal-amount"
     FIELD_ORDER_WHOLE_FOODS_TAX_SELECTOR = "#wfm-tax-total-amount"
-    # The first "Payment Methods" entry on the Whole Foods Market in-store (FOPO) order details page
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_METHOD_SELECTOR = "#wfm-0-card-brand"
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR = "#wfm-0-card-tail"
     FIELD_ORDER_PLACED_DATE_SELECTOR = ["[data-component='orderDate']",
@@ -201,10 +190,6 @@ class Selectors:
     FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR = "div.recipient span.a-declarative"
     FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR = "script[id^='shipToData']"
     FIELD_ORDER_GIFT_CARD_INSTANCE_SELECTOR = ".gift-card-instance"
-    # The candidate tags to scan for an "N items in this purchase" summary (e.g. Whole Foods Market and
-    # eGift orders); the count is extracted from the matching tag's text in ``Order._parse_item_count``.
-    # The summary renders in an unclassed ``span`` in the order card's right column, so scope to that
-    # column first and fall back to scanning every ``span`` if the layout differs.
     FIELD_ORDER_ITEM_COUNT_SELECTOR = ["div.a-fixed-left-grid-col.a-col-right span",
                                        "span"]
 
