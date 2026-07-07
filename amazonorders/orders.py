@@ -216,7 +216,17 @@ class AmazonOrders:
         order: Order = self.config.order_cls(order_tag, self.config, index=current_index)
 
         if full_details:
-            if len(util.select(order.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
+            if order.is_whole_foods:
+                # Whole Foods orders are served by a dedicated details page (the in-store/FOPO page or the
+                # receipt page), never the standard order-details endpoint, so only fetch full details when
+                # the history page linked us to one of those routes.
+                link = order.order_details_link or ""
+                if "/fopo/order-details" in link or "/wholefoodsmarket/receipts/order/" in link:
+                    order = self._get_whole_foods_order(order, link)
+                else:
+                    logger.warning(f"Order {order.order_number} is a Whole Foods Market order whose details "
+                                   f"page could not be located, so it was left partially populated.")
+            elif len(util.select(order.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
                 logger.warning(f"Order {order.order_number} was partially populated, "
                                f"since it is an unsupported Order type.")
             elif not order.order_number:
@@ -226,6 +236,24 @@ class AmazonOrders:
                 order = self.get_order(order.order_number, clone=order)
 
         return order
+
+    def _get_whole_foods_order(self,
+                               order: Order,
+                               url: str) -> Order:
+        """Fetches the WFM dedicated details page and returns the order enriched with per-item details."""
+        details_response = self.amazon_session.get(url)
+        self.amazon_session.check_response(details_response, meta={"index": order.index})
+
+        details_tag = util.select_one(details_response.parsed,
+                                      self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+
+        if not details_tag:
+            logger.warning(f"Could not parse Whole Foods Market details for Order {order.order_number}, "
+                           f"so it was left partially populated.")
+            return order
+
+        return self.config.order_cls(details_tag, self.config, full_details=True, clone=order,
+                                     order_number=order.order_number)
 
     async def _async_wrapper(self,
                              func: Callable,
