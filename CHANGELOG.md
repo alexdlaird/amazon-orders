@@ -18,10 +18,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `request_timeout` config key (defaults to `None`) controlling the timeout passed to each HTTP request.
+- `Order.is_whole_foods`, identifying Whole Foods Market purchases (in-store/FOPO purchases and Whole Foods receipt orders).
+- `Order.item_count`, the number of items in a purchase when Amazon summarizes the count instead of listing the items (e.g. Whole Foods Market and eGift orders).
+- Full-details support for Whole Foods Market in-store purchases: when `full_details=True`, these orders are fetched from their dedicated `/fopo/order-details` page (which the standard order-details endpoint does not serve) and populate `items` (title, price, image, link, and whole-unit `quantity`), `subtotal`, `estimated_tax`, `payment_method`, and `payment_method_last_4`.
 
 ### Changed
 
 - `Order.order_number` now uses the caller-supplied value as a fallback when the order number cannot be parsed from the details page; previously documented but unintuitive behavior.
+- `Order.grand_total` is now populated for Whole Foods Market orders from the order history page (previously skipped as an unsupported order type).
+- `Item.link` is now optional (`None` for line items without an Amazon detail page, such as ASINLESS Whole Foods Market items) rather than raising when no link is present.
 
 ## [4.4.1](https://github.com/alexdlaird/amazon-orders/compare/4.4.0...4.4.1) - 2026-07-04
 
