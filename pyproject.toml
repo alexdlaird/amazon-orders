@@ -137,7 +137,7 @@ directory = "build/coverage"
 [tool.flake8]
 max-line-length = 119
 statistics = true
-exclude = "scripts/*,docs/*,venv/*,build/*,dist/*,.egg-info/*,.mypy_cache/*"
+exclude = "scripts/*,docs/*,venv/*,build/*,dist/*,.egg-info/*,.mypy_cache/*,.claude/*"
 
 [[tool.mypy.overrides]]
 module = "amazoncaptcha.*"
