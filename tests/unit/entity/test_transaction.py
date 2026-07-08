@@ -58,3 +58,17 @@ class TestTransaction(UnitTestCase):
         self.assertEqual(
             repr(transaction), '<Transaction 2024-01-01: "Order #123-4567890-1234567, Grand Total: 12.34">'
         )
+
+    def test_parse_no_payment_method(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transaction-no-payment-method-snippet.html"),
+                  "r", encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN
+        transaction = Transaction(parsed, self.test_config, date(2024, 1, 1))
+
+        # THEN
+        self.assertIsNone(transaction.payment_method)
+        self.assertIsNone(transaction.payment_method_last_4)
+        self.assertEqual(transaction.grand_total, -12.34)

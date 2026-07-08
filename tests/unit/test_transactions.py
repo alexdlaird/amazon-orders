@@ -121,6 +121,26 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(transaction.order_number, "123-4567890-1234567")
         self.assertEqual(transaction.seller, "AMZN Mktp CA")
 
+    def test_parse_transactions_zero_transactions(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-zero-transactions.html"),
+                  "r", encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        transactions = AmazonTransactions.parse_transactions(html, self.test_config)
+
+        # THEN
+        self.assertEqual([], transactions)
+
+    def test_parse_transactions_unparseable(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonTransactions.parse_transactions("<html></html>", self.test_config)
+
+        # THEN
+        self.assertIn("Could not parse Transaction history", str(cm.exception))
+
     @responses.activate
     def test_get_transactions_errors_with_meta(self):
         # GIVEN

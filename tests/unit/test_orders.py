@@ -700,6 +700,14 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
 
+    def test_parse_order_details_unparseable(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonOrders.parse_order_details("<html></html>", self.test_config)
+
+        # THEN
+        self.assertIn("Could not parse Order details", str(cm.exception))
+
     @responses.activate
     def test_get_order_digital(self):
         # GIVEN
