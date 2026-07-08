@@ -672,6 +672,34 @@ class TestOrders(UnitTestCase):
         self.assertIsNone(order.index)
         self.assertEqual(1, resp.call_count)
 
+    def test_parse_order_history(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        orders = AmazonOrders.parse_order_history(html, self.test_config)
+
+        # THEN
+        self.assertEqual(10, len(orders))
+        self.assert_order_112_0399923_3070642(orders[3], False)
+        self.assertEqual(3, orders[3].index)
+        self.assert_orders_list_index(orders)
+
+    def test_parse_order_details(self):
+        # GIVEN
+        order_id = "112-9685975-5907428"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(html, self.test_config)
+
+        # THEN
+        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
+
     @responses.activate
     def test_get_order_digital(self):
         # GIVEN

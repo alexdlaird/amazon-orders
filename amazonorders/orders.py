@@ -9,7 +9,7 @@ import re
 from typing import Any, Callable, List, Optional
 from urllib.parse import quote
 
-from bs4 import Tag
+from bs4 import BeautifulSoup, Tag
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
@@ -60,6 +60,39 @@ class AmazonOrders:
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
+
+    @staticmethod
+    def parse_order_history(html: str,
+                            config: AmazonOrdersConfig) -> List[Order]:
+        """
+        Parse an already-fetched Amazon Order history page into Orders, without a session driving the
+        fetch — useful for parsing HTML obtained elsewhere (a browser, a proxy, a fixture) and for
+        network-free testing.
+
+        :param html: The Order history page HTML to parse.
+        :param config: The config providing the selectors and entity classes used for parsing.
+        :return: A list of the parsed Orders.
+        """
+        parsed = BeautifulSoup(html, config.bs4_parser)
+        order_tags = util.select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
+        return [config.order_cls(tag, config, index=i) for i, tag in enumerate(order_tags)]
+
+    @staticmethod
+    def parse_order_details(html: str,
+                            config: AmazonOrdersConfig) -> Order:
+        """
+        Parse an already-fetched Amazon Order details page into an Order, without a session driving the
+        fetch — useful for parsing HTML obtained elsewhere and for network-free testing.
+
+        :param html: The Order details page HTML to parse.
+        :param config: The config providing the selectors and entity classes used for parsing.
+        :return: The parsed Order.
+        """
+        parsed = BeautifulSoup(html, config.bs4_parser)
+        order_details_tag = util.select_one(parsed, config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+        if not order_details_tag:
+            raise AmazonOrdersError("Could not parse Order details. Check if Amazon changed the HTML.")
+        return config.order_cls(order_details_tag, config, full_details=True)
 
     def get_order(self,
                   order_id: str,

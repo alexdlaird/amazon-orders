@@ -5,7 +5,7 @@ import datetime
 import logging
 from typing import Dict, List, Optional, Tuple, Any
 
-from bs4 import Tag
+from bs4 import BeautifulSoup, Tag
 from dateutil import parser
 
 from amazonorders import util
@@ -81,6 +81,31 @@ class AmazonTransactions:
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
+
+    @staticmethod
+    def parse_transactions(html: str,
+                           config: AmazonOrdersConfig) -> List[Transaction]:
+        """
+        Parse an already-fetched Amazon Transactions page into Transactions, without a session driving
+        the fetch — useful for parsing HTML obtained elsewhere (a browser, a proxy, a fixture) and for
+        network-free testing. Only the Transactions on the given page are returned; paging is a fetch
+        concern.
+
+        :param html: The Transactions page HTML to parse.
+        :param config: The config providing the selectors used for parsing.
+        :return: A list of the parsed Transactions.
+        """
+        parsed = BeautifulSoup(html, config.bs4_parser)
+
+        form_tag = util.select_one(parsed, config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
+        if not form_tag:
+            container = util.select_one(parsed, config.selectors.TRANSACTION_HISTORY_CONTAINER_SELECTOR)
+            if container and "don't have any transactions" in container.text:
+                return []
+            raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.")
+
+        transactions, _next_page_data = _parse_transaction_form_tag(form_tag, config)
+        return transactions
 
     def get_transactions(self,
                          days: int = 365,
