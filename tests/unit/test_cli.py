@@ -142,6 +142,77 @@ class TestCli(UnitTestCase):
         self.assertIn("orderFilter=digital-orders", request_url)
 
     @responses.activate
+    def test_history_command_last_30_days(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        resp = self.given_order_history_exists_for_time_filter("last30", "order-history-2024-0.html")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "history", "--last-30-days", "--single-page"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertNotIn("TypeError", response.output)
+        self.assert_login_responses_success()
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("timeFilter=last30", resp.calls[0].request.url)
+
+    @responses.activate
+    def test_history_command_last_3_months(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        resp = self.given_order_history_exists_for_time_filter("months-3", "order-history-2024-0.html")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "history", "--last-3-months", "--single-page"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertNotIn("TypeError", response.output)
+        self.assert_login_responses_success()
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("timeFilter=months-3", resp.calls[0].request.url)
+
+    @responses.activate
+    def test_history_command_mutually_exclusive_flags(self):
+        # GIVEN
+        exclusive_flag_combinations = [
+            ["--last-30-days", "--last-3-months"],
+            ["--year", "2023", "--last-30-days"],
+            ["--year", "2023", "--last-3-months"],
+        ]
+
+        for flags in exclusive_flag_combinations:
+            with self.subTest(flags=flags):
+                self.given_unauthenticated_home_page()
+                self.given_login_responses_success()
+
+                # WHEN
+                response = self.runner.invoke(amazon_orders_cli,
+                                              [
+                                                  "--config-path", self.test_config.config_path,
+                                                  "--username", "some-username@gmail.com",
+                                                  "--password", "some-password",
+                                                  "history", *flags])
+
+                # THEN
+                self.assertNotEqual(0, response.exit_code)
+                self.assertIn("Only one of --last-30-days, --last-3-months, or --year "
+                              "may be used at a time.", response.output)
+
+    @responses.activate
     def test_invoice_command(self):
         # GIVEN
         order_id = "123-4567890-1234567"

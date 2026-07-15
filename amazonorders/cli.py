@@ -147,7 +147,7 @@ def history(ctx: Context,
         order_filter = kwargs["order_filter"]
 
         exclusive_flags = [year, last_3_months, last_30_days]
-        if not all(not item for item in exclusive_flags) and sum(exclusive_flags) == 1:
+        if sum(1 for item in exclusive_flags if item) > 1:
             ctx.fail("Only one of --last-30-days, --last-3-months, or --year may be used at a time.")
 
         # Determine time filter
