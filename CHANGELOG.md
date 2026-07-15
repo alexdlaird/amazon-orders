@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.4...HEAD)
 
+### Fixed
+
+- CLI `history` crash when using `--last-30-days` or `--last-3-months`.
+- CLI `history --start-index` now validates non-numeric input.
+
 ## [4.4.4](https://github.com/alexdlaird/amazon-orders/compare/4.4.3...4.4.4) - 2026-07-07
 
 ### Added

@@ -213,6 +213,46 @@ class TestCli(UnitTestCase):
                               "may be used at a time.", response.output)
 
     @responses.activate
+    def test_history_command_full_details(self):
+        # GIVEN
+        year = 2023
+        start_index = 10
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        resp1 = self.given_order_history_exists(year, start_index)
+        resp2 = self.given_any_order_details_exists("order-details-114-9460922-7737063.html")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "history", "--year", year, "--start-index", start_index,
+                                          "--single-page", "--full-details"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assert_login_responses_success()
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(10, resp2.call_count)
+        self.assertIn("with full details", response.output)
+
+    def test_history_command_invalid_start_index(self):
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "history", "--start-index", "not-a-number"])
+
+        # THEN
+        self.assertNotEqual(0, response.exit_code)
+        self.assertNotIn("Traceback", response.output)
+        self.assertIn("Invalid value", response.output)
+
+    @responses.activate
     def test_invoice_command(self):
         # GIVEN
         order_id = "123-4567890-1234567"
@@ -435,6 +475,76 @@ class TestCli(UnitTestCase):
                 "transactions"
             ],
         )
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertIn("Error from Amazon: There was a problem. Your password is incorrect.", response.output)
+
+    @responses.activate
+    def test_invoice_command_error(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-invalid-password.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "invoice", "1234-fake-id"
+                                      ])
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertIn("Error from Amazon: There was a problem. Your password is incorrect.", response.output)
+
+    @responses.activate
+    def test_order_transactions_command_error(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-invalid-password.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "order-transactions", "1234-fake-id"
+                                      ])
 
         # THEN
         self.assertEqual(2, response.exit_code)
