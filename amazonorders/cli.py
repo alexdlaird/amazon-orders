@@ -119,7 +119,7 @@ def amazon_orders_cli(ctx: Context,
               help="Get Order history for the last 30 days.")
 @click.option("--last-3-months", "last_3_months", is_flag=True, default=False,
               help="Get Order history for the past 3 months.")
-@click.option("--start-index",
+@click.option("--start-index", type=int,
               help="The index of the Order from which to start fetching in the history.")
 @click.option("--single-page", is_flag=True, default=False,
               help="Only one page should be fetched.")
@@ -147,7 +147,7 @@ def history(ctx: Context,
         order_filter = kwargs["order_filter"]
 
         exclusive_flags = [year, last_3_months, last_30_days]
-        if not all(not item for item in exclusive_flags) and sum(exclusive_flags) == 1:
+        if sum(1 for item in exclusive_flags if item) > 1:
             ctx.fail("Only one of --last-30-days, --last-3-months, or --year may be used at a time.")
 
         # Determine time filter
