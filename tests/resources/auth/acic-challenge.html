@@ -1,7 +1,150 @@
-<!doctype html>
-<html>
-<head><title>Challenge Page</title></head>
-<body>
-<div id="aa-challenge-page-captcha-container"></div>
-</body>
+<!doctype html><html class="a-no-js" data-19ax5a9jf="dingo">
+    <head><script>var aPageStart = (new Date()).getTime();</script><meta charset="utf-8"/>
+        <title>Challenge Page</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://m.media-amazon.com/images/I/21b2CPPFLqL._RC|51nfWTBkewL.css_.css?AUIClients/AmazonUI" />
+<link rel="stylesheet" href="https://m.media-amazon.com/images/I/11WsGYSItxL._RC|01DE6WSvLKL.css,51-rItlKGTL.css,31zRoguzRzL.css,21JMC7OC91L.css,01xH+fhFIJL.css,01oplyhwgTL.css,413Vvv3GONL.css,1170nDgl0uL.css,01Rw4F+QU6L.css,11GW2DCngTL.css,01dwEpLmO4L.css,01IdKcBuAdL.css,01iHqjS7YfL.css,21D3IemrALL.css,11Cv7swYm2L.css,51kR4v4RCcL.css,01yC8kk5kkL.css,11aX6hlPzjL.css,01GAxF7K5tL.css,01ZM-s8Z3xL.css,21gEzBqpmtL.css,11FeoxrgiyL.css,21Yuul0BcnL.css,01rSTIgNJIL.css,21HqyYwP3xL.css,31u+uM+C07L.css,01i092IYHUL.css,01oaPOLX+-L.css,31g3RABPKHL.css,11PDZ29p-PL.css,117zDsOznQL.css,215WpAjwzoL.css,11INh4d+2FL.css,114aTS6SjML.css,01Uw64cHNCL.css,21GcfcmbahL.css,21OD8FuBraL.css,11XozyxiH7L.css,210W8HxtP4L.css,11GyUpf9PlL.css,119Cktja74L.css,11PMguLK6gL.css,01890+Vwk8L.css,11TZSntL0oL.css,01qiwJ7qDfL.css,21jZ2Hny6UL.css,01pps5qPjtL.css,0136+UFOtpL.css,31un+UKeIeL.css,21MLYj6O8gL.css,013-xYw+SRL.css_.css?AUIClients/AmazonUI#us.not-trident" />
+
+        <script>
+(function(b,a,c,d){if((b=b.AmazonUIPageJS||b.P)&&b.when&&b.register){c=[];for(a=a.currentScript;a;a=a.parentElement)a.id&&c.push(a.id);return b.log("A copy of P has already been loaded on this page.","FATAL",c.join(" "))}})(window,document,Date);(function(a,b,c,d){"use strict";a._pSetI=function(){return null}})(window,document,Date);
+</script>
+
+        <style>
+            .aa-full-screen-container {
+                border:none;
+                width: 100%;
+            }
+        </style>
+    </head>
+    <body class="a-m-us a-aui_72554-c a-aui_template_weblab_cache_333406-c"><div id="a-page"><script type="a-state" data-a-state="{&quot;key&quot;:&quot;a-wlab-states&quot;}">{}</script>
+        <!-- Add CSRF token -->
+        <input type='hidden' name='__token_' value='SCRUBBED-CSRF-TOKEN' />
+        <!-- Debug info -->
+        <div style="display: none">
+            Current Locale: en_US
+            Resource Bundle:
+        </div>
+
+
+        <!-- JavaScript disabled version redirects to separate page -->
+        <noscript>
+            <meta http-equiv="refresh" content="0; url=/aaut/verify/ap/challenge/nojs?aamationToken=SCRUBBED-AAMATION-TOKEN&locale=en-US&useDiv=true&fallbackTo=https%3A%2F%2Fwww.amazon.com%2Fap%2Fsignin%3Fopenid.pape.max_auth_age%3D0%26openid.return_to%3Dhttps%253A%252F%252Fwww.amazon.com%252F%253Fref_%253Dnav_custrec_signin%26openid.identity%3Dhttp%253A%252F%252Fspecs.openid.net%252Fauth%252F2.0%252Fidentifier_select%26openid.assoc_handle%3Dusflex%26openid.mode%3Dcheckid_setup%26openid.claimed_id%3Dhttp%253A%252F%252Fspecs.openid.net%252Fauth%252F2.0%252Fidentifier_select%26openid.ns%3Dhttp%253A%252F%252Fspecs.openid.net%252Fauth%252F2.0">
+        </noscript>
+
+        <script>
+            P.when('A', 'acic-map-ios-bridge', 'acic-component').execute('acic-setup', function(A, mapBridge) {
+                if (mapBridge && mapBridge.dismissSpinner) {
+                    mapBridge.dismissSpinner(function (errorName, errorInfo) {
+                        console.error('Dismiss spinner error:', errorName, errorInfo);
+                    });
+                }
+
+                acic.setupACIC({
+                    "data-div": document.getElementById("aa-challenge-page-captcha-container"),
+                    "data-ref-id": "ap",
+                    "data-challenge-type": "",
+                    "data-context": "",
+                    "data-external-id": "",
+                    "data-callback": function(data) {
+                        handleSessionToken(data);
+                    },
+                    "data-challengeLoadCallback": function(data) {
+                        handleChallengeLoadCallBackEvents(data);
+                    },
+                    "data-locale": "en-US",
+                    "data-header-footer": true,
+                    "data-bypass-mechanism": false,
+                    "data-host": window.location.host,
+                    "data-aamation-token": "SCRUBBED-AAMATION-TOKEN"
+                });
+
+                function handleChallengeLoadCallBackEvents(data) {
+                    if (false) {
+                        const eventId = 'aa-page-challenge-load';
+                        window.parent.postMessage(JSON.stringify({ clientId: `ap`, eventId: eventId, height: data.height, width: data.width}), '*');
+                    }
+                }
+
+                function handleSessionToken(data) {
+
+                    const clientId = "ap";
+
+                    if (false) {
+                        const eventId = 'aa-page-challenge-complete';
+                        window.parent.postMessage(JSON.stringify({ clientId: `ap`, sessionToken: data.sessionToken, eventId: eventId }), '*');
+                    } else if (clientId === "ap") {
+                        // Get the aamationToken from query parameters
+                        const aamationToken = data.sessionToken;
+                        // Create a form element dynamically
+                        const form = document.createElement('form');
+                        form.setAttribute('name', 'aaTokenForm');
+                        form.method = 'POST';
+
+                        const submitUrl = new URL(window.location.href);
+                        //path to AA challenge page for AP
+                        submitUrl.pathname = '/ax/aaut/verify/ap/challenge/submit';
+                        form.action = submitUrl.href;
+
+                        // Add CSRF token to the form input
+                        const tokenInput = document.querySelector('input[name="__token_"]');
+
+                        if (tokenInput) {
+                            const csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = 'anti-csrftoken-a2z';
+                            csrfInput.value = tokenInput.value;
+                            form.appendChild(csrfInput);
+                        }
+
+                        // Append form to document body
+                        document.body.appendChild(form);
+
+                        // Manually build the data
+                        var postData = {
+                            'sessionToken': data.sessionToken,
+                            'anti-csrftoken-a2z': tokenInput ? tokenInput.value : ''
+                        };
+
+                        A.post(submitUrl.href, {
+                            params: postData,
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'anti-csrftoken-a2z': tokenInput ? tokenInput.value : '',
+                                'Accept': 'application/json'
+                            },
+                            success: function(response) {
+                                if (response && response.location) {
+                                    form.action = response.location;
+                                }
+                                if (response && response.csrfToken) {
+                                    const csrfInput = form.querySelector('input[name="anti-csrftoken-a2z"]');
+                                    if (csrfInput) {
+                                        csrfInput.value = response.csrfToken;
+                                    }
+                                }
+                                form.submit();
+                            },
+                            error: function() {
+                                const urlParams = new URLSearchParams(window.location.search);
+                                const fallbackTo = urlParams.get('fallbackTo');
+                                if (fallbackTo) {
+                                    window.location.href = fallbackTo;
+                                }
+                            }
+                        });
+
+                    } else {
+                        const newUrl = new URL("https://www.amazon.com");
+                        newUrl.searchParams.append('clientId', 'ap');
+                        newUrl.searchParams.append('sessionToken', data.sessionToken);
+                        window.location.replace(newUrl.toString());
+                    }
+                }
+            });
+        </script>
+
+            <div id="aa-challenge-page-captcha-container" class="a-section aa-full-screen-container">
+            </div>
+
+    </div></body>
 </html>

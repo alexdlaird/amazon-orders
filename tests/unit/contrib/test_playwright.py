@@ -140,6 +140,84 @@ class TestPlaywrightAcicForm(UnitTestCase):
         launch_kwargs = mock_sync_playwright.return_value.__enter__.return_value.chromium.launch.call_args
         self.assertEqual(True, launch_kwargs.kwargs.get("headless"))
 
+    def test_submit_goes_headful_when_manual_solver_registered(self):
+        # GIVEN
+        form = PlaywrightAcicForm(self.test_config)
+        self.amazon_session.auth_forms.append(PlaywrightManualWafForm(self.test_config))
+        parsed = BeautifulSoup(self.acic_html, self.test_config.bs4_parser)
+        form.select_form(self.amazon_session, parsed)
+
+        last_response = MagicMock()
+        last_response.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        self.amazon_session.get = MagicMock(return_value="refetched")
+
+        mock_sync_playwright, _, _, _ = _make_mock_playwright()
+        fake_module = _playwright_module(mock_sync_playwright)
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            form.submit(last_response)
+
+        # THEN
+        launch_kwargs = mock_sync_playwright.return_value.__enter__.return_value.chromium.launch.call_args
+        self.assertEqual(False, launch_kwargs.kwargs.get("headless"))
+
+    def test_manual_mode_skips_automated_solve_loop(self):
+        # GIVEN
+        form = PlaywrightAcicForm(self.test_config)
+        self.amazon_session.auth_forms.append(PlaywrightManualWafForm(self.test_config))
+        parsed = BeautifulSoup(self.acic_html, self.test_config.bs4_parser)
+        form.select_form(self.amazon_session, parsed)
+
+        last_response = MagicMock()
+        last_response.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        self.amazon_session.get = MagicMock(return_value="refetched")
+        self.amazon_session.io = MagicMock()
+
+        mock_sync_playwright, mock_page, _, _ = _make_mock_playwright()
+        fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            result = form.submit(last_response)
+
+        # THEN
+        mock_page.wait_for_function.assert_not_called()
+        mock_page.reload.assert_not_called()
+        echoed = [call.args[0] for call in self.amazon_session.io.echo.call_args_list]
+        self.assertTrue(any("solve the challenge" in msg for msg in echoed))
+        self.assertEqual("refetched", result)
+
+    def test_automated_solver_takes_precedence_over_manual(self):
+        # GIVEN
+        form = PlaywrightAcicForm(self.test_config)
+        self.amazon_session.auth_forms.append(PlaywrightManualWafForm(self.test_config))
+        mock_waf = MagicMock(spec=AwsWafForm)
+        mock_waf.PROVIDER_NAME = "TestSolver"
+        mock_waf._solve_token.return_value = "waf-token-value"
+        self.amazon_session.auth_forms.append(mock_waf)
+        parsed = BeautifulSoup(self.acic_html, self.test_config.bs4_parser)
+        form.select_form(self.amazon_session, parsed)
+
+        last_response = MagicMock()
+        last_response.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        self.amazon_session.get = MagicMock(return_value="refetched")
+
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        mock_sync_playwright, mock_page, _, _ = _make_mock_playwright()
+        mock_page.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        mock_page.evaluate.side_effect = [goku, "https://challenge.awswaf.com/challenge.js"]
+        fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            form.submit(last_response)
+
+        # THEN
+        launch_kwargs = mock_sync_playwright.return_value.__enter__.return_value.chromium.launch.call_args
+        self.assertEqual(True, launch_kwargs.kwargs.get("headless"))
+        mock_waf._solve_token.assert_called_once()
+
     def test_submit_launches_firefox_when_configured(self):
         # GIVEN
         config = AmazonOrdersConfig(data={

@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.5...HEAD)
 
+### Fixed
+
+- `PlaywrightManualWafForm` alongside `PlaywrightAcicForm` now opens a visible browser to solve ACIC-embedded challenges manually.
+
 ## [4.4.5](https://github.com/alexdlaird/amazon-orders/compare/4.4.4...4.4.5) - 2026-07-15
 
 ### Fixed
