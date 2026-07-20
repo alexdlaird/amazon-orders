@@ -127,9 +127,9 @@ Amazon sometimes embeds challenges inside the ACIC page — either a WAF token c
 grid Puzzle (e.g. "Choose all the buckets"), or both. When this happens, the headless browser alone
 cannot solve them. Two options are available:
 
-- **Manual** — register ``PlaywrightManualWafForm`` alongside ``PlaywrightAcicForm``. A visible
-  browser window opens for you to solve the embedded WAF challenge yourself. No WAF solver extra
-  is required.
+- **Manual** — register ``PlaywrightManualWafForm`` alongside ``PlaywrightAcicForm``. The ACIC
+  browser itself opens visibly and hands the embedded challenge — whether a WAF token challenge or
+  a visual grid Puzzle — to you to solve yourself. No WAF solver extra is required.
 
   .. code-block:: yaml
 

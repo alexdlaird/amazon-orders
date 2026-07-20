@@ -19,6 +19,7 @@ from amazonorders.forms import AuthForm
 from amazonorders.util import AmazonSessionResponse
 
 if TYPE_CHECKING:
+    from amazonorders.contrib.waf.base import AwsWafForm
     from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
@@ -44,6 +45,10 @@ class PlaywrightAuthForm(AuthForm):
         #: Whether to launch the browser in headless mode. Defaults to ``True``.
         #: Set to ``False`` in subclasses that require user interaction.
         self.headless: bool = True
+        #: Whether this form solves challenges by handing off to a human in a visible
+        #: browser window (as opposed to an automated third-party solver). Forms with
+        #: this set act as the free, manual solver for an embedded ACIC challenge.
+        self.manual: bool = False
 
     def fill_form(self,
                   additional_attrs: Optional[Dict[str, Any]] = None) -> None:
@@ -197,9 +202,15 @@ class PlaywrightAuthForm(AuthForm):
 class PlaywrightAcicForm(PlaywrightAuthForm):
     """
     Handles Amazon's ACIC (Amazon Challenge and Identity Component) JavaScript challenge
-    by running it in a headless browser. If an embedded AWS WAF challenge is present on
-    the ACIC page, it will be solved automatically using the first
+    by running it in a headless browser. If an embedded AWS WAF challenge or visual grid
+    Puzzle is present on the ACIC page, it will be solved automatically using the first
     :class:`~amazonorders.contrib.waf.base.AwsWafForm` found in ``auth_forms_classes``.
+
+    If no automated solver is registered but a manual solver
+    (:class:`~amazonorders.contrib.browser.playwright.PlaywrightManualWafForm`) is, a
+    **visible** browser window is opened instead so the user can solve the embedded
+    challenge themselves, for free. An automated solver takes precedence when both are
+    registered.
 
     Detects the challenge via the ``#aa-challenge-page-captcha-container`` element and
     waits for navigation away from ``/ax/aaut/verify/ap/challenge``.
@@ -224,9 +235,50 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
         :return: ``True`` if an ACIC challenge was detected, ``False`` otherwise.
         """
         self.amazon_session = amazon_session
-        return bool(parsed.select_one(self.config.selectors.ACIC_CHALLENGE_SELECTOR))
+        detected = bool(parsed.select_one(self.config.selectors.ACIC_CHALLENGE_SELECTOR))
+        if detected:
+            self.headless = not self._manual_mode()
+        return detected
+
+    def _manual_mode(self) -> bool:
+        """
+        Return ``True`` if the embedded challenge should be handed off to a human in a
+        visible browser window rather than an automated solver. This is the case when a
+        manual solver form is registered and no automated :class:`AwsWafForm` is; an
+        automated solver takes precedence when both are present, since it is
+        non-interactive.
+        """
+        return self._find_manual_solver() is not None and self._find_waf_solver() is None
+
+    def _find_waf_solver(self) -> Optional["AwsWafForm"]:
+        if not self.amazon_session:
+            return None  # pragma: no cover
+        from amazonorders.contrib.waf.base import AwsWafForm
+        return next(
+            (f for f in self.amazon_session.auth_forms if isinstance(f, AwsWafForm)),
+            None,
+        )
+
+    def _find_manual_solver(self) -> Optional["PlaywrightAuthForm"]:
+        if not self.amazon_session:
+            return None  # pragma: no cover
+        return next(
+            (f for f in self.amazon_session.auth_forms
+             if isinstance(f, PlaywrightAuthForm) and f.manual),
+            None,
+        )
 
     def _on_challenge_page(self, page: Any, context: Any, output_dir: Optional[str]) -> None:
+        if self._manual_mode():
+            message = (
+                "Info: A browser window has opened — solve the challenge, then return "
+                "here when done."
+            )
+            logger.info(message)
+            if self.amazon_session:
+                self.amazon_session.io.echo(message)
+            return
+
         max_solves = self.config.max_auth_attempts
         solves = 0
         while solves < max_solves:
@@ -281,11 +333,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
         if not self.amazon_session:
             return False  # pragma: no cover
 
-        from amazonorders.contrib.waf.base import AwsWafForm
-        waf_form = next(
-            (f for f in self.amazon_session.auth_forms if isinstance(f, AwsWafForm)),
-            None,
-        )
+        waf_form = self._find_waf_solver()
         if not waf_form:
             logger.debug("No AwsWafForm configured, skipping WAF challenge.")
             return False
@@ -339,11 +387,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
         if not self.amazon_session:
             return False  # pragma: no cover
 
-        from amazonorders.contrib.waf.base import AwsWafForm
-        waf_form = next(
-            (f for f in self.amazon_session.auth_forms if isinstance(f, AwsWafForm)),
-            None,
-        )
+        waf_form = self._find_waf_solver()
         if not waf_form:
             logger.debug("No AwsWafForm configured, skipping Puzzle.")
             return False
@@ -502,6 +546,7 @@ class PlaywrightManualWafForm(PlaywrightAuthForm):
                  config: AmazonOrdersConfig) -> None:
         super().__init__(config)
         self.headless = False
+        self.manual = True
 
     def select_form(self,
                     amazon_session: "AmazonSession",
