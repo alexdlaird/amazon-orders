@@ -63,7 +63,12 @@ class AmazonOrders:
             f"{self.config.constants.ORDER_DETAILS_URL}?orderID={order_id}")
         self.amazon_session.check_response(order_details_response, meta=meta)
 
-        if not order_details_response.response.url.startswith(self.config.constants.ORDER_DETAILS_URL):
+        response_url = order_details_response.response.url
+        if not response_url.startswith(self.config.constants.ORDER_DETAILS_URL):
+            if self._is_whole_foods_details_url(response_url):
+                # GET already followed the redirect, so order_details_response is the FOPO/receipt page.
+                return self._get_whole_foods_order(order_details_response, order_number=order_id, clone=clone)
+
             raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.",
                                             meta=meta)
 
@@ -217,12 +222,12 @@ class AmazonOrders:
 
         if full_details:
             if order.is_whole_foods:
-                # Whole Foods orders are served by a dedicated details page (the in-store/FOPO page or the
-                # receipt page), never the standard order-details endpoint, so only fetch full details when
-                # the history page linked us to one of those routes.
                 link = order.order_details_link or ""
-                if "/fopo/order-details" in link or "/wholefoodsmarket/receipts/order/" in link:
-                    order = self._get_whole_foods_order(order, link)
+                if self._is_whole_foods_details_url(link):
+                    details_response = self.amazon_session.get(link)
+                    self.amazon_session.check_response(details_response, meta={"index": order.index})
+                    order = self._get_whole_foods_order(details_response, order_number=order.order_number,
+                                                        clone=order)
                 else:
                     logger.warning(f"Order {order.order_number} is a Whole Foods Market order whose details "
                                    f"page could not be located, so it was left partially populated.")
@@ -237,23 +242,29 @@ class AmazonOrders:
 
         return order
 
-    def _get_whole_foods_order(self,
-                               order: Order,
-                               url: str) -> Order:
-        """Fetches the WFM dedicated details page and returns the order enriched with per-item details."""
-        details_response = self.amazon_session.get(url)
-        self.amazon_session.check_response(details_response, meta={"index": order.index})
+    def _is_whole_foods_details_url(self,
+                                    url: str) -> bool:
+        return any(route in url for route in self.config.constants.WHOLE_FOODS_DETAILS_ROUTES)
 
+    def _get_whole_foods_order(self,
+                               details_response: util.AmazonSessionResponse,
+                               order_number: Optional[str] = None,
+                               clone: Optional[Order] = None) -> Order:
+        """Builds an Order from an already-fetched Whole Foods Market details page response."""
         details_tag = util.select_one(details_response.parsed,
                                       self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
 
         if not details_tag:
-            logger.warning(f"Could not parse Whole Foods Market details for Order {order.order_number}, "
-                           f"so it was left partially populated.")
-            return order
+            if clone:
+                logger.warning(f"Could not parse Whole Foods Market details for Order {clone.order_number}, "
+                               f"so it was left partially populated.")
+                return clone
 
-        return self.config.order_cls(details_tag, self.config, full_details=True, clone=order,
-                                     order_number=order.order_number)
+            raise AmazonOrdersError(f"Could not parse Whole Foods Market details for Order {order_number}. "
+                                    f"Check if Amazon changed the HTML.")
+
+        return self.config.order_cls(details_tag, self.config, full_details=True, clone=clone,
+                                     order_number=order_number)
 
     async def _async_wrapper(self,
                              func: Callable,

@@ -742,6 +742,56 @@ class TestOrders(UnitTestCase):
         self.assertEqual(cm.exception.meta["index"], index)
 
     @responses.activate
+    def test_get_order_whole_foods(self):
+        # GIVEN ORDER_DETAILS_URL redirects to the dedicated FOPO details page, as Amazon does for
+        # Whole Foods Market orders looked up directly (not via order history)
+        self.amazon_session.is_authenticated = True
+        order_id = "147-7999693-6862434"
+        fopo_url = "https://www.amazon.com/fopo/order-details/ref=ppx_yo2ov_dt_b_fed_order_details" \
+                   f"?ie=UTF8&orderID={order_id}"
+        resp1 = responses.add(
+            responses.GET,
+            f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+            status=302,
+            headers={"Location": fopo_url},
+        )
+        resp2 = self.given_any_whole_foods_details_exists("order-details-fopo-147-7999693-6862434.html")
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(order_id, order.order_number)
+        self.assertTrue(order.is_whole_foods)
+        self.assertEqual(62.95, order.grand_total)
+        self.assertEqual(64.15, order.subtotal)
+        self.assertEqual(1.96, order.estimated_tax)
+        self.assertEqual(10, len(order.items))
+
+    @responses.activate
+    def test_get_order_whole_foods_unparseable_details(self):
+        # GIVEN the FOPO details page returns no parseable order-details container
+        self.amazon_session.is_authenticated = True
+        order_id = "147-7999693-6862434"
+        fopo_url = "https://www.amazon.com/fopo/order-details/ref=ppx_yo2ov_dt_b_fed_order_details" \
+                   f"?ie=UTF8&orderID={order_id}"
+        responses.add(
+            responses.GET,
+            f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+            status=302,
+            headers={"Location": fopo_url},
+        )
+        self.given_any_whole_foods_details_exists("order-details-wholefoods-unparseable.html")
+
+        # WHEN there is no clone to fall back to, so the FOPO page must parse to be usable at all
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order(order_id)
+
+        self.assertIn("Could not parse Whole Foods Market details", str(cm.exception))
+
+    @responses.activate
     def test_get_order_invalid_page(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
