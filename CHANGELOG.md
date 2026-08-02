@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.6...HEAD)
 
+### Fixed
+
+- `get_order()` now fetches Whole Foods Market orders via their dedicated details page instead of raising `AmazonOrdersNotFoundError` on redirect.
+
 ## [4.4.6](https://github.com/alexdlaird/amazon-orders/compare/4.4.5...4.4.6) - 2026-07-20
 
 ### Fixed
