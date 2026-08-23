@@ -110,3 +110,17 @@ class TestConstants(UnitTestCase):
         # THEN
         self.assertEqual("https://www.amazon.co.jp", config.constants.BASE_URL)
         self.assertEqual("¥", config.constants.CURRENCY_SYMBOL)
+
+    def test_domain_co_jp_sets_region_assoc_handle(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.co.jp"})
+
+        # THEN — the region-specific handle, otherwise Amazon 404s the sign-in request
+        self.assertEqual("jpflex", config.constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"])
+
+    def test_domain_unknown_tld_keeps_default_assoc_handle(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.com"})
+
+        # THEN
+        self.assertEqual("usflex", config.constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"])

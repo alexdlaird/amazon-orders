@@ -50,6 +50,19 @@ _REGION_CURRENCIES = {
     "sg": "S$",
 }
 
+#: ``openid.assoc_handle`` values for Amazon sign-in, keyed by the TLD suffix that follows
+#: ``amazon.``. Amazon rejects the sign-in request (HTTP 404) when the handle does not match
+#: the storefront's region, so it is looked up dynamically from the user-supplied domain.
+#: Unknown TLDs keep the default ``usflex``.
+_REGION_ASSOC_HANDLES = {
+    "co.uk": "ukflex",
+    "co.jp": "jpflex",
+    "com.au": "auflex",
+    "ca": "caflex",
+    "de": "deflex",
+    "in": "inflex",
+}
+
 
 def _normalize_base_url(value: str) -> str:
     value = value.strip().rstrip("/")
@@ -71,17 +84,16 @@ class Constants:
         config = AmazonOrdersConfig(data={"constants_class": "my_module.MyConstants"})
 
     URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are derived from the active
-    Amazon domain. ``Accept-Language`` and ``CURRENCY_SYMBOL`` are adjusted for a small set of
-    English-locale TLDs (``CURRENCY_SYMBOL`` only when ``AMAZON_CURRENCY_SYMBOL`` is unset). The
-    domain is resolved in this precedence order:
+    Amazon domain. ``Accept-Language``, ``CURRENCY_SYMBOL``, and the sign-in ``openid.assoc_handle``
+    are adjusted for a small set of known TLDs (``CURRENCY_SYMBOL`` only when
+    ``AMAZON_CURRENCY_SYMBOL`` is unset). The domain is resolved in this precedence order:
 
     1. The ``domain`` key on :class:`~amazonorders.conf.AmazonOrdersConfig`.
     2. The ``AMAZON_BASE_URL`` environment variable.
     3. The default, ``amazon.com``.
 
-    Only the English, ``.com`` site is officially supported. Other domains may work, but values like
-    ``openid.assoc_handle`` are not adjusted automatically — subclass and set ``constants_class`` to
-    override them if a non-``.com`` site requires it.
+    Only the English, ``.com`` site is officially supported. Other domains may work; for a TLD not
+    covered by the region maps, subclass and set ``constants_class`` to override any values it needs.
     """
 
     ##########################################################################
@@ -207,10 +219,17 @@ class Constants:
         """
         base_url = _normalize_base_url(domain)
 
+        host = urlparse(base_url).netloc.lower().split(":")[0]
+        if host.startswith("www."):
+            host = host[len("www."):]
+        tld = host[len("amazon."):] if host.startswith("amazon.") else ""
+
         # Build from the instance-level BASE_HEADERS if _apply_browser has already set it;
         # otherwise fall back to the class-level definition.
         sign_in_query_params = dict(type(self).SIGN_IN_QUERY_PARAMS)
         sign_in_query_params["openid.return_to"] = f"{base_url}/?ref_=nav_custrec_signin"
+        if tld in _REGION_ASSOC_HANDLES:
+            sign_in_query_params["openid.assoc_handle"] = _REGION_ASSOC_HANDLES[tld]
 
         sign_in_url = f"{base_url}/ap/signin"
 
@@ -223,11 +242,6 @@ class Constants:
         self.ORDER_DETAILS_URL = f"{base_url}/gp/your-account/order-details"
         self.ORDER_INVOICE_URL = f"{base_url}/gp/css/summary/print.html"
         self.TRANSACTION_HISTORY_URL = f"{base_url}{self.TRANSACTION_HISTORY_ROUTE}"
-
-        host = urlparse(base_url).netloc.lower().split(":")[0]
-        if host.startswith("www."):
-            host = host[len("www."):]
-        tld = host[len("amazon."):] if host.startswith("amazon.") else ""
 
         headers = dict(vars(self).get("BASE_HEADERS", type(self).BASE_HEADERS))
         headers["Origin"] = base_url
