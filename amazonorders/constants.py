@@ -254,6 +254,14 @@ class Constants:
         if not os.environ.get("AMAZON_CURRENCY_SYMBOL") and tld in _REGION_CURRENCIES:
             self.CURRENCY_SYMBOL = _REGION_CURRENCIES[tld]
 
+        # The cookie that marks an authenticated session is region-specific: ``x-main`` on
+        # amazon.com, but ``x-acb<country>`` elsewhere (e.g. ``x-acbjp`` on amazon.co.jp,
+        # ``x-acbuk`` on amazon.co.uk). Without this, a valid regional session is treated as
+        # logged out, forcing a re-login on every command.
+        if tld and tld != "com":
+            country = tld.rsplit(".", 1)[-1]
+            self.COOKIES_SET_WHEN_AUTHENTICATED = [f"x-acb{country}"]
+
     def format_currency(self,
                         amount: float) -> str:
         formatted_amt = "{currency_symbol}{amount:,.2f}".format(currency_symbol=self.CURRENCY_SYMBOL,

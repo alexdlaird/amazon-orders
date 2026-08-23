@@ -124,3 +124,22 @@ class TestConstants(UnitTestCase):
 
         # THEN
         self.assertEqual("usflex", config.constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"])
+
+    def test_domain_sets_region_authenticated_cookie(self):
+        # GIVEN / WHEN — the authenticated-session marker is region-specific
+        self.assertEqual(
+            ["x-acbjp"],
+            AmazonOrdersConfig(data={"domain": "amazon.co.jp"}).constants.COOKIES_SET_WHEN_AUTHENTICATED)
+        self.assertEqual(
+            ["x-acbuk"],
+            AmazonOrdersConfig(data={"domain": "amazon.co.uk"}).constants.COOKIES_SET_WHEN_AUTHENTICATED)
+        self.assertEqual(
+            ["x-acbau"],
+            AmazonOrdersConfig(data={"domain": "amazon.com.au"}).constants.COOKIES_SET_WHEN_AUTHENTICATED)
+
+    def test_domain_com_keeps_x_main_authenticated_cookie(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.com"})
+
+        # THEN
+        self.assertEqual(["x-main"], config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
