@@ -102,3 +102,11 @@ class TestConstants(UnitTestCase):
         # THEN — both get the TLD-specific Accept-Language regardless of browser
         self.assertIn("en-GB", config_default.constants.BASE_HEADERS["Accept-Language"])
         self.assertIn("en-GB", config_ff.constants.BASE_HEADERS["Accept-Language"])
+
+    def test_domain_co_jp_sets_yen_currency_symbol(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.co.jp"})
+
+        # THEN
+        self.assertEqual("https://www.amazon.co.jp", config.constants.BASE_URL)
+        self.assertEqual("¥", config.constants.CURRENCY_SYMBOL)

@@ -23,4 +23,8 @@ class TestItem(UnitTestCase):
         self.assertEqual(parsable.to_currency(1234), 1234)
         self.assertEqual(parsable.to_currency("1,234.99"), 1234.99)
         self.assertEqual(parsable.to_currency("$1,234.99"), 1234.99)
+        self.assertEqual(parsable.to_currency("¥1,980"), 1980)
+        self.assertEqual(parsable.to_currency("￥1,980"), 1980)
+        self.assertEqual(parsable.to_currency("-¥1,980"), -1980)
+        self.assertEqual(parsable.to_currency("(¥1,980)"), -1980)
         self.assertIsNone(parsable.to_currency("not currency"))

@@ -45,6 +45,7 @@ _REGION_LANGUAGES = {
 #: omitted here. Skipped when ``AMAZON_CURRENCY_SYMBOL`` is set.
 _REGION_CURRENCIES = {
     "co.uk": "£",
+    "co.jp": "¥",
     "in": "₹",
     "sg": "S$",
 }
