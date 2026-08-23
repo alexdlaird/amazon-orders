@@ -6,7 +6,6 @@ import logging
 from typing import Dict, List, Optional, Tuple, Any
 
 from bs4 import Tag
-from dateutil import parser
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
@@ -29,7 +28,10 @@ def _parse_transaction_form_tag(form_tag: Tag,
             continue
 
         date_str = date_tag.text
-        date = parser.parse(date_str).date()
+        date = util.to_date(date_str)
+        if date is None:
+            logger.warning(f"Could not parse date {date_str!r} in Transaction form.")
+            continue
 
         transactions_container_tag = date_container_tag.find_next_sibling(
             config.selectors.TRANSACTIONS_CONTAINER_SELECTOR)

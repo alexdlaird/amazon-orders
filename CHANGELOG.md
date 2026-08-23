@@ -6,6 +6,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.7...HEAD)
 
+### Added
+
+- amazon.co.jp support: `to_currency()` now parses the yen symbol (`¥` and the fullwidth `￥`), and `--domain amazon.co.jp` sets `¥` as the region `CURRENCY_SYMBOL`.
+- Date parsing now recognizes the Japanese `年`/`月`/`日` notation (e.g. `2024年8月23日`) used by amazon.co.jp, via the new `util.to_date()` helper.
+- Region-specific `openid.assoc_handle` for sign-in, keyed by TLD (`co.jp` → `jpflex`, `co.uk` → `ukflex`, `com.au` → `auflex`, `ca` → `caflex`, `de` → `deflex`, `in` → `inflex`); unknown TLDs keep the default `usflex`.
+- Region-specific authenticated-session cookie: `x-main` on `.com`, `x-acb<country>` elsewhere (e.g. `x-acbjp` on amazon.co.jp).
+
+### Fixed
+
+- Yen-denominated amounts (`¥`/`￥`) previously parsed to `None` because the symbol was not stripped in `to_currency()`.
+- Japanese order and transaction dates previously failed to parse (and were silently misinterpreted by `dateutil`'s fuzzy parsing).
+- Sign-in against a non-`.com` domain sent the US `openid.assoc_handle` (`usflex`), which Amazon rejects with an HTTP 404 for regional storefronts such as amazon.co.jp.
+- A valid session on a non-`.com` domain was treated as logged out (checking only for the US `x-main` cookie), forcing a re-login on every command.
+
 ## [4.4.7](https://github.com/alexdlaird/amazon-orders/compare/4.4.6...4.4.7) - 2026-08-02
 
 ### Fixed

@@ -7,7 +7,6 @@ from datetime import date
 from typing import Any, Callable, Dict, Optional, Type, Union
 
 from bs4 import Tag
-from dateutil import parser
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
@@ -142,10 +141,7 @@ class Parsable:
                             value = util.to_type(value.strip())
 
                         if parse_date and isinstance(value, str):
-                            try:
-                                value = parser.parse(value, fuzzy=True).date()
-                            except ValueError:
-                                value = None
+                            value = util.to_date(value, fuzzy=True)
                     break
             if value:
                 break
@@ -187,9 +183,10 @@ class Parsable:
         """
         Clean up a currency, stripping non-numeric values and returning it as a primitive.
 
-        Recognizes the ``$``, ``£``, ``€``, and ``₹`` symbols (and leading currency-code
-        letters such as ``A$`` or ``CDN$``), accepts accounting-style negatives in parentheses
-        (e.g. ``($1.99)``), and treats a literal ``FREE`` as ``0.0``.
+        Recognizes the ``$``, ``£``, ``€``, ``₹``, and ``¥`` symbols (including the fullwidth
+        ``￥`` used by amazon.co.jp, and leading currency-code letters such as ``A$`` or
+        ``CDN$``), accepts accounting-style negatives in parentheses (e.g. ``($1.99)``), and
+        treats a literal ``FREE`` as ``0.0``.
 
         :param value: The currency to parse.
         :return: The currency as a primitive.
@@ -208,7 +205,7 @@ class Parsable:
         if value.startswith("(") and value.endswith(")"):
             value = "-" + value[1:-1]
 
-        value = re.sub("[a-zA-Z$£€₹,]+", "", value)
+        value = re.sub("[a-zA-Z$£€₹¥￥,]+", "", value)
         currency = util.to_type(value)
 
         if isinstance(currency, str):
