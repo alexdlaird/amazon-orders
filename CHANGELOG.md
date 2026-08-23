@@ -38,6 +38,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `get_order()` now parses the charge summary on digital (`D01-`) order details pages.
 - `get_order_history()` no longer raises on empty Order history pages (a digital window with no Orders, or a `start_index` past the end), or on Order counts containing a thousands separator.
 
+### Added
+
+- amazon.co.jp support: `to_currency()` now parses the yen symbol (`¥` and the fullwidth `￥`), and `--domain amazon.co.jp` sets `¥` as the region `CURRENCY_SYMBOL`.
+- Date parsing now recognizes the Japanese `年`/`月`/`日` notation (e.g. `2024年8月23日`) used by amazon.co.jp, via the new `util.to_date()` helper.
+
+### Fixed
+
+- Yen-denominated amounts (`¥`/`￥`) previously parsed to `None` because the symbol was not stripped in `to_currency()`.
+- Japanese order and transaction dates previously failed to parse (and were silently misinterpreted by `dateutil`'s fuzzy parsing).
+
 ## [4.4.7](https://github.com/alexdlaird/amazon-orders/compare/4.4.6...4.4.7) - 2026-08-02
 
 ### Fixed
