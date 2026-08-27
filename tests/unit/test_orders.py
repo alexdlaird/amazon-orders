@@ -1097,3 +1097,21 @@ class TestOrders(UnitTestCase):
         self.assertIn(f"timeFilter=year-{year}", request_url)
         self.assertIn("orderFilter=digital-orders", request_url)
         self.assertEqual(10, len(orders))
+
+    @responses.activate
+    def test_get_order_history_digital_empty_window(self):
+        # GIVEN - the digital Order history page renders its count (and no order cards) in the
+        # time filter label, without the span.num-orders element regular Order history pages have
+        self.amazon_session.is_authenticated = True
+        year = 2005
+        resp = self.given_any_order_history_exists("order-history-digital-2005-0.html")
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, order_filter="digital")
+
+        # THEN - an empty window returns an empty list rather than raising a parse error
+        self.assertEqual(0, len(orders))
+        self.assertEqual(1, resp.call_count)
+        request_url = resp.calls[0].request.url
+        self.assertIn(f"timeFilter=year-{year}", request_url)
+        self.assertIn("orderFilter=digital", request_url)
