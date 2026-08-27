@@ -88,9 +88,13 @@ class Selectors:
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer",
                                      "div#odp-main-section"]
+    # A history card renders an Item three ways, by how many the Shipment holds: ``.item-box`` on its
+    # own, a static thumbnail grid of ``.yo-enhanced-flex-card``'s for a few, and a scrolling
+    # ``.yo-enhanced-item-carousel`` of ``.yo-enhanced-card``'s for more. One Order mixes them freely,
+    # a Shipment apiece.
     ITEM_ENTITY_SELECTOR = ["[data-component='purchasedItems'] .a-fixed-left-grid",
                             "div:has(> div.yohtmlc-item)",
-                            ".item-box",
+                            ".item-box, .yo-enhanced-flex-card, .yo-enhanced-card",
                             # WFM in-store line items
                             "div.a-row.a-spacing-base:has(img.ufpo-itemListWidget-image)"]
     SHIPMENT_ENTITY_SELECTOR = ["[data-component='orderCard'] [data-component='shipments'] .a-box",
@@ -138,18 +142,23 @@ class Selectors:
                                  ".yohtmlc-item a", ".yohtmlc-product-title",
                                  "div.a-column.a-span10 > a",
                                  # ASINLESS WFM items render the title in a span rather than a link
-                                 "div.a-column.a-span10 > span"]
+                                 "div.a-column.a-span10 > span",
+                                 # Grid and carousel items on a history card
+                                 ".yo-enhanced-title a"]
     FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a",
                                 ".yohtmlc-item a",
                                 "a:has(> .yohtmlc-product-title)",
                                 ".yohtmlc-product-title a",
-                                "div.a-column.a-span10 > a"]
+                                "div.a-column.a-span10 > a",
+                                # Grid and carousel items on a history card
+                                ".yo-enhanced-title a"]
     FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div"]
     FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice'] .a-text-price :not(.a-offscreen)",
                                  ".yohtmlc-item .a-color-price",
                                  "div.a-section.a-text-right span.a-size-small"]
     FIELD_ITEM_SELLER_SELECTOR = ["[data-component='orderedMerchant']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
-    FIELD_ITEM_RETURN_SELECTOR = ["[data-component='itemReturnEligibility']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
+    FIELD_ITEM_RETURN_SELECTOR = (["[data-component='itemReturnEligibility']", ".yo-enhanced-return"]
+                                  + FIELD_ITEM_TAG_ITERATOR_SELECTOR)
 
     #####################################
     # CSS selectors for Order fields

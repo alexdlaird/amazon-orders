@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.7...HEAD)
 
+### Fixed
+
+- `Shipment.items` and `Order.items` parsed from the Order history page no longer omit the Items of a Shipment holding more than one Item.
+
 ## [4.4.7](https://github.com/alexdlaird/amazon-orders/compare/4.4.6...4.4.7) - 2026-08-02
 
 ### Fixed
