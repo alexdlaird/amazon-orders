@@ -131,8 +131,11 @@ class Order(Parsable):
         self.multibuy_discount: Optional[float] = self._if_full_details(self._parse_currency("multibuy discount"))
         #: The Amazon discount. Only populated when ``full_details`` is ``True``.
         self.amazon_discount: Optional[float] = self._if_full_details(self._parse_currency("amazon discount"))
-        #: The Gift Card total. Only populated when ``full_details`` is ``True``.
-        self.gift_card: Optional[float] = self._if_full_details(self._parse_currency("gift card amount"))
+        gift_card_amount = self._if_full_details(self._parse_currency("gift card amount"))
+        gift_card = self._if_full_details(self._parse_currency("gift card"))
+        #: The Gift Card total (rendered as "Gift Card" on digital order details pages). Only
+        #: populated when ``full_details`` is ``True``.
+        self.gift_card: Optional[float] = gift_card_amount if gift_card_amount is not None else gift_card
         #: The Gift Wrap total. Only populated when ``full_details`` is ``True``.
         self.gift_wrap: Optional[float] = self._if_full_details(self._parse_currency("gift wrap"))
 
@@ -186,6 +189,9 @@ class Order(Parsable):
 
         if not value:
             value = self._parse_currency("grand total")
+            if value is None:
+                # Digital order details pages render the total as "Total for this Order"
+                value = self._parse_currency("total for this order")
         elif value.lower().startswith(total_str):
             value = value[len(total_str):].strip()
 
@@ -228,7 +234,11 @@ class Order(Parsable):
     def _parse_estimated_tax(self) -> Optional[float]:
         if self.is_whole_foods:
             return self._parse_whole_foods_amount(self.config.selectors.FIELD_ORDER_WHOLE_FOODS_TAX_SELECTOR)
-        return self._parse_currency("estimated tax")
+        value = self._parse_currency("estimated tax")
+        if value is None:
+            # Digital order details pages render the tax as "Tax Collected"
+            value = self._parse_currency("tax collected")
+        return value
 
     def _parse_item_count(self) -> Optional[int]:
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_ITEM_COUNT_SELECTOR):

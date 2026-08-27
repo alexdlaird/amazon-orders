@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - `get_order_history()` no longer raises `AmazonOrdersError` on empty Order history pages that render their count in the time filter label instead of the `span.num-orders` element — an empty digital window (for example `order_filter="digital"` with a year that has no digital orders), or a `start_index` past the end of the window.
 - `get_order_history()` order count parsing no longer raises an unhandled `ValueError` when the count contains a thousands separator (e.g. `1,213 orders`).
+- `get_order()` no longer raises `AmazonOrdersError` on digital (`D01-`) order details pages, which label their charge summary "Total for this Order", "Tax Collected", and "Gift Card" instead of "Grand Total", "Estimated tax", and "Gift Card Amount".
 
 ## [4.4.7](https://github.com/alexdlaird/amazon-orders/compare/4.4.6...4.4.7) - 2026-08-02
 
