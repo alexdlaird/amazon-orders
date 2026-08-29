@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- `get_order_history()` no longer raises `AmazonOrdersError` on an empty digital Order history window (for example `order_filter="digital"` with a year that has no digital orders), where the page renders its `0 orders` count in the time filter label instead of the `span.num-orders` element.
+- `get_order_history()` no longer raises `AmazonOrdersError` on empty Order history pages that render their count in the time filter label instead of the `span.num-orders` element — an empty digital window (for example `order_filter="digital"` with a year that has no digital orders), or a `start_index` past the end of the window.
 
 ## [4.4.7](https://github.com/alexdlaird/amazon-orders/compare/4.4.6...4.4.7) - 2026-08-02
 
