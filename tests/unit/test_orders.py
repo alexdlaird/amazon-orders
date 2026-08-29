@@ -968,6 +968,54 @@ class TestOrders(UnitTestCase):
                     self.assertEqual(0, len(orders))
                     self.assertEqual(1, resp.call_count)
 
+    @responses.activate
+    def test_get_order_history_start_index_past_end(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2026
+        start_index = 220
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+        # THEN
+        self.assertEqual(0, len(orders))
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
+    def test_get_order_history_empty_page_within_window(self):
+        """
+        The same page served for an index the count does not account for is a page that failed to render, not a
+        spent window, and must not be reported as no Orders.
+        """
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2026
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order_history(year=year)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("Could not parse Order history.", str(cm.exception))
+
     @unittest.skipIf(not os.path.exists(temp_order_history_file_path),
                      reason="Skipped, to debug an order history page, "
                             "place it at tests/output/temp-order-history.html")
