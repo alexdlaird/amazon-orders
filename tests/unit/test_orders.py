@@ -1016,6 +1016,30 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
         self.assertIn("Could not parse Order history.", str(cm.exception))
 
+    @responses.activate
+    def test_get_order_history_count_with_thousands_separator(self):
+        # GIVEN - the same real past-the-end page, with the count rendered the way Amazon renders
+        # four-digit counts ("1,213 orders"); the previous split()/int() parse raised ValueError on it
+        self.amazon_session.is_authenticated = True
+        year = 2026
+        start_index = 1220
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
+                  encoding="utf-8") as f:
+            body = f.read().replace("<b>213 orders</b>", "<b>1,213 orders</b>")
+        resp = responses.add(
+            responses.GET,
+            f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+            body=body,
+            status=200,
+        )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+        # THEN
+        self.assertEqual(0, len(orders))
+        self.assertEqual(1, resp.call_count)
+
     @unittest.skipIf(not os.path.exists(temp_order_history_file_path),
                      reason="Skipped, to debug an order history page, "
                             "place it at tests/output/temp-order-history.html")
