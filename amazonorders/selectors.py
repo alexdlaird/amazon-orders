@@ -86,7 +86,7 @@ class Selectors:
                                      "div.order"]
     ORDER_HISTORY_COUNT_SELECTOR = [".js-yo-container span.num-orders",
                                     # Digital order history renders the count in the time filter label instead
-                                    "form.js-time-filter-form label b"]
+                                    "form.js-time-filter-form label.time-filter__label b"]
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer",
                                      "div#odp-main-section"]
