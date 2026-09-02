@@ -5,6 +5,7 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
+import re
 from typing import Any, Callable, List, Optional
 from urllib.parse import quote
 
@@ -187,9 +188,12 @@ class AmazonOrders:
             if not order_tags:
                 order_count_tag = util.select_one(page_response.parsed,
                                                   self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR)
-                (order_count, _) = order_count_tag.text.split(" ", 2) if order_count_tag else ("0", None)
+                # Parse just the leading number so the count survives thousands separators
+                # (e.g. "1,213 orders") and any trailing copy; an unparsable count falls
+                # through to the raise below rather than escaping as a bare ValueError
+                count_match = re.match(r"\s*([\d,]+)", order_count_tag.text) if order_count_tag else None
 
-                if order_count_tag and int(order_count) <= current_index:
+                if count_match and int(count_match.group(1).replace(",", "")) <= current_index:
                     break
                 else:
                     raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")

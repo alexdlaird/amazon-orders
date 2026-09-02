@@ -968,6 +968,78 @@ class TestOrders(UnitTestCase):
                     self.assertEqual(0, len(orders))
                     self.assertEqual(1, resp.call_count)
 
+    @responses.activate
+    def test_get_order_history_start_index_past_end(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2026
+        start_index = 220
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+        # THEN
+        self.assertEqual(0, len(orders))
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
+    def test_get_order_history_empty_page_within_window(self):
+        """
+        The same page served for an index the count does not account for is a page that failed to render, not a
+        spent window, and must not be reported as no Orders.
+        """
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2026
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order_history(year=year)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("Could not parse Order history.", str(cm.exception))
+
+    @responses.activate
+    def test_get_order_history_count_with_thousands_separator(self):
+        # GIVEN - the same real past-the-end page, with the count rendered the way Amazon renders
+        # four-digit counts ("1,213 orders"); the previous split()/int() parse raised ValueError on it
+        self.amazon_session.is_authenticated = True
+        year = 2026
+        start_index = 1220
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
+                  encoding="utf-8") as f:
+            body = f.read().replace("<b>213 orders</b>", "<b>1,213 orders</b>")
+        resp = responses.add(
+            responses.GET,
+            f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+            body=body,
+            status=200,
+        )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+        # THEN
+        self.assertEqual(0, len(orders))
+        self.assertEqual(1, resp.call_count)
+
     @unittest.skipIf(not os.path.exists(temp_order_history_file_path),
                      reason="Skipped, to debug an order history page, "
                             "place it at tests/output/temp-order-history.html")
@@ -1097,3 +1169,21 @@ class TestOrders(UnitTestCase):
         self.assertIn(f"timeFilter=year-{year}", request_url)
         self.assertIn("orderFilter=digital-orders", request_url)
         self.assertEqual(10, len(orders))
+
+    @responses.activate
+    def test_get_order_history_digital_empty_window(self):
+        # GIVEN - the digital Order history page renders its count (and no order cards) in the
+        # time filter label, without the span.num-orders element regular Order history pages have
+        self.amazon_session.is_authenticated = True
+        year = 2005
+        resp = self.given_any_order_history_exists("order-history-digital-2005-0.html")
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, order_filter="digital")
+
+        # THEN - an empty window returns an empty list rather than raising a parse error
+        self.assertEqual(0, len(orders))
+        self.assertEqual(1, resp.call_count)
+        request_url = resp.calls[0].request.url
+        self.assertIn(f"timeFilter=year-{year}", request_url)
+        self.assertIn("orderFilter=digital", request_url)

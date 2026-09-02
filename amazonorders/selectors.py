@@ -84,7 +84,12 @@ class Selectors:
 
     ORDER_HISTORY_ENTITY_SELECTOR = ["div.order-card",
                                      "div.order"]
-    ORDER_HISTORY_COUNT_SELECTOR = ".js-yo-container span.num-orders"
+    # The count confirms an empty page is a spent window rather than a page that failed to render, so
+    # it has to keep matching as Amazon reskins the filter form. The count moved out of its own
+    # ``span.num-orders`` and into a bare ``b``, inside the same label it has always been rendered in
+    # (digital Order history renders it this way as well).
+    ORDER_HISTORY_COUNT_SELECTOR = [".js-yo-container span.num-orders",
+                                    "form.js-time-filter-form label.time-filter__label b"]
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer",
                                      "div#odp-main-section"]
