@@ -98,7 +98,7 @@ class Order(Parsable):
         #: The Order payment method. Only populated when ``full_details`` is ``True``. For Whole Foods Market
         #: orders this is the card brand of the first payment method on the receipt (e.g. "Visa").
         self.payment_method: Optional[str] = self._if_full_details(self._parse_payment_method())
-        #: The Order payment method's last digits, preserved verbatim (e.g. leading zeros).
+        #: The Order payment method's last 4 digits, preserved verbatim so leading zeros are not lost.
         #: Only populated when ``full_details`` is ``True``.
         self.payment_method_last_4: Optional[str] = self._if_full_details(
             self.safe_parse(self._parse_payment_method_last_4))
@@ -220,22 +220,22 @@ class Order(Parsable):
         return self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR,
                                       attr_name="alt")
 
-    def _parse_payment_method_last_4(self) -> Optional[str]:
-        if self.is_whole_foods:
-            for tag in util.select(self.parsed,
-                                   self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR):
-                match = re.search(r"\*\s*(\d+)", tag.text)
-                if match:
-                    return match.group(1)
-
-            return None
-
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR):
-            match = re.search(r"ending in\s+(\d+)", tag.text)
+    def _parse_masked_digits(self,
+                             selector: str,
+                             pattern: str) -> Optional[str]:
+        for tag in util.select(self.parsed, selector):
+            match = re.search(pattern, tag.text)
             if match:
                 return match.group(1)
 
         return None
+
+    def _parse_payment_method_last_4(self) -> Optional[str]:
+        if self.is_whole_foods:
+            return self._parse_masked_digits(
+                self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR, r"\*\s*(\d+)")
+        return self._parse_masked_digits(
+            self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR, r"ending in\s+(\d+)")
 
     def _parse_subtotal(self) -> Optional[float]:
         if self.is_whole_foods:

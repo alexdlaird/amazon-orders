@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- `Order.payment_method_last_4` is now a `str` rather than an `int`, preserving leading zeros.
+- **Breaking:** `Order.payment_method_last_4` is now a `str` rather than an `int`, preserving leading zeros and matching `Transaction.payment_method_last_4`. Numeric comparisons must become string comparisons (`== "1234"`).
 
 ### Fixed
 
