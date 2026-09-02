@@ -20,6 +20,22 @@ from amazonorders.session import AmazonSession
 logger = logging.getLogger(__name__)
 
 
+def _parse_order_count(order_count_tag: Optional[Tag]) -> Optional[int]:
+    """
+    Parse the leading number out of an Order history count tag, so the count survives thousands
+    separators (e.g. ``1,213 orders``) and any trailing copy.
+
+    :param order_count_tag: The Order history count tag, if one was found.
+    :return: The Order count, or ``None`` if it was absent or unparsable.
+    """
+    if not order_count_tag:
+        return None
+
+    match = re.match(r"\s*([\d,]+)", order_count_tag.text)
+
+    return int(match.group(1).replace(",", "")) if match else None
+
+
 class AmazonOrders:
     """
     Using an authenticated :class:`~amazonorders.session.AmazonSession`, can be used to query Amazon
@@ -186,14 +202,10 @@ class AmazonOrders:
                                      self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
 
             if not order_tags:
-                order_count_tag = util.select_one(page_response.parsed,
-                                                  self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR)
-                # Parse just the leading number so the count survives thousands separators
-                # (e.g. "1,213 orders") and any trailing copy; an unparsable count falls
-                # through to the raise below rather than escaping as a bare ValueError
-                count_match = re.match(r"\s*([\d,]+)", order_count_tag.text) if order_count_tag else None
+                order_count = _parse_order_count(
+                    util.select_one(page_response.parsed, self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR))
 
-                if count_match and int(count_match.group(1).replace(",", "")) <= current_index:
+                if order_count is not None and order_count <= current_index:
                     break
                 else:
                     raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")

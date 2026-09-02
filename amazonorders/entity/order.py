@@ -190,7 +190,6 @@ class Order(Parsable):
         if not value:
             value = self._parse_currency("grand total")
             if value is None:
-                # Digital order details pages render the total as "Total for this Order"
                 value = self._parse_currency("total for this order")
         elif value.lower().startswith(total_str):
             value = value[len(total_str):].strip()
@@ -236,8 +235,8 @@ class Order(Parsable):
             return self._parse_whole_foods_amount(self.config.selectors.FIELD_ORDER_WHOLE_FOODS_TAX_SELECTOR)
         value = self._parse_currency("estimated tax")
         if value is None:
-            # Digital order details pages render the tax as "Tax Collected"
             value = self._parse_currency("tax collected")
+
         return value
 
     def _parse_item_count(self) -> Optional[int]:

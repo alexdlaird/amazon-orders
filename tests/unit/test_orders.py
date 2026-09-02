@@ -674,9 +674,7 @@ class TestOrders(UnitTestCase):
 
     @responses.activate
     def test_get_order_digital(self):
-        # GIVEN - digital (D01-) order details pages label their charge summary "Total for this
-        # Order", "Tax Collected", and "Gift Card" instead of "Grand Total", "Estimated tax",
-        # and "Gift Card Amount"
+        # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "D01-1000111-2000222"
         with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
@@ -1024,8 +1022,7 @@ class TestOrders(UnitTestCase):
     @responses.activate
     def test_get_order_history_empty_page_within_window(self):
         """
-        The same page served for an index the count does not account for is a page that failed to render, not a
-        spent window, and must not be reported as no Orders.
+        An empty page is only a spent window when the page's own count says so.
         """
         # GIVEN
         self.amazon_session.is_authenticated = True
@@ -1049,8 +1046,7 @@ class TestOrders(UnitTestCase):
 
     @responses.activate
     def test_get_order_history_count_with_thousands_separator(self):
-        # GIVEN - the same real past-the-end page, with the count rendered the way Amazon renders
-        # four-digit counts ("1,213 orders"); the previous split()/int() parse raised ValueError on it
+        # GIVEN
         self.amazon_session.is_authenticated = True
         year = 2026
         start_index = 1220
@@ -1203,8 +1199,7 @@ class TestOrders(UnitTestCase):
 
     @responses.activate
     def test_get_order_history_digital_empty_window(self):
-        # GIVEN - the digital Order history page renders its count (and no order cards) in the
-        # time filter label, without the span.num-orders element regular Order history pages have
+        # GIVEN
         self.amazon_session.is_authenticated = True
         year = 2005
         resp = self.given_any_order_history_exists("order-history-digital-2005-0.html")
@@ -1212,7 +1207,7 @@ class TestOrders(UnitTestCase):
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year, order_filter="digital")
 
-        # THEN - an empty window returns an empty list rather than raising a parse error
+        # THEN
         self.assertEqual(0, len(orders))
         self.assertEqual(1, resp.call_count)
         request_url = resp.calls[0].request.url
@@ -1221,9 +1216,7 @@ class TestOrders(UnitTestCase):
 
     @responses.activate
     def test_get_order_history_multi_item_shipment_renderings(self):
-        # GIVEN - a history page holding all three of Amazon's Item renderings, which it
-        # chooses by how many Items the Shipment holds: `.item-box` for one on its own,
-        # a `.yo-enhanced-flex-card` grid for a few, a `.yo-enhanced-card` carousel for more
+        # GIVEN
         self.amazon_session.is_authenticated = True
         resp = self.given_any_order_history_exists("order-history-multi-item-shipments.html")
 
@@ -1233,24 +1226,14 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertEqual(1, resp.call_count)
         self.assertEqual(5, len(orders))
-
-        # A single-item shipment, rendered as an `.item-box`
         self.assertEqual(1, len(orders[0].items))
         self.assertEqual([1], [len(s.items) for s in orders[0].shipments])
-
-        # Four `.item-box` shipments and one grid of four, on the same Order
         self.assertEqual(8, len(orders[1].items))
         self.assertEqual([1, 4, 1, 1, 1], [len(s.items) for s in orders[1].shipments])
-
-        # A grid and nothing else, so no `.item-box` anywhere on the card
         self.assertEqual(3, len(orders[2].items))
         self.assertEqual([3], [len(s.items) for s in orders[2].shipments])
-
-        # An `.item-box` shipment beside a carousel of five
         self.assertEqual(6, len(orders[3].items))
         self.assertEqual([5, 1], [len(s.items) for s in orders[3].shipments])
-
-        # Two `.item-box` shipments beside a carousel of twelve
         self.assertEqual(14, len(orders[4].items))
         self.assertEqual([1, 1, 12], [len(s.items) for s in orders[4].shipments])
 
@@ -1263,8 +1246,7 @@ class TestOrders(UnitTestCase):
         # WHEN
         orders = self.amazon_orders.get_order_history(keep_paging=False)
 
-        # THEN - the grid and the carousel title and link their Items through markup of
-        # their own, so an Item parsed out of either still has to come back whole
+        # THEN
         grid = orders[2].shipments[0]
         self.assertEqual(["B0815ZDD5H", "B083DN5R61", "B08F79YG8Q"],
                          sorted(i.asin for i in grid.items))

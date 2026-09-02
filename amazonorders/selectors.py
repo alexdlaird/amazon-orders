@@ -84,19 +84,14 @@ class Selectors:
 
     ORDER_HISTORY_ENTITY_SELECTOR = ["div.order-card",
                                      "div.order"]
-    # The count confirms an empty page is a spent window rather than a page that failed to render, so
-    # it has to keep matching as Amazon reskins the filter form. The count moved out of its own
-    # ``span.num-orders`` and into a bare ``b``, inside the same label it has always been rendered in
-    # (digital Order history renders it this way as well).
+    # Digital Order history renders the count in the time filter label rather than in span.num-orders
     ORDER_HISTORY_COUNT_SELECTOR = [".js-yo-container span.num-orders",
                                     "form.js-time-filter-form label.time-filter__label b"]
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer",
                                      "div#odp-main-section"]
-    # A history card renders an Item three ways, by how many the Shipment holds: ``.item-box`` on its
-    # own, a static thumbnail grid of ``.yo-enhanced-flex-card``'s for a few, and a scrolling
-    # ``.yo-enhanced-item-carousel`` of ``.yo-enhanced-card``'s for more. One Order mixes them freely,
-    # a Shipment apiece.
+    # A history card renders Items as .item-box, a .yo-enhanced-flex-card grid, or a
+    # .yo-enhanced-card carousel, by how many the Shipment holds, and one Order mixes them
     ITEM_ENTITY_SELECTOR = ["[data-component='purchasedItems'] .a-fixed-left-grid",
                             "div:has(> div.yohtmlc-item)",
                             ".item-box, .yo-enhanced-flex-card, .yo-enhanced-card",
@@ -148,14 +143,12 @@ class Selectors:
                                  "div.a-column.a-span10 > a",
                                  # ASINLESS WFM items render the title in a span rather than a link
                                  "div.a-column.a-span10 > span",
-                                 # Grid and carousel items on a history card
                                  ".yo-enhanced-title a"]
     FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a",
                                 ".yohtmlc-item a",
                                 "a:has(> .yohtmlc-product-title)",
                                 ".yohtmlc-product-title a",
                                 "div.a-column.a-span10 > a",
-                                # Grid and carousel items on a history card
                                 ".yo-enhanced-title a"]
     FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div"]
     FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice'] .a-text-price :not(.a-offscreen)",
