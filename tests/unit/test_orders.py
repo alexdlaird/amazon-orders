@@ -673,6 +673,37 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
+    def test_get_order_digital(self):
+        # GIVEN - digital (D01-) order details pages label their charge summary "Total for this
+        # Order", "Tax Collected", and "Gift Card" instead of "Grand Total", "Estimated tax",
+        # and "Gift Card Amount"
+        self.amazon_session.is_authenticated = True
+        order_id = "D01-1000111-2000222"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assertEqual(order_id, order.order_number)
+        self.assertEqual(0.0, order.grand_total)
+        self.assertEqual(2.73, order.subtotal)
+        self.assertEqual(0.18, order.estimated_tax)
+        self.assertEqual(-2.9, order.gift_card)
+        self.assertEqual("Amazon Visa", order.payment_method)
+        self.assertEqual(1, len(order.items))
+        self.assertEqual("Digital Item 01", order.items[0].title)
+        self.assertEqual(2.73, order.items[0].price)
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
     def test_get_order_chargesummary_totals(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
