@@ -67,7 +67,7 @@ class AmazonOrders:
                             start_index: int = 0) -> List[Order]:
         """
         Parse an already-fetched Amazon Order history page into Orders, without a session driving the
-        fetch — useful for parsing HTML obtained elsewhere (a browser, a proxy, a fixture) and for
+        fetch. Useful for parsing HTML obtained elsewhere (a browser, a proxy, a fixture) and for
         network-free testing.
 
         A page with no Orders is returned as an empty list only when the page's own Order count
@@ -100,7 +100,7 @@ class AmazonOrders:
                             order_number: Optional[str] = None) -> Order:
         """
         Parse an already-fetched Amazon Order details page into an Order, without a session driving the
-        fetch — useful for parsing HTML obtained elsewhere and for network-free testing.
+        fetch. Useful for parsing HTML obtained elsewhere and for network-free testing.
 
         :param html: The Order details page HTML to parse.
         :param config: The config providing the selectors and entity classes used for parsing.

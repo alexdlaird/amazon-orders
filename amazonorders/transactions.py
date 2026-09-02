@@ -57,6 +57,21 @@ def _parse_transaction_form_tag(form_tag: Tag,
     return transactions, next_page_data
 
 
+def _parse_transactions_page(parsed: Tag,
+                             config: AmazonOrdersConfig) \
+        -> Tuple[List[Transaction], Optional[Dict[str, str]]]:
+    form_tag = util.select_one(parsed, config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
+
+    if not form_tag:
+        container_tag = util.select_one(parsed, config.selectors.TRANSACTION_HISTORY_CONTAINER_SELECTOR)
+        if container_tag and "don't have any transactions" in container_tag.text:
+            return [], None
+
+        raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.")
+
+    return _parse_transaction_form_tag(form_tag, config)
+
+
 class AmazonTransactions:
     """
     Using an authenticated :class:`~amazonorders.session.AmazonSession`, can be used to query Amazon
@@ -87,7 +102,7 @@ class AmazonTransactions:
                            config: AmazonOrdersConfig) -> List[Transaction]:
         """
         Parse an already-fetched Amazon Transactions page into Transactions, without a session driving
-        the fetch — useful for parsing HTML obtained elsewhere (a browser, a proxy, a fixture) and for
+        the fetch. Useful for parsing HTML obtained elsewhere (a browser, a proxy, a fixture) and for
         network-free testing. Only the Transactions on the given page are returned; paging is a fetch
         concern.
 
@@ -96,15 +111,8 @@ class AmazonTransactions:
         :return: A list of the parsed Transactions.
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
+        transactions, _ = _parse_transactions_page(parsed, config)
 
-        form_tag = util.select_one(parsed, config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
-        if not form_tag:
-            container = util.select_one(parsed, config.selectors.TRANSACTION_HISTORY_CONTAINER_SELECTOR)
-            if container and "don't have any transactions" in container.text:
-                return []
-            raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.")
-
-        transactions, _next_page_data = _parse_transaction_form_tag(form_tag, config)
         return transactions
 
     def get_transactions(self,
@@ -140,20 +148,7 @@ class AmazonTransactions:
             page_response = self.amazon_session.post(url, data=next_page_data)
             self.amazon_session.check_response(page_response, meta=next_page_data)
 
-            form_tag = util.select_one(page_response.parsed,
-                                       self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
-
-            if not form_tag:
-                transaction_container = util.select_one(page_response.parsed,
-                                                        self.config.selectors.TRANSACTION_HISTORY_CONTAINER_SELECTOR)
-                if transaction_container and "don't have any transactions" in transaction_container.text:
-                    break
-                else:
-                    raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.")
-
-            loaded_transactions, next_page_data = (
-                _parse_transaction_form_tag(form_tag, self.config)
-            )
+            loaded_transactions, next_page_data = _parse_transactions_page(page_response.parsed, self.config)
 
             for transaction in loaded_transactions:
                 if order_id or transaction.completed_date >= min_date:
