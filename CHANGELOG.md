@@ -18,8 +18,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - `Shipment.items` and `Order.items` from the Order history page no longer omit Items when a Shipment holds more than one.
 - `get_order()` now parses the charge summary on digital (`D01-`) order details pages.
-- `get_order_history()` now returns an empty list, rather than raising, when a window has no Orders on the requested page.
-- `get_order_history()` no longer raises `ValueError` when the Order count contains a thousands separator.
+- `get_order_history()` no longer raises on empty Order history pages (a digital window with no Orders, or a `start_index` past the end), or on Order counts containing a thousands separator.
 
 ## [4.4.7](https://github.com/alexdlaird/amazon-orders/compare/4.4.6...4.4.7) - 2026-08-02
 
