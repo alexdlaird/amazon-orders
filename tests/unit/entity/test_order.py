@@ -167,6 +167,34 @@ class TestOrder(UnitTestCase):
         # THEN
         self.assertEqual(order.gift_card, -2.37)
 
+    def test_order_payment_method_last_4_preserves_leading_zeros(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-amazon-discount-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read().replace("ending in 1234", "ending in 0123"),
+                                   self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual("0123", order.payment_method_last_4)
+
+    def test_order_payment_method_last_4_none_when_absent(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-amazon-discount-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read().replace("ending in 1234", ""),
+                                   self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertIsNone(order.payment_method_last_4)
+
     def test_order_missing_grand_total_raises_exception_by_default(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-missing-grand-total-snippet.html"),

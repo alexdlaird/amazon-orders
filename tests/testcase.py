@@ -398,7 +398,7 @@ class TestCase(unittest.TestCase):
         if full_details:
             self.assertEqual(date(2025, 1, 31), order.items[0].return_eligible_date)
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual(1234, order.payment_method_last_4)
+            self.assertEqual("1234", order.payment_method_last_4)
             self.assertEqual(27.98, order.subtotal)
             self.assertEqual(0.00, order.shipping_total)
             self.assertEqual(26.58, order.total_before_tax)
@@ -425,7 +425,7 @@ class TestCase(unittest.TestCase):
 
         if full_details:
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual(1234, order.payment_method_last_4)
+            self.assertEqual("1234", order.payment_method_last_4)
             self.assertEqual(10.00, order.subtotal)
             self.assertEqual(10.00, order.total_before_tax)
             self.assertEqual(0.00, order.estimated_tax)
@@ -472,7 +472,7 @@ class TestCase(unittest.TestCase):
         if full_details:
             self.assertEqual(date(2024, 11, 25), order.items[0].return_eligible_date)
             self.assertEqual("American Express", order.payment_method)
-            self.assertEqual(1234, order.payment_method_last_4)
+            self.assertEqual("1234", order.payment_method_last_4)
             self.assertEqual(43.49, order.subtotal)
             self.assertEqual(0.00, order.shipping_total)
             self.assertEqual(-2.17, order.subscription_discount)
@@ -514,7 +514,7 @@ class TestCase(unittest.TestCase):
 
         if full_details:
             self.assertEqual("Prime Visa", order.payment_method)
-            self.assertEqual(1111, order.payment_method_last_4)
+            self.assertEqual("1111", order.payment_method_last_4)
             self.assertEqual(57.69, order.subtotal)
             self.assertEqual(2.99, order.shipping_total)
             self.assertEqual(57.69, order.total_before_tax)

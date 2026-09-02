@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.7...HEAD)
 
+### Changed
+
+- `Order.payment_method_last_4` is now a `str` rather than an `int`, preserving leading zeros.
+
 ### Fixed
 
 - `Shipment.items` and `Order.items` from the Order history page no longer omit Items when a Shipment holds more than one.
