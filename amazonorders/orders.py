@@ -63,36 +63,56 @@ class AmazonOrders:
 
     @staticmethod
     def parse_order_history(html: str,
-                            config: AmazonOrdersConfig) -> List[Order]:
+                            config: AmazonOrdersConfig,
+                            start_index: int = 0) -> List[Order]:
         """
         Parse an already-fetched Amazon Order history page into Orders, without a session driving the
         fetch — useful for parsing HTML obtained elsewhere (a browser, a proxy, a fixture) and for
         network-free testing.
 
+        A page with no Orders is returned as an empty list only when the page's own Order count
+        confirms the window is empty at ``start_index``; otherwise it raises, since that is a page
+        that failed to render.
+
         :param html: The Order history page HTML to parse.
         :param config: The config providing the selectors and entity classes used for parsing.
+        :param start_index: The index of the first Order on the page within its window, seeding
+            :attr:`~amazonorders.entity.order.Order.index` the way ``get_order_history()`` does.
         :return: A list of the parsed Orders.
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
         order_tags = util.select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
-        return [config.order_cls(tag, config, index=i) for i, tag in enumerate(order_tags)]
+
+        if not order_tags:
+            order_count = _parse_order_count(
+                util.select_one(parsed, config.selectors.ORDER_HISTORY_COUNT_SELECTOR))
+
+            if order_count is not None and order_count <= start_index:
+                return []
+            else:
+                raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")
+
+        return [config.order_cls(tag, config, index=start_index + i) for i, tag in enumerate(order_tags)]
 
     @staticmethod
     def parse_order_details(html: str,
-                            config: AmazonOrdersConfig) -> Order:
+                            config: AmazonOrdersConfig,
+                            order_number: Optional[str] = None) -> Order:
         """
         Parse an already-fetched Amazon Order details page into an Order, without a session driving the
         fetch — useful for parsing HTML obtained elsewhere and for network-free testing.
 
         :param html: The Order details page HTML to parse.
         :param config: The config providing the selectors and entity classes used for parsing.
+        :param order_number: The Order ID the page was fetched for, used as a fallback for
+            :attr:`~amazonorders.entity.order.Order.order_number` when it cannot be parsed from the page.
         :return: The parsed Order.
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
         order_details_tag = util.select_one(parsed, config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
         if not order_details_tag:
             raise AmazonOrdersError("Could not parse Order details. Check if Amazon changed the HTML.")
-        return config.order_cls(order_details_tag, config, full_details=True)
+        return config.order_cls(order_details_tag, config, full_details=True, order_number=order_number)
 
     def get_order(self,
                   order_id: str,
