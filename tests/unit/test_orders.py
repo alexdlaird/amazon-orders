@@ -507,7 +507,7 @@ class TestOrders(UnitTestCase):
         fopo_order = next(order for order in orders if order.order_number == "777-5719845-2377811")
         # The receipt's first payment method maps onto the existing Order payment fields
         self.assertEqual("Visa", fopo_order.payment_method)
-        self.assertEqual(9790, fopo_order.payment_method_last_4)
+        self.assertEqual("9790", fopo_order.payment_method_last_4)
         self.assertEqual(27.96, fopo_order.subtotal)
         self.assertEqual(0.54, fopo_order.estimated_tax)
         # An ASINLESS line item (no Amazon detail page) still parses, with a title but no link

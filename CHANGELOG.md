@@ -10,6 +10,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - `AmazonOrders.parse_order_history()`, `AmazonOrders.parse_order_details()`, and `AmazonTransactions.parse_transactions()`, which parse already-fetched page HTML without a session.
 
+### Changed
+
+- **Breaking:** `Order.payment_method_last_4` is now a `str` rather than an `int`, preserving leading zeros and matching `Transaction.payment_method_last_4`. Numeric comparisons must become string comparisons (`== "1234"`).
+
 ### Fixed
 
 - `Shipment.items` and `Order.items` from the Order history page no longer omit Items when a Shipment holds more than one.
