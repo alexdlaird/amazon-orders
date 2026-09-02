@@ -1,0 +1,2758 @@
+<!doctype html><html lang="en-us">
+<head><meta charset="utf-8"/><title dir="ltr">Your Orders</title></head>
+<body>
+<div id="ordersContainer">
+<div class="order-card js-order-card" data-csa-c-content-id="amzn1.yourorders.order-card" data-csa-c-slot-id="amzn1.yourorders.order-card.112-1111111-1111111" data-csa-c-type="widget">
+<div class="a-box-group a-spacing-base">
+<div class="a-box a-color-offset-background order-header"><div class="a-box-inner">
+<div class="a-fixed-right-grid"><div class="a-fixed-right-grid-inner" style="padding-right:290px">
+<h5 class="a-text-normal">
+<ul class="order-header__header-list" role="presentation">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:0%;float:left;">
+<div class="a-row">
+<div class="a-column a-span3">
+<li class="order-header__header-list-item" role="presentation">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Order placed</span>
+</div>
+<div class="a-row">
+<span class="a-size-base a-color-secondary aok-break-word">August 26, 2026</span>
+</div>
+</li>
+</div>
+<div class="a-column a-span2">
+<li class="order-header__header-list-item" role="presentation">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Total</span>
+</div>
+<div class="a-row">
+<span class="a-size-base a-color-secondary aok-break-word">$12.95</span>
+</div>
+</li>
+</div>
+<div class="a-column a-span7 a-span-last">
+<li class="order-header__header-list-item" role="presentation">
+<div class="yohtmlc-recipient">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Ship to</span>
+</div>
+<div class="a-row a-size-base">
+<div id="shipToInsertionNode-shippingAddress-9472966e435cb0ad3fdd28649f5dfa18">
+</div>
+</div>
+</div>
+</li>
+</div>
+</div>
+</div>
+<div class="a-text-right a-fixed-right-grid-col a-col-right" style="width:290px;margin-right:-290px;float:left;">
+<div class="a-row a-size-mini">
+<li class="order-header__header-list-item" role="presentation">
+<div class="yohtmlc-order-id">
+<span class="a-color-secondary a-text-caps">Order #</span>
+<span class="a-color-secondary" dir="ltr">112-1111111-1111111</span>
+</div>
+</li>
+</div>
+<div class="a-row">
+<li class="order-header__header-list-item yohtmlc-order-level-connections" role="presentation">
+<a class="a-link-normal" href="/your-orders/order-details?orderID=112-1111111-1111111&amp;ref=ppx_yo2ov_dt_b_fed_order_details">
+        
+            View order details
+        
+    </a>
+<i class="a-icon a-icon-text-separator" role="img"></i>
+<a class="a-link-normal" href="/gp/css/summary/print.html?orderID=112-1111111-1111111&amp;ref=ppx_yo2ov_dt_b_fed_invoice_pos">
+        
+            View invoice
+        
+    </a>
+</li>
+</div>
+</div>
+</ul>
+</h5>
+</div></div>
+</div></div>
+<div class="a-box yo-ask-order-pill" data-csa-c-content-id="amzn1.yourorders.ask-about-order-pill" data-csa-c-type="widget" data-csa-op-log-render="">
+<div class="a-box-inner a-padding-small">
+<button class="rufus-pill" data-csa-c-action="open-rufus-stream" data-csa-c-element-id="ask-about-order" data-csa-c-element-type="transactional" data-csa-c-type="button" onclick="var P=window.AmazonUIPageJS||window.P;P.when('rufus-handle-stream').execute(function(s){s({qis:'NileRelatedQuestionIngress',query:'I have a question about order #112-1111111-1111111',metricName:'YOAskAboutOrderIngress',refmarker:'nl_blyo_ask_order_ingress'});});" type="button">
+<span class="rufus-tooltip-icon"></span>
+<span class="rufus-font-size-base">Ask Alexa about this order</span>
+</button>
+</div>
+</div>
+<script>
+    (function(s) {
+        var pill = s.previousElementSibling;
+        if (!pill) return;
+        var card = pill.closest('.order-card');
+        if (!card) return;
+
+        // 1. Cancelled order: check the shipment status text node only, NOT the whole
+        // card (which would false-positive on product titles containing "cancelled").
+        // Status copy varies ("Cancelled", "Order cancelled", "Service cancelled"),
+        // so match case-insensitively on the "cancel" stem within the status node.
+        // TODO (https://sim.amazon.com/issues/YO-ORCA-2751): short-term fix.
+        var statusNodes = card.querySelectorAll('.yohtmlc-shipment-status-primaryText');
+        for (var i = 0; i < statusNodes.length; i++) {
+            if (statusNodes[i].textContent.toLowerCase().indexOf('cancel') !== -1) {
+                pill.style.display = 'none';
+                return;
+            }
+        }
+
+        // 2. > 30 days ago: hide pill. The first header-list-item is "Order placed";
+        // its second .a-row holds the formatted date (e.g. "May 27, 2026").
+        // TODO (https://sim.amazon.com/issues/YO-ORCA-2751): remove after
+        // REX_RUFUS_MY_PURCHASES_AGENT_V3_PROMPT_1395422 dial-up.
+        var header = card.querySelector('.order-header');
+        if (!header) return;
+        var firstItem = header.querySelector('.order-header__header-list-item');
+        if (!firstItem) return;
+        var rows = firstItem.querySelectorAll('.a-row');
+        if (rows.length < 2) return;
+        var dateText = rows[1].textContent.trim();
+        var orderDate = Date.parse(dateText);
+        if (isNaN(orderDate)) return; // fail open: if we can't parse, leave pill visible
+        var daysAgo = (Date.now() - orderDate) / 86400000;
+        if (daysAgo > 30) {
+            pill.style.display = 'none';
+        }
+    })(document.currentScript);
+</script>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text delivery-box__primary-text--text-normal a-text-bold">Arriving tomorrow</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<li><span class="a-list-item">
+<div class="a-fixed-left-grid item-box yo-enhanced-items a-padding-small"><div class="a-fixed-left-grid-inner" style="padding-left:150px">
+<div class="a-fixed-left-grid-col a-col-left" style="width:150px;margin-left:-150px;float:left;">
+<div class="product-image">
+<a class="a-link-normal" href="/dp/B01N195VG9?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt='Jameco Benchpro HDBC-1206.25 Conductive Anti-Static Foam, 12" L x 6" W x 1/4" H (Pack of 2)' data-a-hires="https://m.media-amazon.com/images/I/61NASTHRGwL._SS284_.jpg" src="https://m.media-amazon.com/images/I/61NASTHRGwL._SS142_.jpg"/>
+</a>
+</div>
+</div>
+<div class="a-fixed-left-grid-col a-col-right" style="padding-left:0%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-product-title">
+<a aria-hidden="false" class="a-link-normal" href="/dp/B01N195VG9?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                Jameco Benchpro HDBC-1206.25 Conductive Anti-Static Foam, 12" L x 6" W x 1/4" H (Pack of 2)
+            </a>
+</div>
+</div>
+<div class="a-row a-spacing-top-mini">
+</div>
+<div class="a-row a-size-small a-color-secondary">
+<span></span>
+</div>
+<div class="a-row a-spacing-top-mini">
+<div class="yohtmlc-item-level-connections">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</div>
+</div></div>
+</span></li>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;orderId=112-1111111-1111111&amp;shipmentId=REDACTED" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_veo" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/your-orders/order-details?orderID=112-1111111-1111111&amp;ref=ppx_yo2ov_dt_b_fed_veo" role="button">
+            View or edit order
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B01N195VG9&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<script id="shipToData-shippingAddress-9472966e435cb0ad3fdd28649f5dfa18" type="text/template">
+    <span class="a-declarative" data-action="a-popover" data-a-popover="{&quot;name&quot;:&quot;shippingAddress-9472966e435cb0ad3fdd28649f5dfa18&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;closeButton&quot;:true,&quot;width&quot;:&quot;250&quot;,&quot;popoverLabel&quot;:&quot;Recipient address&quot;,&quot;closeButtonLabel&quot;:&quot;Close recipient address&quot;}">
+        <a href="javascript:void(0)" class="a-popover-trigger a-declarative insert-encrypted-trigger-text aok-break-word">
+            Name1 Name2
+        <i class="a-icon a-icon-popover"></i></a>
+    </span>
+
+    
+        <div class="a-popover-preload" id="a-popover-shippingAddress-REDACTED">
+            <span class="a-color-base">
+                
+                    <div class="a-row">
+                        <h5>
+                            Name1 Name2
+                        </h5>
+                    </div>
+                
+
+                
+                    <div class="a-row">
+                        1 Any St<br>Anytown, CA 90210
+                    </div>
+                
+                    <div class="a-row">
+                        United States
+                    </div>
+                
+
+                
+
+                
+            </span>
+
+        </div>
+    
+</script>
+<script>
+    var insertionNode = document.getElementById("shipToInsertionNode-" + "shippingAddress-9472966e435cb0ad3fdd28649f5dfa18");
+    if (insertionNode !== null) {
+        var encryptedDataNode = document.getElementById("shipToData-" + "shippingAddress-9472966e435cb0ad3fdd28649f5dfa18");
+        insertionNode.innerHTML = encryptedDataNode.innerHTML;
+    }
+</script>
+</div>
+</div>
+<div class="order-card js-order-card" data-csa-c-content-id="amzn1.yourorders.order-card" data-csa-c-slot-id="amzn1.yourorders.order-card.112-2222222-2222222" data-csa-c-type="widget">
+<div class="a-box-group a-spacing-base">
+<div class="a-box a-color-offset-background order-header"><div class="a-box-inner">
+<div class="a-fixed-right-grid"><div class="a-fixed-right-grid-inner" style="padding-right:290px">
+<h5 class="a-text-normal">
+<ul class="order-header__header-list" role="presentation">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:0%;float:left;">
+<div class="a-row">
+<div class="a-column a-span3">
+<li class="order-header__header-list-item" role="presentation">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Order placed</span>
+</div>
+<div class="a-row">
+<span class="a-size-base a-color-secondary aok-break-word">August 26, 2026</span>
+</div>
+</li>
+</div>
+<div class="a-column a-span2">
+<li class="order-header__header-list-item" role="presentation">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Total</span>
+</div>
+<div class="a-row">
+<span class="a-size-base a-color-secondary aok-break-word">$79.17</span>
+</div>
+</li>
+</div>
+<div class="a-column a-span7 a-span-last">
+<li class="order-header__header-list-item" role="presentation">
+<div class="yohtmlc-recipient">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Ship to</span>
+</div>
+<div class="a-row a-size-base">
+<div id="shipToInsertionNode-shippingAddress-1a1de4cf9c7706db225a91c51e068868">
+</div>
+</div>
+</div>
+</li>
+</div>
+</div>
+</div>
+<div class="a-text-right a-fixed-right-grid-col a-col-right" style="width:290px;margin-right:-290px;float:left;">
+<div class="a-row a-size-mini">
+<li class="order-header__header-list-item" role="presentation">
+<div class="yohtmlc-order-id">
+<span class="a-color-secondary a-text-caps">Order #</span>
+<span class="a-color-secondary" dir="ltr">112-2222222-2222222</span>
+</div>
+</li>
+</div>
+<div class="a-row">
+<li class="order-header__header-list-item yohtmlc-order-level-connections" role="presentation">
+<a class="a-link-normal" href="/your-orders/order-details?orderID=112-2222222-2222222&amp;ref=ppx_yo2ov_dt_b_fed_order_details">
+        
+            View order details
+        
+    </a>
+<i class="a-icon a-icon-text-separator" role="img"></i>
+<a class="a-link-normal" href="/gp/css/summary/print.html?orderID=112-2222222-2222222&amp;ref=ppx_yo2ov_dt_b_fed_invoice_pos">
+        
+            View invoice
+        
+    </a>
+</li>
+</div>
+</div>
+</ul>
+</h5>
+</div></div>
+</div></div>
+<div class="a-box yo-ask-order-pill" data-csa-c-content-id="amzn1.yourorders.ask-about-order-pill" data-csa-c-type="widget" data-csa-op-log-render="">
+<div class="a-box-inner a-padding-small">
+<button class="rufus-pill" data-csa-c-action="open-rufus-stream" data-csa-c-element-id="ask-about-order" data-csa-c-element-type="transactional" data-csa-c-type="button" onclick="var P=window.AmazonUIPageJS||window.P;P.when('rufus-handle-stream').execute(function(s){s({qis:'NileRelatedQuestionIngress',query:'I have a question about order #112-2222222-2222222',metricName:'YOAskAboutOrderIngress',refmarker:'nl_blyo_ask_order_ingress'});});" type="button">
+<span class="rufus-tooltip-icon"></span>
+<span class="rufus-font-size-base">Ask Alexa about this order</span>
+</button>
+</div>
+</div>
+<script>
+    (function(s) {
+        var pill = s.previousElementSibling;
+        if (!pill) return;
+        var card = pill.closest('.order-card');
+        if (!card) return;
+
+        // 1. Cancelled order: check the shipment status text node only, NOT the whole
+        // card (which would false-positive on product titles containing "cancelled").
+        // Status copy varies ("Cancelled", "Order cancelled", "Service cancelled"),
+        // so match case-insensitively on the "cancel" stem within the status node.
+        // TODO (https://sim.amazon.com/issues/YO-ORCA-2751): short-term fix.
+        var statusNodes = card.querySelectorAll('.yohtmlc-shipment-status-primaryText');
+        for (var i = 0; i < statusNodes.length; i++) {
+            if (statusNodes[i].textContent.toLowerCase().indexOf('cancel') !== -1) {
+                pill.style.display = 'none';
+                return;
+            }
+        }
+
+        // 2. > 30 days ago: hide pill. The first header-list-item is "Order placed";
+        // its second .a-row holds the formatted date (e.g. "May 27, 2026").
+        // TODO (https://sim.amazon.com/issues/YO-ORCA-2751): remove after
+        // REX_RUFUS_MY_PURCHASES_AGENT_V3_PROMPT_1395422 dial-up.
+        var header = card.querySelector('.order-header');
+        if (!header) return;
+        var firstItem = header.querySelector('.order-header__header-list-item');
+        if (!firstItem) return;
+        var rows = firstItem.querySelectorAll('.a-row');
+        if (rows.length < 2) return;
+        var dateText = rows[1].textContent.trim();
+        var orderDate = Date.parse(dateText);
+        if (isNaN(orderDate)) return; // fail open: if we can't parse, leave pill visible
+        var daysAgo = (Date.now() - orderDate) / 86400000;
+        if (daysAgo > 30) {
+            pill.style.display = 'none';
+        }
+    })(document.currentScript);
+</script>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text delivery-box__primary-text--text-normal a-text-bold">Arriving today 1:30 PM - 3:30 PM</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<div class="yo-enhanced-flex">
+<div class="yo-enhanced-flex-card">
+<div class="yo-enhanced-flex-image">
+<a class="a-link-normal" href="/dp/B08RYMY6XK?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="Chanzon 1200pcs 0805 SMD Resistor Kit 60 Values 0-10M ohm 1/8W Each 20pcs" data-a-hires="https://m.media-amazon.com/images/I/71Momj9JtFL._SS284_.jpg" src="https://m.media-amazon.com/images/I/71Momj9JtFL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B08RYMY6XK?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                Chanzon 1200pcs 0805 SMD Resistor Kit 60 Values 0-10M ohm 1/8W Each 20pcs
+                            </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                            Return or replace items: Eligible through September 26, 2026
+                        </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+<div class="yo-enhanced-flex-card">
+<div class="yo-enhanced-flex-image">
+<a class="a-link-normal" href="/dp/B0FH9NDWKD?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="VIBICCK 155pcs DIP IC Sockets Solder Type Adaptor Assortment Kit 2.54mm Pitch 6 8 14 16 18 24 28 40 Pin dip sockets ic Socket" data-a-hires="https://m.media-amazon.com/images/I/819WXLxQSqL._SS284_.jpg" src="https://m.media-amazon.com/images/I/819WXLxQSqL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0FH9NDWKD?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                VIBICCK 155pcs DIP IC Sockets Solder Type Adaptor Assortment Kit 2.54mm Pitch 6 8 14 16 18 24 28 40 Pin dip sockets ic Socket
+                            </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                            Return or replace items: Eligible through September 26, 2026
+                        </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+<div class="yo-enhanced-flex-card">
+<div class="yo-enhanced-flex-image">
+<a class="a-link-normal" href="/dp/B0858XRGYW?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="TWTADE 202Pcs Micro Momentary Tactile Push Button Switch Assortment Kit" data-a-hires="https://m.media-amazon.com/images/I/81QenxN7QwL._SS284_.jpg" src="https://m.media-amazon.com/images/I/81QenxN7QwL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0858XRGYW?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                TWTADE 202Pcs Micro Momentary Tactile Push Button Switch Assortment Kit
+                            </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                            Return or replace items: Eligible through September 26, 2026
+                        </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+<div class="yo-enhanced-flex-card">
+<div class="yo-enhanced-flex-image">
+<a class="a-link-normal" href="/dp/B07T61SY9Y?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="BOJACK 10 Values 250 Pcs A1015 BC327 BC337 C1815 S8050 S8550 2N2222 2N2907 2N3904 2N3906 PNP NPN Power General Purpose Transistors Assortment Kit" data-a-hires="https://m.media-amazon.com/images/I/81vmFMTw01S._SS284_.jpg" src="https://m.media-amazon.com/images/I/81vmFMTw01S._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B07T61SY9Y?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                BOJACK 10 Values 250 Pcs A1015 BC327 BC337 C1815 S8050 S8550 2N2222 2N2907 2N3904 2N3906 PNP NPN Power General Purpose Transistors Assortment Kit
+                            </a>
+</div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</div>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;orderId=112-2222222-2222222&amp;shipmentId=REDACTED&amp;packageIndex=0&amp;noPtRedirect=1" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_support" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/ps/product-support/order?orderId=112-2222222-2222222&amp;ref=ppx_yo2ov_dt_b_fed_product_support" role="button">
+            Get product support
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_return_replace" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/spr/returns/cart?orderId=112-2222222-2222222&amp;ref=ppx_yo2ov_dt_b_fed_return_replace" role="button">
+            Return or replace items
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_gift_receipt" data-csa-c-item-type="shipment-action" data-csa-c-pos="3" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gcx/-/ty/gr/112-2222222-2222222/shipment?ref=ppx_yo2ov_dt_b_gift_receipt" role="button">
+            Share gift receipt
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="4" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B07T61SY9Y%2CB0858XRGYW%2CB08RYMY6XK%2CB0FH9NDWKD&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text delivery-box__primary-text--text-normal a-text-bold">Arriving today 1:30 PM - 3:30 PM</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<li><span class="a-list-item">
+<div class="a-fixed-left-grid item-box yo-enhanced-items a-padding-small"><div class="a-fixed-left-grid-inner" style="padding-left:150px">
+<div class="a-fixed-left-grid-col a-col-left" style="width:150px;margin-left:-150px;float:left;">
+<div class="product-image">
+<a class="a-link-normal" href="/dp/B07Q5FZR7X?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="BOJACK 14 Value 240 pcs Diode Assortment Kit Contain Rectifier/Fast Recovery/Schottky/Switching Diode 1N4001 1N4004 1N4007 1N5404 1N5406 1N5408 RL207 FR107 FR207 UF4007 1N5817 1N5819 1N5822 1N4148" data-a-hires="https://m.media-amazon.com/images/I/81nXV3dEJPL._SS284_.jpg" src="https://m.media-amazon.com/images/I/81nXV3dEJPL._SS142_.jpg"/>
+</a>
+</div>
+</div>
+<div class="a-fixed-left-grid-col a-col-right" style="padding-left:0%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-product-title">
+<a aria-hidden="false" class="a-link-normal" href="/dp/B07Q5FZR7X?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                BOJACK 14 Value 240 pcs Diode Assortment Kit Contain Rectifier/Fast Recovery/Schottky/Switching Diode 1N4001 1N4004 1N4007 1N5404 1N5406 1N5408 RL207 FR107 FR207 UF4007 1N5817 1N5819 1N5822 1N4148
+            </a>
+</div>
+</div>
+<div class="a-row a-spacing-top-mini">
+</div>
+<div class="a-row a-size-small a-color-secondary">
+<span></span>
+</div>
+<div class="a-row a-spacing-top-mini">
+<div class="yohtmlc-item-level-connections">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</div>
+</div></div>
+</span></li>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;orderId=112-2222222-2222222&amp;shipmentId=REDACTED&amp;packageIndex=0&amp;noPtRedirect=1" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_return_replace" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/spr/returns/cart?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_fed_return_replace&amp;orderId=112-2222222-2222222" role="button">
+            Return or replace items
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_gift_receipt" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gcx/-/ty/gr/112-2222222-2222222/shipment?ref=ppx_yo2ov_dt_b_gift_receipt" role="button">
+            Share gift receipt
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_seller_product_inquiry" data-csa-c-item-type="shipment-action" data-csa-c-pos="3" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/help/contact/contact.html?marketplaceId=ATVPDKIKX0DER&amp;ref=ppx_yo2ov_dt_b_fed_seller_product_inquiry&amp;assistanceType=order&amp;orderId=112-2222222-2222222&amp;subject=2&amp;recipientId=A2RFXKS6GNXFWP&amp;step=submitEntry" role="button">
+            Ask Product Question
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="4" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B07Q5FZR7X&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text delivery-box__primary-text--text-normal a-text-bold">Arriving tomorrow</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<li><span class="a-list-item">
+<div class="a-fixed-left-grid item-box yo-enhanced-items a-padding-small"><div class="a-fixed-left-grid-inner" style="padding-left:150px">
+<div class="a-fixed-left-grid-col a-col-left" style="width:150px;margin-left:-150px;float:left;">
+<div class="product-image">
+<a class="a-link-normal" href="/dp/B0FD77Y9KZ?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="AO3400 AO3401 AO3402 AO3404 AO3406 AO3407 AO3413 AO3415 MOSFET 8Values" data-a-hires="https://m.media-amazon.com/images/I/51XypLI-0WL._SS284_.jpg" src="https://m.media-amazon.com/images/I/51XypLI-0WL._SS142_.jpg"/>
+</a>
+</div>
+</div>
+<div class="a-fixed-left-grid-col a-col-right" style="padding-left:0%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-product-title">
+<a aria-hidden="false" class="a-link-normal" href="/dp/B0FD77Y9KZ?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                AO3400 AO3401 AO3402 AO3404 AO3406 AO3407 AO3413 AO3415 MOSFET 8Values
+            </a>
+</div>
+</div>
+<div class="a-row a-spacing-top-mini">
+</div>
+<div class="a-row a-size-small a-color-secondary">
+<span></span>
+</div>
+<div class="a-row a-spacing-top-mini">
+<div class="yohtmlc-item-level-connections">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</div>
+</div></div>
+</span></li>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;orderId=112-2222222-2222222&amp;shipmentId=REDACTED&amp;packageIndex=0&amp;noPtRedirect=1" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_return_replace" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/spr/returns/cart?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_fed_return_replace&amp;orderId=112-2222222-2222222" role="button">
+            Return or replace items
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_gift_receipt" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gcx/-/ty/gr/112-2222222-2222222/shipment?ref=ppx_yo2ov_dt_b_gift_receipt" role="button">
+            Share gift receipt
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_seller_product_inquiry" data-csa-c-item-type="shipment-action" data-csa-c-pos="3" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/help/contact/contact.html?marketplaceId=ATVPDKIKX0DER&amp;ref=ppx_yo2ov_dt_b_fed_seller_product_inquiry&amp;assistanceType=order&amp;orderId=112-2222222-2222222&amp;subject=2&amp;recipientId=A1WAMA0P4112X8&amp;step=submitEntry" role="button">
+            Ask Product Question
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="4" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B0FD77Y9KZ&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text delivery-box__primary-text--text-normal a-text-bold">Arriving Saturday</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<li><span class="a-list-item">
+<div class="a-fixed-left-grid item-box yo-enhanced-items a-padding-small"><div class="a-fixed-left-grid-inner" style="padding-left:150px">
+<div class="a-fixed-left-grid-col a-col-left" style="width:150px;margin-left:-150px;float:left;">
+<div class="product-image">
+<a class="a-link-normal" href="/dp/B0F5QB3S8V?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="0805 SMD Capacitor 1PF-10uF mlcc Ceramic Chip Capacitors kit 30values" data-a-hires="https://m.media-amazon.com/images/I/61ghDfXrXTL._SS284_.jpg" src="https://m.media-amazon.com/images/I/61ghDfXrXTL._SS142_.jpg"/>
+</a>
+</div>
+</div>
+<div class="a-fixed-left-grid-col a-col-right" style="padding-left:0%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-product-title">
+<a aria-hidden="false" class="a-link-normal" href="/dp/B0F5QB3S8V?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                0805 SMD Capacitor 1PF-10uF mlcc Ceramic Chip Capacitors kit 30values
+            </a>
+</div>
+</div>
+<div class="a-row a-spacing-top-mini">
+</div>
+<div class="a-row a-size-small a-color-secondary">
+<span></span>
+</div>
+<div class="a-row a-spacing-top-mini">
+<div class="yohtmlc-item-level-connections">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</div>
+</div></div>
+</span></li>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;orderId=112-2222222-2222222&amp;shipmentId=REDACTED&amp;packageIndex=0&amp;noPtRedirect=1" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_return_replace" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/spr/returns/cart?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_fed_return_replace&amp;orderId=112-2222222-2222222" role="button">
+            Return or replace items
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_gift_receipt" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gcx/-/ty/gr/112-2222222-2222222/shipment?ref=ppx_yo2ov_dt_b_gift_receipt" role="button">
+            Share gift receipt
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_seller_product_inquiry" data-csa-c-item-type="shipment-action" data-csa-c-pos="3" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/help/contact/contact.html?marketplaceId=ATVPDKIKX0DER&amp;ref=ppx_yo2ov_dt_b_fed_seller_product_inquiry&amp;assistanceType=order&amp;orderId=112-2222222-2222222&amp;subject=2&amp;recipientId=A1WAMA0P4112X8&amp;step=submitEntry" role="button">
+            Ask Product Question
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="4" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B0F5QB3S8V&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text delivery-box__primary-text--text-normal a-text-bold">Arriving today 1:30 PM - 3:30 PM</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<li><span class="a-list-item">
+<div class="a-fixed-left-grid item-box yo-enhanced-items a-padding-small"><div class="a-fixed-left-grid-inner" style="padding-left:150px">
+<div class="a-fixed-left-grid-col a-col-left" style="width:150px;margin-left:-150px;float:left;">
+<div class="product-image">
+<a class="a-link-normal" href="/dp/B09WN6CSNR?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="Bridgold 10pcs 4N35 35 Optocoupler DC Input 1 Channel Trans ，6Pins." data-a-hires="https://m.media-amazon.com/images/I/71mOdFyKF-L._SS284_.jpg" src="https://m.media-amazon.com/images/I/71mOdFyKF-L._SS142_.jpg"/>
+</a>
+</div>
+</div>
+<div class="a-fixed-left-grid-col a-col-right" style="padding-left:0%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-product-title">
+<a aria-hidden="false" class="a-link-normal" href="/dp/B09WN6CSNR?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                Bridgold 10pcs 4N35 35 Optocoupler DC Input 1 Channel Trans ，6Pins.
+            </a>
+</div>
+</div>
+<div class="a-row a-spacing-top-mini">
+</div>
+<div class="a-row a-size-small a-color-secondary">
+<span></span>
+</div>
+<div class="a-row a-spacing-top-mini">
+<div class="yohtmlc-item-level-connections">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</div>
+</div></div>
+</span></li>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;orderId=112-2222222-2222222&amp;shipmentId=REDACTED&amp;packageIndex=0&amp;noPtRedirect=1" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_return_replace" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/spr/returns/cart?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_fed_return_replace&amp;orderId=112-2222222-2222222" role="button">
+            Return or replace items
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_gift_receipt" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gcx/-/ty/gr/112-2222222-2222222/shipment?ref=ppx_yo2ov_dt_b_gift_receipt" role="button">
+            Share gift receipt
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_seller_product_inquiry" data-csa-c-item-type="shipment-action" data-csa-c-pos="3" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/help/contact/contact.html?marketplaceId=ATVPDKIKX0DER&amp;ref=ppx_yo2ov_dt_b_fed_seller_product_inquiry&amp;assistanceType=order&amp;orderId=112-2222222-2222222&amp;subject=2&amp;recipientId=A376OCJGR11S0Z&amp;step=submitEntry" role="button">
+            Ask Product Question
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="4" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B09WN6CSNR&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<script id="shipToData-shippingAddress-1a1de4cf9c7706db225a91c51e068868" type="text/template">
+    <span class="a-declarative" data-action="a-popover" data-a-popover="{&quot;name&quot;:&quot;shippingAddress-1a1de4cf9c7706db225a91c51e068868&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;closeButton&quot;:true,&quot;width&quot;:&quot;250&quot;,&quot;popoverLabel&quot;:&quot;Recipient address&quot;,&quot;closeButtonLabel&quot;:&quot;Close recipient address&quot;}">
+        <a href="javascript:void(0)" class="a-popover-trigger a-declarative insert-encrypted-trigger-text aok-break-word">
+            Name1 Name2
+        <i class="a-icon a-icon-popover"></i></a>
+    </span>
+
+    
+        <div class="a-popover-preload" id="a-popover-shippingAddress-REDACTED">
+            <span class="a-color-base">
+                
+                    <div class="a-row">
+                        <h5>
+                            Name1 Name2
+                        </h5>
+                    </div>
+                
+
+                
+                    <div class="a-row">
+                        1 Any St<br>Anytown, CA 90210
+                    </div>
+                
+                    <div class="a-row">
+                        United States
+                    </div>
+                
+
+                
+
+                
+            </span>
+
+        </div>
+    
+</script>
+<script>
+    var insertionNode = document.getElementById("shipToInsertionNode-" + "shippingAddress-1a1de4cf9c7706db225a91c51e068868");
+    if (insertionNode !== null) {
+        var encryptedDataNode = document.getElementById("shipToData-" + "shippingAddress-1a1de4cf9c7706db225a91c51e068868");
+        insertionNode.innerHTML = encryptedDataNode.innerHTML;
+    }
+</script>
+</div>
+</div>
+<div class="order-card js-order-card" data-csa-c-content-id="amzn1.yourorders.order-card" data-csa-c-slot-id="amzn1.yourorders.order-card.112-3333333-3333333" data-csa-c-type="widget">
+<div class="a-box-group a-spacing-base">
+<div class="a-box a-color-offset-background order-header"><div class="a-box-inner">
+<div class="a-fixed-right-grid"><div class="a-fixed-right-grid-inner" style="padding-right:290px">
+<h5 class="a-text-normal">
+<ul class="order-header__header-list" role="presentation">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:0%;float:left;">
+<div class="a-row">
+<div class="a-column a-span3">
+<li class="order-header__header-list-item" role="presentation">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Order placed</span>
+</div>
+<div class="a-row">
+<span class="a-size-base a-color-secondary aok-break-word">August 25, 2026</span>
+</div>
+</li>
+</div>
+<div class="a-column a-span2">
+<li class="order-header__header-list-item" role="presentation">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Total</span>
+</div>
+<div class="a-row">
+<span class="a-size-base a-color-secondary aok-break-word">$40.96</span>
+</div>
+</li>
+</div>
+<div class="a-column a-span7 a-span-last">
+<li class="order-header__header-list-item" role="presentation">
+<div class="yohtmlc-recipient">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Ship to</span>
+</div>
+<div class="a-row a-size-base">
+<div id="shipToInsertionNode-shippingAddress-aeb25bab9cd80d9546fb50f369a6375c">
+</div>
+</div>
+</div>
+</li>
+</div>
+</div>
+</div>
+<div class="a-text-right a-fixed-right-grid-col a-col-right" style="width:290px;margin-right:-290px;float:left;">
+<div class="a-row a-size-mini">
+<li class="order-header__header-list-item" role="presentation">
+<div class="yohtmlc-order-id">
+<span class="a-color-secondary a-text-caps">Order #</span>
+<span class="a-color-secondary" dir="ltr">112-3333333-3333333</span>
+</div>
+</li>
+</div>
+<div class="a-row">
+<li class="order-header__header-list-item yohtmlc-order-level-connections" role="presentation">
+<a class="a-link-normal" href="/your-orders/order-details?orderID=112-3333333-3333333&amp;ref=ppx_yo2ov_dt_b_fed_order_details">
+        
+            View order details
+        
+    </a>
+<i class="a-icon a-icon-text-separator" role="img"></i>
+<a class="a-link-normal" href="/gp/css/summary/print.html?orderID=112-3333333-3333333&amp;ref=ppx_yo2ov_dt_b_fed_invoice_pos">
+        
+            View invoice
+        
+    </a>
+</li>
+</div>
+</div>
+</ul>
+</h5>
+</div></div>
+</div></div>
+<div class="a-box yo-ask-order-pill" data-csa-c-content-id="amzn1.yourorders.ask-about-order-pill" data-csa-c-type="widget" data-csa-op-log-render="">
+<div class="a-box-inner a-padding-small">
+<button class="rufus-pill" data-csa-c-action="open-rufus-stream" data-csa-c-element-id="ask-about-order" data-csa-c-element-type="transactional" data-csa-c-type="button" onclick="var P=window.AmazonUIPageJS||window.P;P.when('rufus-handle-stream').execute(function(s){s({qis:'NileRelatedQuestionIngress',query:'I have a question about order #112-3333333-3333333',metricName:'YOAskAboutOrderIngress',refmarker:'nl_blyo_ask_order_ingress'});});" type="button">
+<span class="rufus-tooltip-icon"></span>
+<span class="rufus-font-size-base">Ask Alexa about this order</span>
+</button>
+</div>
+</div>
+<script>
+    (function(s) {
+        var pill = s.previousElementSibling;
+        if (!pill) return;
+        var card = pill.closest('.order-card');
+        if (!card) return;
+
+        // 1. Cancelled order: check the shipment status text node only, NOT the whole
+        // card (which would false-positive on product titles containing "cancelled").
+        // Status copy varies ("Cancelled", "Order cancelled", "Service cancelled"),
+        // so match case-insensitively on the "cancel" stem within the status node.
+        // TODO (https://sim.amazon.com/issues/YO-ORCA-2751): short-term fix.
+        var statusNodes = card.querySelectorAll('.yohtmlc-shipment-status-primaryText');
+        for (var i = 0; i < statusNodes.length; i++) {
+            if (statusNodes[i].textContent.toLowerCase().indexOf('cancel') !== -1) {
+                pill.style.display = 'none';
+                return;
+            }
+        }
+
+        // 2. > 30 days ago: hide pill. The first header-list-item is "Order placed";
+        // its second .a-row holds the formatted date (e.g. "May 27, 2026").
+        // TODO (https://sim.amazon.com/issues/YO-ORCA-2751): remove after
+        // REX_RUFUS_MY_PURCHASES_AGENT_V3_PROMPT_1395422 dial-up.
+        var header = card.querySelector('.order-header');
+        if (!header) return;
+        var firstItem = header.querySelector('.order-header__header-list-item');
+        if (!firstItem) return;
+        var rows = firstItem.querySelectorAll('.a-row');
+        if (rows.length < 2) return;
+        var dateText = rows[1].textContent.trim();
+        var orderDate = Date.parse(dateText);
+        if (isNaN(orderDate)) return; // fail open: if we can't parse, leave pill visible
+        var daysAgo = (Date.now() - orderDate) / 86400000;
+        if (daysAgo > 30) {
+            pill.style.display = 'none';
+        }
+    })(document.currentScript);
+</script>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text a-text-bold">Delivered August 25</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+<span class="delivery-box__secondary-text">Your package was left near the front door or porch.</span>
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<div class="yo-enhanced-flex">
+<div class="yo-enhanced-flex-card">
+<div class="yo-enhanced-flex-image">
+<a class="a-link-normal" href="/dp/B0815ZDD5H?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="TUOFENG 22 AWG Stranded Wire Kit, 6 Colors, 30 ft Each, PVC Hookup Wire" data-a-hires="https://m.media-amazon.com/images/I/61zjvpkCNBL._SS284_.jpg" src="https://m.media-amazon.com/images/I/61zjvpkCNBL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0815ZDD5H?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                TUOFENG 22 AWG Stranded PVC Wire Kit
+                            </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                            Return or replace items: Eligible through September 24, 2026
+                        </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+<div class="yo-enhanced-flex-card">
+<div class="yo-enhanced-flex-image">
+<a class="a-link-normal" href="/dp/B08F79YG8Q?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="20 awg Silicone Electrical Wire Cable 2 Colors 23ft Each" data-a-hires="https://m.media-amazon.com/images/I/6138b0ogNQL._SS284_.jpg" src="https://m.media-amazon.com/images/I/6138b0ogNQL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B08F79YG8Q?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                20 awg Silicone Electrical Wire Cable 2 Colors 23ft Each
+                            </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                            Return or replace items: Eligible through September 24, 2026
+                        </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+<div class="yo-enhanced-flex-card">
+<div class="yo-enhanced-flex-image">
+<a class="a-link-normal" href="/dp/B083DN5R61?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="22awg Solid Electrical Wire Cable Kit 7colors 26ft Each Spool" data-a-hires="https://m.media-amazon.com/images/I/61Zqw2mXP6L._SS284_.jpg" src="https://m.media-amazon.com/images/I/61Zqw2mXP6L._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B083DN5R61?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                22awg Solid Electrical Wire Cable Kit 7colors 26ft Each Spool
+                            </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                            Return or replace items: Eligible through September 24, 2026
+                        </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</div>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;packageIndex=0&amp;orderId=112-3333333-3333333&amp;shipmentId=REDACTED" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_return_replace" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/spr/returns/cart?orderId=112-3333333-3333333&amp;ref=ppx_yo2ov_dt_b_fed_return_replace" role="button">
+            Return or replace items
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_gift_receipt" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gcx/-/ty/gr/112-3333333-3333333/shipment?ref=ppx_yo2ov_dt_b_gift_receipt" role="button">
+            Share gift receipt
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_leave_seller_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="3" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/hz/feedback?orderID=112-3333333-3333333&amp;ref=ppx_yo2ov_dt_b_fed_leave_seller_feedback" role="button">
+            Leave seller feedback
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="4" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B0815ZDD5H%2CB083DN5R61%2CB08F79YG8Q&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<script id="shipToData-shippingAddress-aeb25bab9cd80d9546fb50f369a6375c" type="text/template">
+    <span class="a-declarative" data-action="a-popover" data-a-popover="{&quot;name&quot;:&quot;shippingAddress-aeb25bab9cd80d9546fb50f369a6375c&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;closeButton&quot;:true,&quot;width&quot;:&quot;250&quot;,&quot;popoverLabel&quot;:&quot;Recipient address&quot;,&quot;closeButtonLabel&quot;:&quot;Close recipient address&quot;}">
+        <a href="javascript:void(0)" class="a-popover-trigger a-declarative insert-encrypted-trigger-text aok-break-word">
+            Name1 Name2
+        <i class="a-icon a-icon-popover"></i></a>
+    </span>
+
+    
+        <div class="a-popover-preload" id="a-popover-shippingAddress-REDACTED">
+            <span class="a-color-base">
+                
+                    <div class="a-row">
+                        <h5>
+                            Name1 Name2
+                        </h5>
+                    </div>
+                
+
+                
+                    <div class="a-row">
+                        1 Any St<br>Anytown, CA 90210
+                    </div>
+                
+                    <div class="a-row">
+                        United States
+                    </div>
+                
+
+                
+
+                
+            </span>
+
+        </div>
+    
+</script>
+<script>
+    var insertionNode = document.getElementById("shipToInsertionNode-" + "shippingAddress-aeb25bab9cd80d9546fb50f369a6375c");
+    if (insertionNode !== null) {
+        var encryptedDataNode = document.getElementById("shipToData-" + "shippingAddress-aeb25bab9cd80d9546fb50f369a6375c");
+        insertionNode.innerHTML = encryptedDataNode.innerHTML;
+    }
+</script>
+</div>
+</div>
+<div class="order-card js-order-card" data-csa-c-content-id="amzn1.yourorders.order-card" data-csa-c-slot-id="amzn1.yourorders.order-card.112-4444444-4444444" data-csa-c-type="widget">
+<div class="a-box-group a-spacing-base">
+<div class="a-box a-color-offset-background order-header"><div class="a-box-inner">
+<div class="a-fixed-right-grid"><div class="a-fixed-right-grid-inner" style="padding-right:290px">
+<h5 class="a-text-normal">
+<ul class="order-header__header-list" role="presentation">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:0%;float:left;">
+<div class="a-row">
+<div class="a-column a-span3">
+<li class="order-header__header-list-item" role="presentation">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Order placed</span>
+</div>
+<div class="a-row">
+<span class="a-size-base a-color-secondary aok-break-word">August 10, 2026</span>
+</div>
+</li>
+</div>
+<div class="a-column a-span2">
+<li class="order-header__header-list-item" role="presentation">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Total</span>
+</div>
+<div class="a-row">
+<span class="a-size-base a-color-secondary aok-break-word">$96.97</span>
+</div>
+</li>
+</div>
+<div class="a-column a-span7 a-span-last">
+<li class="order-header__header-list-item" role="presentation">
+<div class="yohtmlc-recipient">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Ship to</span>
+</div>
+<div class="a-row a-size-base">
+<div id="shipToInsertionNode-shippingAddress-c4732465920893b527d072a07f2275a6">
+</div>
+</div>
+</div>
+</li>
+</div>
+</div>
+</div>
+<div class="a-text-right a-fixed-right-grid-col a-col-right" style="width:290px;margin-right:-290px;float:left;">
+<div class="a-row a-size-mini">
+<li class="order-header__header-list-item" role="presentation">
+<div class="yohtmlc-order-id">
+<span class="a-color-secondary a-text-caps">Order #</span>
+<span class="a-color-secondary" dir="ltr">112-4444444-4444444</span>
+</div>
+</li>
+</div>
+<div class="a-row">
+<li class="order-header__header-list-item yohtmlc-order-level-connections" role="presentation">
+<a class="a-link-normal" href="/your-orders/order-details?orderID=112-4444444-4444444&amp;ref=ppx_yo2ov_dt_b_fed_order_details">
+        
+            View order details
+        
+    </a>
+<i class="a-icon a-icon-text-separator" role="img"></i>
+<a class="a-link-normal" href="/gp/css/summary/print.html?orderID=112-4444444-4444444&amp;ref=ppx_yo2ov_dt_b_fed_invoice_pos">
+        
+            View invoice
+        
+    </a>
+</li>
+</div>
+</div>
+</ul>
+</h5>
+</div></div>
+</div></div>
+<div class="a-box yo-ask-order-pill" data-csa-c-content-id="amzn1.yourorders.ask-about-order-pill" data-csa-c-type="widget" data-csa-op-log-render="">
+<div class="a-box-inner a-padding-small">
+<button class="rufus-pill" data-csa-c-action="open-rufus-stream" data-csa-c-element-id="ask-about-order" data-csa-c-element-type="transactional" data-csa-c-type="button" onclick="var P=window.AmazonUIPageJS||window.P;P.when('rufus-handle-stream').execute(function(s){s({qis:'NileRelatedQuestionIngress',query:'I have a question about order #112-4444444-4444444',metricName:'YOAskAboutOrderIngress',refmarker:'nl_blyo_ask_order_ingress'});});" type="button">
+<span class="rufus-tooltip-icon"></span>
+<span class="rufus-font-size-base">Ask Alexa about this order</span>
+</button>
+</div>
+</div>
+<script>
+    (function(s) {
+        var pill = s.previousElementSibling;
+        if (!pill) return;
+        var card = pill.closest('.order-card');
+        if (!card) return;
+
+        // 1. Cancelled order: check the shipment status text node only, NOT the whole
+        // card (which would false-positive on product titles containing "cancelled").
+        // Status copy varies ("Cancelled", "Order cancelled", "Service cancelled"),
+        // so match case-insensitively on the "cancel" stem within the status node.
+        // TODO (https://sim.amazon.com/issues/YO-ORCA-2751): short-term fix.
+        var statusNodes = card.querySelectorAll('.yohtmlc-shipment-status-primaryText');
+        for (var i = 0; i < statusNodes.length; i++) {
+            if (statusNodes[i].textContent.toLowerCase().indexOf('cancel') !== -1) {
+                pill.style.display = 'none';
+                return;
+            }
+        }
+
+        // 2. > 30 days ago: hide pill. The first header-list-item is "Order placed";
+        // its second .a-row holds the formatted date (e.g. "May 27, 2026").
+        // TODO (https://sim.amazon.com/issues/YO-ORCA-2751): remove after
+        // REX_RUFUS_MY_PURCHASES_AGENT_V3_PROMPT_1395422 dial-up.
+        var header = card.querySelector('.order-header');
+        if (!header) return;
+        var firstItem = header.querySelector('.order-header__header-list-item');
+        if (!firstItem) return;
+        var rows = firstItem.querySelectorAll('.a-row');
+        if (rows.length < 2) return;
+        var dateText = rows[1].textContent.trim();
+        var orderDate = Date.parse(dateText);
+        if (isNaN(orderDate)) return; // fail open: if we can't parse, leave pill visible
+        var daysAgo = (Date.now() - orderDate) / 86400000;
+        if (daysAgo > 30) {
+            pill.style.display = 'none';
+        }
+    })(document.currentScript);
+</script>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text a-text-bold">Delivered August 12</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<div class="a-begin a-carousel-container a-carousel-static a-carousel-display-stretchyGoodness a-carousel-transition-slide yo-enhanced-item-carousel" data-a-ajax-strategy="none" data-a-carousel-options='{"first_item_flush_left":true,"force_minimum_gutter_width":true,"minimum_gutter_width":8}'><input autocomplete="on" class="a-carousel-firstvisibleitem" type="hidden"/>
+<div class="a-row a-carousel-controls a-carousel-row a-carousel-has-buttons"><div class="a-carousel-row-inner"><div class="a-carousel-col a-carousel-left"><a class="a-button a-button-image a-carousel-button a-carousel-goto-prevpage" href="#" tabindex="0"><span class="a-button-inner"><i class="a-icon a-icon-previous"><span class="a-icon-alt">Previous page</span></i></span></a></div><div class="a-carousel-col a-carousel-center"><div class="a-carousel-viewport"><ol class="a-carousel" role="list">
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B07P3MFG5D?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="BOJACK 50 Values 1350 Pcs Resistor Kit 0 Ohm-5.6M Ohm with 1% 1/4W Metal Film Resistors Assortment" data-a-hires="https://m.media-amazon.com/images/I/71H7IYJRyHL._SS284_.jpg" src="https://m.media-amazon.com/images/I/71H7IYJRyHL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B07P3MFG5D?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        BOJACK 50 Values 1350 Pcs Resistor Kit 0 Ohm-5.6M Ohm with 1% 1/4W Metal Film Resistors Assortment
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 11, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B07QH5PYWY?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="EDGELEC 100pcs 3.9K ohm Resistor 1/2w ±1% Tolerance Metal Film Fixed Resistor" data-a-hires="https://m.media-amazon.com/images/I/51qUxOop68L._SS284_.jpg" src="https://m.media-amazon.com/images/I/51qUxOop68L._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B07QH5PYWY?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        EDGELEC 100pcs 3.9K ohm Resistor 1/2w ±1% Tolerance Metal Film Fixed Resistor
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 11, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B07DL13RZH?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="4PCS Breadboards Kit Include 2PCS 830 Point 2PCS 400 Point Solderless Breadboards for Proto Shield Distribution Connecting Blocks" data-a-hires="https://m.media-amazon.com/images/I/71Rog-c1pZL._SS284_.jpg" src="https://m.media-amazon.com/images/I/71Rog-c1pZL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B07DL13RZH?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        4PCS Breadboards Kit Include 2PCS 830 Point 2PCS 400 Point Solderless Breadboards for Proto Shield Distribution Connecting Blocks
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 11, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0DBVYP91F?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="Seloky 5 Pack LM2596 DC to DC Buck Converter 3.0-40V to 1.5-35V Adjustable Voltage Regulator Electronic Voltage Stabilizer Power Supply Step Down Module" data-a-hires="https://m.media-amazon.com/images/I/71nsN6HZpmL._SS284_.jpg" src="https://m.media-amazon.com/images/I/71nsN6HZpmL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0DBVYP91F?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        Seloky 5 Pack LM2596 DC to DC Buck Converter 3.0-40V to 1.5-35V Adjustable Voltage Regulator Electronic Voltage Stabilizer Power Supply Step Down Module
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 11, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0CN989377?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="DC Power Supply Variable 0-30V 0-10A, Adjustable Switching Regulated Bench Power Supply with Encoder Coarse &amp; Fine Knob, 3.6A USB &amp; Type-C Quick-Charge, OCP Overcurrent Protection" data-a-hires="https://m.media-amazon.com/images/I/719LdvfMylL._SS284_.jpg" src="https://m.media-amazon.com/images/I/719LdvfMylL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0CN989377?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        DC Power Supply Variable 0-30V 0-10A, Adjustable Switching Regulated Bench Power Supply with Encoder Coarse &amp; Fine Knob, 3.6A USB &amp; Type-C Quick-Charge, OCP Overcurrent Protection
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 11, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+</ol></div></div><div class="a-carousel-col a-carousel-right"><a class="a-button a-button-image a-carousel-button a-carousel-goto-nextpage" href="#" tabindex="0"><span class="a-button-inner"><i class="a-icon a-icon-next"><span class="a-icon-alt">Next page</span></i></span></a></div></div></div>
+<span class="a-end aok-hidden"></span></div>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_support" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/ps/product-support/order?orderId=112-4444444-4444444&amp;ref=ppx_yo2ov_dt_b_fed_product_support" role="button">
+            Get product support
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;orderId=112-4444444-4444444&amp;shipmentId=REDACTED&amp;packageIndex=0&amp;noPtRedirect=1" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-declarative" data-a-modal='{"name":"add_protection_plan_modal","activate":"onClick","header":"Add a Protection Plan","dataStrategy":"ajax","url":"/warranties/post-purchase/offers?orderId=112-4444444-4444444&amp;lineItemId=jmpokqkstjltqmps&amp;ref_=fed_warranties_add_protection_plan"}' data-action="a-modal">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><input class="a-button-input" type="submit"/><span aria-hidden="true" class="a-button-text">
+            Add a protection plan
+        </span></span></span>
+</span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_return_replace" data-csa-c-item-type="shipment-action" data-csa-c-pos="3" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/spr/returns/cart?orderId=112-4444444-4444444&amp;ref=ppx_yo2ov_dt_b_fed_return_replace" role="button">
+            Return or replace items
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_gift_receipt" data-csa-c-item-type="shipment-action" data-csa-c-pos="4" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gcx/-/ty/gr/112-4444444-4444444/shipment?ref=ppx_yo2ov_dt_b_gift_receipt" role="button">
+            Share gift receipt
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_leave_seller_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="5" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/hz/feedback?orderID=112-4444444-4444444&amp;ref=ppx_yo2ov_dt_b_fed_leave_seller_feedback" role="button">
+            Leave seller feedback
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="6" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B07DL13RZH%2CB07P3MFG5D%2CB07QH5PYWY%2CB0CN989377%2CB0DBVYP91F&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text a-text-bold">Delivered August 14</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<li><span class="a-list-item">
+<div class="a-fixed-left-grid item-box yo-enhanced-items a-padding-small"><div class="a-fixed-left-grid-inner" style="padding-left:150px">
+<div class="a-fixed-left-grid-col a-col-left" style="width:150px;margin-left:-150px;float:left;">
+<div class="product-image">
+<a class="a-link-normal" href="/dp/B0FLD93VRC?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="Qoroos 3pcs INA226 IIC I2C Interface Bi-Directional Current Monitoring Sensor Power Monitor Sensor Alert Monitor Module with Alarm Function 36V for Arduino" data-a-hires="https://m.media-amazon.com/images/I/71b2C8mB64L._SS284_.jpg" src="https://m.media-amazon.com/images/I/71b2C8mB64L._SS142_.jpg"/>
+</a>
+</div>
+</div>
+<div class="a-fixed-left-grid-col a-col-right" style="padding-left:0%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-product-title">
+<a aria-hidden="false" class="a-link-normal" href="/dp/B0FLD93VRC?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                Qoroos 3pcs INA226 IIC I2C Interface Bi-Directional Current Monitoring Sensor Power Monitor Sensor Alert Monitor Module with Alarm Function 36V for Arduino
+            </a>
+</div>
+</div>
+<div class="a-row a-spacing-top-mini">
+</div>
+<div class="a-row a-size-small a-color-secondary">
+<span></span>
+</div>
+<div class="a-row">
+<span class="a-size-small">
+                Return or replace items: Eligible through September 13, 2026
+            </span>
+</div>
+<div class="a-row a-spacing-top-mini">
+<div class="yohtmlc-item-level-connections">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</div>
+</div></div>
+</span></li>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;orderId=112-4444444-4444444&amp;shipmentId=REDACTED&amp;packageIndex=0&amp;noPtRedirect=1" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_return_replace" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/spr/returns/cart?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_fed_return_replace&amp;orderId=112-4444444-4444444" role="button">
+            Return or replace items
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_gift_receipt" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gcx/-/ty/gr/112-4444444-4444444/shipment?ref=ppx_yo2ov_dt_b_gift_receipt" role="button">
+            Share gift receipt
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_seller_product_inquiry" data-csa-c-item-type="shipment-action" data-csa-c-pos="3" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/help/contact/contact.html?marketplaceId=ATVPDKIKX0DER&amp;ref=ppx_yo2ov_dt_b_fed_seller_product_inquiry&amp;assistanceType=order&amp;orderId=112-4444444-4444444&amp;subject=2&amp;recipientId=A3MMFRJLN0ZQ32&amp;step=submitEntry" role="button">
+            Ask Product Question
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_leave_seller_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="4" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/hz/feedback?ref=ppx_yo2ov_dt_b_fed_leave_seller_feedback&amp;sellerID=A3MMFRJLN0ZQ32&amp;orderID=112-4444444-4444444" role="button">
+            Leave seller feedback
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="5" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B0FLD93VRC&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<script id="shipToData-shippingAddress-c4732465920893b527d072a07f2275a6" type="text/template">
+    <span class="a-declarative" data-action="a-popover" data-a-popover="{&quot;name&quot;:&quot;shippingAddress-c4732465920893b527d072a07f2275a6&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;closeButton&quot;:true,&quot;width&quot;:&quot;250&quot;,&quot;popoverLabel&quot;:&quot;Recipient address&quot;,&quot;closeButtonLabel&quot;:&quot;Close recipient address&quot;}">
+        <a href="javascript:void(0)" class="a-popover-trigger a-declarative insert-encrypted-trigger-text aok-break-word">
+            Name1 Name2
+        <i class="a-icon a-icon-popover"></i></a>
+    </span>
+
+    
+        <div class="a-popover-preload" id="a-popover-shippingAddress-REDACTED">
+            <span class="a-color-base">
+                
+                    <div class="a-row">
+                        <h5>
+                            Name1 Name2
+                        </h5>
+                    </div>
+                
+
+                
+                    <div class="a-row">
+                        1 Any St<br>Anytown, CA 90210
+                    </div>
+                
+                    <div class="a-row">
+                        United States
+                    </div>
+                
+
+                
+
+                
+            </span>
+
+        </div>
+    
+</script>
+<script>
+    var insertionNode = document.getElementById("shipToInsertionNode-" + "shippingAddress-c4732465920893b527d072a07f2275a6");
+    if (insertionNode !== null) {
+        var encryptedDataNode = document.getElementById("shipToData-" + "shippingAddress-c4732465920893b527d072a07f2275a6");
+        insertionNode.innerHTML = encryptedDataNode.innerHTML;
+    }
+</script>
+</div>
+</div>
+<div class="order-card js-order-card" data-csa-c-content-id="amzn1.yourorders.order-card" data-csa-c-slot-id="amzn1.yourorders.order-card.112-5555555-5555555" data-csa-c-type="widget">
+<div class="a-box-group a-spacing-base">
+<div class="a-box a-color-offset-background order-header"><div class="a-box-inner">
+<div class="a-fixed-right-grid"><div class="a-fixed-right-grid-inner" style="padding-right:290px">
+<h5 class="a-text-normal">
+<ul class="order-header__header-list" role="presentation">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:0%;float:left;">
+<div class="a-row">
+<div class="a-column a-span3">
+<li class="order-header__header-list-item" role="presentation">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Order placed</span>
+</div>
+<div class="a-row">
+<span class="a-size-base a-color-secondary aok-break-word">August 11, 2026</span>
+</div>
+</li>
+</div>
+<div class="a-column a-span2">
+<li class="order-header__header-list-item" role="presentation">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Total</span>
+</div>
+<div class="a-row">
+<span class="a-size-base a-color-secondary aok-break-word">$160.61</span>
+</div>
+</li>
+</div>
+<div class="a-column a-span7 a-span-last">
+<li class="order-header__header-list-item" role="presentation">
+<div class="yohtmlc-recipient">
+<div class="a-row a-size-mini">
+<span class="a-color-secondary a-text-caps">Ship to</span>
+</div>
+<div class="a-row a-size-base">
+<div id="shipToInsertionNode-shippingAddress-556c8b09b22bc4c053d29ba3d11a433b">
+</div>
+</div>
+</div>
+</li>
+</div>
+</div>
+</div>
+<div class="a-text-right a-fixed-right-grid-col a-col-right" style="width:290px;margin-right:-290px;float:left;">
+<div class="a-row a-size-mini">
+<li class="order-header__header-list-item" role="presentation">
+<div class="yohtmlc-order-id">
+<span class="a-color-secondary a-text-caps">Order #</span>
+<span class="a-color-secondary" dir="ltr">112-5555555-5555555</span>
+</div>
+</li>
+</div>
+<div class="a-row">
+<li class="order-header__header-list-item yohtmlc-order-level-connections" role="presentation">
+<a class="a-link-normal" href="/your-orders/order-details?orderID=112-5555555-5555555&amp;ref=ppx_yo2ov_dt_b_fed_order_details">
+        
+            View order details
+        
+    </a>
+<i class="a-icon a-icon-text-separator" role="img"></i>
+<a class="a-link-normal" href="/gp/css/summary/print.html?orderID=112-5555555-5555555&amp;ref=ppx_yo2ov_dt_b_fed_invoice_pos">
+        
+            View invoice
+        
+    </a>
+</li>
+</div>
+</div>
+</ul>
+</h5>
+</div></div>
+</div></div>
+<div class="a-box yo-ask-order-pill" data-csa-c-content-id="amzn1.yourorders.ask-about-order-pill" data-csa-c-type="widget" data-csa-op-log-render="">
+<div class="a-box-inner a-padding-small">
+<button class="rufus-pill" data-csa-c-action="open-rufus-stream" data-csa-c-element-id="ask-about-order" data-csa-c-element-type="transactional" data-csa-c-type="button" onclick="var P=window.AmazonUIPageJS||window.P;P.when('rufus-handle-stream').execute(function(s){s({qis:'NileRelatedQuestionIngress',query:'I have a question about order #112-5555555-5555555',metricName:'YOAskAboutOrderIngress',refmarker:'nl_blyo_ask_order_ingress'});});" type="button">
+<span class="rufus-tooltip-icon"></span>
+<span class="rufus-font-size-base">Ask Alexa about this order</span>
+</button>
+</div>
+</div>
+<script>
+    (function(s) {
+        var pill = s.previousElementSibling;
+        if (!pill) return;
+        var card = pill.closest('.order-card');
+        if (!card) return;
+
+        // 1. Cancelled order: check the shipment status text node only, NOT the whole
+        // card (which would false-positive on product titles containing "cancelled").
+        // Status copy varies ("Cancelled", "Order cancelled", "Service cancelled"),
+        // so match case-insensitively on the "cancel" stem within the status node.
+        // TODO (https://sim.amazon.com/issues/YO-ORCA-2751): short-term fix.
+        var statusNodes = card.querySelectorAll('.yohtmlc-shipment-status-primaryText');
+        for (var i = 0; i < statusNodes.length; i++) {
+            if (statusNodes[i].textContent.toLowerCase().indexOf('cancel') !== -1) {
+                pill.style.display = 'none';
+                return;
+            }
+        }
+
+        // 2. > 30 days ago: hide pill. The first header-list-item is "Order placed";
+        // its second .a-row holds the formatted date (e.g. "May 27, 2026").
+        // TODO (https://sim.amazon.com/issues/YO-ORCA-2751): remove after
+        // REX_RUFUS_MY_PURCHASES_AGENT_V3_PROMPT_1395422 dial-up.
+        var header = card.querySelector('.order-header');
+        if (!header) return;
+        var firstItem = header.querySelector('.order-header__header-list-item');
+        if (!firstItem) return;
+        var rows = firstItem.querySelectorAll('.a-row');
+        if (rows.length < 2) return;
+        var dateText = rows[1].textContent.trim();
+        var orderDate = Date.parse(dateText);
+        if (isNaN(orderDate)) return; // fail open: if we can't parse, leave pill visible
+        var daysAgo = (Date.now() - orderDate) / 86400000;
+        if (daysAgo > 30) {
+            pill.style.display = 'none';
+        }
+    })(document.currentScript);
+</script>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text a-text-bold">Delivered August 14</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+<span class="delivery-box__secondary-text">Your package was left near the front door or porch.</span>
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<li><span class="a-list-item">
+<div class="a-fixed-left-grid item-box yo-enhanced-items a-padding-small"><div class="a-fixed-left-grid-inner" style="padding-left:150px">
+<div class="a-fixed-left-grid-col a-col-left" style="width:150px;margin-left:-150px;float:left;">
+<div class="product-image">
+<a class="a-link-normal" href="/dp/B0FGXTR5TM?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="Yuuhseel 10PCS 3 Pins 650nm Dot Diode Copper Head Laser Sensor Transmitter Module Red 5V Compatible with Arduino" data-a-hires="https://m.media-amazon.com/images/I/61eRJL9i9gL._SS284_.jpg" src="https://m.media-amazon.com/images/I/61eRJL9i9gL._SS142_.jpg"/>
+</a>
+</div>
+</div>
+<div class="a-fixed-left-grid-col a-col-right" style="padding-left:0%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-product-title">
+<a aria-hidden="false" class="a-link-normal" href="/dp/B0FGXTR5TM?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                Yuuhseel 10PCS 3 Pins 650nm Dot Diode Copper Head Laser Sensor Transmitter Module Red 5V Compatible with Arduino
+            </a>
+</div>
+</div>
+<div class="a-row a-spacing-top-mini">
+</div>
+<div class="a-row a-size-small a-color-secondary">
+<span></span>
+</div>
+<div class="a-row">
+<span class="a-size-small">
+                Return or replace items: Eligible through September 13, 2026
+            </span>
+</div>
+<div class="a-row a-spacing-top-mini">
+<div class="yohtmlc-item-level-connections">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</div>
+</div></div>
+</span></li>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;packageIndex=0&amp;orderId=112-5555555-5555555&amp;shipmentId=REDACTED" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_return_replace" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/spr/returns/cart?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_fed_return_replace&amp;orderId=112-5555555-5555555" role="button">
+            Return or replace items
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_gift_receipt" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gcx/-/ty/gr/112-5555555-5555555/shipment?ref=ppx_yo2ov_dt_b_gift_receipt" role="button">
+            Share gift receipt
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_seller_product_inquiry" data-csa-c-item-type="shipment-action" data-csa-c-pos="3" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/help/contact/contact.html?marketplaceId=ATVPDKIKX0DER&amp;ref=ppx_yo2ov_dt_b_fed_seller_product_inquiry&amp;assistanceType=order&amp;orderId=112-5555555-5555555&amp;subject=2&amp;recipientId=A2HKE9XDS0VMYP&amp;step=submitEntry" role="button">
+            Ask Product Question
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_leave_seller_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="4" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/hz/feedback?ref=ppx_yo2ov_dt_b_fed_leave_seller_feedback&amp;sellerID=A2HKE9XDS0VMYP&amp;orderID=112-5555555-5555555" role="button">
+            Leave seller feedback
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="5" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B0FGXTR5TM&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text a-text-bold">Delivered August 14</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+<span class="delivery-box__secondary-text">Your package was left near the front door or porch.</span>
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<li><span class="a-list-item">
+<div class="a-fixed-left-grid item-box yo-enhanced-items a-padding-small"><div class="a-fixed-left-grid-inner" style="padding-left:150px">
+<div class="a-fixed-left-grid-col a-col-left" style="width:150px;margin-left:-150px;float:left;">
+<div class="product-image">
+<a class="a-link-normal" href="/dp/B0F297R23T?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="580 PCS M3 Black Nylon Standoff Kit with Spacers, Screws, and Nuts - Motherboard &amp; PCB Mounting Standoffs and Screws, Threaded Pillar Spacers for Circuit Boards and Computer Building" data-a-hires="https://m.media-amazon.com/images/I/71pr+7iWRKL._SS284_.jpg" src="https://m.media-amazon.com/images/I/71pr+7iWRKL._SS142_.jpg"/>
+</a>
+</div>
+</div>
+<div class="a-fixed-left-grid-col a-col-right" style="padding-left:0%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-product-title">
+<a aria-hidden="false" class="a-link-normal" href="/dp/B0F297R23T?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                580 PCS M3 Black Nylon Standoff Kit with Spacers, Screws, and Nuts - Motherboard &amp; PCB Mounting Standoffs and Screws, Threaded Pillar Spacers for Circuit Boards and Computer Building
+            </a>
+</div>
+</div>
+<div class="a-row a-spacing-top-mini">
+</div>
+<div class="a-row a-size-small a-color-secondary">
+<span></span>
+</div>
+<div class="a-row">
+<span class="a-size-small">
+                Return or replace items: Eligible through September 13, 2026
+            </span>
+</div>
+<div class="a-row a-spacing-top-mini">
+<div class="yohtmlc-item-level-connections">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</div>
+</div></div>
+</span></li>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;packageIndex=0&amp;orderId=112-5555555-5555555&amp;shipmentId=REDACTED" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_return_replace" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/spr/returns/cart?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_fed_return_replace&amp;orderId=112-5555555-5555555" role="button">
+            Return or replace items
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_gift_receipt" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gcx/-/ty/gr/112-5555555-5555555/shipment?ref=ppx_yo2ov_dt_b_gift_receipt" role="button">
+            Share gift receipt
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_seller_product_inquiry" data-csa-c-item-type="shipment-action" data-csa-c-pos="3" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/help/contact/contact.html?marketplaceId=ATVPDKIKX0DER&amp;ref=ppx_yo2ov_dt_b_fed_seller_product_inquiry&amp;assistanceType=order&amp;orderId=112-5555555-5555555&amp;subject=2&amp;recipientId=A31R75H52P5N5X&amp;step=submitEntry" role="button">
+            Ask Product Question
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_leave_seller_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="4" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/hz/feedback?ref=ppx_yo2ov_dt_b_fed_leave_seller_feedback&amp;sellerID=A31R75H52P5N5X&amp;orderID=112-5555555-5555555" role="button">
+            Leave seller feedback
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="5" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B0F297R23T&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<hr class="a-spacing-none a-divider-normal"/>
+<div class="a-box delivery-box"><div class="a-box-inner">
+<div class="a-fixed-right-grid a-spacing-small"><div class="a-fixed-right-grid-inner" style="padding-right:220px">
+<div class="a-fixed-right-grid-col a-col-left" style="padding-right:3.2%;float:left;">
+<div class="a-row">
+<div class="yohtmlc-shipment-status-primaryText">
+<h3>
+<span class="a-size-medium delivery-box__primary-text a-text-bold">Delivered August 14</span>
+</h3>
+</div>
+</div>
+<div class="a-row">
+<div class="yohtmlc-shipment-status-secondaryText">
+<span class="delivery-box__secondary-text">Your package was left near the front door or porch.</span>
+</div>
+</div>
+<ul class="a-unordered-list a-nostyle a-vertical" role="list">
+<div class="a-row a-spacing-top-base">
+<div class="a-begin a-carousel-container a-carousel-static a-carousel-display-stretchyGoodness a-carousel-transition-slide yo-enhanced-item-carousel" data-a-ajax-strategy="none" data-a-carousel-options='{"first_item_flush_left":true,"force_minimum_gutter_width":true,"minimum_gutter_width":8}'><input autocomplete="on" class="a-carousel-firstvisibleitem" type="hidden"/>
+<div class="a-row a-carousel-controls a-carousel-row a-carousel-has-buttons"><div class="a-carousel-row-inner"><div class="a-carousel-col a-carousel-left"><a class="a-button a-button-image a-carousel-button a-carousel-goto-prevpage" href="#" tabindex="0"><span class="a-button-inner"><i class="a-icon a-icon-previous"><span class="a-icon-alt">Previous page</span></i></span></a></div><div class="a-carousel-col a-carousel-center"><div class="a-carousel-viewport"><ol class="a-carousel" role="list">
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0DC6M6G7W?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="4pcs TOF400C VL53L1X 4M Laser Ranging Sensor Module TOF Time-of-Flight Distance IIC Output for Arduino STM32" data-a-hires="https://m.media-amazon.com/images/I/71zWh8fxMiL._SS284_.jpg" src="https://m.media-amazon.com/images/I/71zWh8fxMiL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0DC6M6G7W?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        4pcs TOF400C VL53L1X 4M Laser Ranging Sensor Module TOF Time-of-Flight Distance IIC Output for Arduino STM32
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0GHNCK1LG?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="Cermant 20Pcs SOT23-3 SOT-323 to DIP SMD Breakout Adapter Board" data-a-hires="https://m.media-amazon.com/images/I/61zdrxggNNL._SS284_.jpg" src="https://m.media-amazon.com/images/I/61zdrxggNNL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0GHNCK1LG?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        Cermant 20Pcs SOT23-3 SOT-323 to DIP SMD Breakout Adapter Board
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0FJRTL572?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="HJHYUL CP2102 USB to TTL Serial Adapter – USB 2.0 to 5Pin UART Converter Module with 3.3V/5V Output, STC Compatible, Includes Jumper Wires – for Arduino, ESP8266, STM32, DIY Projects (3-Pack)" data-a-hires="https://m.media-amazon.com/images/I/71keU+k35eL._SS284_.jpg" src="https://m.media-amazon.com/images/I/71keU+k35eL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0FJRTL572?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        HJHYUL CP2102 USB to TTL Serial Adapter – USB 2.0 to 5Pin UART Converter Module with 3.3V/5V Output, STC Compatible, Includes Jumper Wires – for Arduino, ESP8266, STM32, DIY Projects (3-Pack)
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0FJFVBLJD?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="25 Pack Cable Gland Kit – IP68 Waterproof Nylon Cord Grip Connectors PG7 to PG16 for Junction Box and Wire Protection (Black)" data-a-hires="https://m.media-amazon.com/images/I/71VL5UlGbNL._SS284_.jpg" src="https://m.media-amazon.com/images/I/71VL5UlGbNL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0FJFVBLJD?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        25 Pack Cable Gland Kit – IP68 Waterproof Nylon Cord Grip Connectors PG7 to PG16 for Junction Box and Wire Protection (Black)
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0GXFBJQD9?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="AEDIKO 4pcs 3V Relay Power Switch Board 1 Channel Optocoupler Module Opto Isolation High Level Trigger for IOT ESP8266 Development Board" data-a-hires="https://m.media-amazon.com/images/I/71WGWsJa1cL._SS284_.jpg" src="https://m.media-amazon.com/images/I/71WGWsJa1cL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0GXFBJQD9?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        AEDIKO 4pcs 3V Relay Power Switch Board 1 Channel Optocoupler Module Opto Isolation High Level Trigger for IOT ESP8266 Development Board
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0CM3C8KFT?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="WWZMDiB 4Pcs AS5600 Magnetic Encoder 3.3V 12bit high Precision Magnetic Induction Angle Measurement Sensor Module，Mainly Used to Obtain Information Such as Progressive Motor Speed" data-a-hires="https://m.media-amazon.com/images/I/61KtRGhEtJL._SS284_.jpg" src="https://m.media-amazon.com/images/I/61KtRGhEtJL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0CM3C8KFT?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        WWZMDiB 4Pcs AS5600 Magnetic Encoder 3.3V 12bit high Precision Magnetic Induction Angle Measurement Sensor Module，Mainly Used to Obtain Information Such as Progressive Motor Speed
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B07F7W91LC?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="HiLetgo 10pcs 4 Channels IIC I2C Logic Level Converter Bi-Directional 3.3V-5V Shifter Module for Arduino" data-a-hires="https://m.media-amazon.com/images/I/7122P125BzL._SS284_.jpg" src="https://m.media-amazon.com/images/I/7122P125BzL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B07F7W91LC?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        HiLetgo 10pcs 4 Channels IIC I2C Logic Level Converter Bi-Directional 3.3V-5V Shifter Module for Arduino
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0GQM4SRS3?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="4Pcs ESP32-C3 Mini Development Board,ESP32 Supermini Board with WiFi/Bluetooth 5.0 ESP32 Mini Module, RISC-V 32-bit CPU, 160MHz, 400KB SRAM, Ideal for IoT Arduin0 Wearables &amp; Smart Home(4-Pack)" data-a-hires="https://m.media-amazon.com/images/I/71O6bRzfbqL._SS284_.jpg" src="https://m.media-amazon.com/images/I/71O6bRzfbqL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0GQM4SRS3?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        4Pcs ESP32-C3 Mini Development Board,ESP32 Supermini Board with WiFi/Bluetooth 5.0 ESP32 Mini Module, RISC-V 32-bit CPU, 160MHz, 400KB SRAM, Ideal for IoT Arduin0 Wearables &amp; Smart Home(4-Pack)
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0G4QTPVZ8?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="QSYZAIL 54 Pcs Double Sided PCB Perf Board Kit in 5 Sizes Perfboard Compatible with for Arduino DIY Soldering Circuit Protoboard" data-a-hires="https://m.media-amazon.com/images/I/81yLlA2RheL._SS284_.jpg" src="https://m.media-amazon.com/images/I/81yLlA2RheL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0G4QTPVZ8?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        QSYZAIL 54 Pcs Double Sided PCB Perf Board Kit in 5 Sizes Perfboard Compatible with for Arduino DIY Soldering Circuit Protoboard
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0FSRQG23K?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="ELEGOO 3PCS 0.96 Inch OLED Display Screen Module, Self-Luminous, SSD1306" data-a-hires="https://m.media-amazon.com/images/I/71I0Q3og3hL._SS284_.jpg" src="https://m.media-amazon.com/images/I/71I0Q3og3hL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0FSRQG23K?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        ELEGOO 3PCS 0.96 Inch OLED Display Screen Module, Self-Luminous, SSD1306
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B082PZF831?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="Sumnacon 10 Pcs Multimeter Electrical Test Dual Lead Test Hook Clips - 5 Colors 20 AWG Silicone Flexible Test Cables for Electronic, Component, Testing Connecting" data-a-hires="https://m.media-amazon.com/images/I/815QEYxWijL._SS284_.jpg" src="https://m.media-amazon.com/images/I/815QEYxWijL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B082PZF831?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        Sumnacon 10 Pcs Multimeter Electrical Test Dual Lead Test Hook Clips - 5 Colors 20 AWG Silicone Flexible Test Cables for Electronic, Component, Testing Connecting
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+<li class="a-carousel-card" role="listitem">
+<div class="yo-enhanced-card">
+<div class="yo-enhanced-card-image">
+<a class="a-link-normal" href="/dp/B0G4MYNHBC?ref=ppx_yo2ov_dt_b_fed_asin_title" tabindex="-1">
+<img alt="QSYZAIL 85 Pcs Screw Terminal Block Kit 2.54 mm 5.08 mm Pitch for PCB Perf Board Breadboard Circuit Connector" data-a-hires="https://m.media-amazon.com/images/I/8149h5rAenL._SS284_.jpg" src="https://m.media-amazon.com/images/I/8149h5rAenL._SS142_.jpg"/>
+</a>
+</div>
+<div class="a-spacing-top-mini yo-enhanced-title">
+<a class="a-link-normal" href="/dp/B0G4MYNHBC?ref=ppx_yo2ov_dt_b_fed_asin_title">
+                                        QSYZAIL 85 Pcs Screw Terminal Block Kit 2.54 mm 5.08 mm Pitch for PCB Perf Board Breadboard Circuit Connector
+                                    </a>
+</div>
+<div class="a-size-small a-color-secondary a-spacing-top-mini yo-enhanced-return">
+                                    Return or replace items: Eligible through September 13, 2026
+                                </div>
+<div class="yohtmlc-item-level-connections a-spacing-top-mini">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/gp/buyagain?ats=REDACTED&amp;ref=ppx_yo2ov_dt_b_bia_item_f" role="button">
+<div class="buy-it-again-button__icon"></div>
+<div class="reorder-modal-trigger-text">Buy it again</div>
+</a></span></span>
+</div>
+</div>
+</li>
+</ol></div></div><div class="a-carousel-col a-carousel-right"><a class="a-button a-button-image a-carousel-button a-carousel-goto-nextpage" href="#" tabindex="0"><span class="a-button-inner"><i class="a-icon a-icon-next"><span class="a-icon-alt">Next page</span></i></span></a></div></div></div>
+<span class="a-end aok-hidden"></span></div>
+</div>
+</ul>
+</div>
+<div class="a-fixed-right-grid-col a-col-right" style="width:220px;margin-right:-220px;float:left;">
+<div class="a-button-stack a-spacing-mini">
+<style>
+    .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: none;
+    }
+    .yo-collapsible-actions--expanded .yo-collapsible-actions__list > li:nth-child(n+4) {
+        display: list-item;
+    }
+</style>
+<div class="yo-collapsible-actions" data-csa-c-content-id="amzn1.yourorders.shipment-actions" data-csa-c-type="widget" data-csa-op-log-render="">
+<ul class="yohtmlc-shipment-level-connections a-nostyle yo-collapsible-actions__list" role="list">
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_support" data-csa-c-item-type="shipment-action" data-csa-c-pos="0" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-primary"><span class="a-button-inner"><a class="a-button-text" href="/ps/product-support/order?orderId=112-5555555-5555555&amp;ref=ppx_yo2ov_dt_b_fed_product_support" role="button">
+            Get product support
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_track_package" data-csa-c-item-type="shipment-action" data-csa-c-pos="1" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gp/your-account/ship-track?itemId=REDACTED&amp;ref=ppx_yo2ov_dt_b_track_package&amp;packageIndex=0&amp;orderId=112-5555555-5555555&amp;shipmentId=REDACTED" role="button">
+            Track package
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_return_replace" data-csa-c-item-type="shipment-action" data-csa-c-pos="2" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/spr/returns/cart?orderId=112-5555555-5555555&amp;ref=ppx_yo2ov_dt_b_fed_return_replace" role="button">
+            Return or replace items
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_gift_receipt" data-csa-c-item-type="shipment-action" data-csa-c-pos="3" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/gcx/-/ty/gr/112-5555555-5555555/shipment?ref=ppx_yo2ov_dt_b_gift_receipt" role="button">
+            Share gift receipt
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_leave_seller_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="4" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/hz/feedback?orderID=112-5555555-5555555&amp;ref=ppx_yo2ov_dt_b_fed_leave_seller_feedback" role="button">
+            Leave seller feedback
+        </a></span></span>
+</li>
+<li data-csa-c-item-id="ppx_yo2ov_dt_b_fed_product_feedback" data-csa-c-item-type="shipment-action" data-csa-c-pos="5" data-csa-c-type="item">
+<span class="a-button a-button-normal a-spacing-mini a-button-base"><span class="a-button-inner"><a class="a-button-text" href="/review/review-your-purchases?asins=B07F7W91LC%2CB082PZF831%2CB0CM3C8KFT%2CB0DC6M6G7W%2CB0FJFVBLJD%2CB0FJRTL572%2CB0FSRQG23K%2CB0G4MYNHBC%2CB0G4QTPVZ8%2CB0GHNCK1LG%2CB0GQM4SRS3%2CB0GXFBJQD9&amp;channel=YAcc-wr&amp;ref=ppx_yo2ov_dt_b_fed_product_feedback" role="button">
+            Write a product review
+        </a></span></span>
+</li>
+</ul>
+<div class="yo-collapsible-actions__toggle a-text-center" data-csa-c-item-id="shipment-actions-toggle" data-csa-c-item-type="shipment-action" data-csa-c-type="item">
+<div aria-live="polite" class="a-row a-expander-container a-expander-extend-container yo-collapsible-actions__expander">
+<div aria-expanded="false" class="a-expander-content a-expander-extend-content" style="display:none"></div>
+<a class="a-expander-header a-declarative a-expander-extend-header" data-a-expander-toggle='{"allowLinkDefault":true, "expand_prompt":"More options", "collapse_prompt":"See less"}' data-action="a-expander-toggle" href="javascript:void(0)"><i class="a-icon a-icon-extender-expand"></i><span class="a-expander-prompt">More options</span></a>
+</div>
+</div>
+</div>
+<script>
+    (function(s) {
+        var c = s.previousElementSibling;
+        var items = c.querySelectorAll('.yo-collapsible-actions__list > li');
+        var toggle = c.querySelector('.yo-collapsible-actions__toggle');
+        if (items.length <= 4) {
+            // 4 or fewer items: show all, no toggle UI.
+            c.classList.add('yo-collapsible-actions--expanded');
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+        // >4 items: AUI expander manages the prompt + icon swap.
+        // Bridge its toggle click to the wrapper class so CSS reveals items 4+.
+        var anchor = c.querySelector('.yo-collapsible-actions__expander a[data-action="a-expander-toggle"]');
+        if (anchor) {
+            anchor.addEventListener('click', function() {
+                c.classList.toggle('yo-collapsible-actions--expanded');
+            });
+        }
+    })(document.currentScript);
+</script>
+</div>
+</div>
+</div></div>
+</div></div>
+<script id="shipToData-shippingAddress-556c8b09b22bc4c053d29ba3d11a433b" type="text/template">
+    <span class="a-declarative" data-action="a-popover" data-a-popover="{&quot;name&quot;:&quot;shippingAddress-556c8b09b22bc4c053d29ba3d11a433b&quot;,&quot;position&quot;:&quot;triggerBottom&quot;,&quot;closeButton&quot;:true,&quot;width&quot;:&quot;250&quot;,&quot;popoverLabel&quot;:&quot;Recipient address&quot;,&quot;closeButtonLabel&quot;:&quot;Close recipient address&quot;}">
+        <a href="javascript:void(0)" class="a-popover-trigger a-declarative insert-encrypted-trigger-text aok-break-word">
+            Name1 Name2
+        <i class="a-icon a-icon-popover"></i></a>
+    </span>
+
+    
+        <div class="a-popover-preload" id="a-popover-shippingAddress-REDACTED">
+            <span class="a-color-base">
+                
+                    <div class="a-row">
+                        <h5>
+                            Name1 Name2
+                        </h5>
+                    </div>
+                
+
+                
+                    <div class="a-row">
+                        1 Any St<br>Anytown, CA 90210
+                    </div>
+                
+                    <div class="a-row">
+                        United States
+                    </div>
+                
+
+                
+
+                
+            </span>
+
+        </div>
+    
+</script>
+<script>
+    var insertionNode = document.getElementById("shipToInsertionNode-" + "shippingAddress-556c8b09b22bc4c053d29ba3d11a433b");
+    if (insertionNode !== null) {
+        var encryptedDataNode = document.getElementById("shipToData-" + "shippingAddress-556c8b09b22bc4c053d29ba3d11a433b");
+        insertionNode.innerHTML = encryptedDataNode.innerHTML;
+    }
+</script>
+</div>
+</div>
+</div>
+</body></html>

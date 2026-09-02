@@ -98,8 +98,10 @@ class Order(Parsable):
         #: The Order payment method. Only populated when ``full_details`` is ``True``. For Whole Foods Market
         #: orders this is the card brand of the first payment method on the receipt (e.g. "Visa").
         self.payment_method: Optional[str] = self._if_full_details(self._parse_payment_method())
-        #: The Order payment method's last 4 digits. Only populated when ``full_details`` is ``True``.
-        self.payment_method_last_4: Optional[int] = self._if_full_details(self._parse_payment_method_last_4())
+        #: The Order payment method's last 4 digits, preserved verbatim so leading zeros are not lost.
+        #: Only populated when ``full_details`` is ``True``.
+        self.payment_method_last_4: Optional[str] = self._if_full_details(
+            self.safe_parse(self._parse_payment_method_last_4))
         #: The Order subtotal. Only populated when ``full_details`` is ``True``.
         self.subtotal: Optional[float] = self._if_full_details(self._parse_subtotal())
         #: The Order shipping total. Only populated when ``full_details`` is ``True``.
@@ -131,8 +133,11 @@ class Order(Parsable):
         self.multibuy_discount: Optional[float] = self._if_full_details(self._parse_currency("multibuy discount"))
         #: The Amazon discount. Only populated when ``full_details`` is ``True``.
         self.amazon_discount: Optional[float] = self._if_full_details(self._parse_currency("amazon discount"))
-        #: The Gift Card total. Only populated when ``full_details`` is ``True``.
-        self.gift_card: Optional[float] = self._if_full_details(self._parse_currency("gift card amount"))
+        gift_card_amount = self._if_full_details(self._parse_currency("gift card amount"))
+        gift_card = self._if_full_details(self._parse_currency("gift card"))
+        #: The Gift Card total (rendered as "Gift Card" on digital order details pages). Only
+        #: populated when ``full_details`` is ``True``.
+        self.gift_card: Optional[float] = gift_card_amount if gift_card_amount is not None else gift_card
         #: The Gift Wrap total. Only populated when ``full_details`` is ``True``.
         self.gift_wrap: Optional[float] = self._if_full_details(self._parse_currency("gift wrap"))
 
@@ -186,6 +191,8 @@ class Order(Parsable):
 
         if not value:
             value = self._parse_currency("grand total")
+            if value is None:
+                value = self._parse_currency("total for this order")
         elif value.lower().startswith(total_str):
             value = value[len(total_str):].strip()
 
@@ -213,12 +220,22 @@ class Order(Parsable):
         return self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR,
                                       attr_name="alt")
 
-    def _parse_payment_method_last_4(self) -> Optional[int]:
+    def _parse_masked_digits(self,
+                             selector: str,
+                             pattern: str) -> Optional[str]:
+        for tag in util.select(self.parsed, selector):
+            match = re.search(pattern, tag.text)
+            if match:
+                return match.group(1)
+
+        return None
+
+    def _parse_payment_method_last_4(self) -> Optional[str]:
         if self.is_whole_foods:
-            return self.safe_simple_parse(
-                selector=self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR, prefix_split="*")
-        return self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR,
-                                      prefix_split="ending in")
+            return self._parse_masked_digits(
+                self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR, r"\*\s*(\d+)")
+        return self._parse_masked_digits(
+            self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR, r"ending in\s+(\d+)")
 
     def _parse_subtotal(self) -> Optional[float]:
         if self.is_whole_foods:
@@ -228,7 +245,11 @@ class Order(Parsable):
     def _parse_estimated_tax(self) -> Optional[float]:
         if self.is_whole_foods:
             return self._parse_whole_foods_amount(self.config.selectors.FIELD_ORDER_WHOLE_FOODS_TAX_SELECTOR)
-        return self._parse_currency("estimated tax")
+        value = self._parse_currency("estimated tax")
+        if value is None:
+            value = self._parse_currency("tax collected")
+
+        return value
 
     def _parse_item_count(self) -> Optional[int]:
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_ITEM_COUNT_SELECTOR):

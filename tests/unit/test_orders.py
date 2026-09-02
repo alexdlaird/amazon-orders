@@ -507,7 +507,7 @@ class TestOrders(UnitTestCase):
         fopo_order = next(order for order in orders if order.order_number == "777-5719845-2377811")
         # The receipt's first payment method maps onto the existing Order payment fields
         self.assertEqual("Visa", fopo_order.payment_method)
-        self.assertEqual(9790, fopo_order.payment_method_last_4)
+        self.assertEqual("9790", fopo_order.payment_method_last_4)
         self.assertEqual(27.96, fopo_order.subtotal)
         self.assertEqual(0.54, fopo_order.estimated_tax)
         # An ASINLESS line item (no Amazon detail page) still parses, with a title but no link
@@ -670,6 +670,147 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
         self.assertIsNone(order.index)
+        self.assertEqual(1, resp.call_count)
+
+    def test_parse_order_history(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        orders = AmazonOrders.parse_order_history(html, self.test_config)
+
+        # THEN
+        self.assertEqual(10, len(orders))
+        self.assert_order_112_0399923_3070642(orders[3], False)
+        self.assertEqual(3, orders[3].index)
+        self.assert_orders_list_index(orders)
+
+    def test_parse_order_details(self):
+        # GIVEN
+        order_id = "112-9685975-5907428"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(html, self.test_config)
+
+        # THEN
+        self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
+
+    def test_parse_order_details_unparseable(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonOrders.parse_order_details("<html></html>", self.test_config)
+
+        # THEN
+        self.assertIn("Could not parse Order details", str(cm.exception))
+
+    def test_parse_order_history_start_index(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        orders = AmazonOrders.parse_order_history(html, self.test_config, start_index=10)
+
+        # THEN
+        self.assertEqual(10, len(orders))
+        self.assertEqual(10, orders[0].index)
+        self.assertEqual(19, orders[-1].index)
+
+    def test_parse_order_history_empty_window(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-digital-2005-0.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        orders = AmazonOrders.parse_order_history(html, self.test_config)
+
+        # THEN
+        self.assertEqual(0, len(orders))
+
+    def test_parse_order_history_start_index_past_end(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        orders = AmazonOrders.parse_order_history(html, self.test_config, start_index=220)
+
+        # THEN
+        self.assertEqual(0, len(orders))
+
+    def test_parse_order_history_empty_page_within_window(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonOrders.parse_order_history(html, self.test_config)
+
+        # THEN
+        self.assertIn("Could not parse Order history", str(cm.exception))
+
+    def test_parse_order_history_unparseable(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "500.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonOrders.parse_order_history(html, self.test_config)
+
+        # THEN
+        self.assertIn("Could not parse Order history", str(cm.exception))
+
+    def test_parse_order_details_order_number_fallback(self):
+        # GIVEN
+        order_id = "112-9685975-5907428"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read().replace(order_id, "")
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(html, self.test_config, order_number=order_id)
+
+        # THEN
+        self.assertEqual(order_id, order.order_number)
+
+    @responses.activate
+    def test_get_order_digital(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "D01-1000111-2000222"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-details-{order_id}.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assertEqual(order_id, order.order_number)
+        self.assertEqual(0.0, order.grand_total)
+        self.assertEqual(2.73, order.subtotal)
+        self.assertEqual(0.18, order.estimated_tax)
+        self.assertEqual(-2.9, order.gift_card)
+        self.assertEqual("Amazon Visa", order.payment_method)
+        self.assertEqual(1, len(order.items))
+        self.assertEqual("Digital Item 01", order.items[0].title)
+        self.assertEqual(2.73, order.items[0].price)
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
@@ -968,6 +1109,76 @@ class TestOrders(UnitTestCase):
                     self.assertEqual(0, len(orders))
                     self.assertEqual(1, resp.call_count)
 
+    @responses.activate
+    def test_get_order_history_start_index_past_end(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2026
+        start_index = 220
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+        # THEN
+        self.assertEqual(0, len(orders))
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
+    def test_get_order_history_empty_page_within_window(self):
+        """
+        An empty page is only a spent window when the page's own count says so.
+        """
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2026
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order_history(year=year)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("Could not parse Order history.", str(cm.exception))
+
+    @responses.activate
+    def test_get_order_history_count_with_thousands_separator(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2026
+        start_index = 1220
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
+                  encoding="utf-8") as f:
+            body = f.read().replace("<b>213 orders</b>", "<b>1,213 orders</b>")
+        resp = responses.add(
+            responses.GET,
+            f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+            body=body,
+            status=200,
+        )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, start_index=start_index)
+
+        # THEN
+        self.assertEqual(0, len(orders))
+        self.assertEqual(1, resp.call_count)
+
     @unittest.skipIf(not os.path.exists(temp_order_history_file_path),
                      reason="Skipped, to debug an order history page, "
                             "place it at tests/output/temp-order-history.html")
@@ -1097,3 +1308,64 @@ class TestOrders(UnitTestCase):
         self.assertIn(f"timeFilter=year-{year}", request_url)
         self.assertIn("orderFilter=digital-orders", request_url)
         self.assertEqual(10, len(orders))
+
+    @responses.activate
+    def test_get_order_history_digital_empty_window(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2005
+        resp = self.given_any_order_history_exists("order-history-digital-2005-0.html")
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, order_filter="digital")
+
+        # THEN
+        self.assertEqual(0, len(orders))
+        self.assertEqual(1, resp.call_count)
+        request_url = resp.calls[0].request.url
+        self.assertIn(f"timeFilter=year-{year}", request_url)
+        self.assertIn("orderFilter=digital", request_url)
+
+    @responses.activate
+    def test_get_order_history_multi_item_shipment_renderings(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_any_order_history_exists("order-history-multi-item-shipments.html")
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(keep_paging=False)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertEqual(5, len(orders))
+        self.assertEqual(1, len(orders[0].items))
+        self.assertEqual([1], [len(s.items) for s in orders[0].shipments])
+        self.assertEqual(8, len(orders[1].items))
+        self.assertEqual([1, 4, 1, 1, 1], [len(s.items) for s in orders[1].shipments])
+        self.assertEqual(3, len(orders[2].items))
+        self.assertEqual([3], [len(s.items) for s in orders[2].shipments])
+        self.assertEqual(6, len(orders[3].items))
+        self.assertEqual([5, 1], [len(s.items) for s in orders[3].shipments])
+        self.assertEqual(14, len(orders[4].items))
+        self.assertEqual([1, 1, 12], [len(s.items) for s in orders[4].shipments])
+
+    @responses.activate
+    def test_get_order_history_multi_item_shipment_items_are_whole(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        self.given_any_order_history_exists("order-history-multi-item-shipments.html")
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(keep_paging=False)
+
+        # THEN
+        grid = orders[2].shipments[0]
+        self.assertEqual(["B0815ZDD5H", "B083DN5R61", "B08F79YG8Q"],
+                         sorted(i.asin for i in grid.items))
+        carousel = orders[3].shipments[0]
+        self.assertEqual(5, len(carousel.items))
+        for item in grid.items + carousel.items:
+            self.assertIsNotNone(item.title)
+            self.assertIsNotNone(item.link)
+            self.assertIsNotNone(item.asin)
+            self.assertIsNotNone(item.image_link)

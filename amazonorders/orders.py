@@ -5,10 +5,11 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
+import re
 from typing import Any, Callable, List, Optional
 from urllib.parse import quote
 
-from bs4 import Tag
+from bs4 import BeautifulSoup, Tag
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
@@ -17,6 +18,22 @@ from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_order_count(order_count_tag: Optional[Tag]) -> Optional[int]:
+    """
+    Parse the leading number out of an Order history count tag, so the count survives thousands
+    separators (e.g. ``1,213 orders``) and any trailing copy.
+
+    :param order_count_tag: The Order history count tag, if one was found.
+    :return: The Order count, or ``None`` if it was absent or unparsable.
+    """
+    if not order_count_tag:
+        return None
+
+    match = re.match(r"\s*([\d,]+)", order_count_tag.text)
+
+    return int(match.group(1).replace(",", "")) if match else None
 
 
 class AmazonOrders:
@@ -43,6 +60,59 @@ class AmazonOrders:
         self.debug: bool = debug
         if self.debug:
             logger.setLevel(logging.DEBUG)
+
+    @staticmethod
+    def parse_order_history(html: str,
+                            config: AmazonOrdersConfig,
+                            start_index: int = 0) -> List[Order]:
+        """
+        Parse an already-fetched Amazon Order history page into Orders, without a session driving the
+        fetch. Useful for parsing HTML obtained elsewhere (a browser, a proxy, a fixture) and for
+        network-free testing.
+
+        A page with no Orders is returned as an empty list only when the page's own Order count
+        confirms the window is empty at ``start_index``; otherwise it raises, since that is a page
+        that failed to render.
+
+        :param html: The Order history page HTML to parse.
+        :param config: The config providing the selectors and entity classes used for parsing.
+        :param start_index: The index of the first Order on the page within its window, seeding
+            :attr:`~amazonorders.entity.order.Order.index` the way ``get_order_history()`` does.
+        :return: A list of the parsed Orders.
+        """
+        parsed = BeautifulSoup(html, config.bs4_parser)
+        order_tags = util.select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
+
+        if not order_tags:
+            order_count = _parse_order_count(
+                util.select_one(parsed, config.selectors.ORDER_HISTORY_COUNT_SELECTOR))
+
+            if order_count is not None and order_count <= start_index:
+                return []
+            else:
+                raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")
+
+        return [config.order_cls(tag, config, index=start_index + i) for i, tag in enumerate(order_tags)]
+
+    @staticmethod
+    def parse_order_details(html: str,
+                            config: AmazonOrdersConfig,
+                            order_number: Optional[str] = None) -> Order:
+        """
+        Parse an already-fetched Amazon Order details page into an Order, without a session driving the
+        fetch. Useful for parsing HTML obtained elsewhere and for network-free testing.
+
+        :param html: The Order details page HTML to parse.
+        :param config: The config providing the selectors and entity classes used for parsing.
+        :param order_number: The Order ID the page was fetched for, used as a fallback for
+            :attr:`~amazonorders.entity.order.Order.order_number` when it cannot be parsed from the page.
+        :return: The parsed Order.
+        """
+        parsed = BeautifulSoup(html, config.bs4_parser)
+        order_details_tag = util.select_one(parsed, config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+        if not order_details_tag:
+            raise AmazonOrdersError("Could not parse Order details. Check if Amazon changed the HTML.")
+        return config.order_cls(order_details_tag, config, full_details=True, order_number=order_number)
 
     def get_order(self,
                   order_id: str,
@@ -185,11 +255,10 @@ class AmazonOrders:
                                      self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
 
             if not order_tags:
-                order_count_tag = util.select_one(page_response.parsed,
-                                                  self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR)
-                (order_count, _) = order_count_tag.text.split(" ", 2) if order_count_tag else ("0", None)
+                order_count = _parse_order_count(
+                    util.select_one(page_response.parsed, self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR))
 
-                if order_count_tag and int(order_count) <= current_index:
+                if order_count is not None and order_count <= current_index:
                     break
                 else:
                     raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")

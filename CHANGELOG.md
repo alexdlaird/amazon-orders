@@ -4,7 +4,23 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.4.7...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.5.0...HEAD)
+
+## [4.5.0](https://github.com/alexdlaird/amazon-orders/compare/4.4.7...4.5.0) - 2026-09-02
+
+### Added
+
+- `AmazonOrders.parse_order_history()`, `AmazonOrders.parse_order_details()`, and `AmazonTransactions.parse_transactions()`, which parse already-fetched page HTML without a session.
+
+### Changed
+
+- **Breaking:** `Order.payment_method_last_4` is now a `str` rather than an `int`, preserving leading zeros and matching `Transaction.payment_method_last_4`. Numeric comparisons must become string comparisons (`== "1234"`).
+
+### Fixed
+
+- `Shipment.items` and `Order.items` from the Order history page no longer omit Items when a Shipment holds more than one.
+- `get_order()` now parses the charge summary on digital (`D01-`) order details pages.
+- `get_order_history()` no longer raises on empty Order history pages (a digital window with no Orders, or a `start_index` past the end), or on Order counts containing a thousands separator.
 
 ## [4.4.7](https://github.com/alexdlaird/amazon-orders/compare/4.4.6...4.4.7) - 2026-08-02
 
