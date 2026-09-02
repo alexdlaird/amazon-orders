@@ -103,6 +103,44 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(1, resp.call_count)
         self.assertIn(f"transactionTag={order_id}", resp.calls[0].request.url)
 
+    def test_parse_transactions(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        transactions = AmazonTransactions.parse_transactions(html, self.test_config)
+
+        # THEN
+        self.assertEqual(2, len(transactions))
+        transaction = transactions[0]
+        self.assertEqual(transaction.payment_method, "Visa ****1234")
+        self.assertEqual(transaction.payment_method_last_4, "1234")
+        self.assertEqual(transaction.grand_total, -45.19)
+        self.assertEqual(transaction.order_number, "123-4567890-1234567")
+        self.assertEqual(transaction.seller, "AMZN Mktp CA")
+
+    def test_parse_transactions_zero_transactions(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-zero-transactions.html"),
+                  "r", encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        transactions = AmazonTransactions.parse_transactions(html, self.test_config)
+
+        # THEN
+        self.assertEqual([], transactions)
+
+    def test_parse_transactions_unparseable(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonTransactions.parse_transactions("<html></html>", self.test_config)
+
+        # THEN
+        self.assertIn("Could not parse Transaction history", str(cm.exception))
+
     @responses.activate
     def test_get_transactions_errors_with_meta(self):
         # GIVEN
