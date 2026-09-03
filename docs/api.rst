@@ -30,6 +30,34 @@ Session Management
     :private-members:
     :show-inheritance:
 
+Challenge Solvers
+-----------------
+
+.. automodule:: amazonorders.contrib.waf.base
+    :members:
+    :private-members:
+    :show-inheritance:
+
+.. automodule:: amazonorders.contrib.waf.capsolver
+    :members:
+    :private-members:
+    :show-inheritance:
+
+.. automodule:: amazonorders.contrib.waf.anticaptcha
+    :members:
+    :private-members:
+    :show-inheritance:
+
+.. automodule:: amazonorders.contrib.waf.twocaptcha
+    :members:
+    :private-members:
+    :show-inheritance:
+
+.. automodule:: amazonorders.contrib.browser.playwright
+    :members:
+    :private-members:
+    :show-inheritance:
+
 Configuration
 -------------
 .. automodule:: amazonorders.conf

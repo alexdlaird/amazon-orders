@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class PlaywrightAuthForm(AuthForm):
     """
     Shared base for Playwright-based JavaScript challenge solvers. Subclasses implement
-    :func:`select_form` to detect the challenge page and :func:`_is_challenge_url` to
+    :func:`~amazonorders.forms.AuthForm.select_form` to detect the challenge page and :func:`_is_challenge_url` to
     signal when navigation has completed.
 
     This base class handles the Playwright browser lifecycle, bidirectional cookie bridging
@@ -66,7 +66,7 @@ class PlaywrightAuthForm(AuthForm):
         :return: The :class:`~amazonorders.util.AmazonSessionResponse` from re-fetching
             the URL after the challenge resolves.
         :raises AmazonOrdersError: if the ``playwright`` package is not installed, if
-            :func:`select_form` was not called first, or if the challenge does not resolve
+            :func:`~amazonorders.forms.AuthForm.select_form` was not called first, or if the challenge does not resolve
             within the timeout.
         """
         if not self.amazon_session:
@@ -244,7 +244,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
         """
         Return ``True`` if the embedded challenge should be handed off to a human in a
         visible browser window rather than an automated solver. This is the case when a
-        manual solver form is registered and no automated :class:`AwsWafForm` is; an
+        manual solver form is registered and no automated :class:`~amazonorders.contrib.waf.base.AwsWafForm` is; an
         automated solver takes precedence when both are present, since it is
         non-interactive.
         """
@@ -483,7 +483,7 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
     headless browser. This is a best-effort form; effectiveness
     depends on whether the challenge can be resolved by a real browser without a visual puzzle.
 
-    Detects the challenge via :attr:`~amazonorders.constants.Constants.JS_ROBOT_TEXT_REGEX`
+    Detects the challenge via ``JS_ROBOT_TEXT_REGEX``
     and waits for navigation away from the original challenge URL path.
 
     Register via ``auth_forms_classes`` in :class:`~amazonorders.conf.AmazonOrdersConfig`:
@@ -505,7 +505,7 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
                     parsed: Tag) -> bool:
         """
         Detect a JavaScript bot-detection page by matching
-        :attr:`~amazonorders.constants.Constants.JS_ROBOT_TEXT_REGEX` against the page text.
+        ``JS_ROBOT_TEXT_REGEX`` against the page text.
 
         :param amazon_session: The ``AmazonSession`` on which to submit the form.
         :param parsed: The ``Tag`` for the page being inspected.

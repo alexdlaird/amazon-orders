@@ -9,7 +9,7 @@ Enabling ``debug`` mode does a few main things:
 
 1. Sets ``logger`` levels to ``DEBUG``
 2. Sends ``logger`` output to ``stderr``, so you'll see it on the console when using the CLI
-3. HTML pages will be be saved locally
+3. HTML pages will be saved locally
 
 To enable ``debug`` mode in Python, you need to pass ``debug=True`` to
 :class:`~amazonorders.session.AmazonSession`:
@@ -91,7 +91,7 @@ Slow Parsing / Malformed Data
 -----------------------------
 
 By default, ``amazon-orders`` uses ``html.parser``, Python's `built-in HTML parser <https://docs.python.org/3/library/html.parser.html>`_.
-There are some situations where this parsers is not preferred, either because it is slower than other options, or in
+There are some situations where this parser is not preferred, either because it is slower than other options, or in
 some cases it leads to parsing issues, where fields like ``title``, ``currency``, etc. are populated with mangled data.
 ``amazon-orders`` should work with any `BeautifulSoup-compatible HTML parser <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-a-parser>`_,
 and many prefer to use `lxml <https://pypi.org/project/lxml/>`_ instead. If another parser is installed, you can change
@@ -125,7 +125,7 @@ command stops working, a likely cause is that something changed on an associated
 This could be that Amazon changed the layout of a page, renamed or refactored a field, or
 something else.
 
-To see what the effected page looks like, `enable debug mode`_, then rerun your code. Running in
+To see what the affected page looks like, `enable debug mode`_, then rerun your code. Running in
 ``debug`` mode will save parsed HTML files locally for you so that you can inspect the DOM and compare it to
 the parsing code within ``amazon-orders``. This may give you some insight in to what changed.
 In ``amazon-orders``, look for code that uses `BeautifulSoup's CSS select() methods <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_.
