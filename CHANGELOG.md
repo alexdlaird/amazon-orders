@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.5.0...HEAD)
 
+### Fixed
+
+- `parse_order_history()` now raises a clear `AmazonOrdersError` on a page Amazon served with its content encrypted, rather than an entity error about a missing Order ID.
+
 ## [4.5.0](https://github.com/alexdlaird/amazon-orders/compare/4.4.7...4.5.0) - 2026-09-02
 
 ### Added

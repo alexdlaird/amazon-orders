@@ -759,6 +759,19 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertIn("Could not parse Order history", str(cm.exception))
 
+    def test_parse_order_history_csd_encrypted(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-csd-encrypted.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonOrders.parse_order_history(html, self.test_config)
+
+        # THEN
+        self.assertIn("encrypted", str(cm.exception))
+
     def test_parse_order_history_unparseable(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "500.html"), "r", encoding="utf-8") as f:
