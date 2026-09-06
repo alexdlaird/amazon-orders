@@ -514,8 +514,37 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
         self.amazon_session = amazon_session
         return bool(re.search(self.regex, parsed.text))
 
+    def _on_challenge_page(self, page: Any, context: Any, output_dir: Optional[str]) -> None:
+        # Wait until the challenge resolves, which it does by reloading the original URL with
+        # different content: the robot-challenge text is gone and a real page has rendered. The
+        # text length guard avoids false positives while the reload leaves the DOM briefly empty.
+        from playwright.sync_api import TimeoutError as PlaywrightTimeoutError  # type: ignore[import-not-found]
+
+        try:
+            page.wait_for_function(
+                "(pattern) => {"
+                "  const el = document.body;"
+                "  if (!el) return false;"
+                "  const text = el.innerText || '';"
+                "  return !new RegExp(pattern, 'i').test(text) && text.length > 500;"
+                "}",
+                arg=self.regex,
+                timeout=self.config.browser_timeout * 1000,
+            )
+        except PlaywrightTimeoutError as e:
+            logger.debug(f"Browser timed out at URL: {page.url}")
+            self._save_debug_snapshot(page, output_dir, "browser-timeout")
+            if page.context.browser:
+                page.context.browser.close()
+            raise AmazonOrdersError(
+                "Browser timed out waiting for the JavaScript challenge to resolve."
+            ) from e
+
     def _is_challenge_url(self, url: str, original_url: str) -> bool:
-        return url.split("?")[0] == original_url.split("?")[0]
+        # Resolution is detected by page content in _on_challenge_page. The challenge is served
+        # at the destination URL and reloads that same URL when solved, so a URL comparison
+        # would report "still challenged" forever.
+        return False
 
 
 class PlaywrightManualWafForm(PlaywrightAuthForm):
