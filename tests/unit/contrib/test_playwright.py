@@ -536,18 +536,65 @@ class TestPlaywrightJSAuthForm(UnitTestCase):
         # THEN
         self.assertEqual(self.test_config.constants.JS_ROBOT_TEXT_REGEX, form.regex)
 
-    def test_is_challenge_url_matches_original_path(self):
+    def test_is_challenge_url_always_false(self):
         # GIVEN
         form = PlaywrightJSAuthForm(self.test_config)
+
         original = "https://www.amazon.com/ap/signin?openid.return_to=abc"
 
-        # same path, different query → still on challenge
-        self.assertTrue(form._is_challenge_url(
-            "https://www.amazon.com/ap/signin?other_param=123", original))
-
-        # different path → challenge resolved
+        # WHEN / THEN
+        self.assertFalse(form._is_challenge_url(original, original),
+                         "an unchanged URL must still report resolved, since this challenge reloads its own URL")
         self.assertFalse(form._is_challenge_url(
             "https://www.amazon.com/gp/yourorders", original))
+
+    def test_submit_waits_for_challenge_text_to_disappear(self):
+        # GIVEN
+        form = PlaywrightJSAuthForm(self.test_config)
+        parsed = BeautifulSoup(self.js_html, self.test_config.bs4_parser)
+        form.select_form(self.amazon_session, parsed)
+
+        original_url = "https://www.amazon.com/"
+        last_response = MagicMock()
+        last_response.url = original_url
+        self.amazon_session.get = MagicMock(return_value="refetched")
+
+        mock_sync_playwright, mock_page, _, _ = _make_mock_playwright(final_url=original_url)
+        mock_page.evaluate.return_value = 120
+        fake_module = _playwright_module(mock_sync_playwright)
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            result = form.submit(last_response)
+
+        # THEN
+        mock_page.wait_for_function.assert_called_once()
+        _, kwargs = mock_page.wait_for_function.call_args
+        self.assertEqual([form.regex, 120], kwargs["arg"])
+        self.assertEqual(self.test_config.browser_timeout * 1000, kwargs["timeout"])
+        self.assertEqual("refetched", result)
+        self.amazon_session.get.assert_called_once_with(original_url, persist_cookies=True)
+
+    def test_submit_timeout_when_challenge_text_persists(self):
+        # GIVEN
+        form = PlaywrightJSAuthForm(self.test_config)
+        parsed = BeautifulSoup(self.js_html, self.test_config.bs4_parser)
+        form.select_form(self.amazon_session, parsed)
+
+        last_response = MagicMock()
+        last_response.url = "https://www.amazon.com/"
+
+        mock_sync_playwright, mock_page, _, mock_browser = _make_mock_playwright(
+            final_url="https://www.amazon.com/")
+        mock_page.wait_for_function.side_effect = _FakeTimeoutError("timed out")
+        mock_page.context.browser = mock_browser
+        fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
+
+        # WHEN / THEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            with self.assertRaises(AmazonOrdersError):
+                form.submit(last_response)
+        mock_browser.close.assert_called_once()
 
     def test_submit_refetches_final_url(self):
         # GIVEN

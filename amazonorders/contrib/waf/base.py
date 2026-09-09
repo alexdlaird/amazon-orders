@@ -107,7 +107,7 @@ class AwsWafForm(AuthForm):
         :param last_response: The response that returned the WAF challenge page.
         :return: The :class:`~amazonorders.util.AmazonSessionResponse` from
             re-fetching the URL after the cookie is set.
-        :raises AmazonOrdersError: if :func:`select_form` was not called first.
+        :raises AmazonOrdersError: if :func:`~amazonorders.forms.AuthForm.select_form` was not called first.
         """
         if not self.amazon_session or self._goku is None or self._challenge_script is None:
             raise AmazonOrdersError(

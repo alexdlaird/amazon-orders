@@ -167,6 +167,34 @@ class TestOrder(UnitTestCase):
         # THEN
         self.assertEqual(order.gift_card, -2.37)
 
+    def test_order_payment_method_last_4_preserves_leading_zeros(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-amazon-discount-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read().replace("ending in 1234", "ending in 0123"),
+                                   self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual("0123", order.payment_method_last_4)
+
+    def test_order_payment_method_last_4_none_when_absent(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-amazon-discount-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read().replace("ending in 1234", ""),
+                                   self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertIsNone(order.payment_method_last_4)
+
     def test_order_missing_grand_total_raises_exception_by_default(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-missing-grand-total-snippet.html"),
@@ -201,3 +229,53 @@ class TestOrder(UnitTestCase):
         self.assertIsNone(order.grand_total)
         mock_logger.warning.assert_called_once()
         self.assertIn("grand_total could not be parsed", mock_logger.warning.call_args[0][0])
+
+    def test_order_recipient_from_popover_inline_content(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-recipient-popover-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+        tag = util.select_one(parsed, self.test_config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+
+        # WHEN
+        order = Order(tag, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual("Alex Laird", order.recipient.name)
+        self.assertIn("555 My Road", order.recipient.address)
+        self.assertIn("Chicago, IL 60007", order.recipient.address)
+
+    def test_order_recipient_parent_not_found_raises_exception_by_default(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-old-summary-grand-total-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN / THEN
+        with self.assertRaises(AmazonOrdersError) as context:
+            Order(parsed, self.test_config, full_details=True)
+
+        self.assertIn("Recipient parent not found", str(context.exception))
+
+    def test_order_recipient_parent_not_found_logs_warning_when_configured(self):
+        # GIVEN
+        config = AmazonOrdersConfig(data={
+            "output_dir": self.test_output_dir,
+            "cookie_jar_path": self.test_cookie_jar_path,
+            "warn_on_missing_required_field": True
+        })
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-old-summary-grand-total-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), config.bs4_parser)
+
+        # WHEN
+        with patch("amazonorders.entity.order.logger") as mock_logger:
+            order = Order(parsed, config, full_details=True)
+
+        # THEN
+        self.assertIsNone(order.recipient)
+        mock_logger.warning.assert_called_once()
+        self.assertIn("Recipient parent not found", mock_logger.warning.call_args[0][0])

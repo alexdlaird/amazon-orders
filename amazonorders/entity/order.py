@@ -63,8 +63,6 @@ class Order(Parsable):
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
         #: The Order Items.
         self.items: List[Item] = clone.items if clone and not full_details else self._parse_items()
-        #: The Order number. May be ``None`` only when the Order is :attr:`cancelled` and Amazon stripped the order
-        #: number from the details page (the ``order_number`` parameter is used as a fallback in that case).
         # `required` is relaxed only when `order_number` is explicitly supplied (the `get_order()` path), so the
         # fallback is never silently applied when parsing the history list, where the parsed value must be present.
         _parsed_order_number = None if clone else self.safe_simple_parse(
@@ -75,6 +73,8 @@ class Order(Parsable):
         if _parsed_order_number is None and order_number is not None:
             logger.debug(f"Order number could not be parsed from the page; "
                          f"using supplied order_number={order_number}.")
+        #: The Order number. May be ``None`` only when the Order is :attr:`cancelled` and Amazon stripped the order
+        #: number from the details page (the ``order_number`` parameter is used as a fallback in that case).
         self.order_number: Optional[str] = clone.order_number if clone else _parsed_order_number or order_number
         #: The Order details link.
         self.order_details_link: Optional[str] = clone.order_details_link if clone else self.safe_parse(
@@ -98,8 +98,10 @@ class Order(Parsable):
         #: The Order payment method. Only populated when ``full_details`` is ``True``. For Whole Foods Market
         #: orders this is the card brand of the first payment method on the receipt (e.g. "Visa").
         self.payment_method: Optional[str] = self._if_full_details(self._parse_payment_method())
-        #: The Order payment method's last 4 digits. Only populated when ``full_details`` is ``True``.
-        self.payment_method_last_4: Optional[int] = self._if_full_details(self._parse_payment_method_last_4())
+        #: The Order payment method's last 4 digits, preserved verbatim so leading zeros are not lost.
+        #: Only populated when ``full_details`` is ``True``.
+        self.payment_method_last_4: Optional[str] = self._if_full_details(
+            self.safe_parse(self._parse_payment_method_last_4))
         #: The Order subtotal. Only populated when ``full_details`` is ``True``.
         self.subtotal: Optional[float] = self._if_full_details(self._parse_subtotal())
         #: The Order shipping total. Only populated when ``full_details`` is ``True``.
@@ -131,8 +133,11 @@ class Order(Parsable):
         self.multibuy_discount: Optional[float] = self._if_full_details(self._parse_currency("multibuy discount"))
         #: The Amazon discount. Only populated when ``full_details`` is ``True``.
         self.amazon_discount: Optional[float] = self._if_full_details(self._parse_currency("amazon discount"))
-        #: The Gift Card total. Only populated when ``full_details`` is ``True``.
-        self.gift_card: Optional[float] = self._if_full_details(self._parse_currency("gift card amount"))
+        gift_card_amount = self._if_full_details(self._parse_currency("gift card amount"))
+        gift_card = self._if_full_details(self._parse_currency("gift card"))
+        #: The Gift Card total (rendered as "Gift Card" on digital order details pages). Only
+        #: populated when ``full_details`` is ``True``.
+        self.gift_card: Optional[float] = gift_card_amount if gift_card_amount is not None else gift_card
         #: The Gift Wrap total. Only populated when ``full_details`` is ``True``.
         self.gift_wrap: Optional[float] = self._if_full_details(self._parse_currency("gift wrap"))
 
@@ -186,6 +191,8 @@ class Order(Parsable):
 
         if not value:
             value = self._parse_currency("grand total")
+            if value is None:
+                value = self._parse_currency("total for this order")
         elif value.lower().startswith(total_str):
             value = value[len(total_str):].strip()
 
@@ -213,12 +220,22 @@ class Order(Parsable):
         return self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR,
                                       attr_name="alt")
 
-    def _parse_payment_method_last_4(self) -> Optional[int]:
+    def _parse_masked_digits(self,
+                             selector: str,
+                             pattern: str) -> Optional[str]:
+        for tag in util.select(self.parsed, selector):
+            match = re.search(pattern, tag.text)
+            if match:
+                return match.group(1)
+
+        return None
+
+    def _parse_payment_method_last_4(self) -> Optional[str]:
         if self.is_whole_foods:
-            return self.safe_simple_parse(
-                selector=self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR, prefix_split="*")
-        return self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR,
-                                      prefix_split="ending in")
+            return self._parse_masked_digits(
+                self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR, r"\*\s*(\d+)")
+        return self._parse_masked_digits(
+            self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR, r"ending in\s+(\d+)")
 
     def _parse_subtotal(self) -> Optional[float]:
         if self.is_whole_foods:
@@ -228,7 +245,11 @@ class Order(Parsable):
     def _parse_estimated_tax(self) -> Optional[float]:
         if self.is_whole_foods:
             return self._parse_whole_foods_amount(self.config.selectors.FIELD_ORDER_WHOLE_FOODS_TAX_SELECTOR)
-        return self._parse_currency("estimated tax")
+        value = self._parse_currency("estimated tax")
+        if value is None:
+            value = self._parse_currency("tax collected")
+
+        return value
 
     def _parse_item_count(self) -> Optional[int]:
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_ITEM_COUNT_SELECTOR):
@@ -249,39 +270,49 @@ class Order(Parsable):
             value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
             if value:
-                data_popover = value.get("data-a-popover", {})  # type: ignore[var-annotated]
-                inline_content = data_popover.get("inlineContent")  # type: ignore[union-attr]
+                data_popover = json.loads(str(value.get("data-a-popover", "{}")))
+                inline_content = data_popover.get("inlineContent")
                 if inline_content:
-                    value = BeautifulSoup(json.loads(inline_content), self.config.bs4_parser)
+                    value = BeautifulSoup(inline_content, self.config.bs4_parser)
 
         if not value:
-            # TODO: there are multiple shipToData tags, we should double check we're picking the right one
-            #  associated with the order; should also be able to eliminate the use of find_parent() here with
-            #  a better CSS selector, we just need to make sure we have good test coverage around this path first
-            parsed_parent = self.parsed.find_parent()
+            ship_to_tag = util.select_one(self.parsed,
+                                          self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
 
-            if parsed_parent is None:  # pragma: no cover
-                err_msg = ("Recipient parent not found, but it's required. "
-                           "Check if Amazon changed the HTML.")
-                if not self.config.warn_on_missing_required_field:
-                    raise AmazonOrdersError(err_msg)
-                else:
-                    logger.warning(err_msg)
+            if not ship_to_tag:
+                ship_to_tag = self._parse_enclosing_ship_to()
 
-                    return None
-
-            parent_tag = util.select_one(
-                parsed_parent,
-                self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR
-            )
-
-            if parent_tag:
-                value = BeautifulSoup(str(parent_tag.contents[0]).strip(), self.config.bs4_parser)
+            if ship_to_tag:
+                value = BeautifulSoup(str(ship_to_tag.contents[0]).strip(), self.config.bs4_parser)
 
         if not value:
             return None
 
         return Recipient(value, self.config)
+
+    def _parse_enclosing_ship_to(self) -> Optional[Tag]:
+        """Finds this Order's shipping address when a page renders it alongside the Order instead of within it."""
+        parsed_parent = self.parsed.find_parent()
+
+        if parsed_parent is None:
+            err_msg = ("Recipient parent not found, but it's required. "
+                       "Check if Amazon changed the HTML.")
+            if not self.config.warn_on_missing_required_field:
+                raise AmazonOrdersError(err_msg)
+            else:
+                logger.warning(err_msg)
+
+                return None
+
+        # A container wrapping every Order on the page would give back whichever address Amazon rendered first
+        # TODO: capture a page that renders the shipping address outside the Order, to verify this path
+        if len(util.select(parsed_parent, self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)) > 1:
+            logger.debug(f"Order {self.order_number} shipping address could not be attributed to it, "
+                         f"so Recipient was left unpopulated.")
+
+            return None
+
+        return util.select_one(parsed_parent, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
 
     def _parse_currency(self,
                         contains: str,

@@ -58,6 +58,7 @@ class Selectors:
     MFA_DEVICE_SELECT_FORM_SELECTOR = "form#auth-select-device-form"
     MFA_DEVICE_SELECT_INPUT_SELECTOR = "input[name='otpDeviceContext']"
     MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE = "value"
+    MFA_DEVICE_SELECT_LABEL_SELECTOR = "span.a-label.a-radio-label"
     MFA_FORM_SELECTOR = "form#auth-mfa-form"
     CAPTCHA_1_FORM_SELECTOR = "form.cvf-widget-form-captcha"
     CAPTCHA_2_FORM_SELECTOR = ["form:has(input[id^='captchacharacters'])", "form[action$='validateCaptcha']"]
@@ -84,13 +85,21 @@ class Selectors:
 
     ORDER_HISTORY_ENTITY_SELECTOR = ["div.order-card",
                                      "div.order"]
-    ORDER_HISTORY_COUNT_SELECTOR = ".js-yo-container span.num-orders"
+    # Digital Order history renders the count in the time filter label rather than in span.num-orders
+    ORDER_HISTORY_COUNT_SELECTOR = [".js-yo-container span.num-orders",
+                                    "form.js-time-filter-form label.time-filter__label b"]
+    # Readable pages also carry the no-JS fallback and the encrypted-sensitive container, so the payload
+    # call itself is what identifies a page Amazon served with its card content encrypted
+    ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR = Selector("div.csd-encrypted-sensitive script",
+                                                    text_contains="csdContent(")
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer",
                                      "div#odp-main-section"]
+    # A history card renders Items as .item-box, a .yo-enhanced-flex-card grid, or a
+    # .yo-enhanced-card carousel, by how many the Shipment holds, and one Order mixes them
     ITEM_ENTITY_SELECTOR = ["[data-component='purchasedItems'] .a-fixed-left-grid",
                             "div:has(> div.yohtmlc-item)",
-                            ".item-box",
+                            ".item-box, .yo-enhanced-flex-card, .yo-enhanced-card",
                             # WFM in-store line items
                             "div.a-row.a-spacing-base:has(img.ufpo-itemListWidget-image)"]
     SHIPMENT_ENTITY_SELECTOR = ["[data-component='orderCard'] [data-component='shipments'] .a-box",
@@ -138,18 +147,21 @@ class Selectors:
                                  ".yohtmlc-item a", ".yohtmlc-product-title",
                                  "div.a-column.a-span10 > a",
                                  # ASINLESS WFM items render the title in a span rather than a link
-                                 "div.a-column.a-span10 > span"]
+                                 "div.a-column.a-span10 > span",
+                                 ".yo-enhanced-title a"]
     FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a",
                                 ".yohtmlc-item a",
                                 "a:has(> .yohtmlc-product-title)",
                                 ".yohtmlc-product-title a",
-                                "div.a-column.a-span10 > a"]
+                                "div.a-column.a-span10 > a",
+                                ".yo-enhanced-title a"]
     FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div"]
     FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice'] .a-text-price :not(.a-offscreen)",
                                  ".yohtmlc-item .a-color-price",
                                  "div.a-section.a-text-right span.a-size-small"]
     FIELD_ITEM_SELLER_SELECTOR = ["[data-component='orderedMerchant']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
-    FIELD_ITEM_RETURN_SELECTOR = ["[data-component='itemReturnEligibility']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
+    FIELD_ITEM_RETURN_SELECTOR = (["[data-component='itemReturnEligibility']", ".yo-enhanced-return"]
+                                  + FIELD_ITEM_TAG_ITERATOR_SELECTOR)
 
     #####################################
     # CSS selectors for Order fields
