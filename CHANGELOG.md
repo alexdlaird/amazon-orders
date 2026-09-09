@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- `PlaywrightJSAuthForm` could never detect the JavaScript bot-detection challenge resolving — and always timed out — when Amazon served the challenge at the destination URL, since it resolves by reloading that same URL. Resolution is now detected by waiting for the challenge text to disappear from the page content instead of waiting for the URL to change.
+- Bug fixes and stability improvements.
 
 ## [4.5.0](https://github.com/alexdlaird/amazon-orders/compare/4.4.7...4.5.0) - 2026-09-02
 

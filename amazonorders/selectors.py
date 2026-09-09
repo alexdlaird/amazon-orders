@@ -87,6 +87,10 @@ class Selectors:
     # Digital Order history renders the count in the time filter label rather than in span.num-orders
     ORDER_HISTORY_COUNT_SELECTOR = [".js-yo-container span.num-orders",
                                     "form.js-time-filter-form label.time-filter__label b"]
+    # Readable pages also carry the no-JS fallback and the encrypted-sensitive container, so the payload
+    # call itself is what identifies a page Amazon served with its card content encrypted
+    ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR = Selector("div.csd-encrypted-sensitive script",
+                                                    text_contains="csdContent(")
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer",
                                      "div#odp-main-section"]
