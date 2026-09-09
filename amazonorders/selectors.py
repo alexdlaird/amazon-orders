@@ -58,6 +58,7 @@ class Selectors:
     MFA_DEVICE_SELECT_FORM_SELECTOR = "form#auth-select-device-form"
     MFA_DEVICE_SELECT_INPUT_SELECTOR = "input[name='otpDeviceContext']"
     MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE = "value"
+    MFA_DEVICE_SELECT_LABEL_SELECTOR = "span.a-label.a-radio-label"
     MFA_FORM_SELECTOR = "form#auth-mfa-form"
     CAPTCHA_1_FORM_SELECTOR = "form.cvf-widget-form-captcha"
     CAPTCHA_2_FORM_SELECTOR = ["form:has(input[id^='captchacharacters'])", "form[action$='validateCaptcha']"]

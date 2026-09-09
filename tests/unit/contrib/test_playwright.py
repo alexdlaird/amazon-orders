@@ -540,11 +540,11 @@ class TestPlaywrightJSAuthForm(UnitTestCase):
         # GIVEN
         form = PlaywrightJSAuthForm(self.test_config)
 
-        # The challenge is served at the destination URL and resolves by reloading that same
-        # URL, so resolution is detected by page content, not by URL change -- even an identical
-        # URL must therefore be reported as resolved.
         original = "https://www.amazon.com/ap/signin?openid.return_to=abc"
-        self.assertFalse(form._is_challenge_url(original, original))
+
+        # WHEN / THEN
+        self.assertFalse(form._is_challenge_url(original, original),
+                         "an unchanged URL must still report resolved, since this challenge reloads its own URL")
         self.assertFalse(form._is_challenge_url(
             "https://www.amazon.com/gp/yourorders", original))
 
@@ -559,8 +559,8 @@ class TestPlaywrightJSAuthForm(UnitTestCase):
         last_response.url = original_url
         self.amazon_session.get = MagicMock(return_value="refetched")
 
-        # the challenge resolves by reloading the SAME url
         mock_sync_playwright, mock_page, _, _ = _make_mock_playwright(final_url=original_url)
+        mock_page.evaluate.return_value = 120
         fake_module = _playwright_module(mock_sync_playwright)
 
         # WHEN
@@ -570,7 +570,7 @@ class TestPlaywrightJSAuthForm(UnitTestCase):
         # THEN
         mock_page.wait_for_function.assert_called_once()
         _, kwargs = mock_page.wait_for_function.call_args
-        self.assertEqual(form.regex, kwargs["arg"])
+        self.assertEqual([form.regex, 120], kwargs["arg"])
         self.assertEqual(self.test_config.browser_timeout * 1000, kwargs["timeout"])
         self.assertEqual("refetched", result)
         self.amazon_session.get.assert_called_once_with(original_url, persist_cookies=True)
