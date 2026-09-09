@@ -24,6 +24,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+BODY_TEXT_LENGTH_JS = "() => (document.body && document.body.innerText || '').length"
+
 
 class PlaywrightAuthForm(AuthForm):
     """
@@ -515,20 +517,22 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
         return bool(re.search(self.regex, parsed.text))
 
     def _on_challenge_page(self, page: Any, context: Any, output_dir: Optional[str]) -> None:
-        # Wait until the challenge resolves, which it does by reloading the original URL with
-        # different content: the robot-challenge text is gone and a real page has rendered. The
-        # text length guard avoids false positives while the reload leaves the DOM briefly empty.
+        # The challenge resolves by reloading the original URL, so wait on the content rather than the URL.
+        # The reload leaves the DOM empty then partially rendered, so the challenge page's own length is
+        # the bar a resolved page has to clear
         from playwright.sync_api import TimeoutError as PlaywrightTimeoutError  # type: ignore[import-not-found]
+
+        challenge_text_length = page.evaluate(BODY_TEXT_LENGTH_JS)
 
         try:
             page.wait_for_function(
-                "(pattern) => {"
+                "([pattern, challengeTextLength]) => {"
                 "  const el = document.body;"
                 "  if (!el) return false;"
                 "  const text = el.innerText || '';"
-                "  return !new RegExp(pattern, 'i').test(text) && text.length > 500;"
+                "  return text.length > challengeTextLength && !new RegExp(pattern, 'i').test(text);"
                 "}",
-                arg=self.regex,
+                arg=[self.regex, challenge_text_length],
                 timeout=self.config.browser_timeout * 1000,
             )
         except PlaywrightTimeoutError as e:
@@ -541,9 +545,7 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
             ) from e
 
     def _is_challenge_url(self, url: str, original_url: str) -> bool:
-        # Resolution is detected by page content in _on_challenge_page. The challenge is served
-        # at the destination URL and reloads that same URL when solved, so a URL comparison
-        # would report "still challenged" forever.
+        # This challenge resolves at its own URL, so only _on_challenge_page can detect it resolving
         return False
 
 

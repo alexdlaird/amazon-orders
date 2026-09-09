@@ -73,6 +73,7 @@ class AmazonOrders:
         A page with no Orders is returned as an empty list only when the page's own Order count
         confirms the window is empty at ``start_index``; otherwise it raises, since that is a page
         that failed to render.
+
         A page Amazon served with its content encrypted (which can happen to fetches made outside the
         library's session) raises rather than being parsed as empty cards.
 
@@ -85,8 +86,8 @@ class AmazonOrders:
         parsed = BeautifulSoup(html, config.bs4_parser)
 
         if util.select_one(parsed, config.selectors.ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR):
-            raise AmazonOrdersError("Could not parse Order history, Amazon served the page with its content "
-                                    "encrypted. Fetch it through an authenticated session instead.")
+            raise AmazonOrdersError("Could not parse Order history. Amazon served the page with its content "
+                                    "encrypted, so fetch it through an authenticated session instead.")
 
         order_tags = util.select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
 
