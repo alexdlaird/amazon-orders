@@ -270,39 +270,49 @@ class Order(Parsable):
             value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
             if value:
-                data_popover = value.get("data-a-popover", {})  # type: ignore[var-annotated]
-                inline_content = data_popover.get("inlineContent")  # type: ignore[union-attr]
+                data_popover = json.loads(str(value.get("data-a-popover", "{}")))
+                inline_content = data_popover.get("inlineContent")
                 if inline_content:
-                    value = BeautifulSoup(json.loads(inline_content), self.config.bs4_parser)
+                    value = BeautifulSoup(inline_content, self.config.bs4_parser)
 
         if not value:
-            # TODO: there are multiple shipToData tags, we should double check we're picking the right one
-            #  associated with the order; should also be able to eliminate the use of find_parent() here with
-            #  a better CSS selector, we just need to make sure we have good test coverage around this path first
-            parsed_parent = self.parsed.find_parent()
+            ship_to_tag = util.select_one(self.parsed,
+                                          self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
 
-            if parsed_parent is None:  # pragma: no cover
-                err_msg = ("Recipient parent not found, but it's required. "
-                           "Check if Amazon changed the HTML.")
-                if not self.config.warn_on_missing_required_field:
-                    raise AmazonOrdersError(err_msg)
-                else:
-                    logger.warning(err_msg)
+            if not ship_to_tag:
+                ship_to_tag = self._parse_enclosing_ship_to()
 
-                    return None
-
-            parent_tag = util.select_one(
-                parsed_parent,
-                self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR
-            )
-
-            if parent_tag:
-                value = BeautifulSoup(str(parent_tag.contents[0]).strip(), self.config.bs4_parser)
+            if ship_to_tag:
+                value = BeautifulSoup(str(ship_to_tag.contents[0]).strip(), self.config.bs4_parser)
 
         if not value:
             return None
 
         return Recipient(value, self.config)
+
+    def _parse_enclosing_ship_to(self) -> Optional[Tag]:
+        """Finds this Order's shipping address when a page renders it alongside the Order instead of within it."""
+        parsed_parent = self.parsed.find_parent()
+
+        if parsed_parent is None:
+            err_msg = ("Recipient parent not found, but it's required. "
+                       "Check if Amazon changed the HTML.")
+            if not self.config.warn_on_missing_required_field:
+                raise AmazonOrdersError(err_msg)
+            else:
+                logger.warning(err_msg)
+
+                return None
+
+        # A container wrapping every Order on the page would give back whichever address Amazon rendered first
+        # TODO: capture a page that renders the shipping address outside the Order, to verify this path
+        if len(util.select(parsed_parent, self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)) > 1:
+            logger.debug(f"Order {self.order_number} shipping address could not be attributed to it, "
+                         f"so Recipient was left unpopulated.")
+
+            return None
+
+        return util.select_one(parsed_parent, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
 
     def _parse_currency(self,
                         contains: str,

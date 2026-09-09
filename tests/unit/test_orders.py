@@ -746,6 +746,23 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertEqual(0, len(orders))
 
+    def test_parse_order_history_recipient_scoped_to_each_order(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-multiple-recipients.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        orders = AmazonOrders.parse_order_history(html, self.test_config)
+
+        # THEN
+        self.assertEqual(3, len(orders))
+        self.assertEqual(["Jane Doe", "Alex Laird", "Alex Laird"],
+                         [order.recipient.name for order in orders])
+        self.assertIn("555 Some Road", orders[0].recipient.address)
+        self.assertIn("555 My Road", orders[1].recipient.address)
+        self.assertIn("555 My Road", orders[2].recipient.address)
+
     def test_parse_order_history_empty_page_within_window(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2026-220.html"), "r",
