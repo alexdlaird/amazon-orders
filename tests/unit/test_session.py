@@ -7,12 +7,13 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import responses
+from bs4 import BeautifulSoup
 from responses.matchers import query_string_matcher, urlencoded_params_matcher
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
-from amazonorders.forms import JSAuthBlocker
-from amazonorders.session import AmazonSession
+from amazonorders.forms import JSAuthBlocker, MfaDeviceSelectForm
+from amazonorders.session import AmazonSession, IODefault
 from tests._auth_form_stubs import OtherStubAuthForm, StubAuthForm
 from tests.unittestcase import UnitTestCase
 
@@ -889,3 +890,83 @@ class TestSession(UnitTestCase):
 
             # THEN
             self.assertEqual(5, mock_request.call_args.kwargs["timeout"])
+
+
+class RecordingIO(IODefault):
+    def __init__(self, prompt_response):
+        self.prompt_response = prompt_response
+        self.choices = []
+
+    def echo(self, msg, **kwargs):
+        pass
+
+    def prompt(self, msg, type=None, **kwargs):
+        self.choices = kwargs.get("choices", [])
+
+        return self.prompt_response
+
+
+class TestMfaDeviceSelectForm(UnitTestCase):
+    SMS_DEVICE_VALUE = "PKZe0oGlJ++N4zzxyJYvgbD5xe9sjooSY4K4t9Tt9e4=, SMS"
+    VOICE_DEVICE_VALUE = "PKZe0oGlJ++N4zzxyJYvgbD5xe9sjooSY4K4t9Tt9e4=, VOICE"
+
+    def given_device_select_form(self, prompt_response, with_labels=True):
+        self.io = RecordingIO(prompt_response)
+        amazon_session = AmazonSession("some-username@gmail.com",
+                                       "some-password",
+                                       io=self.io,
+                                       config=self.test_config)
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-new-otp.html"), "r", encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+        if not with_labels:
+            for label in parsed.select(self.test_config.selectors.MFA_DEVICE_SELECT_LABEL_SELECTOR):
+                label.decompose()
+        form = MfaDeviceSelectForm(self.test_config)
+        form.select_form(amazon_session, parsed)
+
+        return form
+
+    def test_fill_form_lists_devices_by_readable_label(self):
+        # GIVEN
+        form = self.given_device_select_form(prompt_response=1)
+
+        # WHEN
+        form.fill_form()
+
+        # THEN
+        self.assertEqual(["1: Text me at my number ending in 1234",
+                          "2: Call me at my number ending in 1234"],
+                         self.io.choices)
+
+    def test_fill_form_selects_device_matching_listed_number(self):
+        # GIVEN
+        form = self.given_device_select_form(prompt_response=2)
+
+        # WHEN
+        form.fill_form()
+
+        # THEN
+        self.assertEqual(self.VOICE_DEVICE_VALUE, form.data["otpDeviceContext"])
+
+    def test_fill_form_rejects_choice_outside_listed_range(self):
+        # GIVEN
+        form = self.given_device_select_form(prompt_response=0)
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            form.fill_form()
+
+        # THEN
+        self.assertIn("0", str(cm.exception))
+
+    def test_fill_form_falls_back_to_input_value_when_label_missing(self):
+        # GIVEN
+        form = self.given_device_select_form(prompt_response=1, with_labels=False)
+
+        # WHEN
+        form.fill_form()
+
+        # THEN
+        self.assertEqual([f"1: {self.SMS_DEVICE_VALUE}",
+                          f"2: {self.VOICE_DEVICE_VALUE}"],
+                         self.io.choices)
