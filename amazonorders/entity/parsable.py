@@ -35,6 +35,31 @@ class Parsable:
         state.pop("parsed")
         return state
 
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Serialize the entity to a ``dict`` of primitives, suitable for JSON, YAML, or CSV output.
+        Nested entities and lists of them are converted recursively, dates become ISO 8601 strings,
+        and the parsed ``Tag`` and the config are omitted.
+
+        :return: The entity's fields as a ``dict``.
+        """
+        serialized: Dict[str, Any] = {}
+        for field, value in vars(self).items():
+            if field in ["parsed", "config"]:
+                continue
+
+            if isinstance(value, Parsable):
+                serialized[field] = value.to_dict()
+            elif isinstance(value, (list, tuple)):
+                serialized[field] = [item.to_dict() if isinstance(item, Parsable) else item
+                                     for item in value]
+            elif isinstance(value, date):
+                serialized[field] = value.isoformat()
+            else:
+                serialized[field] = value
+
+        return serialized
+
     def safe_parse(self,
                    parse_function: Callable[..., Any],
                    **kwargs: Any) -> Any:

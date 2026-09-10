@@ -56,6 +56,7 @@ class AmazonOrdersConfig:
             "order_class": "amazonorders.entity.order.Order",
             "shipment_class": "amazonorders.entity.shipment.Shipment",
             "item_class": "amazonorders.entity.item.Item",
+            "output_class": "amazonorders.output.OutputFormatter",
             "bs4_parser": "html.parser",
             "auth_forms_classes": [],
             # Timeout in seconds for browser-based challenge detection and resolution
@@ -101,6 +102,7 @@ class AmazonOrdersConfig:
         order_class_split = self.order_class.split(".")
         shipment_class_split = self.shipment_class.split(".")
         item_class_split = self.item_class.split(".")
+        output_class_split = self.output_class.split(".")
 
         #: The :class:`~amazonorders.constants.Constants` in use, rebuilt when the domain changes.
         self.constants = self._instantiate_constants()
@@ -108,6 +110,7 @@ class AmazonOrdersConfig:
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
         self.item_cls = util.load_class(item_class_split[:-1], item_class_split[-1])
+        self.output_cls = util.load_class(output_class_split[:-1], output_class_split[-1])
 
     def _validate_bs4_parser(self) -> None:
         try:
@@ -159,12 +162,14 @@ class AmazonOrdersConfig:
         order_class_split = self.order_class.split(".")
         shipment_class_split = self.shipment_class.split(".")
         item_class_split = self.item_class.split(".")
+        output_class_split = self.output_class.split(".")
 
         self.constants = self._instantiate_constants()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
         self.item_cls = util.load_class(item_class_split[:-1], item_class_split[-1])
+        self.output_cls = util.load_class(output_class_split[:-1], output_class_split[-1])
 
     def update_config(self,
                       key: str,

@@ -70,6 +70,11 @@ Configuration
     :private-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.output
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: amazonorders.selectors
     :members:
     :private-members:

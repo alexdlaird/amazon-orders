@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.5.1...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.5.0...HEAD)
 
-## [4.5.1](https://github.com/alexdlaird/amazon-orders/compare/4.5.0...4.5.1) - 2026-09-09
+### Added
+
+- `Parsable.to_dict()`, serializing an entity and its nested entities to a `dict` of primitives.
+- `OutputFormatter`, which renders entities as `text`, `json`, `yaml`, or `csv`, and the `output_class` config key to override it.
+- CLI `--output` option on `history`, `order`, `transactions`, and `order-transactions`, for `text` (the default), `json`, `yaml`, or `csv` output.
 
 ### Fixed
 

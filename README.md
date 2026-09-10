@@ -76,6 +76,16 @@ amazon-orders history --last-30-days
 amazon-orders history --last-3-months
 ```
 
+Pass `--output` to get `json`, `yaml`, or `csv` instead of the default text:
+
+```sh
+amazon-orders history --year 2023 --output json > orders.json
+amazon-orders history --last-30-days --output csv > orders.csv
+```
+
+See [Output Formats](https://amazon-orders.readthedocs.io/index.html#output-formats) for details, including
+[`to_dict()`](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.parsable.Parsable.to_dict).
+
 ### Automating Authentication
 
 Authentication can be automated by (in order of precedence) storing credentials in environment variables, passing them

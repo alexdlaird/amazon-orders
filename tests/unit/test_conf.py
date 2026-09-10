@@ -71,6 +71,7 @@ max_auth_attempts: 10
 max_auth_retries: 1
 max_cookie_attempts: 10
 order_class: amazonorders.entity.order.Order
+output_class: amazonorders.output.OutputFormatter
 output_dir: {output_dir}
 request_timeout: null
 selectors_class: amazonorders.selectors.Selectors
