@@ -27,6 +27,12 @@ class TestCli(UnitTestCase):
 
         self.runner = CliRunner()
 
+    def given_runner_with_split_streams(self):
+        try:
+            return CliRunner(mix_stderr=False)
+        except TypeError:
+            return CliRunner()
+
     def test_missing_credentials(self):
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
@@ -610,13 +616,13 @@ class TestCli(UnitTestCase):
         self.given_any_order_history_exists("order-history-2018-0.html")
 
         # WHEN
-        response = self.runner.invoke(amazon_orders_cli,
-                                      [
-                                          "--config-path", self.test_config.config_path,
-                                          "--username", "some-username@gmail.com",
-                                          "--password", "some-password",
-                                          "history", "--year", year, "--single-page",
-                                          "--output", "json"])
+        response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
+                                                                 [
+                                                                     "--config-path", self.test_config.config_path,
+                                                                     "--username", "some-username@gmail.com",
+                                                                     "--password", "some-password",
+                                                                     "history", "--year", year, "--single-page",
+                                                                     "--output", "json"])
 
         # THEN
         self.assertEqual(0, response.exit_code)
@@ -635,13 +641,13 @@ class TestCli(UnitTestCase):
         self.given_any_order_history_exists("order-history-2018-0.html")
 
         # WHEN
-        response = self.runner.invoke(amazon_orders_cli,
-                                      [
-                                          "--config-path", self.test_config.config_path,
-                                          "--username", "some-username@gmail.com",
-                                          "--password", "some-password",
-                                          "history", "--year", year, "--single-page",
-                                          "--output", "yaml"])
+        response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
+                                                                 [
+                                                                     "--config-path", self.test_config.config_path,
+                                                                     "--username", "some-username@gmail.com",
+                                                                     "--password", "some-password",
+                                                                     "history", "--year", year, "--single-page",
+                                                                     "--output", "yaml"])
 
         # THEN
         self.assertEqual(0, response.exit_code)
@@ -658,13 +664,13 @@ class TestCli(UnitTestCase):
         self.given_any_order_history_exists("order-history-2018-0.html")
 
         # WHEN
-        response = self.runner.invoke(amazon_orders_cli,
-                                      [
-                                          "--config-path", self.test_config.config_path,
-                                          "--username", "some-username@gmail.com",
-                                          "--password", "some-password",
-                                          "history", "--year", year, "--single-page",
-                                          "--output", "csv"])
+        response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
+                                                                 [
+                                                                     "--config-path", self.test_config.config_path,
+                                                                     "--username", "some-username@gmail.com",
+                                                                     "--password", "some-password",
+                                                                     "history", "--year", year, "--single-page",
+                                                                     "--output", "csv"])
 
         # THEN
         self.assertEqual(0, response.exit_code)
