@@ -39,10 +39,6 @@ class AmazonOrdersConfig:
 
         self._data: Dict[str, Any] = self._default_data()
 
-        # Constructing a config has no filesystem side effects: the config dir, output dir, and cookie
-        # jar dir are each provisioned by the code that writes to them (save(), the session's debug
-        # page writes, and the session's cookie persistence), so a config built only to drive the
-        # parse_* methods never touches the disk
         with config_file_lock:
             if os.path.exists(self.config_path):
                 with open(self.config_path, "r") as config_file:
@@ -160,16 +156,7 @@ class AmazonOrdersConfig:
     def __setstate__(self,
                      state: Dict[str, Any]) -> None:
         self._data = state
-        selectors_class_split = self.selectors_class.split(".")
-        order_class_split = self.order_class.split(".")
-        shipment_class_split = self.shipment_class.split(".")
-        item_class_split = self.item_class.split(".")
-
-        self.constants = self._instantiate_constants()
-        self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
-        self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
-        self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
-        self.item_cls = util.load_class(item_class_split[:-1], item_class_split[-1])
+        self._load_classes()
 
     def update_config(self,
                       key: str,
