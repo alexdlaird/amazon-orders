@@ -12,6 +12,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `OutputFormatter`, which renders entities as `text`, `json`, `yaml`, or `csv`, and the `output_class` config key to override it.
 - CLI `--output` option on `history`, `order`, `transactions`, and `order-transactions`, for `text` (the default), `json`, `yaml`, or `csv` output.
 
+### Changed
+
+- Constructing an `AmazonOrdersConfig` no longer creates the config, output, or cookie jar directories. Each is now provisioned by the code that writes to it (`save()`, the session's debug page writes, and the session's cookie persistence), so a config built only to drive the `parse_*` methods has no filesystem side effects.
+
 ### Fixed
 
 - Bug fixes and stability improvements.
