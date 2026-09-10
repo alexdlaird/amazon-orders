@@ -39,12 +39,11 @@ class AmazonOrdersConfig:
 
         self._data: Dict[str, Any] = self._default_data()
 
+        # Constructing a config has no filesystem side effects: the config dir, output dir, and cookie
+        # jar dir are each provisioned by the code that writes to them (save(), the session's debug
+        # page writes, and the session's cookie persistence), so a config built only to drive the
+        # parse_* methods never touches the disk
         with config_file_lock:
-            # Ensure directories and files exist for config data
-            config_dir = os.path.dirname(self.config_path)
-            if not os.path.exists(config_dir):
-                os.makedirs(config_dir)
-
             if os.path.exists(self.config_path):
                 with open(self.config_path, "r") as config_file:
                     logger.debug(f"Loading config from {self.config_path} ...")
@@ -57,14 +56,6 @@ class AmazonOrdersConfig:
         self._data.update(data or {})
 
         self._validate_bs4_parser()
-
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
-
-        with cookies_file_lock:
-            cookie_jar_dir = os.path.dirname(self.cookie_jar_path)
-            if not os.path.exists(cookie_jar_dir):
-                os.makedirs(cookie_jar_dir)
 
         self._load_classes()
 
@@ -121,27 +112,6 @@ class AmazonOrdersConfig:
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
         self.item_cls = util.load_class(item_class_split[:-1], item_class_split[-1])
-
-    @classmethod
-    def for_parsing(cls,
-                    data: Optional[Dict[str, Any]] = None) -> "AmazonOrdersConfig":
-        """
-        Build a config for the ``parse_*`` methods without touching the filesystem: no config file is read
-        and no directories are created. The parse methods only need the selectors, entity classes, constants,
-        and ``bs4_parser``, so a config built this way is not suitable for fetching (its ``output_dir`` and
-        ``cookie_jar_path`` may not exist).
-
-        :param data: Overrides for the default config values.
-        :return: The config.
-        """
-        config = cls.__new__(cls)
-        config.config_path = os.path.join(DEFAULT_CONFIG_DIR, "config.yml")
-        config._data = cls._default_data()
-        config._data.update(data or {})
-        config._validate_bs4_parser()
-        config._load_classes()
-
-        return config
 
     def _validate_bs4_parser(self) -> None:
         try:
@@ -222,6 +192,8 @@ class AmazonOrdersConfig:
         Persist the current state of this config object to the config file.
         """
         with config_file_lock:
+            os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
+
             with open(self.config_path, "w") as config_file:
                 logger.debug(f"Saving config to {self.config_path} ...")
 
