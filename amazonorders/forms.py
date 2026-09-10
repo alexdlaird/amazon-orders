@@ -297,8 +297,9 @@ class MfaDeviceSelectForm(AuthForm):
     """
     This will first echo the ``<form>`` device choices, then it will pass the list of choices
     to :func:`~amazonorders.session.IODefault.prompt` as ``choices``. The value passed to
-    :func:`~amazonorders.session.IODefault.prompt` will be a ``list`` of  the ``value`` from
-    each of ``input`` tag.
+    :func:`~amazonorders.session.IODefault.prompt` will be a ``list`` of the human-readable
+    label of each ``input`` tag (falling back to the tag's ``value`` when no label is found),
+    numbered starting at one, and the number entered selects the device of the same number.
     """
 
     def __init__(self,
@@ -329,11 +330,8 @@ class MfaDeviceSelectForm(AuthForm):
             )  # pragma: no cover
 
         contexts = util.select(self.form, self.config.selectors.MFA_DEVICE_SELECT_INPUT_SELECTOR)
-        i = 0
-        choices = []
-        for field in contexts:
-            choices.append(f"{i}: {str(field[self.config.selectors.MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE]).strip()}")
-            i += 1
+        choices = [f"{number}: {self._get_device_label(field)}"
+                   for number, field in enumerate(contexts, start=1)]
 
         otp_device = int(
             self.amazon_session.io.prompt("Choose where you would like your one-time passcode sent",
@@ -342,8 +340,23 @@ class MfaDeviceSelectForm(AuthForm):
         )
         self.amazon_session.io.echo("")
 
+        if not 1 <= otp_device <= len(contexts):
+            raise AmazonOrdersError(
+                f"{otp_device} is not a valid device choice, choose a number between 1 and {len(contexts)}."
+            )
+
         additional_attrs.update({self.solution_attr_key: contexts[otp_device - 1]["value"]})
         self.data.update(additional_attrs)
+
+    def _get_device_label(self, field: Tag) -> str:
+        label = None
+        if field.parent:
+            label = util.select_one(field.parent, self.config.selectors.MFA_DEVICE_SELECT_LABEL_SELECTOR)
+
+        if label:
+            return " ".join(label.get_text().split())
+
+        return str(field[self.config.selectors.MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE]).strip()
 
 
 class MfaForm(AuthForm):

@@ -24,11 +24,13 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+BODY_TEXT_LENGTH_JS = "() => (document.body && document.body.innerText || '').length"
+
 
 class PlaywrightAuthForm(AuthForm):
     """
     Shared base for Playwright-based JavaScript challenge solvers. Subclasses implement
-    :func:`select_form` to detect the challenge page and :func:`_is_challenge_url` to
+    :func:`~amazonorders.forms.AuthForm.select_form` to detect the challenge page and :func:`_is_challenge_url` to
     signal when navigation has completed.
 
     This base class handles the Playwright browser lifecycle, bidirectional cookie bridging
@@ -66,7 +68,7 @@ class PlaywrightAuthForm(AuthForm):
         :return: The :class:`~amazonorders.util.AmazonSessionResponse` from re-fetching
             the URL after the challenge resolves.
         :raises AmazonOrdersError: if the ``playwright`` package is not installed, if
-            :func:`select_form` was not called first, or if the challenge does not resolve
+            :func:`~amazonorders.forms.AuthForm.select_form` was not called first, or if the challenge does not resolve
             within the timeout.
         """
         if not self.amazon_session:
@@ -244,7 +246,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
         """
         Return ``True`` if the embedded challenge should be handed off to a human in a
         visible browser window rather than an automated solver. This is the case when a
-        manual solver form is registered and no automated :class:`AwsWafForm` is; an
+        manual solver form is registered and no automated :class:`~amazonorders.contrib.waf.base.AwsWafForm` is; an
         automated solver takes precedence when both are present, since it is
         non-interactive.
         """
@@ -483,7 +485,7 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
     headless browser. This is a best-effort form; effectiveness
     depends on whether the challenge can be resolved by a real browser without a visual puzzle.
 
-    Detects the challenge via :attr:`~amazonorders.constants.Constants.JS_ROBOT_TEXT_REGEX`
+    Detects the challenge via ``JS_ROBOT_TEXT_REGEX``
     and waits for navigation away from the original challenge URL path.
 
     Register via ``auth_forms_classes`` in :class:`~amazonorders.conf.AmazonOrdersConfig`:
@@ -505,7 +507,7 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
                     parsed: Tag) -> bool:
         """
         Detect a JavaScript bot-detection page by matching
-        :attr:`~amazonorders.constants.Constants.JS_ROBOT_TEXT_REGEX` against the page text.
+        ``JS_ROBOT_TEXT_REGEX`` against the page text.
 
         :param amazon_session: The ``AmazonSession`` on which to submit the form.
         :param parsed: The ``Tag`` for the page being inspected.
@@ -514,8 +516,37 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
         self.amazon_session = amazon_session
         return bool(re.search(self.regex, parsed.text))
 
+    def _on_challenge_page(self, page: Any, context: Any, output_dir: Optional[str]) -> None:
+        # The challenge resolves by reloading the original URL, so wait on the content rather than the URL.
+        # The reload leaves the DOM empty then partially rendered, so the challenge page's own length is
+        # the bar a resolved page has to clear
+        from playwright.sync_api import TimeoutError as PlaywrightTimeoutError  # type: ignore[import-not-found]
+
+        challenge_text_length = page.evaluate(BODY_TEXT_LENGTH_JS)
+
+        try:
+            page.wait_for_function(
+                "([pattern, challengeTextLength]) => {"
+                "  const el = document.body;"
+                "  if (!el) return false;"
+                "  const text = el.innerText || '';"
+                "  return text.length > challengeTextLength && !new RegExp(pattern, 'i').test(text);"
+                "}",
+                arg=[self.regex, challenge_text_length],
+                timeout=self.config.browser_timeout * 1000,
+            )
+        except PlaywrightTimeoutError as e:
+            logger.debug(f"Browser timed out at URL: {page.url}")
+            self._save_debug_snapshot(page, output_dir, "browser-timeout")
+            if page.context.browser:
+                page.context.browser.close()
+            raise AmazonOrdersError(
+                "Browser timed out waiting for the JavaScript challenge to resolve."
+            ) from e
+
     def _is_challenge_url(self, url: str, original_url: str) -> bool:
-        return url.split("?")[0] == original_url.split("?")[0]
+        # This challenge resolves at its own URL, so only _on_challenge_page can detect it resolving
+        return False
 
 
 class PlaywrightManualWafForm(PlaywrightAuthForm):

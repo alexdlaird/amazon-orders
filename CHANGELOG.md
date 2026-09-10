@@ -10,6 +10,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - Constructing an `AmazonOrdersConfig` no longer creates the config, output, or cookie jar directories. Each is now provisioned by the code that writes to it (`save()`, the session's debug page writes, and the session's cookie persistence), so a config built only to drive the `parse_*` methods has no filesystem side effects.
 
+### Fixed
+
+- Bug fixes and stability improvements.
+
 ## [4.5.0](https://github.com/alexdlaird/amazon-orders/compare/4.4.7...4.5.0) - 2026-09-02
 
 ### Added

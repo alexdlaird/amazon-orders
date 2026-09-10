@@ -213,6 +213,12 @@ epub_exclude_files = ["search.html"]
 
 # -- Extension configuration -------------------------------------------------
 
+# ``typing.Union`` is registered as ``py:class`` in the Python inventory, but autodoc emits a
+# ``py:data`` reference for it, so it can never resolve.
+nitpick_ignore = [
+    ("py:data", "typing.Union"),
+]
+
 intersphinx_mapping = {
     "click": ("https://click.palletsprojects.com/en/latest", None),
     "requests": ("https://requests.readthedocs.io/en/latest/", None),

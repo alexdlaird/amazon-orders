@@ -58,6 +58,7 @@ class Selectors:
     MFA_DEVICE_SELECT_FORM_SELECTOR = "form#auth-select-device-form"
     MFA_DEVICE_SELECT_INPUT_SELECTOR = "input[name='otpDeviceContext']"
     MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE = "value"
+    MFA_DEVICE_SELECT_LABEL_SELECTOR = "span.a-label.a-radio-label"
     MFA_FORM_SELECTOR = "form#auth-mfa-form"
     CAPTCHA_1_FORM_SELECTOR = "form.cvf-widget-form-captcha"
     CAPTCHA_2_FORM_SELECTOR = ["form:has(input[id^='captchacharacters'])", "form[action$='validateCaptcha']"]
@@ -87,6 +88,10 @@ class Selectors:
     # Digital Order history renders the count in the time filter label rather than in span.num-orders
     ORDER_HISTORY_COUNT_SELECTOR = [".js-yo-container span.num-orders",
                                     "form.js-time-filter-form label.time-filter__label b"]
+    # Readable pages also carry the no-JS fallback and the encrypted-sensitive container, so the payload
+    # call itself is what identifies a page Amazon served with its card content encrypted
+    ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR = Selector("div.csd-encrypted-sensitive script",
+                                                    text_contains="csdContent(")
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer",
                                      "div#odp-main-section"]
