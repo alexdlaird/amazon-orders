@@ -1,14 +1,21 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import csv
 import datetime
+import io
+import json
 import os
 from unittest.mock import patch
 
 import responses
+import yaml
+from bs4 import BeautifulSoup
 from click.testing import CliRunner
 
 from amazonorders.cli import amazon_orders_cli
+from amazonorders.entity.parsable import Parsable
+from amazonorders.output import OutputFormatter
 from tests.unittestcase import UnitTestCase
 
 
@@ -19,6 +26,12 @@ class TestCli(UnitTestCase):
         self.test_config.save()
 
         self.runner = CliRunner()
+
+    def given_runner_with_split_streams(self):
+        try:
+            return CliRunner(mix_stderr=False)
+        except TypeError:
+            return CliRunner()
 
     def test_missing_credentials(self):
         # WHEN
@@ -593,3 +606,174 @@ class TestCli(UnitTestCase):
         self.assertIn("max_auth_attempts\" updated", response.output)
         with open(self.test_config.config_path, "r") as f:
             self.assertIn("max_auth_attempts: 7", f.read())
+
+    @responses.activate
+    def test_history_command_output_json(self):
+        # GIVEN
+        year = 2018
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        self.given_any_order_history_exists("order-history-2018-0.html")
+
+        # WHEN
+        response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
+                                                                 [
+                                                                     "--config-path", self.test_config.config_path,
+                                                                     "--username", "some-username@gmail.com",
+                                                                     "--password", "some-password",
+                                                                     "history", "--year", year, "--single-page",
+                                                                     "--output", "json"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        orders = json.loads(response.stdout)
+        self.assertEqual(10, len(orders))
+        self.assertEqual("112-0399923-3070642", orders[3]["order_number"])
+        self.assertEqual("2018-12-21", orders[3]["order_placed_date"])
+        self.assertNotIn("parsed", orders[3])
+
+    @responses.activate
+    def test_history_command_output_yaml(self):
+        # GIVEN
+        year = 2018
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        self.given_any_order_history_exists("order-history-2018-0.html")
+
+        # WHEN
+        response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
+                                                                 [
+                                                                     "--config-path", self.test_config.config_path,
+                                                                     "--username", "some-username@gmail.com",
+                                                                     "--password", "some-password",
+                                                                     "history", "--year", year, "--single-page",
+                                                                     "--output", "yaml"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        orders = yaml.safe_load(response.stdout)
+        self.assertEqual(10, len(orders))
+        self.assertEqual("112-0399923-3070642", orders[3]["order_number"])
+
+    @responses.activate
+    def test_history_command_output_csv_is_one_row_per_order(self):
+        # GIVEN
+        year = 2018
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        self.given_any_order_history_exists("order-history-2018-0.html")
+
+        # WHEN
+        response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
+                                                                 [
+                                                                     "--config-path", self.test_config.config_path,
+                                                                     "--username", "some-username@gmail.com",
+                                                                     "--password", "some-password",
+                                                                     "history", "--year", year, "--single-page",
+                                                                     "--output", "csv"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        rows = list(csv.DictReader(io.StringIO(response.stdout)))
+        self.assertEqual(10, len(rows))
+        self.assertEqual(10, len(response.stdout.strip().split("\n")) - 1)
+        self.assertEqual("112-0399923-3070642", rows[3]["order_number"])
+        self.assertEqual("Alex Laird", rows[3]["recipient_name"])
+        self.assertEqual("1", rows[3]["items_count"])
+
+    def test_history_command_output_invalid_format(self):
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "history", "--output", "xml"])
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertIn("Usage: ", response.output)
+
+
+class StubEntity(Parsable):
+    def __init__(self, config, name, tags):
+        super().__init__(BeautifulSoup("<div></div>", config.bs4_parser), config)
+        self.name = name
+        self.completed_date = datetime.date(2024, 8, 23)
+        self.nested = None
+        self.tags = tags
+
+    def __str__(self):
+        return f"StubEntity: {self.name}"
+
+
+class TestOutputFormatter(UnitTestCase):
+    def given_formatter(self):
+        return OutputFormatter(self.test_config)
+
+    def given_entities(self):
+        return [StubEntity(self.test_config, "First", ["a", "b"]),
+                StubEntity(self.test_config, "Second", [])]
+
+    def test_format_empty_contracts(self):
+        # WHEN / THEN
+        self.assertEqual("[]\n", self.given_formatter().format([], "json"))
+        self.assertEqual([], yaml.safe_load(self.given_formatter().format([], "yaml")))
+        self.assertEqual("", self.given_formatter().format([], "csv"))
+        self.assertEqual("", self.given_formatter().format([], "text"))
+
+    def test_format_json_serializes_any_entity(self):
+        # WHEN
+        serialized = json.loads(self.given_formatter().format(self.given_entities(), "json"))
+
+        # THEN
+        self.assertEqual(2, len(serialized))
+        self.assertEqual("First", serialized[0]["name"])
+        self.assertEqual("2024-08-23", serialized[0]["completed_date"])
+        self.assertNotIn("parsed", serialized[0])
+        self.assertNotIn("config", serialized[0])
+
+    def test_format_text_falls_back_to_entity_str(self):
+        # WHEN
+        text = self.given_formatter().format(self.given_entities(), "text")
+
+        # THEN
+        self.assertEqual("StubEntity: First\n\nStubEntity: Second\n", text)
+
+    def test_csv_flattens_nested_entities_and_lists(self):
+        # GIVEN
+        entities = [{"order_number": "111", "recipient": {"name": "Alex Laird", "address": "555 My Road"},
+                     "items": [{"title": "One"}, {"title": "Two"}]}]
+
+        # WHEN
+        rows = list(csv.DictReader(io.StringIO(self.given_formatter()._csv(entities))))
+
+        # THEN
+        self.assertEqual(1, len(rows))
+        self.assertEqual("Alex Laird", rows[0]["recipient_name"])
+        self.assertEqual("555 My Road", rows[0]["recipient_address"])
+        self.assertEqual("2", rows[0]["items_count"])
+        self.assertEqual("One; Two", rows[0]["items"])
+
+    def test_csv_keeps_one_physical_line_per_entity(self):
+        # GIVEN
+        entities = [{"order_number": "111", "recipient": {"address": "555 My Road\nChicago, IL 60007"}}]
+
+        # WHEN
+        output = self.given_formatter()._csv(entities)
+
+        # THEN
+        self.assertEqual(2, len(output.strip().split("\n")))
+        self.assertIn("555 My Road Chicago, IL 60007", output)
+
+    def test_csv_unions_columns_across_differing_entities(self):
+        # GIVEN
+        entities = [{"a": 1}, {"b": 2}]
+
+        # WHEN
+        rows = list(csv.DictReader(io.StringIO(self.given_formatter()._csv(entities))))
+
+        # THEN
+        self.assertEqual(["a", "b"], list(rows[0].keys()))
+        self.assertEqual("", rows[0]["b"])
+        self.assertEqual("2", rows[1]["b"])

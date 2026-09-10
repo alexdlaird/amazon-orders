@@ -35,12 +35,13 @@ class TestConf(TestCase):
             "cookie_jar_path": self.test_cookie_jar_path
         })
 
-        # THEN
+        # THEN constructing the config touches nothing on disk
         self.assertEqual(5, config.auth_reattempt_wait)
         self.assertEqual(config_path, config.config_path)
-        self.assertTrue(os.path.exists(conf.DEFAULT_CONFIG_DIR))
+        self.assertFalse(os.path.exists(conf.DEFAULT_CONFIG_DIR))
         self.assertFalse(os.path.exists(config_path))
-        self.assertTrue(os.path.exists(self.test_output_dir))
+        self.assertFalse(os.path.exists(self.test_output_dir))
+        self.assertFalse(os.path.exists(os.path.dirname(self.test_cookie_jar_path)))
         self.assertEqual(10, config.max_cookie_attempts)
         self.assertEqual(0.5, config.cookie_reattempt_wait)
         self.assertEqual(10, config.max_auth_attempts)
@@ -54,9 +55,11 @@ class TestConf(TestCase):
         # GIVEN
         config.save()
 
-        # THEN
+        # THEN save() provisions the config dir itself
         thread_pool_size = os.cpu_count() * 4
+        self.assertTrue(os.path.exists(conf.DEFAULT_CONFIG_DIR))
         self.assertTrue(os.path.exists(config_path))
+        self.assertFalse(os.path.exists(self.test_output_dir))
         with open(config.config_path, "r") as f:
             self.assertEqual("""auth_forms_classes: []
 auth_reattempt_wait: 5
@@ -71,6 +74,7 @@ max_auth_attempts: 10
 max_auth_retries: 1
 max_cookie_attempts: 10
 order_class: amazonorders.entity.order.Order
+output_class: amazonorders.output.OutputFormatter
 output_dir: {output_dir}
 request_timeout: null
 selectors_class: amazonorders.selectors.Selectors

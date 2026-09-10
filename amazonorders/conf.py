@@ -37,9 +37,33 @@ class AmazonOrdersConfig:
         #: The path to use for the config file.
         self.config_path: str = os.path.join(DEFAULT_CONFIG_DIR, "config.yml") if config_path is None else config_path
 
-        # Provision default configs
+        self._data: Dict[str, Any] = self._default_data()
+
+        with config_file_lock:
+            if os.path.exists(self.config_path):
+                with open(self.config_path, "r") as config_file:
+                    logger.debug(f"Loading config from {self.config_path} ...")
+                    config = yaml.safe_load(config_file)
+                    if config is not None:
+                        config.update(data or {})
+                        data = config
+
+        # Overload defaults if values passed
+        self._data.update(data or {})
+
+        self._validate_bs4_parser()
+
+        self._load_classes()
+
+    @staticmethod
+    def _default_data() -> Dict[str, Any]:
+        """
+        Provision the default config values.
+
+        :return: The default config values.
+        """
         thread_pool_size = (os.cpu_count() or 1) * 4
-        self._data: Dict[str, Any] = {
+        return {
             # The maximum number of times to retry provisioning initial cookies before failing
             "max_cookie_attempts": 10,
             # The number of seconds to wait before retrying to provision initial cookies
@@ -56,6 +80,7 @@ class AmazonOrdersConfig:
             "order_class": "amazonorders.entity.order.Order",
             "shipment_class": "amazonorders.entity.shipment.Shipment",
             "item_class": "amazonorders.entity.item.Item",
+            "output_class": "amazonorders.output.OutputFormatter",
             "bs4_parser": "html.parser",
             "auth_forms_classes": [],
             # Timeout in seconds for browser-based challenge detection and resolution
@@ -70,37 +95,15 @@ class AmazonOrdersConfig:
             "warn_on_missing_required_field": False
         }
 
-        with config_file_lock:
-            # Ensure directories and files exist for config data
-            config_dir = os.path.dirname(self.config_path)
-            if not os.path.exists(config_dir):
-                os.makedirs(config_dir)
-
-            if os.path.exists(self.config_path):
-                with open(self.config_path, "r") as config_file:
-                    logger.debug(f"Loading config from {self.config_path} ...")
-                    config = yaml.safe_load(config_file)
-                    if config is not None:
-                        config.update(data or {})
-                        data = config
-
-        # Overload defaults if values passed
-        self._data.update(data or {})
-
-        self._validate_bs4_parser()
-
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
-
-        with cookies_file_lock:
-            cookie_jar_dir = os.path.dirname(self.cookie_jar_path)
-            if not os.path.exists(cookie_jar_dir):
-                os.makedirs(cookie_jar_dir)
-
+    def _load_classes(self) -> None:
+        """
+        Instantiate the constants and selectors and resolve the entity and output classes from the config.
+        """
         selectors_class_split = self.selectors_class.split(".")
         order_class_split = self.order_class.split(".")
         shipment_class_split = self.shipment_class.split(".")
         item_class_split = self.item_class.split(".")
+        output_class_split = self.output_class.split(".")
 
         #: The :class:`~amazonorders.constants.Constants` in use, rebuilt when the domain changes.
         self.constants = self._instantiate_constants()
@@ -108,6 +111,7 @@ class AmazonOrdersConfig:
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
         self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
         self.item_cls = util.load_class(item_class_split[:-1], item_class_split[-1])
+        self.output_cls = util.load_class(output_class_split[:-1], output_class_split[-1])
 
     def _validate_bs4_parser(self) -> None:
         try:
@@ -155,16 +159,7 @@ class AmazonOrdersConfig:
     def __setstate__(self,
                      state: Dict[str, Any]) -> None:
         self._data = state
-        selectors_class_split = self.selectors_class.split(".")
-        order_class_split = self.order_class.split(".")
-        shipment_class_split = self.shipment_class.split(".")
-        item_class_split = self.item_class.split(".")
-
-        self.constants = self._instantiate_constants()
-        self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
-        self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
-        self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
-        self.item_cls = util.load_class(item_class_split[:-1], item_class_split[-1])
+        self._load_classes()
 
     def update_config(self,
                       key: str,
@@ -188,6 +183,8 @@ class AmazonOrdersConfig:
         Persist the current state of this config object to the config file.
         """
         with config_file_lock:
+            os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
+
             with open(self.config_path, "w") as config_file:
                 logger.debug(f"Saving config to {self.config_path} ...")
 

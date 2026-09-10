@@ -48,7 +48,7 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==4.5.*``, not ``==4.5.0``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==4.6.*``, not ``==4.6.0``)
 to ensure you always get the latest stable release.
 
 Basic Usage
@@ -96,6 +96,36 @@ You can also run any command available to the main Python interface from the com
     amazon-orders history --year 2023
     amazon-orders history --last-30-days
     amazon-orders history --last-3-months
+
+Output Formats
+--------------
+
+The ``history``, ``order``, ``transactions``, and ``order-transactions`` commands accept ``--output``, which
+renders Orders and Transactions as ``text`` (the default), ``json``, ``yaml``, or ``csv``. Progress messages
+are written to ``stderr``, so redirecting ``stdout`` captures only the data.
+
+.. code:: sh
+
+    amazon-orders history --year 2023 --output json > orders.json
+    amazon-orders history --last-30-days --output csv > orders.csv
+
+To serialize from Python instead, every entity has :func:`~amazonorders.entity.parsable.Parsable.to_dict`,
+which converts it and its nested entities to a ``dict`` of primitives.
+
+.. code:: python
+
+    import json
+
+    from amazonorders.orders import AmazonOrders
+
+    amazon_orders = AmazonOrders(amazon_session)
+    orders = amazon_orders.get_order_history(year=2023)
+
+    # [{"order_number": "112-9685975-5907428", "grand_total": 35.98, ...}]
+    print(json.dumps([order.to_dict() for order in orders], indent=2))
+
+See :class:`~amazonorders.output.OutputFormatter` for each format's contract, and to override how
+entities are rendered.
 
 Automating Authentication
 -------------------------
