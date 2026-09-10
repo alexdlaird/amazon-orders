@@ -96,6 +96,26 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, signout_response.call_count)
 
     @responses.activate
+    def test_debug_write_provisions_output_dir(self):
+        # GIVEN a debug session whose output dir does not exist (the config no longer creates it)
+        self.assertFalse(os.path.exists(self.test_output_dir))
+        amazon_session = AmazonSession("some-username@gmail.com",
+                                       "some-password",
+                                       debug=True,
+                                       config=self.test_config)
+        responses.add(responses.GET,
+                      f"{self.test_config.constants.BASE_URL}/some/page",
+                      body="<html><body>debug page</body></html>",
+                      status=200)
+
+        # WHEN
+        amazon_session.get(f"{self.test_config.constants.BASE_URL}/some/page")
+
+        # THEN the debug write provisioned the output dir itself
+        self.assertTrue(os.path.exists(self.test_output_dir))
+        self.assertEqual(1, len(os.listdir(self.test_output_dir)))
+
+    @responses.activate
     def test_login_claim_invalid_username(self):
         # GIVEN
         self.given_unauthenticated_home_page()

@@ -13,7 +13,7 @@ import requests.adapters
 from requests import Response, Session
 from requests.utils import dict_from_cookiejar
 
-from amazonorders.conf import AmazonOrdersConfig, config_file_lock, cookies_file_lock, debug_output_file_lock
+from amazonorders.conf import AmazonOrdersConfig, cookies_file_lock, debug_output_file_lock
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersAuthRedirectError
 from amazonorders.forms import (AuthForm, AcicAuthBlocker, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm,
                                 SignInForm, ClaimForm, IntentForm)
@@ -136,11 +136,9 @@ class AmazonSession:
         #: If :func:`login` has been executed and successfully logged in the session.
         self.is_authenticated: bool = False
 
-        cookie_dir = os.path.dirname(self.config.cookie_jar_path)
-        with config_file_lock:
-            if not os.path.exists(cookie_dir):
-                os.makedirs(cookie_dir)
         with cookies_file_lock:
+            os.makedirs(os.path.dirname(self.config.cookie_jar_path), exist_ok=True)
+
             if os.path.exists(self.config.cookie_jar_path):
                 with open(self.config.cookie_jar_path, "r", encoding="utf-8") as f:
                     data = json.loads(f.read())
@@ -219,6 +217,7 @@ class AmazonSession:
                 url_str = f" - (redirected) {amazon_session_response.response.url}"
             logger.debug(f"Response: {amazon_session_response.response.status_code}{url_str}")
 
+            os.makedirs(self.config.output_dir, exist_ok=True)
             page_name = self._get_page_from_url(self.config.output_dir, amazon_session_response.response.url)
             with open(os.path.join(self.config.output_dir, page_name), "w",
                       encoding="utf-8") as html_file:
