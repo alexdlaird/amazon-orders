@@ -102,3 +102,44 @@ class TestConstants(UnitTestCase):
         # THEN — both get the TLD-specific Accept-Language regardless of browser
         self.assertIn("en-GB", config_default.constants.BASE_HEADERS["Accept-Language"])
         self.assertIn("en-GB", config_ff.constants.BASE_HEADERS["Accept-Language"])
+
+    def test_domain_co_jp_sets_yen_currency_symbol(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.co.jp"})
+
+        # THEN
+        self.assertEqual("https://www.amazon.co.jp", config.constants.BASE_URL)
+        self.assertEqual("¥", config.constants.CURRENCY_SYMBOL)
+
+    def test_domain_co_jp_sets_region_assoc_handle(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.co.jp"})
+
+        # THEN — the region-specific handle, otherwise Amazon 404s the sign-in request
+        self.assertEqual("jpflex", config.constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"])
+
+    def test_domain_unknown_tld_keeps_default_assoc_handle(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.com"})
+
+        # THEN
+        self.assertEqual("usflex", config.constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"])
+
+    def test_domain_sets_region_authenticated_cookie(self):
+        # GIVEN / WHEN — the authenticated-session marker is region-specific
+        self.assertEqual(
+            ["x-acbjp"],
+            AmazonOrdersConfig(data={"domain": "amazon.co.jp"}).constants.COOKIES_SET_WHEN_AUTHENTICATED)
+        self.assertEqual(
+            ["x-acbuk"],
+            AmazonOrdersConfig(data={"domain": "amazon.co.uk"}).constants.COOKIES_SET_WHEN_AUTHENTICATED)
+        self.assertEqual(
+            ["x-acbau"],
+            AmazonOrdersConfig(data={"domain": "amazon.com.au"}).constants.COOKIES_SET_WHEN_AUTHENTICATED)
+
+    def test_domain_com_keeps_x_main_authenticated_cookie(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.com"})
+
+        # THEN
+        self.assertEqual(["x-main"], config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
