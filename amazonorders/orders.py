@@ -36,6 +36,52 @@ def _parse_order_count(order_count_tag: Optional[Tag]) -> Optional[int]:
     return int(match.group(1).replace(",", "")) if match else None
 
 
+def _parse_order_history(parsed: Tag,
+                         config: AmazonOrdersConfig,
+                         start_index: int) -> List[Tag]:
+    """
+    Select the Order cards from an Order history page, gating an empty page on the page's own Order
+    count so a spent window can be told apart from a page that failed to render.
+
+    :param parsed: The parsed Order history page.
+    :param config: The config providing the selectors.
+    :param start_index: The index of the first Order on the page within its window.
+    :return: The Order card tags, or an empty list when the count confirms the window is spent.
+    """
+    order_tags = util.select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
+
+    if not order_tags:
+        order_count = _parse_order_count(
+            util.select_one(parsed, config.selectors.ORDER_HISTORY_COUNT_SELECTOR))
+
+        if order_count is None or order_count > start_index:
+            raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")
+
+    return order_tags
+
+
+def _parse_order_details(parsed: Tag,
+                         config: AmazonOrdersConfig,
+                         order_number: Optional[str] = None,
+                         clone: Optional[Order] = None) -> Optional[Order]:
+    """
+    Build an Order from an Order details page, leaving the not-found policy to the caller.
+
+    :param parsed: The parsed Order details page.
+    :param config: The config providing the selectors and entity classes.
+    :param order_number: The Order ID to fall back on when the page does not identify itself.
+    :param clone: A partially populated version of the Order, if one was already fetched.
+    :return: The parsed Order, or ``None`` if the details entity was not on the page.
+    """
+    order_details_tag = util.select_one(parsed, config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+
+    if not order_details_tag:
+        return None
+
+    return config.order_cls(order_details_tag, config, full_details=True, clone=clone,
+                            order_number=order_number)
+
+
 class AmazonOrders:
     """
     Using an authenticated :class:`~amazonorders.session.AmazonSession`, can be used to query Amazon
@@ -89,16 +135,7 @@ class AmazonOrders:
             raise AmazonOrdersError("Could not parse Order history. Amazon served the page with its content "
                                     "encrypted, so fetch it through an authenticated session instead.")
 
-        order_tags = util.select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
-
-        if not order_tags:
-            order_count = _parse_order_count(
-                util.select_one(parsed, config.selectors.ORDER_HISTORY_COUNT_SELECTOR))
-
-            if order_count is not None and order_count <= start_index:
-                return []
-            else:
-                raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")
+        order_tags = _parse_order_history(parsed, config, start_index)
 
         return [config.order_cls(tag, config, index=start_index + i) for i, tag in enumerate(order_tags)]
 
@@ -117,10 +154,10 @@ class AmazonOrders:
         :return: The parsed Order.
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
-        order_details_tag = util.select_one(parsed, config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
-        if not order_details_tag:
+        order = _parse_order_details(parsed, config, order_number=order_number)
+        if not order:
             raise AmazonOrdersError("Could not parse Order details. Check if Amazon changed the HTML.")
-        return config.order_cls(order_details_tag, config, full_details=True, order_number=order_number)
+        return order
 
     def get_order(self,
                   order_id: str,
@@ -150,14 +187,11 @@ class AmazonOrders:
             raise AmazonOrdersNotFoundError(f"Amazon redirected, which likely means Order {order_id} was not found.",
                                             meta=meta)
 
-        order_details_tag = util.select_one(order_details_response.parsed,
-                                            self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+        order = _parse_order_details(order_details_response.parsed, self.config, order_number=order_id,
+                                     clone=clone)
 
-        if not order_details_tag:
+        if not order:
             raise AmazonOrdersError(f"Could not parse details for Order {order_id}. Check if Amazon changed the HTML.")
-
-        order: Order = self.config.order_cls(order_details_tag, self.config, full_details=True, clone=clone,
-                                             order_number=order_id)
 
         return order
 
@@ -259,17 +293,10 @@ class AmazonOrders:
             page_response = self.amazon_session.get(next_page)
             self.amazon_session.check_response(page_response, meta={"index": current_index})
 
-            order_tags = util.select(page_response.parsed,
-                                     self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
+            order_tags = _parse_order_history(page_response.parsed, self.config, current_index)
 
             if not order_tags:
-                order_count = _parse_order_count(
-                    util.select_one(page_response.parsed, self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR))
-
-                if order_count is not None and order_count <= current_index:
-                    break
-                else:
-                    raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")
+                break
 
             for order_tag in order_tags:
                 order_tasks.append(self._async_wrapper(self._build_order, order_tag, full_details, current_index))
@@ -328,10 +355,10 @@ class AmazonOrders:
                                order_number: Optional[str] = None,
                                clone: Optional[Order] = None) -> Order:
         """Builds an Order from an already-fetched Whole Foods Market details page response."""
-        details_tag = util.select_one(details_response.parsed,
-                                      self.config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+        order = _parse_order_details(details_response.parsed, self.config, order_number=order_number,
+                                     clone=clone)
 
-        if not details_tag:
+        if not order:
             if clone:
                 logger.warning(f"Could not parse Whole Foods Market details for Order {clone.order_number}, "
                                f"so it was left partially populated.")
@@ -340,8 +367,7 @@ class AmazonOrders:
             raise AmazonOrdersError(f"Could not parse Whole Foods Market details for Order {order_number}. "
                                     f"Check if Amazon changed the HTML.")
 
-        return self.config.order_cls(details_tag, self.config, full_details=True, clone=clone,
-                                     order_number=order_number)
+        return order
 
     async def _async_wrapper(self,
                              func: Callable,

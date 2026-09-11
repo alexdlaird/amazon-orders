@@ -53,6 +53,9 @@ class AmazonOrdersConfig:
 
         self._validate_bs4_parser()
 
+        #: The :class:`~amazonorders.constants.Constants` in use, rebuilt when the domain changes.
+        self.constants: Any
+
         self._load_classes()
 
     @staticmethod
@@ -105,7 +108,6 @@ class AmazonOrdersConfig:
         item_class_split = self.item_class.split(".")
         output_class_split = self.output_class.split(".")
 
-        #: The :class:`~amazonorders.constants.Constants` in use, rebuilt when the domain changes.
         self.constants = self._instantiate_constants()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
         self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
