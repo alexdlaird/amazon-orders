@@ -16,7 +16,7 @@ body:
     options:
     - label: I have written a descriptive issue title
       required: true
-    - label: I have searched [`amazon-orders`'s documentation](https://amazon-orders.readthedocs.io/en/latest/) for an answer
+    - label: I have searched [`amazon-orders`'s documentation](https://amazon-orders.readthedocs.io/) for an answer
       required: true
     - label: I have searched [Issues](issues?q=is%3Aissue) to see if the bug has already been reported
       required: true

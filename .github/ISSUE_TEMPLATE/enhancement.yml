@@ -16,7 +16,7 @@ body:
     options:
     - label: I have written a descriptive issue title
       required: true
-    - label: I have searched [`amazon-orders`'s documentation](https://amazon-orders.readthedocs.io/en/latest/) to see if the feature is already support
+    - label: I have searched [`amazon-orders`'s documentation](https://amazon-orders.readthedocs.io/) to see if the feature is already support
       required: true
     - label: I have searched [Issues](issues?q=is%3Aissue) to see if the feature has already been requested
       required: true
