@@ -161,7 +161,7 @@ class AmazonOrdersConfig:
 
     @order_cls.setter
     def order_cls(self,
-               value: Any) -> None:
+                  value: Any) -> None:
         self._set_class("order_class", value)
 
     @property
@@ -171,7 +171,7 @@ class AmazonOrdersConfig:
 
     @shipment_cls.setter
     def shipment_cls(self,
-               value: Any) -> None:
+                     value: Any) -> None:
         self._set_class("shipment_class", value)
 
     @property
@@ -181,7 +181,7 @@ class AmazonOrdersConfig:
 
     @item_cls.setter
     def item_cls(self,
-               value: Any) -> None:
+                 value: Any) -> None:
         self._set_class("item_class", value)
 
     @property
@@ -191,7 +191,7 @@ class AmazonOrdersConfig:
 
     @output_cls.setter
     def output_cls(self,
-               value: Any) -> None:
+                   value: Any) -> None:
         self._set_class("output_class", value)
 
     def _validate_bs4_parser(self) -> None:
