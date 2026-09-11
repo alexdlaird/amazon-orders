@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from bs4.exceptions import FeatureNotFound
 
 from amazonorders import util
+from amazonorders.exception import AmazonOrdersError
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class AmazonOrdersConfig:
         self.config_path: str = os.path.join(DEFAULT_CONFIG_DIR, "config.yml") if config_path is None else config_path
 
         self._data: Dict[str, Any] = self._default_data()
+        self._resolved_classes: Dict[str, Any] = {}
 
         with config_file_lock:
             if os.path.exists(self.config_path):
@@ -52,6 +54,7 @@ class AmazonOrdersConfig:
         self._data.update(data or {})
 
         self._validate_bs4_parser()
+        self._validate_class_paths()
 
         #: The :class:`~amazonorders.constants.Constants` in use, rebuilt when the domain changes.
         self.constants: Any
@@ -100,20 +103,96 @@ class AmazonOrdersConfig:
 
     def _load_classes(self) -> None:
         """
-        Instantiate the constants and selectors and resolve the entity and output classes from the config.
+        Instantiate the constants and selectors, which the auth layer itself uses and so are always
+        needed. The entity and output classes resolve on first use instead.
         """
         selectors_class_split = self.selectors_class.split(".")
-        order_class_split = self.order_class.split(".")
-        shipment_class_split = self.shipment_class.split(".")
-        item_class_split = self.item_class.split(".")
-        output_class_split = self.output_class.split(".")
 
         self.constants = self._instantiate_constants()
         self.selectors = util.load_class(selectors_class_split[:-1], selectors_class_split[-1])()
-        self.order_cls = util.load_class(order_class_split[:-1], order_class_split[-1])
-        self.shipment_cls = util.load_class(shipment_class_split[:-1], shipment_class_split[-1])
-        self.item_cls = util.load_class(item_class_split[:-1], item_class_split[-1])
-        self.output_cls = util.load_class(output_class_split[:-1], output_class_split[-1])
+
+    def _validate_class_paths(self) -> None:
+        """
+        Check the shape of every lazily resolved class path at construction, so a malformed value
+        still fails here rather than at first use, without importing the modules they name.
+
+        :raises AmazonOrdersError: If a class path is not a dotted path to a class.
+        """
+        for key in ("order_class", "shipment_class", "item_class", "output_class"):
+            value = self._data.get(key)
+            if (not isinstance(value, str) or "." not in value
+                    or not all(part.isidentifier() for part in value.split("."))):
+                raise AmazonOrdersError(f"Config value for \"{key}\" is not a dotted class path: {value!r}")
+
+    def _resolve_class(self,
+                       key: str) -> Any:
+        """
+        Resolve and cache the class named by the given config key.
+
+        :param key: The config key naming the class.
+        :return: The resolved class.
+        :raises AmazonOrdersError: If the configured class path cannot be imported.
+        """
+        if key not in self._resolved_classes:
+            class_split = self._data[key].split(".")
+            try:
+                self._resolved_classes[key] = util.load_class(class_split[:-1], class_split[-1])
+            except (AttributeError, ImportError) as e:
+                raise AmazonOrdersError(f"Could not resolve \"{key}\" ({self._data[key]}): {e}") from e
+
+        return self._resolved_classes[key]
+
+    def _set_class(self,
+                   key: str,
+                   value: Any) -> None:
+        """
+        Override the resolved class for the given config key, so a class can be assigned directly as
+        well as named through its config path.
+
+        :param key: The config key naming the class.
+        :param value: The class to use.
+        """
+        self._resolved_classes[key] = value
+
+    @property
+    def order_cls(self) -> Any:
+        """The :class:`~amazonorders.entity.order.Order` class in use."""
+        return self._resolve_class("order_class")
+
+    @order_cls.setter
+    def order_cls(self,
+               value: Any) -> None:
+        self._set_class("order_class", value)
+
+    @property
+    def shipment_cls(self) -> Any:
+        """The :class:`~amazonorders.entity.shipment.Shipment` class in use."""
+        return self._resolve_class("shipment_class")
+
+    @shipment_cls.setter
+    def shipment_cls(self,
+               value: Any) -> None:
+        self._set_class("shipment_class", value)
+
+    @property
+    def item_cls(self) -> Any:
+        """The :class:`~amazonorders.entity.item.Item` class in use."""
+        return self._resolve_class("item_class")
+
+    @item_cls.setter
+    def item_cls(self,
+               value: Any) -> None:
+        self._set_class("item_class", value)
+
+    @property
+    def output_cls(self) -> Any:
+        """The :class:`~amazonorders.output.OutputFormatter` class in use."""
+        return self._resolve_class("output_class")
+
+    @output_cls.setter
+    def output_cls(self,
+               value: Any) -> None:
+        self._set_class("output_class", value)
 
     def _validate_bs4_parser(self) -> None:
         try:
@@ -161,6 +240,7 @@ class AmazonOrdersConfig:
     def __setstate__(self,
                      state: Dict[str, Any]) -> None:
         self._data = state
+        self._resolved_classes = {}
         self._load_classes()
 
     def update_config(self,
