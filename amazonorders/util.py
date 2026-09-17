@@ -54,7 +54,8 @@ def select(parsed: Tag, selector: Union[List[Union[str, Selector]], Union[str, S
         if isinstance(s, Selector):
             for t in parsed.select(s.css_selector):
                 if t and _selector_text_matches(t, s):
-                    tag += t
+                    # tag += t would extend the list with the tag's children
+                    tag.append(t)
         elif isinstance(s, str):
             tag = parsed.select(s)
         else:
@@ -85,9 +86,11 @@ def select_one(parsed: Tag,
         tag: Optional[Tag] = None
 
         if isinstance(s, Selector):
-            t = parsed.select_one(s.css_selector)
-            if t and _selector_text_matches(t, s):
-                tag = t
+            # The first tag whose text matches, not the first tag the CSS matches
+            for t in parsed.select(s.css_selector):
+                if t and _selector_text_matches(t, s):
+                    tag = t
+                    break
         elif isinstance(s, str):
             tag = parsed.select_one(s)
         else:
