@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.6.0...HEAD)
 
+### Fixed
+
+- `Transaction.order_number` now parses digital (`D01-`) Order IDs on the transactions page, and is `None` rather than an empty string when a row carries no Order number.
+
 ## [4.6.0](https://github.com/alexdlaird/amazon-orders/compare/4.5.0...4.6.0) - 2026-09-10
 
 ### Added
