@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.6.0...HEAD)
 
+### Fixed
+
+- `Order.cancelled` is now detected on the current order-details layout, which renders the cancellation as the shipment-status heading rather than an alert box.
+
 ## [4.6.0](https://github.com/alexdlaird/amazon-orders/compare/4.5.0...4.6.0) - 2026-09-10
 
 ### Added

@@ -126,7 +126,9 @@ class Selectors:
         # Identifies a cancelled order on the history page
         Selector("div.yohtmlc-shipment-status-primaryText", "Cancelled"),
         # Identifies a cancelled order on the details page
-        Selector("h4.a-alert-heading", text_contains="cancelled")
+        Selector("h4.a-alert-heading", text_contains="cancelled"),
+        # Identifies a cancelled order on the current details layout, which has no alert box
+        Selector("h4.od-status-message", text_contains="Cancelled"),
     ]
 
     #####################################
