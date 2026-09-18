@@ -152,6 +152,44 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(datetime.date(2024, 10, 9), transactions[0].completed_date)
         self.assertIn("'Not a date' could not be parsed", cm.output[0])
 
+    def test_parse_transactions_digital_order(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-digital-order.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        transactions = AmazonTransactions.parse_transactions(html, self.test_config)
+
+        # THEN
+        self.assertEqual(2, len(transactions))
+        digital, physical = transactions
+        self.assertEqual(datetime.date(2026, 9, 15), digital.completed_date)
+        self.assertEqual(-7.46, digital.grand_total)
+        self.assertEqual("D01-1234567-1234567", digital.order_number)
+        self.assertEqual("https://www.amazon.com/gp/css/order-details?orderID=D01-1234567-1234567",
+                         digital.order_details_link)
+        self.assertIsNone(digital.seller)
+        self.assertEqual("111-1234567-1234567", physical.order_number)
+        self.assertEqual("AMZN Mktp US", physical.seller)
+
+    def test_parse_transactions_order_text_without_order_number(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-digital-order.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read().replace("Order #D01-1234567-1234567", "Order #pending")
+
+        # WHEN
+        with self.assertLogs("amazonorders.entity.transaction", level="WARNING") as logs:
+            transactions = AmazonTransactions.parse_transactions(html, self.test_config)
+
+        # THEN
+        self.assertEqual(2, len(transactions))
+        self.assertIsNone(transactions[0].order_number)
+        self.assertEqual("111-1234567-1234567", transactions[1].order_number)
+        self.assertEqual(1, len(logs.records))
+        self.assertIn("not an Order number: 'Order #pending'", logs.output[0])
+
     def test_parse_transactions_zero_transactions(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-zero-transactions.html"),
