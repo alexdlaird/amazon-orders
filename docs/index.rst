@@ -4,9 +4,25 @@
 Amazon Orders - A Python library (and CLI) for Amazon order history, line items, and transactions
 *************************************************************************************************
 
-.. image:: _html/logo.png
-   :alt: amazon-orders - A Python library (and CLI) for Amazon order history, line items, and transactions
-   :align: center
+.. only:: html
+
+   .. image:: _static/logo-light.png
+      :alt: amazon-orders - A Python library (and CLI) for Amazon order history, line items, and transactions
+      :align: center
+      :width: 560px
+      :class: hero-logo only-light
+
+   .. image:: _static/logo-dark.png
+      :alt: amazon-orders - A Python library (and CLI) for Amazon order history, line items, and transactions
+      :align: center
+      :width: 560px
+      :class: hero-logo only-dark
+
+.. only:: not html
+
+   .. image:: _html/_images/logo.png
+      :alt: amazon-orders - A Python library (and CLI) for Amazon order history, line items, and transactions
+      :align: center
 
 |
 

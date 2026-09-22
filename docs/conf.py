@@ -47,11 +47,9 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx_sitemap",
     "sphinxext.opengraph",
+    "sphinxcontrib.googleanalytics",
 ]
 autodoc_member_order = "bysource"
-
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -71,33 +69,54 @@ exclude_patterns = ["build", "Thumbs.db", ".DS_Store", "venv"]
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = False
 
-# The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "sphinx"
-
 # -- Options for HTML output -------------------------------------------------
 
 html_baseurl = "https://amazon-orders.readthedocs.io/"
 sitemap_url_scheme = "{link}"
 
 ogp_site_url = html_baseurl
-ogp_image = f"{html_baseurl}logo.png"
+ogp_image = f"{html_baseurl}_images/logo.png"
 ogp_image_alt = "amazon-orders - A Python library (and CLI) for Amazon order history, line items, and transactions"
 ogp_type = "website"
 ogp_social_cards = {"enable": False}
+ogp_enable_meta_description = False
+ogp_custom_meta_tags = [
+    '<meta name="description" content="amazon-orders is an unofficial library that provides a command line interface '
+    'alongside a programmatic API that can be used to interact with Amazon.com\'s consumer-facing website.">',
+    '<meta name="twitter:card" content="summary_large_image">',
+]
+
+googleanalytics_id = "G-7DKJ33P8D3"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "alabaster"
+html_theme = "furo"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
 html_theme_options = {
-    "github_user": "alexdlaird",
-    "github_repo": "amazon-orders",
-    "note_bg": "#FFF59C",
+    "source_repository": "https://github.com/alexdlaird/amazon-orders/",
+    "source_branch": "main",
+    "source_directory": "docs/",
+    "light_logo": "logo-light.png",
+    "dark_logo": "logo-dark.png",
+    "sidebar_hide_name": True,
+    "top_of_page_buttons": ["edit"],
+    "footer_icons": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/alexdlaird/amazon-orders",
+            "html": """
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            """,
+            "class": "",
+        },
+    ],
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -110,32 +129,22 @@ html_css_files = [
     "custom.css",
 ]
 
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-#
-# The default sidebars (for documents that don't match any pattern) are
-# defined by theme itself.  Builtin themes are using these templates by
-# default: ``["localtoc.html", "relations.html", "sourcelink.html",
-# "searchbox.html"]``.
-#
+templates_path = ["_templates"]
+
 html_sidebars = {
-    "index": [
-        "sidebartoc.html",
-        "usefullinks.html",
-        "searchbox.html",
-    ],
     "**": [
-        "sidebartoc.html",
-        "localtoc.html",
-        "usefullinks.html",
-        "searchbox.html",
+        "sidebar/scroll-start.html",
+        "sidebar/brand.html",
+        "sidebar/search.html",
+        "sidebar/getting-around.html",
+        "sidebar/useful-links.html",
+        "sidebar/ethical-ads.html",
+        "sidebar/scroll-end.html",
+        "sidebar/variant-selector.html",
     ],
 }
 
 toc_object_entries = False
-
-# If true, links to the reST sources are added to the pages.
-html_show_sourcelink = False
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 html_show_sphinx = False
