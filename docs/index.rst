@@ -185,6 +185,7 @@ Known Limitations
       different domain with your own credentials, please `contact us <mailto:contact@alexlaird.com>`_ and
       we will start mentioning support for that version of the site.
     - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
+- Amazon Business accounts are not supported
 - Device not remembered for OTP
     - Amazon will sometimes re-prompt for OTP even when a device has been remembered.
     - The recommended workaround for this is persisting the :attr:`~amazonorders.session.AmazonSession.otp_secret_key`
