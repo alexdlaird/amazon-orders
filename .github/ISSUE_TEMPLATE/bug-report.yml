@@ -20,8 +20,6 @@ body:
       required: true
     - label: I have searched [Issues](issues?q=is%3Aissue) to see if the bug has already been reported
       required: true
-    - label: I have searched [Stack Overflow](https://stackoverflow.com/questions/) to ensure the issue I'm experiencing has not already been discussed
-      required: true
     - label: I have [enabled `debug` mode](https://amazon-orders.readthedocs.io/troubleshooting.html#enable-debug-mode) and am attaching relevant console logs and HTML files
 
 - type: input
@@ -56,11 +54,19 @@ body:
   validations:
     required: true
 
+- type: input
+  id: summary
+  attributes:
+    label: Summary
+    description: 2-3 sentences on what breaks and when, written by you even if an AI tool helped with the rest.
+  validations:
+    required: true
+
 - type: textarea
   id: describe-the-bug
   attributes:
     label: Describe the Bug
-    description: A clear and concise description of what the bug is, including exceptions thrown.
+    description: A clear and concise description of what the bug is, including exceptions thrown. Keep it to a few paragraphs, and attach logs and HTML files rather than pasting them. Issues too long to review are closed without consideration.
   validations:
     required: true
 
@@ -68,7 +74,7 @@ body:
   id: steps-to-reproduce
   attributes:
     label: Steps to Reproduce
-    description: A snippet of the code used to reproduce the behavior.
+    description: A snippet of the code used to reproduce the behavior, with the HTML page it ran against attached (sensitive data obfuscated). A snippet alone tells us nothing without the source it ran against.
   validations:
     required: true
 

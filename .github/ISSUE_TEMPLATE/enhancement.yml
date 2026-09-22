@@ -22,11 +22,19 @@ body:
       required: true
     - label: I have [enabled `debug` mode](https://amazon-orders.readthedocs.io/troubleshooting.html#enable-debug-mode) and am attaching relevant console logs and HTML files
 
+- type: input
+  id: summary
+  attributes:
+    label: Summary
+    description: 2-3 sentences on what you'd like to see and why, written by you even if an AI tool helped with the rest.
+  validations:
+    required: true
+
 - type: textarea
   id: describe-the-enhancement
   attributes:
     label: Describe the Enhancement
-    description: A clear and concise description of the how and why of the feature you'd like to see, or what specifically should be added to the documentation. If possible, include possible code snippets of interfaces you'd like to see and how you might interact with them.
+    description: A clear and concise description of the how and why of the feature you'd like to see, or what specifically should be added to the documentation. If possible, include possible code snippets of interfaces you'd like to see and how you might interact with them. Keep it to a few paragraphs. Requests too long to review are closed without consideration.
   validations:
     required: true
 
