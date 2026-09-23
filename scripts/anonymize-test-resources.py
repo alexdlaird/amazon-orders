@@ -13,7 +13,7 @@ import re
 import sys
 from decimal import Decimal, ROUND_HALF_UP
 from html import escape as html_escape
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Tuple
 from urllib.parse import quote, parse_qsl, urlencode, urlsplit, urlunsplit
 
 from bs4 import BeautifulSoup, Comment, Tag
@@ -117,6 +117,58 @@ ADDRESS_SELECTORS = ["li.displayAddressFullName", "li.displayAddressAddressLine1
                      "[data-component='shippingAddress'] li", "div.displayAddressDiv li"]
 
 
+def _neutralize(value: str, titles: List[Tuple[str, str]], sellers: List[str]) -> str:
+    collapsed = re.sub(r"\s+", " ", value)
+    changed = False
+    for title, fake in titles:
+        if title in collapsed:
+            collapsed, changed = collapsed.replace(title, fake), True
+    for seller in sellers:
+        if seller in collapsed:
+            collapsed, changed = collapsed.replace(seller, FAKE_SELLER), True
+    return collapsed if changed else value
+
+
+def _address_fragments(soup: BeautifulSoup) -> List[BeautifulSoup]:
+    fragments = [soup]
+    for tag in soup.select("script[id^='shipToData']"):
+        fragments.append(BeautifulSoup(tag.string or "", "html.parser"))
+    for tag in soup.select("[data-a-popover]"):
+        try:
+            inline = json.loads(str(tag["data-a-popover"])).get("inlineContent")
+        except (ValueError, AttributeError):
+            inline = None
+        if inline:
+            fragments.append(BeautifulSoup(inline, "html.parser"))
+    return fragments
+
+
+def _remove_page_chrome(soup: BeautifulSoup) -> None:
+    for tag in soup.find_all("script"):
+        if not str(tag.get("id", "")).startswith(KEEP_SCRIPT_ID_PREFIXES):
+            tag.decompose()
+    for selector in REMOVE_SELECTORS:
+        for tag in soup.select(selector):
+            tag.decompose()
+
+
+def _fake_address_part(value: str) -> str:
+    return FAKE_ADDRESS_LINES[2] if re.search(r"\b\d{5}\b", value) else FAKE_ADDRESS_LINES[0]
+
+
+def _fake_address_line(tag: Tag, value: str) -> str:
+    classes = " ".join(tag.get("class", []))
+    if "FullName" in classes:
+        return FAKE_NAME
+    if "PhoneNumber" in classes:
+        return "Telefon: 030 1234567"
+    if "AddressLine2" in classes:
+        return FAKE_ADDRESS_LINES[1]
+    if "PostalCode" in classes or re.match(r"^\d{5}\b", value):
+        return FAKE_ADDRESS_LINES[2]
+    return FAKE_ADDRESS_LINES[0]
+
+
 class Anonymizer:
     def __init__(self, rules: Dict) -> None:
         self.salt = str(rules.get("id_salt") or "amazon-orders").encode("utf-8")
@@ -152,34 +204,25 @@ class Anonymizer:
 
     def collect_product_rules(self, soup: BeautifulSoup, raw_html: str) -> None:
         """Harvest product titles, ASINs and sellers, because what was bought is as personal as who bought it."""
+        self._collect_product_titles(soup)
+        self._collect_asins(raw_html)
+        for name in SELLER_NAME_REGEX.findall(raw_html):
+            self._add_seller(name)
+        for tag in soup.select("[data-component='orderedMerchant'] a"):
+            # Some seller names carry a suffix the parser has to handle, keep it and replace only the name
+            self._add_seller(tag.get_text(" "))
+        for seller_id in SELLER_ID_REGEX.findall(raw_html):
+            if seller_id not in PUBLIC_IDS and seller_id not in self.seller_ids:
+                self.seller_ids[seller_id] = f"A0TESTSELLER{len(self.seller_ids) + 1:02d}"
+                self.sensitive.add(seller_id)
+
+    def _collect_product_titles(self, soup: BeautifulSoup) -> None:
         for selector in PRODUCT_TITLE_SELECTORS:
             for tag in soup.select(selector):
                 self._add_product_title(tag.get_text(" "))
         # Only product images, payment method logos have alt texts like "Amazon Visa"
         for tag in soup.select(", ".join(f"{selector} img[alt]" for selector in PRODUCT_IMAGE_CONTAINER_SELECTORS)):
             self._add_product_title(str(tag["alt"]))
-        asins = ASIN_REGEX.findall(raw_html)
-        for asin_list in ASIN_LIST_REGEX.findall(raw_html):
-            asins.extend(re.split(r"%2C|,", asin_list))
-        for asin in asins:
-            if asin not in self.asins and not asin.isalpha():
-                self.asins[asin] = f"B0TEST{len(self.asins) + 1:04d}"
-                self.sensitive.add(asin)
-        for name in SELLER_NAME_REGEX.findall(raw_html):
-            name = re.sub(r"\s*Preise inkl\. MwSt\.$", "", re.sub(r"\s+", " ", name).strip())
-            if len(name) >= 3 and not name.lower().startswith("amazon") and name not in self.sellers:
-                self.sellers.append(name)
-                self.sensitive.add(name)
-        for tag in soup.select("[data-component='orderedMerchant'] a"):
-            # Some seller names carry a suffix the parser has to handle, keep it and replace only the name
-            name = re.sub(r"\s*Preise inkl\. MwSt\.$", "", re.sub(r"\s+", " ", tag.get_text(" ")).strip())
-            if len(name) >= 3 and not name.lower().startswith("amazon") and name not in self.sellers:
-                self.sellers.append(name)
-                self.sensitive.add(name)
-        for seller_id in SELLER_ID_REGEX.findall(raw_html):
-            if seller_id not in PUBLIC_IDS and seller_id not in self.seller_ids:
-                self.seller_ids[seller_id] = f"A0TESTSELLER{len(self.seller_ids) + 1:02d}"
-                self.sensitive.add(seller_id)
 
     def _add_product_title(self, text: str) -> None:
         title = re.sub(r"\s+", " ", text).strip()
@@ -187,31 +230,38 @@ class Anonymizer:
             self.titles[title] = f"Testartikel {len(self.titles) + 1}"
             self.sensitive.add(title)
 
+    def _collect_asins(self, raw_html: str) -> None:
+        asins = ASIN_REGEX.findall(raw_html)
+        for asin_list in ASIN_LIST_REGEX.findall(raw_html):
+            asins.extend(re.split(r"%2C|,", asin_list))
+        for asin in asins:
+            if asin not in self.asins and not asin.isalpha():
+                self.asins[asin] = f"B0TEST{len(self.asins) + 1:04d}"
+                self.sensitive.add(asin)
+
+    def _add_seller(self, text: str) -> None:
+        name = re.sub(r"\s*Preise inkl\. MwSt\.$", "", re.sub(r"\s+", " ", text).strip())
+        if len(name) >= 3 and not name.lower().startswith("amazon") and name not in self.sellers:
+            self.sellers.append(name)
+            self.sensitive.add(name)
+
     def neutralize_products(self, soup: BeautifulSoup) -> None:
         titles = sorted(self.titles.items(), key=lambda t: len(t[0]), reverse=True)
         sellers = sorted(self.sellers, key=len, reverse=True)
 
-        def neutralize(value: str) -> str:
-            collapsed = re.sub(r"\s+", " ", value)
-            changed = False
-            for title, fake in titles:
-                if title in collapsed:
-                    collapsed, changed = collapsed.replace(title, fake), True
-            for seller in sellers:
-                if seller in collapsed:
-                    collapsed, changed = collapsed.replace(seller, FAKE_SELLER), True
-            return collapsed if changed else value
-
         for text in soup.find_all(string=True):
             if isinstance(text, Comment):
                 continue
-            new = neutralize(str(text))
+            new = _neutralize(str(text), titles, sellers)
             if new != str(text):
                 text.replace_with(new)
         for tag in soup.find_all(True):
             for attr, value in list(tag.attrs.items()):
                 if isinstance(value, str):
-                    tag[attr] = neutralize(value)
+                    tag[attr] = _neutralize(value, titles, sellers)
+        self._redact_product_details(soup)
+
+    def _redact_product_details(self, soup: BeautifulSoup) -> None:
         for selector in PRODUCT_DETAIL_SELECTORS:
             for tag in soup.select(selector):
                 for text in tag.find_all(string=lambda t: t.strip() != ""):
@@ -220,103 +270,83 @@ class Anonymizer:
 
     def collect_address_rules(self, soup: BeautifulSoup) -> None:
         """Harvest recipient names and address lines, including those embedded in templates and popovers."""
-        fragments = [soup]
-        for tag in soup.select("script[id^='shipToData']"):
-            fragments.append(BeautifulSoup(tag.string or "", "html.parser"))
-        for tag in soup.select("[data-a-popover]"):
-            try:
-                inline = json.loads(str(tag["data-a-popover"])).get("inlineContent")
-            except (ValueError, AttributeError):
-                inline = None
-            if inline:
-                fragments.append(BeautifulSoup(inline, "html.parser"))
-
         known = {rule["find"] for rule in self.replace}
-
-        def add(value: str, fake: str) -> None:
-            if len(value) >= 3 and value not in known and value.lower() not in ("deutschland", "germany"):
-                self.replace.append({"find": value, "replace": fake})
-                self.sensitive.add(value)
-                known.add(value)
-
-        for fragment in fragments:
-            # Order history cards: name in <h5>, then "street<br>city postal code", then the country
-            for popover in fragment.select("[id^='a-popover-shippingAddress']"):
-                for row in popover.select(".a-row"):
-                    for line in row.stripped_strings:
-                        line = re.sub(r"\s+", " ", line)
-                        if row.find("h5"):
-                            add(line, FAKE_NAME)
-                        elif re.search(r"\b\d{5}\b", line):
-                            add(line, FAKE_ADDRESS_LINES[2])
-                        else:
-                            add(line, FAKE_ADDRESS_LINES[0])
-            # Some detail pages list the address inline: name, then ", street , postal code", then the country
-            for address in fragment.select("[data-component='shippingAddress'] ul"):
-                lines = address.find_all("li")
-                if lines:
-                    add(re.sub(r"\s+", " ", lines[0].get_text(" ")).strip(), FAKE_NAME)
-                for line in lines[1:]:
-                    value = re.sub(r"\s+", " ", line.get_text(" ")).strip()
-                    parts = [p.strip() for p in value.split(",") if p.strip()]
-                    if len(parts) > 1:
-                        for part in parts:
-                            self.sensitive.add(part)
-                        fake_parts = [FAKE_ADDRESS_LINES[2].split()[0] if re.fullmatch(r"\d{5}", p)
-                                      else FAKE_ADDRESS_LINES[2] if re.search(r"\b\d{5}\b", p)
-                                      else FAKE_ADDRESS_LINES[0] for p in parts]
-                        add(value, (", " if value.startswith(",") else "") + " , ".join(fake_parts))
+        for fragment in _address_fragments(soup):
+            self._collect_popover_addresses(fragment, known)
+            self._collect_inline_addresses(fragment, known)
             for selector in ADDRESS_SELECTORS:
                 for tag in fragment.select(selector):
                     value = re.sub(r"\s+", " ", tag.get_text(" ")).strip()
-                    if len(value) < 3 or value in known or value.lower() in ("deutschland", "germany"):
-                        continue
-                    classes = " ".join(tag.get("class", []))
-                    if "FullName" in classes:
-                        fake = FAKE_NAME
-                    elif "PhoneNumber" in classes:
-                        fake = "Telefon: 030 1234567"
-                    elif "AddressLine2" in classes:
-                        fake = FAKE_ADDRESS_LINES[1]
-                    elif "PostalCode" in classes or re.match(r"^\d{5}\b", value):
-                        fake = FAKE_ADDRESS_LINES[2]
+                    self._add_address(value, _fake_address_line(tag, value), known)
+
+    def _add_address(self, value: str, fake: str, known: Set[str]) -> None:
+        if len(value) >= 3 and value not in known and value.lower() not in ("deutschland", "germany"):
+            self.replace.append({"find": value, "replace": fake})
+            self.sensitive.add(value)
+            known.add(value)
+
+    def _collect_popover_addresses(self, fragment: BeautifulSoup, known: Set[str]) -> None:
+        # Order history cards: name in <h5>, then "street<br>city postal code", then the country
+        for popover in fragment.select("[id^='a-popover-shippingAddress']"):
+            for row in popover.select(".a-row"):
+                for line in row.stripped_strings:
+                    line = re.sub(r"\s+", " ", line)
+                    if row.find("h5"):
+                        self._add_address(line, FAKE_NAME, known)
                     else:
-                        fake = FAKE_ADDRESS_LINES[0]
-                    self.replace.append({"find": value, "replace": fake})
-                    self.sensitive.add(value)
-                    known.add(value)
+                        self._add_address(line, _fake_address_part(line), known)
+
+    def _collect_inline_addresses(self, fragment: BeautifulSoup, known: Set[str]) -> None:
+        # Some detail pages list the address inline: name, then ", street , postal code", then the country
+        for address in fragment.select("[data-component='shippingAddress'] ul"):
+            lines = address.find_all("li")
+            if lines:
+                self._add_address(re.sub(r"\s+", " ", lines[0].get_text(" ")).strip(), FAKE_NAME, known)
+            for line in lines[1:]:
+                self._add_inline_address_line(re.sub(r"\s+", " ", line.get_text(" ")).strip(), known)
+
+    def _add_inline_address_line(self, value: str, known: Set[str]) -> None:
+        parts = [p.strip() for p in value.split(",") if p.strip()]
+        if len(parts) > 1:
+            self.sensitive.update(parts)
+            fake_parts = [FAKE_ADDRESS_LINES[2].split()[0] if re.fullmatch(r"\d{5}", p)
+                          else _fake_address_part(p) for p in parts]
+            self._add_address(value, (", " if value.startswith(",") else "") + " , ".join(fake_parts), known)
 
     def clean_structure(self, soup: BeautifulSoup) -> None:
         self.neutralize_products(soup)
-        for tag in soup.find_all("script"):
-            if not str(tag.get("id", "")).startswith(KEEP_SCRIPT_ID_PREFIXES):
-                tag.decompose()
-        for selector in REMOVE_SELECTORS:
-            for tag in soup.select(selector):
-                tag.decompose()
+        _remove_page_chrome(soup)
+        self._replace_carrier_texts(soup)
+        for comment in soup.find_all(string=lambda s: isinstance(s, Comment)):
+            comment.extract()
+        self._redact_hidden_inputs(soup)
+        for tag in soup.find_all(True):
+            if isinstance(tag, Tag):
+                self._redact_attributes(tag)
+
+    def _replace_carrier_texts(self, soup: BeautifulSoup) -> None:
         for text in soup.find_all(string=CARRIER_FREE_TEXT_REGEX):
             if not isinstance(text, Comment) and text.parent.name != "script":
                 self.sensitive.add(re.sub(r"\s+", " ", str(text)).strip())
                 text.replace_with(FAKE_CARRIER_TEXT)
-        for comment in soup.find_all(string=lambda s: isinstance(s, Comment)):
-            comment.extract()
+
+    def _redact_hidden_inputs(self, soup: BeautifulSoup) -> None:
         for tag in soup.find_all("input"):
             if tag.get("type") == "hidden" and tag.get("value"):
                 if len(str(tag["value"])) >= 12:
                     self.sensitive.add(str(tag["value"]))
                 tag["value"] = "REDACTED"
-        for tag in soup.find_all(True):
-            if not isinstance(tag, Tag):
+
+    def _redact_attributes(self, tag: Tag) -> None:
+        for attr, value in list(tag.attrs.items()):
+            if not isinstance(value, str):
                 continue
-            for attr, value in list(tag.attrs.items()):
-                if not isinstance(value, str):
-                    continue
-                if attr in ("href", "src", "action", "data-url", "data-href") and "?" in value:
-                    tag[attr] = self.clean_url(value)
-                elif attr not in KEEP_ATTRIBUTES and TOKEN_VALUE_REGEX.match(value) and \
-                        not value.startswith(("http", "/")):
-                    self.sensitive.add(value)
-                    tag[attr] = "REDACTED"
+            if attr in ("href", "src", "action", "data-url", "data-href") and "?" in value:
+                tag[attr] = self.clean_url(value)
+            elif attr not in KEEP_ATTRIBUTES and TOKEN_VALUE_REGEX.match(value) and \
+                    not value.startswith(("http", "/")):
+                self.sensitive.add(value)
+                tag[attr] = "REDACTED"
 
     def shift_dates(self, html: str) -> str:
         years = [int(y) for y in re.findall(r"\b(20\d\d)\b", " ".join(m.group(0) for m in GERMAN_DATE_REGEX.finditer(html)))]
@@ -359,11 +389,28 @@ class Anonymizer:
         return urlunsplit(parts._replace(query=urlencode(query, safe="-")))
 
     def clean_text(self, html: str) -> str:
+        html = self._apply_replace_rules(html)
+        html = ORDER_ID_REGEX.sub(self.fake_order_id, html)
+        html = self._replace_products(html)
+        html = self._redact_tokens(html)
+        html = self._replace_contact_and_payment(html)
+        html = self.shift_dates(html)
+        html = self.scale_amounts(html)
+        html = PHONE_REGEX.sub(lambda m: self._track(m, 2, "030 1234567"), html)
+        # Tokens redacted in one attribute may be repeated elsewhere, e.g. URL-encoded inside ad slot JSON
+        for value in sorted((v for v in self.sensitive if len(v) >= 12 and "@" not in v), key=len, reverse=True):
+            for variant in {value, quote(value, safe=""), quote(quote(value, safe=""), safe="")}:
+                html = html.replace(variant, "REDACTED")
+        return html
+
+    def _apply_replace_rules(self, html: str) -> str:
         for rule in sorted(self.replace, key=lambda r: len(r["find"]), reverse=True):
             html = re.sub(re.escape(rule["find"]), rule["replace"], html, flags=re.IGNORECASE)
             for variant in (json.dumps(rule["find"])[1:-1], json.dumps(rule["find"], ensure_ascii=False)[1:-1]):
                 html = html.replace(variant, rule["replace"])
-        html = ORDER_ID_REGEX.sub(self.fake_order_id, html)
+        return html
+
+    def _replace_products(self, html: str) -> str:
         for title, fake in sorted(self.titles.items(), key=lambda t: len(t[0]), reverse=True):
             # Titles may also be embedded in JSON (escaped) or in text nodes BeautifulSoup kept escaped
             for variant in {json.dumps(title)[1:-1], json.dumps(title, ensure_ascii=False)[1:-1],
@@ -374,13 +421,20 @@ class Anonymizer:
             html = re.sub(r"(?:(?<=%2C)|(?<![A-Za-z0-9]))" + identifier + r"(?![A-Za-z0-9])", fake, html)
         html = PRODUCT_IMAGE_REGEX.sub(r"\g<1>" + FAKE_IMAGE_ID, html)
         html = VIDEO_ID_REGEX.sub(FAKE_VIDEO_ID, html)
-        html = STATEMENT_DESCRIPTOR_REGEX.sub(
-            lambda m: m.group(0) if re.search(r"AMZN|AMAZON", m.group(1).upper()) or not m.group(1)
-            else self._track(m, 1, "BEISPIELHAENDLER"), html)
+        return STATEMENT_DESCRIPTOR_REGEX.sub(self._replace_statement_descriptor, html)
+
+    def _replace_statement_descriptor(self, match: re.Match) -> str:
+        if not match.group(1) or re.search(r"AMZN|AMAZON", match.group(1).upper()):
+            return match.group(0)
+        return self._track(match, 1, "BEISPIELHAENDLER")
+
+    def _redact_tokens(self, html: str) -> str:
         html = WALLET_ID_REGEX.sub(lambda m: self._track(m, 0, "amzn1.pm.wallet.REDACTED"), html)
         html = EXPIRATION_REGEX.sub(r'"\g<1>":{"year":2030,"month":1}', html)
         html = JSON_TOKEN_REGEX.sub(lambda m: self._track(m, 3, "REDACTED"), html)
-        html = JWT_REGEX.sub(lambda m: self._track(m, 0, "REDACTED"), html)
+        return JWT_REGEX.sub(lambda m: self._track(m, 0, "REDACTED"), html)
+
+    def _replace_contact_and_payment(self, html: str) -> str:
         for email in set(EMAIL_REGEX.findall(html)):
             if email != FAKE_EMAIL:
                 self.sensitive.add(email)
@@ -392,13 +446,6 @@ class Anonymizer:
         for digits in self.card_digits:
             # Card digits are often rendered in their own element, separate from the "••••" prefix
             html = re.sub(r">(\s*)" + re.escape(digits) + r"(\s*)<", r">\g<1>" + FAKE_CARD_DIGITS + r"\g<2><", html)
-        html = self.shift_dates(html)
-        html = self.scale_amounts(html)
-        html = PHONE_REGEX.sub(lambda m: self._track(m, 2, "030 1234567"), html)
-        # Tokens redacted in one attribute may be repeated elsewhere, e.g. URL-encoded inside ad slot JSON
-        for value in sorted((v for v in self.sensitive if len(v) >= 12 and "@" not in v), key=len, reverse=True):
-            for variant in {value, quote(value, safe=""), quote(quote(value, safe=""), safe="")}:
-                html = html.replace(variant, "REDACTED")
         return html
 
     def _track(self, match: re.Match, group: int, fake: str) -> str:
@@ -420,71 +467,91 @@ class Anonymizer:
         return found
 
 
-def main() -> None:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Anonymize raw Amazon pages for use as test resources.")
     parser.add_argument("--rules", required=True, help="Private JSON rules file (never commit it).")
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--extra-sensitive-file", action="append", default=[],
                         help="JSON file whose values must not survive (e.g. the cookie jar).")
     parser.add_argument("pages", nargs="+", help="raw_path:output_relative_path[:cards=0,3,5]")
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    with open(os.path.expanduser(args.rules), encoding="utf-8") as f:
+
+def load_anonymizer(rules_path: str, extra_sensitive_paths: List[str]) -> Anonymizer:
+    with open(os.path.expanduser(rules_path), encoding="utf-8") as f:
         anonymizer = Anonymizer(json.load(f))
-    for path in args.extra_sensitive_file:
+    for path in extra_sensitive_paths:
         with open(os.path.expanduser(path), encoding="utf-8") as f:
             data = json.load(f)
         anonymizer.sensitive.update(v for v in (data.values() if isinstance(data, dict) else data)
                                     if isinstance(v, str) and len(v) >= 12)
+    return anonymizer
+
+
+def read_page(anonymizer: Anonymizer, raw_path: str) -> BeautifulSoup:
+    with open(os.path.expanduser(raw_path), encoding="utf-8") as f:
+        raw = f.read()
+    anonymizer.collect_identifiers(raw)
+    soup = BeautifulSoup(raw, "html.parser")
+    anonymizer.collect_address_rules(soup)
+    anonymizer.collect_product_rules(soup, raw)
+    return soup
+
+
+def keep_cards(soup: BeautifulSoup, options: List[str]) -> None:
+    for option in options:
+        if option.startswith("cards="):
+            keep = {int(i) for i in option[len("cards="):].split(",")}
+            for index, card in enumerate(soup.select("div.order-card")):
+                if index not in keep:
+                    card.decompose()
+
+
+def write_page(anonymizer: Anonymizer, soup: BeautifulSoup, output_dir: str, out_rel: str) -> str:
+    anonymizer.clean_structure(soup)
+    html = anonymizer.clean_text(str(soup))
+    out_rel = ORDER_ID_REGEX.sub(anonymizer.fake_order_id, out_rel)
+    out_path = os.path.join(output_dir, out_rel)
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(html)
+    return out_path
+
+
+def check_page(anonymizer: Anonymizer, out_path: str) -> bool:
+    with open(out_path, encoding="utf-8") as f:
+        html = f.read()
+    leftovers = anonymizer.leftovers(html)
+    size = os.path.getsize(out_path) // 1024
+    if not leftovers:
+        print(f"ok   {out_path} ({size} KB)")
+        return True
+    print(f"LEAK {out_path} ({size} KB): {len(leftovers)} sensitive value(s) survived")
+    for value in leftovers:
+        # Show only a masked hint and the surrounding markup, never the value itself
+        index = html.lower().find(value.lower())
+        context = html[max(0, index - 80):index + len(value) + 40] if index >= 0 else ""
+        print(f"     {value[:2]}…({len(value)} chars): {re.sub(r'\s+', ' ', context.replace(value, '<X>'))}")
+    return False
+
+
+def main() -> None:
+    args = parse_args()
+    anonymizer = load_anonymizer(args.rules, args.extra_sensitive_file)
 
     pairs = [page.split(":") for page in args.pages]
-    soups = []
-    for raw_path, *_ in pairs:
-        with open(os.path.expanduser(raw_path), encoding="utf-8") as f:
-            raw = f.read()
-        anonymizer.collect_identifiers(raw)
-        soup = BeautifulSoup(raw, "html.parser")
-        anonymizer.collect_address_rules(soup)
-        anonymizer.collect_product_rules(soup, raw)
-        soups.append(soup)
+    soups = [read_page(anonymizer, raw_path) for raw_path, *_ in pairs]
 
     written = []
     for (_, out_rel, *options), soup in zip(pairs, soups):
-        for option in options:
-            if option.startswith("cards="):
-                keep = {int(i) for i in option[len("cards="):].split(",")}
-                for index, card in enumerate(soup.select("div.order-card")):
-                    if index not in keep:
-                        card.decompose()
-        anonymizer.clean_structure(soup)
-        html = anonymizer.clean_text(str(soup))
-        out_rel = ORDER_ID_REGEX.sub(anonymizer.fake_order_id, out_rel)
-        out_path = os.path.join(args.output_dir, out_rel)
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write(html)
-        written.append(out_path)
+        keep_cards(soup, options)
+        written.append(write_page(anonymizer, soup, args.output_dir, out_rel))
 
-    failed = False
-    for out_path in written:
-        with open(out_path, encoding="utf-8") as f:
-            leftovers = anonymizer.leftovers(f.read())
-        size = os.path.getsize(out_path) // 1024
-        if leftovers:
-            failed = True
-            print(f"LEAK {out_path} ({size} KB): {len(leftovers)} sensitive value(s) survived")
-            with open(out_path, encoding="utf-8") as f:
-                html = f.read()
-            for value in leftovers:
-                # Show only a masked hint and the surrounding markup, never the value itself
-                index = html.lower().find(value.lower())
-                context = html[max(0, index - 80):index + len(value) + 40] if index >= 0 else ""
-                print(f"     {value[:2]}…({len(value)} chars): {re.sub(r'\s+', ' ', context.replace(value, '<X>'))}")
-        else:
-            print(f"ok   {out_path} ({size} KB)")
+    # Check every page, so all leaks are reported at once
+    results = [check_page(anonymizer, out_path) for out_path in written]
     print(f"{len(anonymizer.order_ids)} order numbers replaced, {len(anonymizer.replace)} text rules applied, "
           f"{len(anonymizer.sensitive)} sensitive values checked.")
-    if failed:
+    if not all(results):
         sys.exit(1)
 
 
