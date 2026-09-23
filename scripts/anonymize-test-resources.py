@@ -63,7 +63,9 @@ PUBLIC_IDS = {"A1PA6795UKMFR9", "ATVPDKIKX0DER"}
 
 # Product links outside of orders are ads, e.g. for the Amazon Visa card, and must keep their text
 ORDER_ITEM_CONTAINERS = ["div.order-card", "[data-component='purchasedItems']"]
-PRODUCT_TITLE_SELECTORS = ["[data-component='itemTitle']", ".yohtmlc-product-title"] + [
+PRODUCT_TITLE_SELECTORS = ["[data-component='itemTitle']", ".yohtmlc-product-title",
+                           # Services reference the product they belong to, e.g. "Service für: <title>"
+                           "[data-component='associatedOrdersForService'] span.a-size-small > span"] + [
     f"{container} {link}" for container in ORDER_ITEM_CONTAINERS
     for link in ("a[href*='/dp/']", "a[href*='/gp/product/']", "a[href*='/gp/video/detail/']")]
 PRODUCT_IMAGE_CONTAINER_SELECTORS = ["[data-component='itemImage']", ".product-image"] + ORDER_ITEM_CONTAINERS
@@ -164,12 +166,13 @@ class Anonymizer:
                 self.asins[asin] = f"B0TEST{len(self.asins) + 1:04d}"
                 self.sensitive.add(asin)
         for name in SELLER_NAME_REGEX.findall(raw_html):
-            name = re.sub(r"\s+", " ", name).strip()
+            name = re.sub(r"\s*Preise inkl\. MwSt\.$", "", re.sub(r"\s+", " ", name).strip())
             if len(name) >= 3 and not name.lower().startswith("amazon") and name not in self.sellers:
                 self.sellers.append(name)
                 self.sensitive.add(name)
         for tag in soup.select("[data-component='orderedMerchant'] a"):
-            name = re.sub(r"\s+", " ", tag.get_text(" ")).strip()
+            # Some seller names carry a suffix the parser has to handle, keep it and replace only the name
+            name = re.sub(r"\s*Preise inkl\. MwSt\.$", "", re.sub(r"\s+", " ", tag.get_text(" ")).strip())
             if len(name) >= 3 and not name.lower().startswith("amazon") and name not in self.sellers:
                 self.sellers.append(name)
                 self.sensitive.add(name)
@@ -248,6 +251,21 @@ class Anonymizer:
                             add(line, FAKE_ADDRESS_LINES[2])
                         else:
                             add(line, FAKE_ADDRESS_LINES[0])
+            # Some detail pages list the address inline: name, then ", street , postal code", then the country
+            for address in fragment.select("[data-component='shippingAddress'] ul"):
+                lines = address.find_all("li")
+                if lines:
+                    add(re.sub(r"\s+", " ", lines[0].get_text(" ")).strip(), FAKE_NAME)
+                for line in lines[1:]:
+                    value = re.sub(r"\s+", " ", line.get_text(" ")).strip()
+                    parts = [p.strip() for p in value.split(",") if p.strip()]
+                    if len(parts) > 1:
+                        for part in parts:
+                            self.sensitive.add(part)
+                        fake_parts = [FAKE_ADDRESS_LINES[2].split()[0] if re.fullmatch(r"\d{5}", p)
+                                      else FAKE_ADDRESS_LINES[2] if re.search(r"\b\d{5}\b", p)
+                                      else FAKE_ADDRESS_LINES[0] for p in parts]
+                        add(value, (", " if value.startswith(",") else "") + " , ".join(fake_parts))
             for selector in ADDRESS_SELECTORS:
                 for tag in fragment.select(selector):
                     value = re.sub(r"\s+", " ", tag.get_text(" ")).strip()
