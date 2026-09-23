@@ -63,6 +63,8 @@ class Order(Parsable):
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
         #: The Order Items.
         self.items: List[Item] = clone.items if clone and not full_details else self._parse_items()
+        if not clone and not self.cancelled:
+            self.cancelled = self._parse_cancelled_shipments()
         # `required` is relaxed only when `order_number` is explicitly supplied (the `get_order()` path), so the
         # fallback is never silently applied when parsing the history list, where the parsed value must be present.
         _parsed_order_number = None if clone else self.safe_simple_parse(
@@ -82,11 +84,8 @@ class Order(Parsable):
         #: The Order grand total.
         self.grand_total: Optional[float] = clone.grand_total if clone else self.safe_parse(self._parse_grand_total)
         #: The Order placed date.
-        self.order_placed_date: date = clone.order_placed_date if clone else self.safe_simple_parse(
-            selector=self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR,
-            suffix_split="Order #",
-            suffix_split_fuzzy=True,
-            parse_date=True)
+        self.order_placed_date: date = clone.order_placed_date if clone else self.safe_parse(
+            self._parse_order_placed_date)
         #: The Order Recipients.
         self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient)
         #: The number of items in the purchase, when Amazon summarizes the count instead of listing the items
@@ -167,6 +166,38 @@ class Order(Parsable):
         items.sort()
         return items
 
+    def _parse_cancelled_shipments(self) -> bool:
+        prefixes = self.config.constants.LOCALE.CANCELLED_STATUS_PREFIXES
+        if not prefixes or not self.shipments:
+            return False
+
+        return all(shipment.delivery_status and shipment.delivery_status.startswith(tuple(prefixes))
+                   for shipment in self.shipments)
+
+    def _parse_history_header_value(self,
+                                    label: str) -> Optional[str]:
+        """Finds the value of an Order history card header column by its label, not its position."""
+        for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_HISTORY_HEADER_ITEM_SELECTOR):
+            label_tag = util.select_one(tag, self.config.selectors.FIELD_ORDER_HISTORY_HEADER_LABEL_SELECTOR)
+            if label_tag and label_tag.text.strip() == label:
+                value = tag.text.strip()[len(tag.text.strip().split(label, 1)[0]) + len(label):]
+                return value.strip() or None
+
+        return None
+
+    def _parse_order_placed_date(self) -> Optional[date]:
+        locale = self.config.constants.LOCALE
+
+        if locale.HISTORY_HEADER_ORDER_PLACED_LABEL:
+            value = self._parse_history_header_value(locale.HISTORY_HEADER_ORDER_PLACED_LABEL)
+            if value:
+                return locale.parse_date(value)
+
+        return self.simple_parse(self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR,
+                                 suffix_split=locale.ORDER_PLACED_DATE_SUFFIX,
+                                 suffix_split_fuzzy=True,
+                                 parse_date=True)
+
     def _parse_order_details_link(self) -> Optional[str]:
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_DETAILS_LINK_SELECTOR, attr_name="href")
 
@@ -185,9 +216,14 @@ class Order(Parsable):
         if not self.is_whole_foods and len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
             return None
 
-        value = self.simple_parse(self.config.selectors.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
+        locale = self.config.constants.LOCALE
+        value: Any = None
+        if locale.HISTORY_HEADER_GRAND_TOTAL_LABEL:
+            value = self._parse_history_header_value(locale.HISTORY_HEADER_GRAND_TOTAL_LABEL)
+        if not value:
+            value = self.simple_parse(self.config.selectors.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
 
-        total_str = "total"
+        total_str = locale.GRAND_TOTAL_PREFIX
 
         if not value:
             value = self._parse_currency("grand total")
@@ -197,6 +233,10 @@ class Order(Parsable):
             value = value[len(total_str):].strip()
 
         value = self.to_currency(value)
+
+        # Amazon may render no totals at all for an Order cancelled before it was charged
+        if value is None and self.cancelled:
+            return None
 
         if value is None:  # pragma: no cover
             err_msg = (f"Order {getattr(self, 'order_number', 'UNKNOWN')} grand_total could not be parsed, but it's "
@@ -217,8 +257,22 @@ class Order(Parsable):
         if self.is_whole_foods:
             return self.safe_simple_parse(
                 selector=self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_METHOD_SELECTOR)
-        return self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR,
-                                      attr_name="alt")
+        value = self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR,
+                                       attr_name="alt")
+        if value is None:
+            value = self.safe_parse(self._parse_payment_instrument_field,
+                                    selector=self.config.selectors.FIELD_ORDER_PAYMENT_INSTRUMENT_NAME_SELECTOR)
+        return value
+
+    def _parse_payment_instrument_field(self,
+                                        selector: str) -> Optional[str]:
+        # When an Order was paid with more than one payment method, only the first one is used
+        instrument = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_PAYMENT_INSTRUMENT_SELECTOR)
+        if not instrument:
+            return None
+
+        tag = util.select_one(instrument, selector)
+        return tag.text.strip() or None if tag else None
 
     def _parse_masked_digits(self,
                              selector: str,
@@ -234,8 +288,12 @@ class Order(Parsable):
         if self.is_whole_foods:
             return self._parse_masked_digits(
                 self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR, r"\*\s*(\d+)")
-        return self._parse_masked_digits(
+        value = self._parse_masked_digits(
             self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR, r"ending in\s+(\d+)")
+        if value is None:
+            value = self._parse_payment_instrument_field(
+                self.config.selectors.FIELD_ORDER_PAYMENT_INSTRUMENT_NUMBER_SELECTOR)
+        return value
 
     def _parse_subtotal(self) -> Optional[float]:
         if self.is_whole_foods:
@@ -318,9 +376,10 @@ class Order(Parsable):
                         contains: str,
                         combine_multiple: bool = False) -> Optional[float]:
         value = None
+        locale = self.config.constants.LOCALE
 
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
-            if (contains in tag.text.lower() and
+            if (locale.subtotal_matches(contains, tag.text.lower()) and
                     not util.select_one(tag,
                                         self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_POPOVER_PRELOAD_SELECTOR)):
                 inner_tag = util.select_one(tag, self.config.selectors.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)

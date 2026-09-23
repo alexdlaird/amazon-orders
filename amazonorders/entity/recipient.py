@@ -2,10 +2,12 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import logging
-from typing import Optional
+import re
+from typing import List, Optional
 
 from bs4 import Tag
 
+from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
 
@@ -35,6 +37,9 @@ class Recipient(Parsable):
         return f"Recipient: {self.name}"
 
     def _parse_address(self) -> Optional[str]:
+        if self.config.constants.LOCALE.MULTILINE_ADDRESS:
+            return self._parse_address_lines()
+
         value = self.simple_parse(self.config.selectors.FIELD_RECIPIENT_ADDRESS1_SELECTOR)
 
         if value:
@@ -49,3 +54,14 @@ class Recipient(Parsable):
             value = self.simple_parse(self.config.selectors.FIELD_RECIPIENT_ADDRESS_FALLBACK_SELECTOR)
 
         return value
+
+    def _parse_address_lines(self) -> Optional[str]:
+        lines: List[str] = []
+        for tag in util.select(self.parsed, self.config.selectors.FIELD_RECIPIENT_ADDRESS_LINES_SELECTOR):
+            # Lines are separated by <br> or, when Amazon renders the address inline, by commas
+            for line in re.split(r"[\n,]", tag.get_text("\n")):
+                line = re.sub(r"\s+", " ", line).strip()
+                if line:
+                    lines.append(line)
+
+        return "\n".join(lines) or None

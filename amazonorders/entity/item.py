@@ -47,17 +47,23 @@ class Item(Parsable):
         #: The Item Seller.
         self.seller: Optional[Seller] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_SELLER_SELECTOR,
-            text_contains="Sold by:",
+            text_contains=self.config.constants.LOCALE.SOLD_BY_PREFIX,
             wrap_tag=Seller)
         #: The Item condition.
         self.condition: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_TAG_ITERATOR_SELECTOR,
-            prefix_split="Condition:")
+            prefix_split=self.config.constants.LOCALE.CONDITION_PREFIX)
         #: The Item return eligible date.
         self.return_eligible_date: Optional[date] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_RETURN_SELECTOR,
-            text_contains="Return",
+            text_contains=self.config.constants.LOCALE.RETURN_TEXT,
             parse_date=True)
+        #: The Item's Subscribe & Save delivery frequency as rendered by Amazon (e.g. "Jeden Monat"). ``None``
+        #: if the Item is not part of a subscription, or the page does not render it.
+        self.subscription_frequency: Optional[str] = self.safe_simple_parse(
+            selector=self.config.selectors.FIELD_ITEM_SUBSCRIPTION_FREQUENCY_SELECTOR,
+            prefix_split=self.config.constants.LOCALE.SUBSCRIPTION_FREQUENCY_PREFIX,
+            prefix_split_fuzzy=True)
         #: The Item image URL.
         self.image_link: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_IMG_LINK_SELECTOR,
