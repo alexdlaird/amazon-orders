@@ -81,6 +81,12 @@ Configuration
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.localization
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: amazonorders.output
     :members:
     :private-members:
