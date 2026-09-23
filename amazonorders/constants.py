@@ -6,6 +6,8 @@ import os
 from typing import Dict, Optional, TYPE_CHECKING
 from urllib.parse import urlencode, urlparse
 
+from amazonorders.localization import EnUS, Locale, LOCALES_BY_TLD, get_locale
+
 if TYPE_CHECKING:
     from amazonorders.conf import AmazonOrdersConfig
 
@@ -47,6 +49,7 @@ _REGION_LANGUAGES = {
 _REGION_CURRENCIES = {
     "co.uk": "£",
     "co.jp": "¥",
+    "de": "€",
     "in": "₹",
     "sg": "S$",
 }
@@ -88,8 +91,8 @@ class Constants:
         config = AmazonOrdersConfig(data={"constants_class": "my_module.MyConstants"})
 
     URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are derived from the active
-    Amazon domain. ``Accept-Language``, ``CURRENCY_SYMBOL``, and the sign-in ``openid.assoc_handle``
-    are adjusted for a small set of known TLDs (``CURRENCY_SYMBOL`` only when
+    Amazon domain. ``Accept-Language``, ``CURRENCY_SYMBOL``, the sign-in ``openid.assoc_handle``, and the
+    :attr:`LOCALE` are adjusted for a small set of known TLDs (``CURRENCY_SYMBOL`` only when
     ``AMAZON_CURRENCY_SYMBOL`` is unset). The domain is resolved in this precedence order:
 
     1. The ``domain`` key on :class:`~amazonorders.conf.AmazonOrdersConfig`.
@@ -176,13 +179,23 @@ class Constants:
 
     CURRENCY_SYMBOL = os.environ.get("AMAZON_CURRENCY_SYMBOL", "$")
 
+    ##########################################################################
+    # Localization
+    ##########################################################################
+
+    #: The :class:`~amazonorders.localization.Locale` used to parse the storefront's language, dates, and
+    #: amounts. Derived from the domain, and overridden by the ``locale`` config key (e.g. ``de-DE``).
+    LOCALE: Locale = EnUS()
+
     def __init__(self,
                  config: Optional["AmazonOrdersConfig"] = None) -> None:
         domain = None
         browser = None
+        locale = None
         if config is not None:
             domain = config._data.get("domain")
             browser = config._data.get("browser")
+            locale = config._data.get("locale")
         if not domain:
             domain = os.environ.get("AMAZON_BASE_URL")
         if not browser:
@@ -190,6 +203,8 @@ class Constants:
         self._apply_browser(browser or "chromium")
         if domain:
             self._apply_domain(domain)
+        if locale:
+            self.LOCALE = get_locale(locale)
 
     def _apply_browser(self,
                        browser: str) -> None:
@@ -258,6 +273,9 @@ class Constants:
         if not os.environ.get("AMAZON_CURRENCY_SYMBOL") and tld in _REGION_CURRENCIES:
             self.CURRENCY_SYMBOL = _REGION_CURRENCIES[tld]
 
+        if tld in LOCALES_BY_TLD:
+            self.LOCALE = LOCALES_BY_TLD[tld]()
+
         # The cookie that marks an authenticated session is region-specific: ``x-main`` on
         # amazon.com, but ``x-acb<country>`` elsewhere (e.g. ``x-acbjp`` on amazon.co.jp,
         # ``x-acbuk`` on amazon.co.uk). Without this, a valid regional session is treated as
@@ -269,9 +287,4 @@ class Constants:
     def format_currency(self,
                         amount: float) -> str:
         decimals = 0 if self.CURRENCY_SYMBOL in _ZERO_DECIMAL_CURRENCY_SYMBOLS else 2
-        formatted_amt = "{currency_symbol}{amount:,.{decimals}f}".format(currency_symbol=self.CURRENCY_SYMBOL,
-                                                                         amount=abs(amount),
-                                                                         decimals=decimals)
-        if round(amount, decimals) < 0:
-            return f"-{formatted_amt}"
-        return formatted_amt
+        return self.LOCALE.format_currency(amount, self.CURRENCY_SYMBOL, decimals)

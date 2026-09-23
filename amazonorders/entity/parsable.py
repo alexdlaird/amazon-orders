@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import logging
-import re
 from datetime import date
 from typing import Any, Callable, Dict, Optional, Type, Union
 
@@ -114,8 +113,8 @@ class Parsable:
         :param required: If required, an exception will be thrown instead of returning ``None``.
         :param prefix_split: Only select the field with the given prefix, returning the right side of the split if so.
         :param wrap_tag: Wrap the selected tag in this class before returning.
-        :param parse_date: ``True`` if the resulting value should be fuzzy parsed in to a date (returning ``None`` if
-            parsing fails).
+        :param parse_date: ``True`` if the resulting value should be parsed in to a date with the active
+            :class:`~amazonorders.localization.Locale` (returning ``None`` if parsing fails).
         :param prefix_split_fuzzy: ``True`` if the value should still be used even if ``prefix_split`` is not found.
         :param suffix_split: Only select the field with the given suffix, returning the left side of the split if so.
         :param suffix_split_fuzzy: ``True`` if the value should still be used even if ``suffix_split`` is not found.
@@ -166,7 +165,7 @@ class Parsable:
                             value = util.to_type(value.strip())
 
                         if parse_date and isinstance(value, str):
-                            value = util.to_date(value, fuzzy=True)
+                            value = self.config.constants.LOCALE.parse_date(value)
                     break
             if value:
                 break
@@ -206,12 +205,8 @@ class Parsable:
     def to_currency(self,
                     value: Union[str, int, float]) -> Union[int, float, None]:
         """
-        Clean up a currency, stripping non-numeric values and returning it as a primitive.
-
-        Recognizes the ``$``, ``£``, ``€``, ``₹``, and ``¥`` symbols (including the fullwidth
-        ``￥`` used by amazon.co.jp, and leading currency-code letters such as ``A$`` or
-        ``CDN$``), accepts accounting-style negatives in parentheses (e.g. ``($1.99)``), and
-        treats a literal ``FREE`` as ``0.0``.
+        Clean up a currency, stripping non-numeric values and returning it as a primitive, as
+        parsed by :func:`~amazonorders.localization.Locale.parse_currency` of the active Locale.
 
         :param value: The currency to parse.
         :return: The currency as a primitive.
@@ -222,18 +217,4 @@ class Parsable:
         if not value:
             return None
 
-        value = value.strip()
-
-        if value.lower() == "free":
-            return 0.0
-
-        if value.startswith("(") and value.endswith(")"):
-            value = "-" + value[1:-1]
-
-        value = re.sub("[a-zA-Z$£€₹¥￥,]+", "", value)
-        currency = util.to_type(value)
-
-        if isinstance(currency, str):
-            return None
-
-        return currency
+        return self.config.constants.LOCALE.parse_currency(value)

@@ -281,7 +281,7 @@ class AmazonSession:
             # TODO: BeautifulSoup doesn't let us query for #nav-item-signout, maybe because it's dynamic on the page,
             #  but we should find a better way to do this
             if self.auth_cookies_stored() or \
-                    ("Hello, sign in" not in last_response.response.text and
+                    (self.config.constants.LOCALE.SIGNED_OUT_TEXT not in last_response.response.text and
                      "nav-item-signout" in last_response.response.text):
                 self.is_authenticated = True
                 break
