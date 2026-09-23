@@ -46,6 +46,9 @@ class Locale:
     CONDITION_PREFIX = "Condition:"
     #: Text contained in the Item's return eligibility.
     RETURN_TEXT = "Return"
+    #: The text that precedes the Item's return eligible date, when the return eligibility lists more than one
+    #: date (one per line). ``None`` if the whole return eligibility text is parsed as the date.
+    RETURN_DATE_PREFIX: Optional[str] = None
     #: The text that precedes an Item's Subscribe & Save delivery frequency. ``None`` if not rendered.
     SUBSCRIPTION_FREQUENCY_PREFIX: Optional[str] = None
     #: ``True`` if the Recipient address is returned line by line (separated by ``\n``), without the Recipient's
@@ -182,6 +185,8 @@ class DeDE(Locale):
     # TODO: capture an Order with a used Item to verify this text
     CONDITION_PREFIX = "Zustand:"
     RETURN_TEXT = "Rückgabe"
+    # e.g. "Zeitraum für Rückgabe endet am 18. September 2026", next to "Artikel ersetzen: Möglich bis zum ..."
+    RETURN_DATE_PREFIX = "Rückgabe endet am"
     SUBSCRIPTION_FREQUENCY_PREFIX = "Automatisch zugestellt:"
     MULTILINE_ADDRESS = True
     CANCELLED_STATUS_PREFIXES = ["Storniert", "Service storniert"]

@@ -7,6 +7,7 @@ from datetime import date
 from bs4 import BeautifulSoup
 
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.entity.item import Item
 from amazonorders.orders import AmazonOrders, _parse_order_count
 from amazonorders.transactions import AmazonTransactions
 from tests.unittestcase import UnitTestCase
@@ -78,6 +79,20 @@ class TestAmazonDe(UnitTestCase):
         self.assertEqual("Amazon.de", item.seller.name)
         self.assertEqual(date(2026, 9, 25), item.return_eligible_date)
         self.assertIsNone(item.subscription_frequency)
+
+    def test_item_return_eligible_date_next_to_replacement_date(self):
+        for rows in (["Artikel ersetzen: Möglich bis zum 6. September 2027",
+                      "Zeitraum für Rückgabe endet am 18. September 2026"],
+                     ["Zeitraum für Rückgabe endet am 18. September 2026",
+                      "Artikel ersetzen: Möglich bis zum 6. September 2027"]):
+            html = ("<div><div data-component='itemTitle'>Testartikel</div>"
+                    "<div data-component='itemReturnEligibility'>"
+                    + "".join(f"<div class='a-row'>{row}</div>" for row in rows)
+                    + "</div></div>")
+
+            item = Item(BeautifulSoup(html, "html.parser"), self.de_config)
+
+            self.assertEqual(date(2026, 9, 18), item.return_eligible_date)
 
     def test_order_details_subscribe_and_save(self):
         order = self._details("303-3777441-6449677")
