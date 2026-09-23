@@ -111,6 +111,24 @@ class TestConstants(UnitTestCase):
         self.assertEqual("https://www.amazon.co.jp", config.constants.BASE_URL)
         self.assertEqual("¥", config.constants.CURRENCY_SYMBOL)
 
+    def test_format_currency_yen_without_decimals(self):
+        # GIVEN
+        constants = AmazonOrdersConfig(data={"domain": "amazon.co.jp"}).constants
+
+        # WHEN / THEN
+        self.assertEqual("¥1,980", constants.format_currency(1980))
+        self.assertEqual("¥1,234,568", constants.format_currency(1234567.5))
+        self.assertEqual("-¥1,980", constants.format_currency(-1980))
+        self.assertEqual("¥0", constants.format_currency(-0.4))
+
+    def test_format_currency_keeps_decimals(self):
+        # GIVEN
+        constants = AmazonOrdersConfig(data={"domain": "amazon.com"}).constants
+
+        # WHEN / THEN
+        self.assertEqual("$1,980.00", constants.format_currency(1980))
+        self.assertEqual("-$1.99", constants.format_currency(-1.99))
+
     def test_domain_co_jp_sets_region_assoc_handle(self):
         # GIVEN / WHEN
         config = AmazonOrdersConfig(data={"domain": "amazon.co.jp"})

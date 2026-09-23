@@ -51,6 +51,9 @@ _REGION_CURRENCIES = {
     "sg": "S$",
 }
 
+#: Currency symbols whose amounts are rendered without decimals (yen has no minor unit).
+_ZERO_DECIMAL_CURRENCY_SYMBOLS = ["¥", "￥"]
+
 #: ``openid.assoc_handle`` values for Amazon sign-in, keyed by the TLD suffix that follows
 #: ``amazon.``. Amazon rejects the sign-in request (HTTP 404) when the handle does not match
 #: the storefront's region, so it is looked up dynamically from the user-supplied domain.
@@ -265,8 +268,10 @@ class Constants:
 
     def format_currency(self,
                         amount: float) -> str:
-        formatted_amt = "{currency_symbol}{amount:,.2f}".format(currency_symbol=self.CURRENCY_SYMBOL,
-                                                                amount=abs(amount))
-        if round(amount, 2) < 0:
+        decimals = 0 if self.CURRENCY_SYMBOL in _ZERO_DECIMAL_CURRENCY_SYMBOLS else 2
+        formatted_amt = "{currency_symbol}{amount:,.{decimals}f}".format(currency_symbol=self.CURRENCY_SYMBOL,
+                                                                         amount=abs(amount),
+                                                                         decimals=decimals)
+        if round(amount, decimals) < 0:
             return f"-{formatted_amt}"
         return formatted_amt
