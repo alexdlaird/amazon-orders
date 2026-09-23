@@ -71,28 +71,38 @@ class Transaction(Parsable):
         transaction = cls.__new__(cls)
         Parsable.__init__(transaction, None, config)  # type: ignore[arg-type]
 
+        # Amazon renders the amount in en-US format regardless of the domain's locale (e.g. "-€22.73")
+        grand_total = EnUS().parse_currency(data.get("formattedAmount") or "")
+
+        transaction.completed_date = completed_date
+        transaction._set_payment_method_from_data(data)
+        transaction.grand_total = grand_total  # type: ignore[assignment]
+        transaction.is_refund = grand_total is not None and grand_total > 0
+        transaction._set_order_from_data(data)
+        transaction.seller = data.get("statementDescriptor")  # type: ignore[assignment]
+
+        return transaction
+
+    def _set_payment_method_from_data(self,
+                                      data: Dict[str, Any]) -> None:
         payment_data = data.get("paymentMethodDisplayStringData") or {}
         payment_method_name = payment_data.get("paymentMethodName")
         last_digits = (payment_data.get("paymentMethodNumber") or {}).get("lastDigits")
-        # Amazon renders the amount in en-US format regardless of the domain's locale (e.g. "-€22.73")
-        grand_total = EnUS().parse_currency(data.get("formattedAmount") or "")
+
+        self.payment_method = f"{payment_method_name} ****{last_digits}" \
+            if payment_method_name and last_digits else payment_method_name  # type: ignore[assignment]
+        self.payment_method_last_4 = last_digits
+
+    def _set_order_from_data(self,
+                             data: Dict[str, Any]) -> None:
         # When a Transaction covers more than one Order, only the first one is used
         order_data = (data.get("orderData") or [{}])[0]
         order_number_match = _ORDER_NUMBER_RE.search(order_data.get("orderDisplayString") or "")
 
-        transaction.completed_date = completed_date
-        transaction.payment_method = f"{payment_method_name} ****{last_digits}" \
-            if payment_method_name and last_digits else payment_method_name  # type: ignore[assignment]
-        transaction.payment_method_last_4 = last_digits
-        transaction.grand_total = grand_total  # type: ignore[assignment]
-        transaction.is_refund = grand_total is not None and grand_total > 0
-        transaction.order_number = order_number_match.group(1) if order_number_match else None  # type: ignore
-        transaction.order_details_link = order_data.get("orderDetailsUrl") or (
-            f"{config.constants.ORDER_DETAILS_URL}?orderID={transaction.order_number}"
-            if transaction.order_number else None)  # type: ignore[assignment]
-        transaction.seller = data.get("statementDescriptor")  # type: ignore[assignment]
-
-        return transaction
+        self.order_number = order_number_match.group(1) if order_number_match else None  # type: ignore
+        self.order_details_link = order_data.get("orderDetailsUrl") or (
+            f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
+            if self.order_number else None)  # type: ignore[assignment]
 
     def __repr__(self) -> str:
         return f"<Transaction {self.completed_date}: \"Order #{self.order_number}, Grand Total: {self.grand_total}\">"
