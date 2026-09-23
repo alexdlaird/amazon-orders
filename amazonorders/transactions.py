@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import datetime
+import json
 import logging
 from typing import Dict, List, Optional, Tuple, Any
 
@@ -59,6 +60,33 @@ def _parse_transaction_form_tag(form_tag: Tag,
     return transactions, next_page_data
 
 
+def _parse_transactions_next_data(next_data_tag: Tag,
+                                  config: AmazonOrdersConfig) \
+        -> Optional[Tuple[List[Transaction], Optional[Dict[str, str]]]]:
+    try:
+        state = json.loads(next_data_tag.text)["props"]["pageProps"]["state"]["transactionResponseState"]
+        transaction_list = state["visibleTransactionResponse"]["transactionList"]
+    except (ValueError, KeyError, TypeError):
+        return None
+
+    transactions = []
+    for data in transaction_list:
+        date_str = data.get("formattedDate")
+        date = config.constants.LOCALE.parse_date(date_str)
+        if date is None:
+            logger.warning(f"Could not parse date {date_str!r} in Transaction data.")
+            continue
+
+        transactions.append(Transaction.from_data(data, config, date))
+
+    # TODO: further pages are loaded client-side from an internal API, which is not supported yet
+    if state.get("hasMore"):
+        logger.warning("Only the first page of Transactions could be loaded, further pages are not supported "
+                       "for this Amazon domain yet.")
+
+    return transactions, None
+
+
 def _parse_transactions_page(parsed: Tag,
                              config: AmazonOrdersConfig) \
         -> Tuple[List[Transaction], Optional[Dict[str, str]]]:
@@ -66,8 +94,14 @@ def _parse_transactions_page(parsed: Tag,
 
     if not form_tag:
         container_tag = util.select_one(parsed, config.selectors.TRANSACTION_HISTORY_CONTAINER_SELECTOR)
-        if container_tag and "don't have any transactions" in container_tag.text:
+        if container_tag and config.constants.LOCALE.NO_TRANSACTIONS_TEXT in container_tag.text:
             return [], None
+
+        next_data_tag = util.select_one(parsed, config.selectors.TRANSACTION_HISTORY_NEXT_DATA_SELECTOR)
+        if next_data_tag:
+            result = _parse_transactions_next_data(next_data_tag, config)
+            if result is not None:
+                return result
 
         raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.")
 

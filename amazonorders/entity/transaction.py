@@ -4,15 +4,21 @@ __license__ = "MIT"
 import logging
 import re
 from datetime import date
-from typing import Union, Optional
+from typing import Any, Dict, Optional, Type, TypeVar, Union
 
 from bs4 import Tag
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
 from amazonorders.exception import AmazonOrdersError
+from amazonorders.localization import EnUS
 
 logger = logging.getLogger(__name__)
+
+TransactionEntity = TypeVar("TransactionEntity", bound="Transaction")
+
+#: An Order number within a Transaction's Order description.
+_ORDER_NUMBER_RE = re.compile(r"\b(\d{3}-\d{7}-\d{7}|D\d{2}-\d{7}-\d{7})\b")
 
 
 class Transaction(Parsable):
@@ -47,6 +53,46 @@ class Transaction(Parsable):
         self.seller: str = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_TRANSACTION_SELLER_NAME_SELECTOR
         )
+
+    @classmethod
+    def from_data(cls: Type[TransactionEntity],
+                  data: Dict[str, Any],
+                  config: AmazonOrdersConfig,
+                  completed_date: date) -> TransactionEntity:
+        """
+        Build a Transaction from the JSON data that some Amazon domains (e.g. amazon.de) embed in the
+        Transactions page, rather than from its HTML.
+
+        :param data: A Transaction of the page's ``transactionList``.
+        :param config: The config to use.
+        :param completed_date: The Transaction completed date.
+        :return: The Transaction.
+        """
+        transaction = cls.__new__(cls)
+        Parsable.__init__(transaction, None, config)  # type: ignore[arg-type]
+
+        payment_data = data.get("paymentMethodDisplayStringData") or {}
+        payment_method_name = payment_data.get("paymentMethodName")
+        last_digits = (payment_data.get("paymentMethodNumber") or {}).get("lastDigits")
+        # Amazon renders the amount in en-US format regardless of the domain's locale (e.g. "-€22.73")
+        grand_total = EnUS().parse_currency(data.get("formattedAmount") or "")
+        # When a Transaction covers more than one Order, only the first one is used
+        order_data = (data.get("orderData") or [{}])[0]
+        order_number_match = _ORDER_NUMBER_RE.search(order_data.get("orderDisplayString") or "")
+
+        transaction.completed_date = completed_date
+        transaction.payment_method = f"{payment_method_name} ****{last_digits}" \
+            if payment_method_name and last_digits else payment_method_name  # type: ignore[assignment]
+        transaction.payment_method_last_4 = last_digits
+        transaction.grand_total = grand_total  # type: ignore[assignment]
+        transaction.is_refund = grand_total is not None and grand_total > 0
+        transaction.order_number = order_number_match.group(1) if order_number_match else None  # type: ignore
+        transaction.order_details_link = order_data.get("orderDetailsUrl") or (
+            f"{config.constants.ORDER_DETAILS_URL}?orderID={transaction.order_number}"
+            if transaction.order_number else None)  # type: ignore[assignment]
+        transaction.seller = data.get("statementDescriptor")  # type: ignore[assignment]
+
+        return transaction
 
     def __repr__(self) -> str:
         return f"<Transaction {self.completed_date}: \"Order #{self.order_number}, Grand Total: {self.grand_total}\">"
