@@ -27,7 +27,7 @@ _BROWSER_PRESETS: Dict[str, Dict[str, Optional[str]]] = {
     },
 }
 
-#: ``Accept-Language`` values for English-locale Amazon sites, keyed by the TLD suffix that
+#: ``Accept-Language`` values for regional Amazon sites, keyed by the TLD suffix that
 #: follows ``amazon.``. Looked up dynamically from the user-supplied domain; unknown TLDs keep
 #: the base ``en-US`` value. This map only governs the ``Accept-Language`` header — it is not
 #: a list of supported sites and does not affect any other authentication behavior.
@@ -35,6 +35,7 @@ _REGION_LANGUAGES = {
     "ca": "en-CA,en;q=0.9,en-US;q=0.8",
     "co.uk": "en-GB,en;q=0.9,en-US;q=0.8",
     "com.au": "en-AU,en;q=0.9,en-US;q=0.8",
+    "de": "de-DE,de;q=0.9,en;q=0.8",
     "in": "en-IN,en;q=0.9,en-US;q=0.8",
     "sg": "en-SG,en;q=0.9,en-US;q=0.8",
 }

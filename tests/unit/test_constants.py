@@ -143,3 +143,13 @@ class TestConstants(UnitTestCase):
 
         # THEN
         self.assertEqual(["x-main"], config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
+
+    def test_domain_de_sets_region_sign_in_and_session_values(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.de"})
+
+        # THEN
+        self.assertEqual("https://www.amazon.de", config.constants.BASE_URL)
+        self.assertEqual("deflex", config.constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"])
+        self.assertEqual(["x-acbde"], config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
+        self.assertTrue(config.constants.BASE_HEADERS["Accept-Language"].startswith("de-DE"))
