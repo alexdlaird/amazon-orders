@@ -141,6 +141,10 @@ class Constants:
 
     TRANSACTION_HISTORY_ROUTE = "/cpe/yourpayments/transactions"
     TRANSACTION_HISTORY_URL = f"{BASE_URL}{TRANSACTION_HISTORY_ROUTE}"
+    #: The internal API that loads further pages of Transactions on sites that render the Transactions page from
+    #: embedded JSON (e.g. amazon.de).
+    TRANSACTION_HISTORY_API_ROUTE = "/payments-portal/data/iris/live/v1/data/manage/get-transactions"
+    TRANSACTION_HISTORY_API_URL = f"{BASE_URL}{TRANSACTION_HISTORY_API_ROUTE}"
 
     ##########################################################################
     # Headers
@@ -261,6 +265,7 @@ class Constants:
         self.ORDER_DETAILS_URL = f"{base_url}/gp/your-account/order-details"
         self.ORDER_INVOICE_URL = f"{base_url}/gp/css/summary/print.html"
         self.TRANSACTION_HISTORY_URL = f"{base_url}{self.TRANSACTION_HISTORY_ROUTE}"
+        self.TRANSACTION_HISTORY_API_URL = f"{base_url}{self.TRANSACTION_HISTORY_API_ROUTE}"
 
         headers = dict(vars(self).get("BASE_HEADERS", type(self).BASE_HEADERS))
         headers["Origin"] = base_url

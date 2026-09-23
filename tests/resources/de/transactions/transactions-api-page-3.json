@@ -1,0 +1,84 @@
+{
+  "type": "GetTransactions",
+  "responseCode": "success",
+  "widgetStyleProps": {
+    "uiTheme": "AUI",
+    "isRTL": false
+  },
+  "displayResponse": {
+    "transactionsList": [
+      {
+        "formattedAmount": "-€12.06",
+        "formattedDate": "20. Juni 2026",
+        "orderData": [
+          {
+            "orderDisplayString": "Bestellnummer 028-3150489-3037176",
+            "orderDetailsUrl": "https://www.amazon.de/gp/css/summary/edit.html?orderID=028-3150489-3037176"
+          }
+        ],
+        "statementDescriptor": "WWW.AMAZON.DE",
+        "statusInfo": {
+          "status": "Approved",
+          "label": "Berechnet",
+          "amountDetailsStatusType": "Charge"
+        },
+        "paymentMethodDisplayStringData": {
+          "paymentMethodName": "Amazon Visa",
+          "paymentMethodNumber": {
+            "prefix": "••••",
+            "lastDigits": "1234"
+          }
+        }
+      },
+      {
+        "formattedAmount": "-€53.32",
+        "formattedDate": "01. Juni 2025",
+        "orderData": [
+          {
+            "orderDisplayString": "Bestellnummer 303-3777441-6449677",
+            "orderDetailsUrl": "https://www.amazon.de/gp/css/summary/edit.html?orderID=303-3777441-6449677"
+          }
+        ],
+        "statementDescriptor": "WWW.AMAZON.DE",
+        "statusInfo": {
+          "status": "Approved",
+          "label": "Berechnet",
+          "amountDetailsStatusType": "Charge"
+        },
+        "paymentMethodDisplayStringData": {
+          "paymentMethodName": "Amazon Visa",
+          "paymentMethodNumber": {
+            "prefix": "••••",
+            "lastDigits": "1234"
+          }
+        }
+      }
+    ],
+    "commonOrderDisplayStrings": {
+      "multipleOrderDisplayTitle": "Wähle eine Bestellung aus",
+      "multipleOrderDisplayText": "Diese Transaktion umfasste mehrere Bestellungen. Wähle eine Bestellung aus, um deine Bestelldetails anzuzeigen:"
+    },
+    "layoutStrings": {
+      "emptyTransactionString": "",
+      "startShoppingButtonString": "",
+      "giftCardActivityString": [
+        {
+          "content": "Ansicht ",
+          "bold": false
+        },
+        {
+          "content": "Geschenkgutschein-Aktivität",
+          "bold": false,
+          "action": {
+            "type": "Redirect",
+            "url": "/gc/balance?ref_=upx_wallet_gc_transactions"
+          }
+        },
+        {
+          "content": " um Erstattungen von Geschenkgutscheinen zu sehen.",
+          "bold": false
+        }
+      ]
+    }
+  }
+}

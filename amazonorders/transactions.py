@@ -60,15 +60,8 @@ def _parse_transaction_form_tag(form_tag: Tag,
     return transactions, next_page_data
 
 
-def _parse_transactions_next_data(next_data_tag: Tag,
-                                  config: AmazonOrdersConfig) \
-        -> Optional[Tuple[List[Transaction], Optional[Dict[str, str]]]]:
-    try:
-        state = json.loads(next_data_tag.text)["props"]["pageProps"]["state"]["transactionResponseState"]
-        transaction_list = state["visibleTransactionResponse"]["transactionList"]
-    except (ValueError, KeyError, TypeError):
-        return None
-
+def _parse_transactions_data(transaction_list: List[Dict[str, Any]],
+                             config: AmazonOrdersConfig) -> List[Transaction]:
     transactions = []
     for data in transaction_list:
         date_str = data.get("formattedDate")
@@ -79,17 +72,69 @@ def _parse_transactions_next_data(next_data_tag: Tag,
 
         transactions.append(Transaction.from_data(data, config, date))
 
-    # TODO: further pages are loaded client-side from an internal API, which is not supported yet
-    if state.get("hasMore"):
-        logger.warning("Only the first page of Transactions could be loaded, further pages are not supported "
-                       "for this Amazon domain yet.")
+    return transactions
 
-    return transactions, None
+
+def _parse_transactions_next_data(next_data_tag: Tag,
+                                  config: AmazonOrdersConfig) \
+        -> Optional[Tuple[List[Transaction], Optional[Dict[str, Any]]]]:
+    try:
+        page_props = json.loads(next_data_tag.text)["props"]["pageProps"]
+        state = page_props["state"]["transactionResponseState"]
+        transaction_list = state["visibleTransactionResponse"]["transactionList"]
+    except (ValueError, KeyError, TypeError):
+        return None
+
+    transactions = _parse_transactions_data(transaction_list, config)
+
+    # Further pages are loaded from an internal API, authorized by the token embedded in the page
+    next_page_data = None
+    if state.get("hasMore") and state.get("lastEvaluatedPageKey"):
+        try:
+            next_page_data = {
+                "token": page_props["token"],
+                "request": {
+                    "type": "GetTransactions",
+                    "locale": page_props["request"]["locale"],
+                    "surfaceInfo": page_props["manageWalletRequest"]["requestContext"]["surfaceInfo"],
+                    "transactionsViewRequest": {"filtersControls": {"includeFilters": True}},
+                    "widgetName": "ViewTransactions",
+                    "exclusiveStartKey": state["lastEvaluatedPageKey"],
+                },
+            }
+        except (KeyError, TypeError):
+            logger.warning("Only the first page of Transactions could be loaded, as the data to load further "
+                           "pages was not found.")
+
+    return transactions, next_page_data
+
+
+def _parse_transactions_api_response(data: Dict[str, Any],
+                                     next_page_data: Dict[str, Any],
+                                     config: AmazonOrdersConfig) \
+        -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
+    try:
+        display_response = data["displayResponse"]
+        transaction_list = display_response["transactionsList"]
+    except (KeyError, TypeError):
+        raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the API.",
+                                meta=next_page_data)
+
+    transactions = _parse_transactions_data(transaction_list, config)
+
+    last_evaluated_key = display_response.get("lastEvaluatedKey")
+    if not last_evaluated_key:
+        return transactions, None
+
+    return transactions, {
+        "token": next_page_data["token"],
+        "request": dict(next_page_data["request"], exclusiveStartKey=last_evaluated_key),
+    }
 
 
 def _parse_transactions_page(parsed: Tag,
                              config: AmazonOrdersConfig) \
-        -> Tuple[List[Transaction], Optional[Dict[str, str]]]:
+        -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
     form_tag = util.select_one(parsed, config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
 
     if not form_tag:
@@ -181,10 +226,13 @@ class AmazonTransactions:
         while first_page or keep_paging:
             first_page = False
 
-            page_response = self.amazon_session.post(url, data=next_page_data)
-            self.amazon_session.check_response(page_response, meta=next_page_data)
+            if next_page_data and "request" in next_page_data:
+                loaded_transactions, next_page_data = self._get_transactions_api_page(next_page_data)
+            else:
+                page_response = self.amazon_session.post(url, data=next_page_data)
+                self.amazon_session.check_response(page_response, meta=next_page_data)
 
-            loaded_transactions, next_page_data = _parse_transactions_page(page_response.parsed, self.config)
+                loaded_transactions, next_page_data = _parse_transactions_page(page_response.parsed, self.config)
 
             for transaction in loaded_transactions:
                 if order_id or transaction.completed_date >= min_date:
@@ -197,3 +245,19 @@ class AmazonTransactions:
                 keep_paging = False
 
         return transactions
+
+    def _get_transactions_api_page(self,
+                                   next_page_data: Dict[str, Any]) \
+            -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
+        page_response = self.amazon_session.post(self.config.constants.TRANSACTION_HISTORY_API_URL,
+                                                 json=next_page_data["request"],
+                                                 headers={"x-amzn-upx-token": next_page_data["token"]})
+        self.amazon_session.check_response(page_response, meta=next_page_data)
+
+        try:
+            data = page_response.response.json()
+        except ValueError:
+            raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the API.",
+                                    meta=next_page_data)
+
+        return _parse_transactions_api_response(data, next_page_data, self.config)

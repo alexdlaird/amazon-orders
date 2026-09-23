@@ -201,8 +201,9 @@ Known Limitations
       different domain with your own credentials, please `contact us <mailto:contact@alexlaird.com>`_ and
       we will start mentioning support for that version of the site.
     - ``amazon.de`` is parsed with the :class:`~amazonorders.localization.DeDE` locale (German labels, dates,
-      and euro amounts). Set the ``locale`` config key to override the locale derived from the domain. Only the
-      first page of Transactions is parsed on ``amazon.de``, and a warning is logged when more exist.
+      and euro amounts). Set the ``locale`` config key to override the locale derived from the domain. Further
+      pages of Transactions on ``amazon.de`` are loaded from an internal API that is not documented by Amazon, and
+      may break without notice.
     - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
 - Amazon Business accounts are not supported
 - Device not remembered for OTP

@@ -1,14 +1,20 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import datetime
+import json
 import os
 from datetime import date
+from unittest.mock import patch
 
+import responses
 from bs4 import BeautifulSoup
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.item import Item
+from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders, _parse_order_count
+from amazonorders.session import AmazonSession
 from amazonorders.transactions import AmazonTransactions
 from tests.unittestcase import UnitTestCase
 
@@ -159,7 +165,7 @@ class TestAmazonDe(UnitTestCase):
         self.assertEqual("Rücksendung abgeschlossen", order.shipments[0].delivery_status)
 
     def test_transactions(self):
-        with self.assertLogs("amazonorders.transactions", level="WARNING"):
+        with self.assertNoLogs("amazonorders.transactions", level="WARNING"):
             transactions = AmazonTransactions.parse_transactions(self._read("transactions", "transactions.html"),
                                                                  self.de_config)
 
@@ -177,3 +183,80 @@ class TestAmazonDe(UnitTestCase):
         self.assertEqual("Santander-Punkte", transactions[1].payment_method)
         self.assertIsNone(transactions[1].payment_method_last_4)
         self.assertEqual(date(2026, 7, 31), transactions[12].completed_date)
+
+    def _mock_transactions(self):
+        responses.add(responses.POST, self.de_config.constants.TRANSACTION_HISTORY_URL,
+                      body=self._read("transactions", "transactions.html"), status=200)
+        page_2 = responses.add(responses.POST, self.de_config.constants.TRANSACTION_HISTORY_API_URL,
+                               body=self._read("transactions", "transactions-api-page-2.json"), status=200,
+                               content_type="application/json")
+        page_3 = responses.add(responses.POST, self.de_config.constants.TRANSACTION_HISTORY_API_URL,
+                               body=self._read("transactions", "transactions-api-page-3.json"), status=200,
+                               content_type="application/json")
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.de_config)
+        amazon_session.is_authenticated = True
+
+        return AmazonTransactions(amazon_session), page_2, page_3
+
+    @responses.activate
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_paginated(self, mock_today):
+        mock_today.date.today.return_value = date(2026, 9, 23)
+        amazon_transactions, page_2, page_3 = self._mock_transactions()
+
+        transactions = amazon_transactions.get_transactions()
+
+        # 20 on the page, 3 from the second page, and 1 from the third page before the 365 day window ends
+        self.assertEqual(24, len(transactions))
+        self.assertEqual(date(2026, 7, 15), transactions[20].completed_date)
+        self.assertEqual(date(2026, 6, 20), transactions[23].completed_date)
+        self.assertEqual(1, page_2.call_count)
+        self.assertEqual(1, page_3.call_count)
+        request = page_2.calls[0].request
+        self.assertEqual("REDACTED", request.headers["x-amzn-upx-token"])
+        body = json.loads(request.body)
+        self.assertEqual("GetTransactions", body["type"])
+        self.assertEqual("de_DE", body["locale"])
+        self.assertEqual("ViewTransactions", body["widgetName"])
+        self.assertEqual("REDACTED", body["exclusiveStartKey"])
+        self.assertEqual("REDACTED-PAGE-3", json.loads(page_3.calls[0].request.body)["exclusiveStartKey"])
+
+    @responses.activate
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_within_first_page(self, mock_today):
+        mock_today.date.today.return_value = date(2026, 9, 23)
+        amazon_transactions, page_2, page_3 = self._mock_transactions()
+
+        transactions = amazon_transactions.get_transactions(days=60)
+
+        self.assertEqual(16, len(transactions))
+        self.assertEqual(date(2026, 7, 27), transactions[-1].completed_date)
+        self.assertEqual(0, page_2.call_count)
+        self.assertEqual(0, page_3.call_count)
+
+    @responses.activate
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_single_page(self, mock_today):
+        mock_today.date.today.return_value = date(2026, 9, 23)
+        amazon_transactions, page_2, page_3 = self._mock_transactions()
+
+        transactions = amazon_transactions.get_transactions(keep_paging=False)
+
+        self.assertEqual(20, len(transactions))
+        self.assertEqual(0, page_2.call_count)
+
+    @responses.activate
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_api_changed(self, mock_today):
+        mock_today.date.today.return_value = date(2026, 9, 23)
+        responses.add(responses.POST, self.de_config.constants.TRANSACTION_HISTORY_URL,
+                      body=self._read("transactions", "transactions.html"), status=200)
+        responses.add(responses.POST, self.de_config.constants.TRANSACTION_HISTORY_API_URL,
+                      json={"type": "GetTransactions", "responseCode": "success"}, status=200)
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.de_config)
+        amazon_session.is_authenticated = True
+
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonTransactions(amazon_session).get_transactions()
+
+        self.assertEqual("REDACTED", cm.exception.meta["request"]["exclusiveStartKey"])
