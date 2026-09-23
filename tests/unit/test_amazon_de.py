@@ -260,3 +260,45 @@ class TestAmazonDe(UnitTestCase):
             AmazonTransactions(amazon_session).get_transactions()
 
         self.assertEqual("REDACTED", cm.exception.meta["request"]["exclusiveStartKey"])
+
+    def test_transactions_skips_date_that_cannot_be_parsed(self):
+        html = self._read("transactions", "transactions.html").replace('"formattedDate":"07. September 2026"',
+                                                                       '"formattedDate":"Heute"')
+
+        with self.assertLogs("amazonorders.transactions", level="WARNING") as cm:
+            transactions = AmazonTransactions.parse_transactions(html, self.de_config)
+
+        self.assertEqual(19, len(transactions))
+        self.assertEqual(date(2026, 9, 6), transactions[0].completed_date)
+        self.assertIn("Heute", cm.output[0])
+
+    def test_transactions_without_next_page_token(self):
+        html = self._read("transactions", "transactions.html").replace('"token":"REDACTED"', '"other":"REDACTED"')
+
+        with self.assertLogs("amazonorders.transactions", level="WARNING") as cm:
+            transactions = AmazonTransactions.parse_transactions(html, self.de_config)
+
+        self.assertEqual(20, len(transactions))
+        self.assertIn("Only the first page", cm.output[0])
+
+    def test_transactions_invalid_next_data(self):
+        html = "<html><body><script id='__NEXT_DATA__'>not json</script></body></html>"
+
+        with self.assertRaises(AmazonOrdersError):
+            AmazonTransactions.parse_transactions(html, self.de_config)
+
+    @responses.activate
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_api_not_json(self, mock_today):
+        mock_today.date.today.return_value = date(2026, 9, 23)
+        responses.add(responses.POST, self.de_config.constants.TRANSACTION_HISTORY_URL,
+                      body=self._read("transactions", "transactions.html"), status=200)
+        responses.add(responses.POST, self.de_config.constants.TRANSACTION_HISTORY_API_URL,
+                      body="<html></html>", status=200)
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.de_config)
+        amazon_session.is_authenticated = True
+
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonTransactions(amazon_session).get_transactions()
+
+        self.assertEqual("REDACTED", cm.exception.meta["request"]["exclusiveStartKey"])
