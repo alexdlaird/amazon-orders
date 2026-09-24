@@ -158,6 +158,7 @@ class Selectors:
                                  ".yohtmlc-item .a-color-price",
                                  "div.a-section.a-text-right span.a-size-small"]
     FIELD_ITEM_SELLER_SELECTOR = ["[data-component='orderedMerchant']"] + FIELD_ITEM_TAG_ITERATOR_SELECTOR
+    FIELD_ITEM_SUBSCRIPTION_FREQUENCY_SELECTOR = "[data-component='deliveryFrequency']"
     FIELD_ITEM_RETURN_SELECTOR = (["[data-component='itemReturnEligibility']", ".yo-enhanced-return"]
                                   + FIELD_ITEM_TAG_ITERATOR_SELECTOR)
 
@@ -185,12 +186,19 @@ class Selectors:
     FIELD_ORDER_WHOLE_FOODS_TAX_SELECTOR = "#wfm-tax-total-amount"
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_METHOD_SELECTOR = "#wfm-0-card-brand"
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR = "#wfm-0-card-tail"
+    # A history card header column, and its label, for Locales that find header values by label
+    FIELD_ORDER_HISTORY_HEADER_ITEM_SELECTOR = "div.order-header li.order-header__header-list-item"
+    FIELD_ORDER_HISTORY_HEADER_LABEL_SELECTOR = "span.a-text-caps"
     FIELD_ORDER_PLACED_DATE_SELECTOR = ["[data-component='orderDate']",
                                         "span.order-date-invoice-item",
                                         "[data-component='briefOrderInfo'] div.a-column",
                                         "div:is(.a-span3, .a-span12)"]
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"
+    # Payment methods rendered as a list of instruments (e.g. on amazon.de)
+    FIELD_ORDER_PAYMENT_INSTRUMENT_SELECTOR = "[data-testid='payment-instrument']"
+    FIELD_ORDER_PAYMENT_INSTRUMENT_NAME_SELECTOR = "[data-testid='payment-instrument-name']"
+    FIELD_ORDER_PAYMENT_INSTRUMENT_NUMBER_SELECTOR = "[data-testid='payment-instrument-number']"
     FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["[data-component='orderSubtotals'] div.a-row",
                                                    "div#od-subtotals div.a-row",
                                                    "[data-component='chargeSummary'] div.od-line-item-row"]
@@ -227,6 +235,9 @@ class Selectors:
     FIELD_RECIPIENT_ADDRESS_COUNTRY_SELECTOR = "li.displayAddressCountryName"
     FIELD_RECIPIENT_ADDRESS_FALLBACK_SELECTOR = ["div:nth-child(2)",
                                                  "li:nth-child(2)"]
+    # The address lines following the Recipient's name, for Locales with a multiline address
+    FIELD_RECIPIENT_ADDRESS_LINES_SELECTOR = ["ul > li:not(:first-child)",
+                                              "div.a-popover-preload .a-row:not(:first-child)"]
 
     #####################################
     # CSS selectors for Seller fields
@@ -241,6 +252,8 @@ class Selectors:
 
     TRANSACTION_HISTORY_FORM_SELECTOR = "form:has(input[name='ppw-widgetState'])"
     TRANSACTION_HISTORY_CONTAINER_SELECTOR = ".pmts-portal-component"
+    # Transactions embedded as JSON in a Next.js page (e.g. on amazon.de)
+    TRANSACTION_HISTORY_NEXT_DATA_SELECTOR = "script#__NEXT_DATA__"
     TRANSACTION_DATE_CONTAINERS_SELECTOR = "div.apx-transaction-date-container"
     TRANSACTIONS_CONTAINER_SELECTOR = "div"
     TRANSACTIONS_SELECTOR = "div.apx-transactions-line-item-component-container:has(*)"

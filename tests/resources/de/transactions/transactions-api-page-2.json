@@ -1,0 +1,104 @@
+{
+  "type": "GetTransactions",
+  "responseCode": "success",
+  "widgetStyleProps": {
+    "uiTheme": "AUI",
+    "isRTL": false
+  },
+  "displayResponse": {
+    "transactionsList": [
+      {
+        "formattedAmount": "-€30.36",
+        "formattedDate": "15. Juli 2026",
+        "orderData": [
+          {
+            "orderDisplayString": "Bestellnummer 305-4666232-2538376",
+            "orderDetailsUrl": "https://www.amazon.de/gp/css/summary/edit.html?orderID=305-4666232-2538376"
+          }
+        ],
+        "statementDescriptor": "WWW.AMAZON.DE",
+        "statusInfo": {
+          "status": "Approved",
+          "label": "Berechnet",
+          "amountDetailsStatusType": "Charge"
+        },
+        "paymentMethodDisplayStringData": {
+          "paymentMethodName": "Amazon Visa",
+          "paymentMethodNumber": {
+            "prefix": "••••",
+            "lastDigits": "1234"
+          }
+        }
+      },
+      {
+        "formattedAmount": "-€7.63",
+        "formattedDate": "10. Juli 2026",
+        "orderData": [
+          {
+            "orderDisplayString": "Bestellnummer 302-9200911-2147206",
+            "orderDetailsUrl": "https://www.amazon.de/gp/css/summary/edit.html?orderID=302-9200911-2147206"
+          }
+        ],
+        "statementDescriptor": "Amazon.de",
+        "statusInfo": {
+          "status": "Approved",
+          "label": "Berechnet",
+          "amountDetailsStatusType": "Charge"
+        },
+        "paymentMethodDisplayStringData": {
+          "paymentMethodName": "Amazon Visa",
+          "paymentMethodNumber": {
+            "prefix": "••••",
+            "lastDigits": "1234"
+          }
+        }
+      },
+      {
+        "formattedAmount": "-€0.69",
+        "formattedDate": "02. Juli 2026",
+        "orderData": [
+          {
+            "orderDisplayString": "Bestellnummer 302-9200911-2147206",
+            "orderDetailsUrl": "https://www.amazon.de/gp/css/summary/edit.html?orderID=302-9200911-2147206"
+          }
+        ],
+        "statementDescriptor": "Amazon.de",
+        "statusInfo": {
+          "status": "Approved",
+          "label": "Berechnet",
+          "amountDetailsStatusType": "Charge"
+        },
+        "paymentMethodDisplayStringData": {
+          "paymentMethodName": "Santander-Punkte"
+        }
+      }
+    ],
+    "commonOrderDisplayStrings": {
+      "multipleOrderDisplayTitle": "Wähle eine Bestellung aus",
+      "multipleOrderDisplayText": "Diese Transaktion umfasste mehrere Bestellungen. Wähle eine Bestellung aus, um deine Bestelldetails anzuzeigen:"
+    },
+    "lastEvaluatedKey": "REDACTED-PAGE-3",
+    "layoutStrings": {
+      "emptyTransactionString": "",
+      "startShoppingButtonString": "",
+      "giftCardActivityString": [
+        {
+          "content": "Ansicht ",
+          "bold": false
+        },
+        {
+          "content": "Geschenkgutschein-Aktivität",
+          "bold": false,
+          "action": {
+            "type": "Redirect",
+            "url": "/gc/balance?ref_=upx_wallet_gc_transactions"
+          }
+        },
+        {
+          "content": " um Erstattungen von Geschenkgutscheinen zu sehen.",
+          "bold": false
+        }
+      ]
+    }
+  }
+}

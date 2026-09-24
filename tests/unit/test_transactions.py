@@ -121,6 +121,21 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(transaction.order_number, "123-4567890-1234567")
         self.assertEqual(transaction.seller, "AMZN Mktp CA")
 
+    def test_parse_transactions_skips_unparseable_date(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read().replace("<span>October 11, 2024</span>", "<span>Not a date</span>")
+
+        # WHEN
+        with self.assertLogs("amazonorders.transactions", level="WARNING") as cm:
+            transactions = AmazonTransactions.parse_transactions(html, self.test_config)
+
+        # THEN
+        self.assertEqual(1, len(transactions))
+        self.assertEqual(datetime.date(2024, 10, 9), transactions[0].completed_date)
+        self.assertIn("Not a date", cm.output[0])
+
     def test_parse_transactions_zero_transactions(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-zero-transactions.html"),
