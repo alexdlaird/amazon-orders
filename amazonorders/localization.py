@@ -4,7 +4,8 @@ __license__ = "MIT"
 import logging
 import re
 from datetime import date
-from typing import Dict, List, Optional, Type, Union
+from types import MappingProxyType
+from typing import Dict, List, Mapping, Optional, Type, Union
 
 from amazonorders import util
 from amazonorders.exception import AmazonOrdersError
@@ -61,6 +62,10 @@ class Locale:
     #: Labels of the Order subtotal rows, keyed by the ``en-US`` label that
     #: :func:`~amazonorders.entity.order.Order._parse_currency` looks up. Missing keys are matched as-is.
     SUBTOTAL_LABELS: Dict[str, List[str]] = {}
+
+    #: Lower-cased month names and abbreviations, mapped to the month number (``1`` to ``12``). Useful for dates
+    #: that :func:`parse_date` rejects because they have no year. Empty if the Locale does not define them.
+    MONTHS: Mapping[str, int] = MappingProxyType({})
 
     def subtotal_matches(self,
                          key: str,
@@ -190,6 +195,7 @@ class DeDE(Locale):
     SUBSCRIPTION_FREQUENCY_PREFIX = "Automatisch zugestellt:"
     MULTILINE_ADDRESS = True
     CANCELLED_STATUS_PREFIXES = ["Storniert", "Service storniert"]
+    MONTHS = MappingProxyType(_GERMAN_MONTHS)
 
     # Matched against the start of the row, since German labels are compounds of one another (e.g.
     # "Zwischensumme" and "Summe").

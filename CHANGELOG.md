@@ -15,6 +15,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Region-specific authenticated-session cookie: `x-main` on `.com`, `x-acb<country>` elsewhere (e.g. `x-acbjp` on amazon.co.jp).
 - `amazonorders.localization`, with a `Locale` interface (defaulting to `EnUS`, the existing behavior) that parses the storefront's language, dates, and amounts, and a `DeDE` implementation for `amazon.de`. The `Locale` is derived from the domain, exposed as `Constants.LOCALE`, and can be overridden with the `locale` config key (e.g. `de-DE`).
 - `amazon.de` support: German dates (`6. September 2026`, `06.09.2026`) and euro amounts (`1.234,56 €`), German labels for Order totals, sellers, returns, and cancellations, and `format_currency()` output as `1.234,56 €`. German dates and amounts that can't be parsed unambiguously are logged as warnings and parsed as `None` rather than guessed.
+- `Locale.MONTHS`, the storefront's month names and abbreviations mapped to the month number (e.g. `DeDE.MONTHS["sept"]` is `9`), for dates without a year, which `parse_date()` does not guess.
 - `Item.subscription_frequency`, the delivery frequency of a Subscribe & Save (Spar-Abo) Item, when shown.
 - `AmazonTransactions` parses the Transactions page when it is rendered from embedded JSON (as on `amazon.de`). Further pages are loaded from the internal API the page itself uses, authorized by the token embedded in the page.
 

@@ -42,6 +42,17 @@ class TestLocalization(UnitTestCase):
         self.assertEqual(date(2026, 9, 25),
                          locale.parse_date("Widerruf, Rückgabe oder Ersatz: Berechtigt bis zum 25. September 2026"))
 
+    def test_de_months(self):
+        locale = DeDE()
+
+        self.assertEqual(9, locale.MONTHS["september"])
+        self.assertEqual(9, locale.MONTHS["sept"])
+        self.assertEqual(3, locale.MONTHS["mär"])
+        self.assertEqual(set(range(1, 13)), set(locale.MONTHS.values()))
+        self.assertEqual({}, dict(EnUS().MONTHS))
+        with self.assertRaises(TypeError):
+            locale.MONTHS["foo"] = 1  # type: ignore[index]
+
     def test_de_parse_date_never_guesses(self):
         locale = DeDE()
 
