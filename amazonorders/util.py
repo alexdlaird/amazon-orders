@@ -136,7 +136,7 @@ def to_type(value: str) -> Union[int, float, bool, str, None]:
     return rv
 
 
-def to_date(value: str,
+def to_date(value: Optional[str],
             fuzzy: bool = False) -> Optional[date]:
     """
     Parse a date string into a :class:`datetime.date`.

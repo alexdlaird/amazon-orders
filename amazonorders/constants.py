@@ -27,7 +27,7 @@ _BROWSER_PRESETS: Dict[str, Dict[str, Optional[str]]] = {
     },
 }
 
-#: ``Accept-Language`` values for regional Amazon sites, keyed by the TLD suffix that
+#: ``Accept-Language`` values for English-locale Amazon sites, keyed by the TLD suffix that
 #: follows ``amazon.``. Looked up dynamically from the user-supplied domain; unknown TLDs keep
 #: the base ``en-US`` value. This map only governs the ``Accept-Language`` header — it is not
 #: a list of supported sites and does not affect any other authentication behavior.
@@ -35,7 +35,6 @@ _REGION_LANGUAGES = {
     "ca": "en-CA,en;q=0.9,en-US;q=0.8",
     "co.uk": "en-GB,en;q=0.9,en-US;q=0.8",
     "com.au": "en-AU,en;q=0.9,en-US;q=0.8",
-    "de": "de-DE,de;q=0.9,en;q=0.8",
     "in": "en-IN,en;q=0.9,en-US;q=0.8",
     "sg": "en-SG,en;q=0.9,en-US;q=0.8",
 }
@@ -56,15 +55,27 @@ _ZERO_DECIMAL_CURRENCY_SYMBOLS = ["¥", "￥"]
 
 #: ``openid.assoc_handle`` values for Amazon sign-in, keyed by the TLD suffix that follows
 #: ``amazon.``. Amazon rejects the sign-in request (HTTP 404) when the handle does not match
-#: the storefront's region, so it is looked up dynamically from the user-supplied domain.
-#: Unknown TLDs keep the default ``usflex``.
+#: the storefront's region. Applied only when ``SIGN_IN_QUERY_PARAMS`` still has the default
+#: ``usflex``, so a ``constants_class`` override wins. Unknown TLDs keep the default.
 _REGION_ASSOC_HANDLES = {
-    "co.uk": "ukflex",
-    "co.jp": "jpflex",
-    "com.au": "auflex",
     "ca": "caflex",
+    "co.jp": "jpflex",
+    "co.uk": "gbflex",
+    "com.au": "auflex",
     "de": "deflex",
     "in": "inflex",
+}
+
+#: The cookie that marks an authenticated session on regional Amazon sites, keyed by the TLD
+#: suffix that follows ``amazon.``. Applied only when ``COOKIES_SET_WHEN_AUTHENTICATED`` still
+#: has the default ``x-main``, so a ``constants_class`` override wins. Unknown TLDs keep the default.
+_REGION_AUTH_COOKIES = {
+    "ca": "x-acbca",
+    "co.jp": "x-acbjp",
+    "co.uk": "x-acbuk",
+    "com.au": "x-acbau",
+    "de": "x-acbde",
+    "in": "x-acbin",
 }
 
 
@@ -88,16 +99,18 @@ class Constants:
         config = AmazonOrdersConfig(data={"constants_class": "my_module.MyConstants"})
 
     URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are derived from the active
-    Amazon domain. ``Accept-Language``, ``CURRENCY_SYMBOL``, and the sign-in ``openid.assoc_handle``
-    are adjusted for a small set of known TLDs (``CURRENCY_SYMBOL`` only when
-    ``AMAZON_CURRENCY_SYMBOL`` is unset). The domain is resolved in this precedence order:
+    Amazon domain. ``Accept-Language``, ``CURRENCY_SYMBOL``, the sign-in ``openid.assoc_handle``, and
+    ``COOKIES_SET_WHEN_AUTHENTICATED`` are adjusted for a small set of known TLDs (``CURRENCY_SYMBOL``
+    only when ``AMAZON_CURRENCY_SYMBOL`` is unset; ``openid.assoc_handle`` and
+    ``COOKIES_SET_WHEN_AUTHENTICATED`` only when a subclass has not overridden them). The domain is
+    resolved in this precedence order:
 
     1. The ``domain`` key on :class:`~amazonorders.conf.AmazonOrdersConfig`.
     2. The ``AMAZON_BASE_URL`` environment variable.
     3. The default, ``amazon.com``.
 
-    Only the English, ``.com`` site is officially supported. Other domains may work; for a TLD not
-    covered by the region maps, subclass and set ``constants_class`` to override any values it needs.
+    Only the English, ``.com`` site is officially supported. Other domains may work; subclass and set
+    ``constants_class`` to override any values a particular site requires.
     """
 
     ##########################################################################
@@ -232,7 +245,8 @@ class Constants:
         # otherwise fall back to the class-level definition.
         sign_in_query_params = dict(type(self).SIGN_IN_QUERY_PARAMS)
         sign_in_query_params["openid.return_to"] = f"{base_url}/?ref_=nav_custrec_signin"
-        if tld in _REGION_ASSOC_HANDLES:
+        if (tld in _REGION_ASSOC_HANDLES and
+                sign_in_query_params["openid.assoc_handle"] == Constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"]):
             sign_in_query_params["openid.assoc_handle"] = _REGION_ASSOC_HANDLES[tld]
 
         sign_in_url = f"{base_url}/ap/signin"
@@ -258,13 +272,9 @@ class Constants:
         if not os.environ.get("AMAZON_CURRENCY_SYMBOL") and tld in _REGION_CURRENCIES:
             self.CURRENCY_SYMBOL = _REGION_CURRENCIES[tld]
 
-        # The cookie that marks an authenticated session is region-specific: ``x-main`` on
-        # amazon.com, but ``x-acb<country>`` elsewhere (e.g. ``x-acbjp`` on amazon.co.jp,
-        # ``x-acbuk`` on amazon.co.uk). Without this, a valid regional session is treated as
-        # logged out, forcing a re-login on every command.
-        if tld and tld != "com":
-            country = tld.rsplit(".", 1)[-1]
-            self.COOKIES_SET_WHEN_AUTHENTICATED = [f"x-acb{country}"]
+        if (tld in _REGION_AUTH_COOKIES and
+                type(self).COOKIES_SET_WHEN_AUTHENTICATED == Constants.COOKIES_SET_WHEN_AUTHENTICATED):
+            self.COOKIES_SET_WHEN_AUTHENTICATED = [_REGION_AUTH_COOKIES[tld]]
 
     def format_currency(self,
                         amount: float) -> str:

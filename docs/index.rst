@@ -191,11 +191,12 @@ Known Limitations
     - Pass ``domain`` to :class:`~amazonorders.session.AmazonSession` (or set ``domain`` in
       :class:`~amazonorders.conf.AmazonOrdersConfig`, or pass ``--domain`` on the CLI) to point at another
       Amazon site. URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are rewritten from
-      the domain, and ``Accept-Language`` is adjusted for a small set of English-locale TLDs, so other
-      English-based versions of Amazon (e.g. ``amazon.ca``) may work by chance. Other values such as the
-      OpenID ``assoc_handle`` are not adjusted — subclass :class:`~amazonorders.constants.Constants` and
-      set ``constants_class`` to override them if a particular site requires it. The ``AMAZON_BASE_URL``
-      environment variable continues to work as a fallback.
+      the domain, and ``Accept-Language``, the currency symbol, the OpenID ``assoc_handle``, and the
+      authenticated-session cookie are adjusted for a small set of known TLDs, so other English-based
+      versions of Amazon (e.g. ``amazon.ca``) may work by chance. Subclass
+      :class:`~amazonorders.constants.Constants` and set ``constants_class`` to override any value a
+      particular site requires; an overridden ``assoc_handle`` or ``COOKIES_SET_WHEN_AUTHENTICATED`` is
+      kept as-is. The ``AMAZON_BASE_URL`` environment variable continues to work as a fallback.
     - We do not run nightly regressions against non-``.com`` versions of the site, and as such do not say
       they are officially supported. If you fork the repo, point the ``integration.yml`` workflow at a
       different domain with your own credentials, please `contact us <mailto:contact@alexlaird.com>`_ and

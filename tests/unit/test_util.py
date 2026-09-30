@@ -8,20 +8,21 @@ from tests.unittestcase import UnitTestCase
 
 
 class TestUtil(UnitTestCase):
-    def test_to_date(self):
-        self.assertIsNone(to_date(None))
-        self.assertIsNone(to_date(""))
-
-        # English formats delegated to dateutil
+    def test_to_date_english(self):
+        # WHEN / THEN
         self.assertEqual(to_date("August 23, 2024"), date(2024, 8, 23))
         self.assertEqual(to_date("2024/8/23"), date(2024, 8, 23))
 
-        # Japanese (amazon.co.jp) notation, which dateutil cannot parse
+    def test_to_date_japanese(self):
+        # WHEN / THEN
         self.assertEqual(to_date("2024年8月23日"), date(2024, 8, 23))
         self.assertEqual(to_date("2024 年 8 月 23 日"), date(2024, 8, 23))
         self.assertEqual(to_date("2024年8月23日 に注文"), date(2024, 8, 23))
 
-        # Unparseable input returns None rather than raising or guessing
+    def test_to_date_unparseable_returns_none(self):
+        # WHEN / THEN
+        self.assertIsNone(to_date(None))
+        self.assertIsNone(to_date(""))
         self.assertIsNone(to_date("not a date"))
         self.assertIsNone(to_date("2024年13月40日"))
 

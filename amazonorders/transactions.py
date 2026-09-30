@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup, Tag
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.transaction import Transaction
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersEntityError, AmazonOrdersError
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,12 @@ def _parse_transaction_form_tag(form_tag: Tag,
         date_str = date_tag.text
         date = util.to_date(date_str)
         if date is None:
-            logger.warning(f"Could not parse date {date_str!r} in Transaction form.")
+            err_msg = (f"Transaction date {date_str!r} could not be parsed, but it's required. Check if "
+                       f"Amazon changed the HTML or set warn_on_missing_required_field=True in config.")
+            if not config.warn_on_missing_required_field:
+                raise AmazonOrdersEntityError(err_msg)
+
+            logger.warning(err_msg)
             continue
 
         transactions_container_tag = date_container_tag.find_next_sibling(
