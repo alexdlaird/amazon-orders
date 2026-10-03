@@ -182,9 +182,9 @@ class Order(Parsable):
             return True
 
         statuses = util.select(self.parsed, self.config.selectors.ORDER_SHIPMENT_STATUS_SELECTOR)
-        cancelled = util.select(self.parsed, self.config.selectors.ORDER_SHIPMENT_CANCELLED_SELECTOR)
+        cancelled_statuses = util.select(self.parsed, self.config.selectors.ORDER_SHIPMENT_CANCELLED_SELECTOR)
 
-        return bool(statuses) and len(cancelled) == len(statuses)
+        return bool(statuses) and len(cancelled_statuses) == len(statuses)
 
     def _parse_grand_total(self) -> Optional[float]:
         # Skip totals parsing for cancelled orders
