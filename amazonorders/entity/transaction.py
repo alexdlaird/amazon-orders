@@ -80,11 +80,11 @@ class Transaction(Parsable):
 
                 return None
 
-        # Digital Order IDs (D01-…) carry a letter, so the class is not digits-only
         match = re.match(r".*#([A-Z0-9-]+)$", value)
         if not match:
-            logger.warning("Transaction.order_number found but not an Order number: %r. "
-                           "Check if Amazon changed the HTML.", value)
+            logger.warning(f"Transaction.order_number found but not an Order number: {value!r}. "
+                           f"Check if Amazon changed the HTML.")
+
             return None
 
         return match.group(1)
@@ -92,7 +92,6 @@ class Transaction(Parsable):
     def _parse_seller(self) -> Optional[str]:
         value = self.simple_parse(self.config.selectors.FIELD_TRANSACTION_SELLER_NAME_SELECTOR)
 
-        # A digital row repeats the Order ID in the seller cell
         if value and value == self.order_number:
             return None
 
