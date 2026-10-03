@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.6.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.6.1...HEAD)
+
+## [4.6.1](https://github.com/alexdlaird/amazon-orders/compare/4.6.0...4.6.1) - 2026-10-03
+
+### Added
+
+- Improved sign-in, session, and currency and date parsing for non-`.com` Amazon sites, including `amazon.co.jp`.
+- `DECIMAL_SEPARATOR`, `THOUSANDS_SEPARATOR`, and `CURRENCY_FORMAT` on `Constants`, and currency parsing for either decimal mark (e.g. `$1,234.56`, `1.234,56 €`, `12,99 €`, or `CHF 1'234.50`).
+
+### Fixed
+
+- Bug fixes and stability improvements.
 
 ## [4.6.0](https://github.com/alexdlaird/amazon-orders/compare/4.5.0...4.6.0) - 2026-09-10
 

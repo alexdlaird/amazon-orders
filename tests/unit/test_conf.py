@@ -9,6 +9,12 @@ import yaml
 
 from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.entity.order import Order
+from amazonorders.exception import AmazonOrdersError
+
+
+class CustomOrder(Order):
+    pass
 
 
 class TestConf(TestCase):
@@ -156,3 +162,44 @@ some_custom_config: {custom_config}
             self.assertEqual(7, persisted_config["max_auth_attempts"])
             self.assertEqual("test-username", persisted_config["username"])
             self.assertEqual("test-otp-secret-key", persisted_config["otp_secret_key"])
+
+    def test_classes_can_be_assigned_directly(self):
+        # GIVEN
+        config = AmazonOrdersConfig(data={"output_dir": self.test_output_dir})
+
+        # WHEN
+        config.order_cls = CustomOrder
+        config.shipment_cls = CustomOrder
+        config.item_cls = CustomOrder
+        config.output_cls = CustomOrder
+
+        # THEN
+        self.assertEqual(CustomOrder, config.order_cls)
+        self.assertEqual(CustomOrder, config.shipment_cls)
+        self.assertEqual(CustomOrder, config.item_cls)
+        self.assertEqual(CustomOrder, config.output_cls)
+
+    def test_unresolvable_class_path_raises_on_use(self):
+        # GIVEN
+        config = AmazonOrdersConfig(data={
+            "output_dir": self.test_output_dir,
+            "order_class": "amazonorders.entity.order.DoesNotExist"
+        })
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            config.order_cls
+
+        # THEN
+        self.assertIn("order_class", str(cm.exception))
+
+    def test_malformed_class_path_raises_at_construction(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonOrdersConfig(data={
+                "output_dir": self.test_output_dir,
+                "order_class": "NotADottedPath"
+            })
+
+        # THEN
+        self.assertIn("order_class", str(cm.exception))

@@ -102,3 +102,106 @@ class TestConstants(UnitTestCase):
         # THEN — both get the TLD-specific Accept-Language regardless of browser
         self.assertIn("en-GB", config_default.constants.BASE_HEADERS["Accept-Language"])
         self.assertIn("en-GB", config_ff.constants.BASE_HEADERS["Accept-Language"])
+
+    def test_domain_co_jp_sets_yen_currency_symbol(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.co.jp"})
+
+        # THEN
+        self.assertEqual("https://www.amazon.co.jp", config.constants.BASE_URL)
+        self.assertEqual("¥", config.constants.CURRENCY_SYMBOL)
+
+    def test_format_currency_yen_without_decimals(self):
+        # GIVEN
+        constants = AmazonOrdersConfig(data={"domain": "amazon.co.jp"}).constants
+
+        # WHEN / THEN
+        self.assertEqual("¥1,980", constants.format_currency(1980))
+        self.assertEqual("¥1,234,568", constants.format_currency(1234567.5))
+        self.assertEqual("-¥1,980", constants.format_currency(-1980))
+        self.assertEqual("¥0", constants.format_currency(-0.4))
+
+    def test_format_currency_keeps_decimals(self):
+        # GIVEN
+        constants = AmazonOrdersConfig(data={"domain": "amazon.com"}).constants
+
+        # WHEN / THEN
+        self.assertEqual("$1,980.00", constants.format_currency(1980))
+        self.assertEqual("-$1.99", constants.format_currency(-1.99))
+
+    def test_domain_sets_region_assoc_handle(self):
+        # GIVEN
+        expected_assoc_handles = {
+            "amazon.ca": "caflex",
+            "amazon.co.jp": "jpflex",
+            "amazon.co.uk": "gbflex",
+            "amazon.com.au": "auflex",
+            "amazon.de": "deflex",
+            "amazon.in": "inflex",
+        }
+
+        for domain, expected_assoc_handle in expected_assoc_handles.items():
+            with self.subTest(domain=domain):
+                # WHEN
+                config = AmazonOrdersConfig(data={"domain": domain})
+
+                # THEN
+                self.assertEqual(expected_assoc_handle,
+                                 config.constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"])
+                self.assertIn(f"openid.assoc_handle={expected_assoc_handle}",
+                              config.constants.BASE_HEADERS["Referer"])
+
+    def test_domain_sets_region_authenticated_cookie(self):
+        # GIVEN
+        expected_cookies = {
+            "amazon.ca": "x-acbca",
+            "amazon.co.jp": "x-acbjp",
+            "amazon.co.uk": "x-acbuk",
+            "amazon.com.au": "x-acbau",
+            "amazon.de": "x-acbde",
+            "amazon.in": "x-acbin",
+        }
+
+        for domain, expected_cookie in expected_cookies.items():
+            with self.subTest(domain=domain):
+                # WHEN
+                config = AmazonOrdersConfig(data={"domain": domain})
+
+                # THEN
+                self.assertEqual([expected_cookie], config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
+
+    def test_domain_com_keeps_default_sign_in_and_session_values(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.com"})
+
+        # THEN
+        self.assertEqual(Constants.SIGN_IN_QUERY_PARAMS, config.constants.SIGN_IN_QUERY_PARAMS)
+        self.assertEqual(Constants.BASE_HEADERS["Referer"], config.constants.BASE_HEADERS["Referer"])
+        self.assertEqual(["x-main"], config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
+
+    def test_domain_unknown_tld_keeps_default_sign_in_and_session_values(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.sg"})
+
+        # THEN
+        self.assertEqual("usflex", config.constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"])
+        self.assertEqual(["x-main"], config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
+
+    def test_domain_does_not_override_constants_class_sign_in_and_session_values(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={
+            "constants_class": "tests.unit.test_constants.RegionOverrideConstants",
+            "domain": "amazon.co.uk",
+        })
+
+        # THEN
+        self.assertEqual("customflex", config.constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"])
+        self.assertIn("openid.assoc_handle=customflex", config.constants.BASE_HEADERS["Referer"])
+        self.assertEqual(["x-custom"], config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
+        self.assertEqual("https://www.amazon.co.uk/?ref_=nav_custrec_signin",
+                         config.constants.SIGN_IN_QUERY_PARAMS["openid.return_to"])
+
+
+class RegionOverrideConstants(Constants):
+    SIGN_IN_QUERY_PARAMS = dict(Constants.SIGN_IN_QUERY_PARAMS, **{"openid.assoc_handle": "customflex"})
+    COOKIES_SET_WHEN_AUTHENTICATED = ["x-custom"]

@@ -4,9 +4,25 @@
 Amazon Orders - A Python library (and CLI) for Amazon order history, line items, and transactions
 *************************************************************************************************
 
-.. image:: _html/logo.png
-   :alt: amazon-orders - A Python library (and CLI) for Amazon order history, line items, and transactions
-   :align: center
+.. only:: html
+
+   .. image:: _static/logo-light.png
+      :alt: amazon-orders - A Python library (and CLI) for Amazon order history, line items, and transactions
+      :align: center
+      :width: 560px
+      :class: hero-logo only-light
+
+   .. image:: _static/logo-dark.png
+      :alt: amazon-orders - A Python library (and CLI) for Amazon order history, line items, and transactions
+      :align: center
+      :width: 560px
+      :class: hero-logo only-dark
+
+.. only:: not html
+
+   .. image:: _html/_images/logo.png
+      :alt: amazon-orders - A Python library (and CLI) for Amazon order history, line items, and transactions
+      :align: center
 
 |
 
@@ -175,16 +191,20 @@ Known Limitations
     - Pass ``domain`` to :class:`~amazonorders.session.AmazonSession` (or set ``domain`` in
       :class:`~amazonorders.conf.AmazonOrdersConfig`, or pass ``--domain`` on the CLI) to point at another
       Amazon site. URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are rewritten from
-      the domain, and ``Accept-Language`` is adjusted for a small set of English-locale TLDs, so other
-      English-based versions of Amazon (e.g. ``amazon.ca``) may work by chance. Other values such as the
-      OpenID ``assoc_handle`` are not adjusted — subclass :class:`~amazonorders.constants.Constants` and
-      set ``constants_class`` to override them if a particular site requires it. The ``AMAZON_BASE_URL``
-      environment variable continues to work as a fallback.
+      the domain, and ``Accept-Language``, the currency symbol, the OpenID ``assoc_handle``, and the
+      authenticated-session cookie are adjusted for a small set of known TLDs, so other English-based
+      versions of Amazon (e.g. ``amazon.ca``) may work by chance. Subclass
+      :class:`~amazonorders.constants.Constants` and set ``constants_class`` to override any value a
+      particular site requires; an overridden ``assoc_handle`` or ``COOKIES_SET_WHEN_AUTHENTICATED`` is
+      kept as-is. The ``AMAZON_BASE_URL`` environment variable continues to work as a fallback.
     - We do not run nightly regressions against non-``.com`` versions of the site, and as such do not say
-      they are officially supported. If you fork the repo, point the ``integration.yml`` workflow at a
+      they are officially supported. If you fork the repo and point the ``integration.yml`` workflow at a
       different domain with your own credentials, please `contact us <mailto:contact@alexlaird.com>`_ and
-      we will start mentioning support for that version of the site.
+      we will start mentioning support for that version of the site. Languages other than English are
+      supported through separately published language packages rather than this library, as described
+      in the `Contribution Guide <https://github.com/alexdlaird/amazon-orders/blob/main/CONTRIBUTING.rst>`_.
     - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
+- Amazon Business accounts are not supported
 - Device not remembered for OTP
     - Amazon will sometimes re-prompt for OTP even when a device has been remembered.
     - The recommended workaround for this is persisting the :attr:`~amazonorders.session.AmazonSession.otp_secret_key`

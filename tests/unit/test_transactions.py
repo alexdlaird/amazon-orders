@@ -8,7 +8,8 @@ from unittest.mock import patch
 import responses
 from bs4 import BeautifulSoup
 
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthRedirectError
+from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.exception import AmazonOrdersAuthRedirectError, AmazonOrdersEntityError, AmazonOrdersError
 from amazonorders.session import AmazonSession
 from amazonorders.transactions import AmazonTransactions, _parse_transaction_form_tag
 from tests.unittestcase import UnitTestCase
@@ -120,6 +121,74 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(transaction.grand_total, -45.19)
         self.assertEqual(transaction.order_number, "123-4567890-1234567")
         self.assertEqual(transaction.seller, "AMZN Mktp CA")
+
+    def test_parse_transactions_unparseable_date_raises(self):
+        # GIVEN
+        html = self.given_transactions_html_with_unparseable_date()
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersEntityError) as cm:
+            AmazonTransactions.parse_transactions(html, self.test_config)
+
+        # THEN
+        self.assertIn("'Not a date' could not be parsed", str(cm.exception))
+        self.assertIn("warn_on_missing_required_field=True", str(cm.exception))
+
+    def test_parse_transactions_unparseable_date_logs_warning_when_configured(self):
+        # GIVEN
+        html = self.given_transactions_html_with_unparseable_date()
+        config = AmazonOrdersConfig(data={
+            "output_dir": self.test_output_dir,
+            "cookie_jar_path": self.test_cookie_jar_path,
+            "warn_on_missing_required_field": True
+        })
+
+        # WHEN
+        with self.assertLogs("amazonorders.transactions", level="WARNING") as cm:
+            transactions = AmazonTransactions.parse_transactions(html, config)
+
+        # THEN
+        self.assertEqual(1, len(transactions))
+        self.assertEqual(datetime.date(2024, 10, 9), transactions[0].completed_date)
+        self.assertIn("'Not a date' could not be parsed", cm.output[0])
+
+    def test_parse_transactions_digital_order(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-digital-order.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        transactions = AmazonTransactions.parse_transactions(html, self.test_config)
+
+        # THEN
+        self.assertEqual(2, len(transactions))
+        digital, physical = transactions
+        self.assertEqual(datetime.date(2026, 9, 15), digital.completed_date)
+        self.assertEqual(-7.46, digital.grand_total)
+        self.assertEqual("D01-1234567-1234567", digital.order_number)
+        self.assertEqual("https://www.amazon.com/gp/css/order-details?orderID=D01-1234567-1234567",
+                         digital.order_details_link)
+        self.assertIsNone(digital.seller)
+        self.assertEqual("111-1234567-1234567", physical.order_number)
+        self.assertEqual("AMZN Mktp US", physical.seller)
+
+    def test_parse_transactions_order_text_without_order_number(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-digital-order.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read().replace("Order #D01-1234567-1234567", "Order #pending")
+
+        # WHEN
+        with self.assertLogs("amazonorders.entity.transaction", level="WARNING") as logs:
+            transactions = AmazonTransactions.parse_transactions(html, self.test_config)
+
+        # THEN
+        self.assertEqual(2, len(transactions))
+        self.assertIsNone(transactions[0].order_number)
+        self.assertEqual("111-1234567-1234567", transactions[1].order_number)
+        self.assertEqual(1, len(logs.records))
+        self.assertIn("not an Order number: 'Order #pending'", logs.output[0])
 
     def test_parse_transactions_zero_transactions(self):
         # GIVEN
@@ -358,3 +427,8 @@ class TestTransactions(UnitTestCase):
                 'ppw-widgetEvent:DefaultNextPageNavigationEvent:{"nextPageKey":"key"}': "",
             },
         )
+
+    def given_transactions_html_with_unparseable_date(self):
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            return f.read().replace("<span>October 11, 2024</span>", "<span>Not a date</span>")

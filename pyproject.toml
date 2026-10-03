@@ -79,6 +79,8 @@ docs = [
     "types-python-dateutil",
     "sphinx-sitemap",
     "sphinxext-opengraph",
+    "furo",
+    "sphinxcontrib-googleanalytics",
 ]
 
 [project.scripts]

@@ -8,3 +8,8 @@
     white-space: nowrap;
     border: 0;
 }
+
+.hero-logo {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}

@@ -50,8 +50,7 @@ class Order(Parsable):
 
         #: ``True`` if the Order was cancelled. When ``True``, fields like ``grand_total`` and the totals on the
         #: details page may be ``None`` because Amazon stops rendering them.
-        self.cancelled: bool = clone.cancelled if clone else bool(
-            self.parsed and util.select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS))
+        self.cancelled: bool = clone.cancelled if clone else self._parse_cancelled()
 
         #: ``True`` if this is a Whole Foods Market purchase (an in-store/FOPO purchase or a Whole Foods receipt
         #: order). Unlike other unsupported order types, these expose a :attr:`grand_total` and (often) an
@@ -175,9 +174,21 @@ class Order(Parsable):
 
         return value
 
+    def _parse_cancelled(self) -> bool:
+        if not self.parsed:
+            return False
+
+        if util.select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS):
+            return True
+
+        statuses = util.select(self.parsed, self.config.selectors.ORDER_SHIPMENT_STATUS_SELECTOR)
+        cancelled_statuses = util.select(self.parsed, self.config.selectors.ORDER_SHIPMENT_CANCELLED_SELECTOR)
+
+        return bool(statuses) and len(cancelled_statuses) == len(statuses)
+
     def _parse_grand_total(self) -> Optional[float]:
         # Skip totals parsing for cancelled orders
-        if len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS)) > 0:
+        if self.cancelled:
             return None
 
         # Skip totals parsing for unsupported order types (Amazon Fresh, physical stores). Whole Foods Market
@@ -217,11 +228,13 @@ class Order(Parsable):
         if self.is_whole_foods:
             return self.safe_simple_parse(
                 selector=self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_METHOD_SELECTOR)
-        return self.safe_simple_parse(selector=self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR,
-                                      attr_name="alt")
+        tag = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR)
+        if tag is None:
+            return None
+        return tag.attrs.get("alt") or tag.text.strip()
 
     def _parse_masked_digits(self,
-                             selector: str,
+                             selector: Union[str, list],
                              pattern: str) -> Optional[str]:
         for tag in util.select(self.parsed, selector):
             match = re.search(pattern, tag.text)
@@ -235,7 +248,7 @@ class Order(Parsable):
             return self._parse_masked_digits(
                 self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR, r"\*\s*(\d+)")
         return self._parse_masked_digits(
-            self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR, r"ending in\s+(\d+)")
+            self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR, r"(?:ending in\s+|^\s*)(\d+)")
 
     def _parse_subtotal(self) -> Optional[float]:
         if self.is_whole_foods:
@@ -253,9 +266,9 @@ class Order(Parsable):
 
     def _parse_item_count(self) -> Optional[int]:
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_ITEM_COUNT_SELECTOR):
-            match = re.search(r"(\d+)\s+items?\s+in this purchase", tag.text)
-            if match:
-                return int(match.group(1))
+            item_count = util.to_count(tag.text, r"{count}\s+items?\s+in this purchase")
+            if item_count is not None:
+                return item_count
 
         return None
 

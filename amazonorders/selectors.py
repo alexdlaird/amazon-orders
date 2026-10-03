@@ -128,6 +128,8 @@ class Selectors:
         # Identifies a cancelled order on the details page
         Selector("h4.a-alert-heading", text_contains="cancelled")
     ]
+    ORDER_SHIPMENT_STATUS_SELECTOR = "h4.od-status-message"
+    ORDER_SHIPMENT_CANCELLED_SELECTOR = Selector(ORDER_SHIPMENT_STATUS_SELECTOR, text_contains="Cancelled")
 
     #####################################
     # CSS selectors for Item fields
@@ -189,8 +191,10 @@ class Selectors:
                                         "span.order-date-invoice-item",
                                         "[data-component='briefOrderInfo'] div.a-column",
                                         "div:is(.a-span3, .a-span12)"]
-    FIELD_ORDER_PAYMENT_METHOD_SELECTOR = "img.pmts-payment-credit-card-instrument-logo"
-    FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"
+    FIELD_ORDER_PAYMENT_METHOD_SELECTOR = ["[data-testid='payment-instrument-name']",
+                                           "img.pmts-payment-credit-card-instrument-logo"]
+    FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = ["[data-testid='payment-instrument-number']",
+                                                  "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"]
     FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["[data-component='orderSubtotals'] div.a-row",
                                                    "div#od-subtotals div.a-row",
                                                    "[data-component='chargeSummary'] div.od-line-item-row"]

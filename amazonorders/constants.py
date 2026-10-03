@@ -42,11 +42,41 @@ _REGION_LANGUAGES = {
 #: ``CURRENCY_SYMBOL`` values for English-locale Amazon sites where the storefront actually
 #: prefixes prices with a non-``$`` symbol. amazon.com.au and amazon.ca render prices as
 #: plain ``$`` (single-currency context), so they keep the default and are intentionally
-#: omitted here. Skipped when ``AMAZON_CURRENCY_SYMBOL`` is set.
+#: omitted here. Skipped when ``AMAZON_CURRENCY_SYMBOL`` is set, or when a ``constants_class``
+#: override sets ``CURRENCY_SYMBOL``.
 _REGION_CURRENCIES = {
     "co.uk": "£",
+    "co.jp": "¥",
     "in": "₹",
     "sg": "S$",
+}
+
+#: Currency symbols whose amounts are rendered without decimals (yen has no minor unit).
+_ZERO_DECIMAL_CURRENCY_SYMBOLS = ["¥", "￥"]
+
+#: ``openid.assoc_handle`` values for Amazon sign-in, keyed by the TLD suffix that follows
+#: ``amazon.``. Amazon rejects the sign-in request (HTTP 404) when the handle does not match
+#: the storefront's region. Applied only when ``SIGN_IN_QUERY_PARAMS`` still has the default
+#: ``usflex``, so a ``constants_class`` override wins. Unknown TLDs keep the default.
+_REGION_ASSOC_HANDLES = {
+    "ca": "caflex",
+    "co.jp": "jpflex",
+    "co.uk": "gbflex",
+    "com.au": "auflex",
+    "de": "deflex",
+    "in": "inflex",
+}
+
+#: The cookie that marks an authenticated session on regional Amazon sites, keyed by the TLD
+#: suffix that follows ``amazon.``. Applied only when ``COOKIES_SET_WHEN_AUTHENTICATED`` still
+#: has the default ``x-main``, so a ``constants_class`` override wins. Unknown TLDs keep the default.
+_REGION_AUTH_COOKIES = {
+    "ca": "x-acbca",
+    "co.jp": "x-acbjp",
+    "co.uk": "x-acbuk",
+    "com.au": "x-acbau",
+    "de": "x-acbde",
+    "in": "x-acbin",
 }
 
 
@@ -70,17 +100,18 @@ class Constants:
         config = AmazonOrdersConfig(data={"constants_class": "my_module.MyConstants"})
 
     URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are derived from the active
-    Amazon domain. ``Accept-Language`` and ``CURRENCY_SYMBOL`` are adjusted for a small set of
-    English-locale TLDs (``CURRENCY_SYMBOL`` only when ``AMAZON_CURRENCY_SYMBOL`` is unset). The
-    domain is resolved in this precedence order:
+    Amazon domain. ``Accept-Language``, ``CURRENCY_SYMBOL``, the sign-in ``openid.assoc_handle``, and
+    ``COOKIES_SET_WHEN_AUTHENTICATED`` are adjusted for a small set of known TLDs (``CURRENCY_SYMBOL``
+    only when ``AMAZON_CURRENCY_SYMBOL`` is unset; ``CURRENCY_SYMBOL``, ``openid.assoc_handle``, and
+    ``COOKIES_SET_WHEN_AUTHENTICATED`` only when a subclass has not overridden them). The domain is
+    resolved in this precedence order:
 
     1. The ``domain`` key on :class:`~amazonorders.conf.AmazonOrdersConfig`.
     2. The ``AMAZON_BASE_URL`` environment variable.
     3. The default, ``amazon.com``.
 
-    Only the English, ``.com`` site is officially supported. Other domains may work, but values like
-    ``openid.assoc_handle`` are not adjusted automatically — subclass and set ``constants_class`` to
-    override them if a non-``.com`` site requires it.
+    Only the English, ``.com`` site is officially supported. Other domains may work; subclass and set
+    ``constants_class`` to override any values a particular site requires.
     """
 
     ##########################################################################
@@ -154,10 +185,16 @@ class Constants:
     ACIC_CHALLENGE_PATH = "/ax/aaut/verify/ap/challenge"
 
     ##########################################################################
-    # Currency
+    # Number and Currency Formats
     ##########################################################################
 
+    DECIMAL_SEPARATOR = "."
+    THOUSANDS_SEPARATOR = ","
+    #: The symbol :func:`format_currency` renders, adjusted for a small set of known TLDs. For an Amazon
+    #: site without a known symbol, the ``AMAZON_CURRENCY_SYMBOL`` environment variable sets it without a
+    #: ``constants_class`` subclass (e.g. for the CLI).
     CURRENCY_SYMBOL = os.environ.get("AMAZON_CURRENCY_SYMBOL", "$")
+    CURRENCY_FORMAT = "{symbol}{amount}"
 
     def __init__(self,
                  config: Optional["AmazonOrdersConfig"] = None) -> None:
@@ -206,10 +243,18 @@ class Constants:
         """
         base_url = _normalize_base_url(domain)
 
+        host = urlparse(base_url).netloc.lower().split(":")[0]
+        if host.startswith("www."):
+            host = host[len("www."):]
+        tld = host[len("amazon."):] if host.startswith("amazon.") else ""
+
         # Build from the instance-level BASE_HEADERS if _apply_browser has already set it;
         # otherwise fall back to the class-level definition.
         sign_in_query_params = dict(type(self).SIGN_IN_QUERY_PARAMS)
         sign_in_query_params["openid.return_to"] = f"{base_url}/?ref_=nav_custrec_signin"
+        if (tld in _REGION_ASSOC_HANDLES and
+                sign_in_query_params["openid.assoc_handle"] == Constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"]):
+            sign_in_query_params["openid.assoc_handle"] = _REGION_ASSOC_HANDLES[tld]
 
         sign_in_url = f"{base_url}/ap/signin"
 
@@ -223,11 +268,6 @@ class Constants:
         self.ORDER_INVOICE_URL = f"{base_url}/gp/css/summary/print.html"
         self.TRANSACTION_HISTORY_URL = f"{base_url}{self.TRANSACTION_HISTORY_ROUTE}"
 
-        host = urlparse(base_url).netloc.lower().split(":")[0]
-        if host.startswith("www."):
-            host = host[len("www."):]
-        tld = host[len("amazon."):] if host.startswith("amazon.") else ""
-
         headers = dict(vars(self).get("BASE_HEADERS", type(self).BASE_HEADERS))
         headers["Origin"] = base_url
         headers["Host"] = urlparse(base_url).netloc
@@ -236,13 +276,31 @@ class Constants:
             headers["Accept-Language"] = _REGION_LANGUAGES[tld]
         self.BASE_HEADERS = headers
 
-        if not os.environ.get("AMAZON_CURRENCY_SYMBOL") and tld in _REGION_CURRENCIES:
+        if (not os.environ.get("AMAZON_CURRENCY_SYMBOL") and tld in _REGION_CURRENCIES and
+                type(self).CURRENCY_SYMBOL == Constants.CURRENCY_SYMBOL):
             self.CURRENCY_SYMBOL = _REGION_CURRENCIES[tld]
+
+        if (tld in _REGION_AUTH_COOKIES and
+                type(self).COOKIES_SET_WHEN_AUTHENTICATED == Constants.COOKIES_SET_WHEN_AUTHENTICATED):
+            self.COOKIES_SET_WHEN_AUTHENTICATED = [_REGION_AUTH_COOKIES[tld]]
 
     def format_currency(self,
                         amount: float) -> str:
-        formatted_amt = "{currency_symbol}{amount:,.2f}".format(currency_symbol=self.CURRENCY_SYMBOL,
-                                                                amount=abs(amount))
-        if round(amount, 2) < 0:
+        """
+        Format an amount for display, using ``CURRENCY_SYMBOL``, ``DECIMAL_SEPARATOR``,
+        ``THOUSANDS_SEPARATOR``, and the ``CURRENCY_FORMAT`` template (which places the
+        ``{symbol}`` and ``{amount}``, e.g. ``"{amount} {symbol}"`` renders ``1.234,56 €``). A
+        negative amount is prefixed with ``-``.
+
+        :param amount: The amount to format.
+        :return: The formatted amount.
+        """
+        decimals = 0 if self.CURRENCY_SYMBOL in _ZERO_DECIMAL_CURRENCY_SYMBOLS else 2
+        integer, _, fraction = "{amount:,.{decimals}f}".format(amount=abs(amount), decimals=decimals).partition(".")
+        formatted_number = integer.replace(",", self.THOUSANDS_SEPARATOR)
+        if fraction:
+            formatted_number += f"{self.DECIMAL_SEPARATOR}{fraction}"
+        formatted_amt = self.CURRENCY_FORMAT.format(symbol=self.CURRENCY_SYMBOL, amount=formatted_number)
+        if round(amount, decimals) < 0:
             return f"-{formatted_amt}"
         return formatted_amt

@@ -17,6 +17,33 @@ labels:
 
           Because Amazon can render slightly different versions of its pages to each user, we rely extensively on users troubleshooting their own issues and [submitting fixes via PRs](https://github.com/alexdlaird/amazon-orders/blob/main/CONTRIBUTING.rst). There is simply no way for us to resolve many of these edge case issues ourselves, since one Amazon account cannot necessarily replicate another Amazon account's exact same experience. We hope you'll start working on a PR for us to evaluate!
 
-          If you want us to troubleshoot the issue, we need more information. To investigate issues, we rely on user-submitted examples of the HTML rendered for pages from your account. Follow the steps in the docs to [enable debug mode](https://amazon-orders.readthedocs.io/troubleshooting.html#enable-debug-mode), attach relevant console logs, and upload relevant HTML files to this ticket (remember to obfuscate any sensitive data first).
+          If you want us to troubleshoot the issue, we need more information. A bug report is only actionable with the HTML page that failed to parse attached, since a code snippet tells us nothing without the source it ran against. Follow the steps in the docs to [enable debug mode](https://amazon-orders.readthedocs.io/troubleshooting.html#enable-debug-mode), attach relevant console logs, and upload relevant HTML files to this ticket (remember to obfuscate any sensitive data first).
 
           Once we have more information, or a PR to evaluate, we will follow up further on this ticket. Thanks!
+      pr:
+        body: |
+          Thanks for submitting your PR! It looks like there is not enough detail given for us to be able to evaluate it.
+
+          Because Amazon can render slightly different versions of its pages to each user, a parsing change is only reviewable alongside the HTML it was written against. Please add the relevant page as a fixture under `tests/resources/` (remember to obfuscate any sensitive data first), along with a test that plainly validates the change, so we can confirm the fix and guard against it regressing later.
+
+          Once we have more information, we will follow up further on this PR. Thanks!
+  - name: too-long
+    labeled:
+      issue:
+        body: |
+          This issue is too long to review as written, so it has not been read.
+
+          A report is only useful if it can be understood quickly, so please edit this one down to the essentials. If an AI tool helped write it, that's fine, but verify it and trim it yourself first. If you haven't read it in full, it's simply not reasonable to expect us to.
+
+          A bug report is also only actionable with the HTML page that failed to parse attached (sensitive data obfuscated), since a code snippet tells us nothing without the source it ran against.
+
+          This issue will be reopened once it is evident it has had a human touch.
+        action: close
+      pr:
+        body: |
+          This PR's description is too long to review as written, so it has not been read.
+
+          A change is only reviewable if it can be understood quickly, so please edit the description down to the essentials. If an AI tool helped write it, that's fine, but verify it and trim it yourself first. If you haven't read it in full, it's simply not reasonable to expect us to.
+
+          This PR will be reopened once it is evident it has had a human touch.
+        action: close
