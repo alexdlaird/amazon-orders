@@ -1,0 +1,83 @@
+name: 🌐 New Language
+description: Published a language package? Request that we link to it from the docs.
+labels: ["documentation"]
+
+body:
+
+- type: markdown
+  attributes:
+    value: |
+      Languages other than English are provided by separately published language packages, not by `amazon-orders` itself, so pull requests that add a language won't be accepted. Use this form once your package is published, to request that we link to it from the docs. See the [Contribution Guide](https://github.com/alexdlaird/amazon-orders/blob/main/CONTRIBUTING.rst) for details.
+
+- type: checkboxes
+  id: ack
+  attributes:
+    label: Acknowledgements
+    options:
+    - label: I have written a descriptive issue title
+      required: true
+    - label: The package is published and installable
+      required: true
+    - label: A nightly integration test runs against that version of Amazon, and it is passing
+      required: true
+    - label: The package's tests use real Amazon pages (anonymized), not generated ones
+      required: true
+    - label: I will maintain the package, and keep it working as Amazon changes the site
+      required: true
+
+- type: input
+  id: language
+  attributes:
+    label: Language
+    placeholder: German
+  validations:
+    required: true
+
+- type: input
+  id: amazon-sites
+  attributes:
+    label: Amazon Site(s)
+    placeholder: amazon.de
+  validations:
+    required: true
+
+- type: input
+  id: package
+  attributes:
+    label: Package
+    description: Where the package is published.
+    placeholder: https://pypi.org/project/...
+  validations:
+    required: true
+
+- type: input
+  id: repository
+  attributes:
+    label: Repository
+    placeholder: https://github.com/...
+  validations:
+    required: true
+
+- type: input
+  id: nightly-run
+  attributes:
+    label: Nightly Integration Run
+    description: A link to the workflow (or its status badge) that runs the integration test nightly.
+  validations:
+    required: true
+
+- type: input
+  id: maintainers
+  attributes:
+    label: Maintainer(s)
+    placeholder: "@your-github-username"
+  validations:
+    required: true
+
+- type: input
+  id: supported-versions
+  attributes:
+    label: Supported amazon-orders Versions
+    placeholder: ">=4.7,<5"
+  validations:
+    required: true

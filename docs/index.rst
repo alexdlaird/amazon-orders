@@ -198,9 +198,11 @@ Known Limitations
       particular site requires; an overridden ``assoc_handle`` or ``COOKIES_SET_WHEN_AUTHENTICATED`` is
       kept as-is. The ``AMAZON_BASE_URL`` environment variable continues to work as a fallback.
     - We do not run nightly regressions against non-``.com`` versions of the site, and as such do not say
-      they are officially supported. If you fork the repo, point the ``integration.yml`` workflow at a
+      they are officially supported. If you fork the repo and point the ``integration.yml`` workflow at a
       different domain with your own credentials, please `contact us <mailto:contact@alexlaird.com>`_ and
-      we will start mentioning support for that version of the site.
+      we will start mentioning support for that version of the site. Languages other than English are
+      supported through separately published language packages rather than this library, as described
+      in the `Contribution Guide <https://github.com/alexdlaird/amazon-orders/blob/main/CONTRIBUTING.rst>`_.
     - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
 - Amazon Business accounts are not supported
 - Device not remembered for OTP
