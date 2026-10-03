@@ -39,14 +39,12 @@ class Transaction(Parsable):
         self.grand_total: float = self.safe_parse(self._parse_grand_total)
         #: The Transaction was a refund or not.
         self.is_refund: bool = self.grand_total > 0
-        #: The Transaction Order number.
-        self.order_number: str = self.safe_parse(self._parse_order_number)
+        #: The Transaction Order number, or ``None`` when the row carries no Order number.
+        self.order_number: Optional[str] = self.safe_parse(self._parse_order_number)
         #: The Transaction Order details link.
         self.order_details_link: str = self.safe_parse(self._parse_order_details_link)
-        #: The Transaction seller name.
-        self.seller: str = self.safe_simple_parse(
-            selector=self.config.selectors.FIELD_TRANSACTION_SELLER_NAME_SELECTOR
-        )
+        #: The Transaction seller name, or ``None`` when the row carries none.
+        self.seller: Optional[str] = self.safe_parse(self._parse_seller)
 
     def __repr__(self) -> str:
         return f"<Transaction {self.completed_date}: \"Order #{self.order_number}, Grand Total: {self.grand_total}\">"
@@ -82,8 +80,21 @@ class Transaction(Parsable):
 
                 return None
 
-        match = re.match(".*#([0-9-]+)$", value)
-        value = match.group(1) if match else ""
+        # Digital Order IDs (D01-…) carry a letter, so the class is not digits-only
+        match = re.match(r".*#([A-Z0-9-]+)$", value)
+        if not match:
+            logger.warning("Transaction.order_number found but not an Order number: %r. "
+                           "Check if Amazon changed the HTML.", value)
+            return None
+
+        return match.group(1)
+
+    def _parse_seller(self) -> Optional[str]:
+        value = self.simple_parse(self.config.selectors.FIELD_TRANSACTION_SELLER_NAME_SELECTOR)
+
+        # A digital row repeats the Order ID in the seller cell
+        if value and value == self.order_number:
+            return None
 
         return value
 
