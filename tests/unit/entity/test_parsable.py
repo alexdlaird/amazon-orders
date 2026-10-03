@@ -34,6 +34,44 @@ class TestItem(UnitTestCase):
         self.assertEqual(parsable.to_currency("(¥1,980)"), -1980)
         self.assertIsNone(parsable.to_currency("not currency"))
 
+    def test_to_currency_decimal_comma(self):
+        # GIVEN
+        parsable = Parsable(BeautifulSoup("<html />", self.test_config.bs4_parser), self.test_config)
+
+        # WHEN / THEN
+        self.assertEqual(parsable.to_currency("12,99 €"), 12.99)
+        self.assertEqual(parsable.to_currency("25,29€"), 25.29)
+        self.assertEqual(parsable.to_currency("€ 0,50"), 0.50)
+        self.assertEqual(parsable.to_currency("\u221239,93 €"), -39.93)
+
+    def test_to_currency_dot_thousands_with_decimal_comma(self):
+        # GIVEN
+        parsable = Parsable(BeautifulSoup("<html />", self.test_config.bs4_parser), self.test_config)
+
+        # WHEN / THEN
+        self.assertEqual(parsable.to_currency("1.234,56 €"), 1234.56)
+        self.assertEqual(parsable.to_currency("1.234,56\u00a0€"), 1234.56)
+        self.assertEqual(parsable.to_currency("EUR 1.234.567,89"), 1234567.89)
+        self.assertEqual(parsable.to_currency("(1.234,50 €)"), -1234.50)
+
+    def test_to_currency_space_and_apostrophe_thousands(self):
+        # GIVEN
+        parsable = Parsable(BeautifulSoup("<html />", self.test_config.bs4_parser), self.test_config)
+
+        # WHEN / THEN
+        self.assertEqual(parsable.to_currency("1 234,56 €"), 1234.56)
+        self.assertEqual(parsable.to_currency("1\u202f234,56 €"), 1234.56)
+        self.assertEqual(parsable.to_currency("CHF 1'234.50"), 1234.50)
+
+    def test_to_currency_three_trailing_digits_are_thousands(self):
+        # GIVEN
+        parsable = Parsable(BeautifulSoup("<html />", self.test_config.bs4_parser), self.test_config)
+
+        # WHEN / THEN
+        self.assertEqual(parsable.to_currency("$1,234"), 1234)
+        self.assertEqual(parsable.to_currency("1.234 €"), 1234)
+        self.assertEqual(parsable.to_currency("-€7.63"), -7.63)
+
     def test_to_dict_excludes_unserializable_fields(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",

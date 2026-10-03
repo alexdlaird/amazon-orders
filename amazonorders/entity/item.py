@@ -83,15 +83,16 @@ class Item(Parsable):
         return match.group(1) if match else None
 
     def _parse_quantity(self) -> Optional[int]:
-        value = self.simple_parse(self.config.selectors.FIELD_ITEM_QUANTITY_SELECTOR)
-        if isinstance(value, int):
-            return value
+        for tag in util.select(self.parsed, self.config.selectors.FIELD_ITEM_QUANTITY_SELECTOR):
+            quantity = util.to_count(tag.text, r"^\s*{count}\s*$")
+            if quantity is not None:
+                return quantity
 
         # Whole Foods Market line items render quantity as "Qty: 1" (a whole count) or "Qty: 0.31 lb"
         # (sold by weight, which has no integer quantity).
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ITEM_WHOLE_FOODS_QUANTITY_SELECTOR):
-            match = re.fullmatch(r"Qty:\s*(\d+)", tag.get_text(strip=True))
-            if match:
-                return int(match.group(1))
+            quantity = util.to_count(tag.get_text(strip=True), r"^Qty:\s*{count}$")
+            if quantity is not None:
+                return quantity
 
         return None

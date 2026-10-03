@@ -211,7 +211,9 @@ class Parsable:
         Recognizes the ``$``, ``£``, ``€``, ``₹``, and ``¥`` symbols (including the fullwidth
         ``￥`` used by amazon.co.jp, and leading currency-code letters such as ``A$`` or
         ``CDN$``), accepts accounting-style negatives in parentheses (e.g. ``($1.99)``), and
-        treats a literal ``FREE`` as ``0.0``.
+        treats a literal ``FREE`` as ``0.0``. Either decimal mark is accepted: a trailing ``.``
+        or ``,`` followed by one or two digits is the decimal mark, and other ``.``, ``,``, ``'``,
+        and space separators group thousands (e.g. ``1,234.56``, ``1.234,56 €``, or ``12,99 €``).
 
         :param value: The currency to parse.
         :return: The currency as a primitive.
@@ -230,8 +232,8 @@ class Parsable:
         if value.startswith("(") and value.endswith(")"):
             value = "-" + value[1:-1]
 
-        value = re.sub("[a-zA-Z$£€₹¥￥,]+", "", value)
-        currency = util.to_type(value)
+        value = re.sub(r"[a-zA-Z$£€₹¥￥\s]+", "", value.replace("\u2212", "-"))
+        currency = util.to_type(util.to_decimal_point(value))
 
         if isinstance(currency, str):
             return None

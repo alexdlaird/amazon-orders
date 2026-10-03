@@ -102,8 +102,8 @@ jobs:
         run: make install install-browser
       - name: Integration test
         env:
-          INTEGRATION_TEST_RERUN: ${{ inputs.retry_failures == false && '0' || '2' }}
-          INTEGRATION_TEST_FAIL_FAST: ${{ inputs.retry_failures == false && '-x' || '' }}
+          INTEGRATION_TEST_RERUN: ${{ github.event_name != 'schedule' && inputs.retry_failures == false && '0' || '2' }}
+          INTEGRATION_TEST_FAIL_FAST: ${{ github.event_name != 'schedule' && inputs.retry_failures == false && '-x' || '' }}
         run: make test-integration PYTEST_EXTRA_ARGS="${INTEGRATION_TEST_FAIL_FAST}"
       - name: Upload test output
         if: ${{ always() }}

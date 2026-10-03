@@ -5,7 +5,6 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
-import re
 from typing import Any, Callable, List, Optional
 from urllib.parse import quote
 
@@ -23,7 +22,7 @@ logger = logging.getLogger(__name__)
 def _parse_order_count(order_count_tag: Optional[Tag]) -> Optional[int]:
     """
     Parse the leading number out of an Order history count tag, so the count survives thousands
-    separators (e.g. ``1,213 orders``) and any trailing copy.
+    separators (e.g. ``1,213``, ``1.213``, or ``1 213 orders``) and any trailing copy.
 
     :param order_count_tag: The Order history count tag, if one was found.
     :return: The Order count, or ``None`` if it was absent or unparsable.
@@ -31,9 +30,7 @@ def _parse_order_count(order_count_tag: Optional[Tag]) -> Optional[int]:
     if not order_count_tag:
         return None
 
-    match = re.match(r"\s*([\d,]+)", order_count_tag.text)
-
-    return int(match.group(1).replace(",", "")) if match else None
+    return util.to_count(order_count_tag.text)
 
 
 def _parse_order_history(parsed: Tag,

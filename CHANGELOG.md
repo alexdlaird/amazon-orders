@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - Improved sign-in, session, and currency and date parsing for non-`.com` Amazon sites, including `amazon.co.jp`.
+- `DECIMAL_SEPARATOR`, `THOUSANDS_SEPARATOR`, and `CURRENCY_FORMAT` on `Constants`, and currency parsing for either decimal mark (e.g. `$1,234.56`, `1.234,56 €`, `12,99 €`, or `CHF 1'234.50`).
 
 ### Fixed
 

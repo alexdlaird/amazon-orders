@@ -4,7 +4,7 @@ __license__ = "MIT"
 import importlib
 import logging
 import re
-from datetime import date
+from datetime import date, datetime
 from typing import List, Union, Optional, Callable, Any
 
 from bs4 import Tag, BeautifulSoup
@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 #: Matches the Japanese ``年``/``月``/``日`` date notation used by amazon.co.jp (e.g.
 #: ``2024年8月23日``), which ``dateutil`` cannot parse.
 _JAPANESE_DATE_RE = re.compile(r"(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日")
+
+#: Two fallback dates that differ in every component, so parsing against both reveals whether
+#: ``dateutil`` would have filled in a day, month, or year missing from the text.
+_DATE_DEFAULTS = [datetime(2001, 1, 1), datetime(2002, 2, 2)]
 
 
 class AmazonSessionResponse:
@@ -137,6 +141,36 @@ def to_type(value: str) -> Union[int, float, bool, str, None]:
     return rv
 
 
+def to_decimal_point(value: str) -> str:
+    """
+    Normalize a number written with either decimal mark to use ``.``, removing thousands separators.
+    A trailing ``.`` or ``,`` followed by one or two digits is the decimal mark, and any other ``.``,
+    ``,``, or ``'`` groups thousands (e.g. ``1,234.56``, ``1.234,56``, and ``1'234.56`` all become
+    ``1234.56``, and ``1,234`` becomes ``1234``).
+
+    :param value: The number to normalize.
+    :return: The number with a ``.`` decimal mark and no thousands separators.
+    """
+    decimal_mark = re.search(r"[.,](\d{1,2})$", value)
+    whole = re.sub(r"[.,']", "", value[:decimal_mark.start()] if decimal_mark else value)
+    return f"{whole}.{decimal_mark.group(1)}" if decimal_mark else whole
+
+
+def to_count(value: str,
+             pattern: str = r"^\s*{count}") -> Optional[int]:
+    """
+    Parse a whole number from text, allowing ``,``, ``.``, ``'``, or space thousands separators (e.g.
+    ``1,234``, ``1.234``, or ``1 234``).
+
+    :param value: The text containing the number.
+    :param pattern: A regex locating the number, with ``{count}`` marking where it appears. Defaults to a
+        number at the start of the text.
+    :return: The number, or ``None`` if ``pattern`` does not match.
+    """
+    match = re.search(pattern.replace("{count}", r"(?P<count>\d+(?:[.,'\s]\d{3})*)"), value)
+    return int(re.sub(r"\D", "", match["count"])) if match else None
+
+
 def to_date(value: Optional[str],
             fuzzy: bool = False) -> Optional[date]:
     """
@@ -145,7 +179,8 @@ def to_date(value: Optional[str],
     In addition to the formats understood by ``dateutil``, this recognizes the Japanese
     ``年``/``月``/``日`` notation used by amazon.co.jp (e.g. ``2024年8月23日``), which
     ``dateutil`` cannot parse and would otherwise silently misinterpret when ``fuzzy`` is
-    enabled.
+    enabled. A date missing its day, month, or year is not parsed, rather than completed from
+    today's date.
 
     :param value: The date string to parse.
     :param fuzzy: Whether to let ``dateutil`` ignore unknown tokens when parsing.
@@ -163,9 +198,15 @@ def to_date(value: Optional[str],
             return None
 
     try:
-        return parser.parse(value, fuzzy=fuzzy).date()
+        parsed_dates = {parser.parse(value, fuzzy=fuzzy, default=default).date() for default in _DATE_DEFAULTS}
     except (ValueError, OverflowError):
         return None
+
+    if len(parsed_dates) > 1:
+        logger.debug(f"Date {value!r} is missing a day, month, or year, so it was not parsed.")
+        return None
+
+    return parsed_dates.pop()
 
 
 def load_class(package: List[str], clazz: str) -> Union[Callable, Any]:

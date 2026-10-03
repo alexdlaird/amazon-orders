@@ -99,3 +99,21 @@ class TestItem(UnitTestCase):
 
         # THEN
         self.assertEqual(3, item.quantity)
+
+    def test_quantity_with_thousands_separator(self):
+        # GIVEN
+        html = """
+<div class="a-fixed-left-grid-col yohtmlc-item a-col-right">
+<div class="a-row">
+<a class="a-link-normal" href="/dp/B0018CJYCO/ref=x">Item Title</a>
+</div>
+<div class="od-item-view-qty">1,000</div>
+</div>
+"""
+        parsed = BeautifulSoup(html, self.test_config.bs4_parser)
+
+        # WHEN
+        item = Item(parsed, self.test_config)
+
+        # THEN
+        self.assertEqual(1000, item.quantity)

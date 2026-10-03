@@ -42,7 +42,8 @@ _REGION_LANGUAGES = {
 #: ``CURRENCY_SYMBOL`` values for English-locale Amazon sites where the storefront actually
 #: prefixes prices with a non-``$`` symbol. amazon.com.au and amazon.ca render prices as
 #: plain ``$`` (single-currency context), so they keep the default and are intentionally
-#: omitted here. Skipped when ``AMAZON_CURRENCY_SYMBOL`` is set.
+#: omitted here. Skipped when ``AMAZON_CURRENCY_SYMBOL`` is set, or when a ``constants_class``
+#: override sets ``CURRENCY_SYMBOL``.
 _REGION_CURRENCIES = {
     "co.uk": "£",
     "co.jp": "¥",
@@ -101,7 +102,7 @@ class Constants:
     URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are derived from the active
     Amazon domain. ``Accept-Language``, ``CURRENCY_SYMBOL``, the sign-in ``openid.assoc_handle``, and
     ``COOKIES_SET_WHEN_AUTHENTICATED`` are adjusted for a small set of known TLDs (``CURRENCY_SYMBOL``
-    only when ``AMAZON_CURRENCY_SYMBOL`` is unset; ``openid.assoc_handle`` and
+    only when ``AMAZON_CURRENCY_SYMBOL`` is unset; ``CURRENCY_SYMBOL``, ``openid.assoc_handle``, and
     ``COOKIES_SET_WHEN_AUTHENTICATED`` only when a subclass has not overridden them). The domain is
     resolved in this precedence order:
 
@@ -184,10 +185,16 @@ class Constants:
     ACIC_CHALLENGE_PATH = "/ax/aaut/verify/ap/challenge"
 
     ##########################################################################
-    # Currency
+    # Number and Currency Formats
     ##########################################################################
 
+    DECIMAL_SEPARATOR = "."
+    THOUSANDS_SEPARATOR = ","
+    #: The symbol :func:`format_currency` renders, adjusted for a small set of known TLDs. For an Amazon
+    #: site without a known symbol, the ``AMAZON_CURRENCY_SYMBOL`` environment variable sets it without a
+    #: ``constants_class`` subclass (e.g. for the CLI).
     CURRENCY_SYMBOL = os.environ.get("AMAZON_CURRENCY_SYMBOL", "$")
+    CURRENCY_FORMAT = "{symbol}{amount}"
 
     def __init__(self,
                  config: Optional["AmazonOrdersConfig"] = None) -> None:
@@ -269,7 +276,8 @@ class Constants:
             headers["Accept-Language"] = _REGION_LANGUAGES[tld]
         self.BASE_HEADERS = headers
 
-        if not os.environ.get("AMAZON_CURRENCY_SYMBOL") and tld in _REGION_CURRENCIES:
+        if (not os.environ.get("AMAZON_CURRENCY_SYMBOL") and tld in _REGION_CURRENCIES and
+                type(self).CURRENCY_SYMBOL == Constants.CURRENCY_SYMBOL):
             self.CURRENCY_SYMBOL = _REGION_CURRENCIES[tld]
 
         if (tld in _REGION_AUTH_COOKIES and
@@ -278,10 +286,21 @@ class Constants:
 
     def format_currency(self,
                         amount: float) -> str:
+        """
+        Format an amount for display, using ``CURRENCY_SYMBOL``, ``DECIMAL_SEPARATOR``,
+        ``THOUSANDS_SEPARATOR``, and the ``CURRENCY_FORMAT`` template (which places the
+        ``{symbol}`` and ``{amount}``, e.g. ``"{amount} {symbol}"`` renders ``1.234,56 €``). A
+        negative amount is prefixed with ``-``.
+
+        :param amount: The amount to format.
+        :return: The formatted amount.
+        """
         decimals = 0 if self.CURRENCY_SYMBOL in _ZERO_DECIMAL_CURRENCY_SYMBOLS else 2
-        formatted_amt = "{currency_symbol}{amount:,.{decimals}f}".format(currency_symbol=self.CURRENCY_SYMBOL,
-                                                                         amount=abs(amount),
-                                                                         decimals=decimals)
+        integer, _, fraction = "{amount:,.{decimals}f}".format(amount=abs(amount), decimals=decimals).partition(".")
+        formatted_number = integer.replace(",", self.THOUSANDS_SEPARATOR)
+        if fraction:
+            formatted_number += f"{self.DECIMAL_SEPARATOR}{fraction}"
+        formatted_amt = self.CURRENCY_FORMAT.format(symbol=self.CURRENCY_SYMBOL, amount=formatted_number)
         if round(amount, decimals) < 0:
             return f"-{formatted_amt}"
         return formatted_amt
