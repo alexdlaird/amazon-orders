@@ -88,6 +88,17 @@ class TestIntegrationGeneric(IntegrationTestCase):
             self.assert_orders_list_index(orders)
             self.assertIsNotNone(orders[0].items[0].asin)
 
+    def test_get_gift_cards(self):
+        # WHEN
+        balance = self.amazon_gift_cards.get_balance()
+        activity = self.amazon_gift_cards.get_gift_card_activity(keep_paging=False)
+
+        # THEN
+        self.assertIsNotNone(balance)
+        for entry in activity:
+            self.assertIsNotNone(entry.activity_date)
+            self.assertIsNotNone(entry.amount)
+
     def test_get_transactions(self):
         # WHEN
         transactions = self.amazon_transactions.get_transactions(days=self.transactions_days)

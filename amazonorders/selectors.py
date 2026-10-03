@@ -339,3 +339,19 @@ class Selectors:
         "div.apx-transactions-line-item-component-container a.a-link-normal"]
     FIELD_TRANSACTION_SELLER_NAME_SELECTOR = [
         "div.apx-transactions-line-item-component-container :has(a.a-link-normal) + div"]
+
+    #####################################
+    # CSS selectors for Gift Card fields
+    #####################################
+
+    GIFT_CARD_BALANCE_SELECTOR = "#gc-ui-balance-gc-balance-value"
+    GIFT_CARD_ACTIVITY_TABLE_SELECTOR = "div#gc-balance-table table.a-bordered"
+    GIFT_CARD_ACTIVITY_SELECTOR = "tr:has(> td)"
+    GIFT_CARD_ACTIVITY_NEXT_PAGE_LINK_SELECTOR = "div#gc-balance-table ul.a-pagination li.a-last a"
+
+    FIELD_GIFT_CARD_ACTIVITY_DATE_SELECTOR = "td:nth-of-type(1)"
+    FIELD_GIFT_CARD_ACTIVITY_DESCRIPTION_SELECTOR = "td:nth-of-type(2) span"
+    FIELD_GIFT_CARD_ACTIVITY_AMOUNT_SELECTOR = "td:nth-of-type(3)"
+    FIELD_GIFT_CARD_ACTIVITY_CLOSING_BALANCE_SELECTOR = "td:nth-of-type(4)"
+    FIELD_GIFT_CARD_ACTIVITY_ORDER_NUMBER_SELECTOR = "td:nth-of-type(2) a.a-link-normal span"
+    FIELD_GIFT_CARD_ACTIVITY_ORDER_LINK_SELECTOR = "td:nth-of-type(2) a.a-link-normal"

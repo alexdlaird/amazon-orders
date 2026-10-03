@@ -161,7 +161,7 @@ class UnitTestCase(TestCase):
                                                    method=responses.GET):
         return responses.add(
             method,
-            re.compile(f"{self.test_config.constants.BASE_URL}/(gp|cpe|your-orders)/.*"),
+            re.compile(f"{self.test_config.constants.BASE_URL}/(gp|cpe|gc|your-orders)/.*"),
             status=302,
             headers={"Location": self.test_config.constants.SIGN_IN_URL}
         )
@@ -171,7 +171,7 @@ class UnitTestCase(TestCase):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
             return responses.add(
                 method,
-                re.compile(f"{self.test_config.constants.BASE_URL}/(gp|cpe|your-orders)/.*"),
+                re.compile(f"{self.test_config.constants.BASE_URL}/(gp|cpe|gc|your-orders)/.*"),
                 body=f.read(),
                 status=200
             )

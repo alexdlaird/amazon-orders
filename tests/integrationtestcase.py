@@ -7,6 +7,7 @@ import time
 
 from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.gift_cards import AmazonGiftCards
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from amazonorders.transactions import AmazonTransactions
@@ -36,6 +37,7 @@ class IntegrationTestCase(TestCase):
 
         cls.amazon_orders = AmazonOrders(cls.amazon_session)
         cls.amazon_transactions = AmazonTransactions(cls.amazon_session)
+        cls.amazon_gift_cards = AmazonGiftCards(cls.amazon_session)
 
     @classmethod
     def tearDownClass(cls):

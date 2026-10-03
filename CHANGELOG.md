@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.7.0...HEAD)
 
+### Added
+
+- `AmazonGiftCards`, the `GiftCardActivity` entity, and the `gift-card-balance` and `gift-card-activity` CLI commands, for the Gift Card balance and activity.
+
 ### Fixed
 
 - Headers passed to an `AmazonSession` request now take precedence over `BASE_HEADERS`.
