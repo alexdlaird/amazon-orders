@@ -120,5 +120,14 @@ class TestUtil(UnitTestCase):
         self.assertEqual("Order Number", tag.text)
         self.assertEqual("123-1234567-1234567", tag.find_next_sibling("p").text)
 
-        # WHEN/THEN
-        self.assertIsNone(select_one(parsed, Selector("span.label", text="Subtotal")))
+    def test_select_one_with_text_selector_returns_none_when_no_text_matches(self):
+        # GIVEN
+        parsed = BeautifulSoup("<ul><li><span class=\"label\">Total</span></li>"
+                               "<li><span class=\"label\">Order Number</span></li></ul>",
+                               self.test_config.bs4_parser)
+
+        # WHEN
+        tag = select_one(parsed, Selector("span.label", text="Subtotal"))
+
+        # THEN
+        self.assertIsNone(tag)
