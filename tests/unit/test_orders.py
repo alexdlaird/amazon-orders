@@ -14,6 +14,9 @@ from tests.unittestcase import UnitTestCase
 
 
 class TestOrders(UnitTestCase):
+    DELIVERED_HEADING = ('<span class="a-text-bold">Delivered </span>'
+                         '<span class="a-text-bold a-nowrap">September 9</span>')
+
     temp_order_history_file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "output",
                                                 "temp-order-history.html")
     temp_order_details_file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "output",
@@ -699,6 +702,70 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
+
+    def test_parse_order_details_cancelled_by_seller(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-cancelled-by-seller.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(html, self.test_config)
+
+        # THEN
+        self.assertTrue(order.cancelled)
+        self.assertIsNone(order.grand_total)
+        self.assertEqual("113-1000001-2000001", order.order_number)
+        self.assertEqual(date(2026, 8, 8), order.order_placed_date)
+        self.assertEqual(1, len(order.items))
+        self.assertEqual(149.99, order.items[0].price)
+        self.assertEqual(1, len(order.shipments))
+        self.assertEqual("Cancelled", order.shipments[0].delivery_status)
+
+    def test_parse_order_details_cancelled_multiple_items(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-cancelled-multiple-items.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(html, self.test_config)
+
+        # THEN
+        self.assertTrue(order.cancelled)
+        self.assertIsNone(order.grand_total)
+        self.assertEqual("103-1000003-2000003", order.order_number)
+        self.assertEqual(3, len(order.items))
+        self.assertEqual(["Cancelled"], [shipment.delivery_status for shipment in order.shipments])
+        self.assertEqual(3, len(order.shipments[0].items))
+
+    def test_parse_order_details_one_shipment_cancelled(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-111-6778632-7354601.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read().replace(self.DELIVERED_HEADING, "<span>Cancelled</span>", 1)
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(html, self.test_config)
+
+        # THEN
+        self.assertFalse(order.cancelled)
+        self.assertEqual(60.88, order.grand_total)
+        self.assertEqual(["Cancelled", "Delivered September 9"],
+                         [shipment.delivery_status for shipment in order.shipments])
+
+    def test_parse_order_details_every_shipment_cancelled(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-111-6778632-7354601.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read().replace(self.DELIVERED_HEADING, "<span>Cancelled</span>")
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(html, self.test_config)
+
+        # THEN
+        self.assertTrue(order.cancelled)
+        self.assertIsNone(order.grand_total)
 
     def test_parse_order_details_unparseable(self):
         # WHEN

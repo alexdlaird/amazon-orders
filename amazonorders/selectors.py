@@ -128,6 +128,9 @@ class Selectors:
         # Identifies a cancelled order on the details page
         Selector("h4.a-alert-heading", text_contains="cancelled")
     ]
+    # The current details layout has a status heading per Shipment, and the Order is cancelled when all are
+    ORDER_SHIPMENT_STATUS_SELECTOR = "h4.od-status-message"
+    ORDER_SHIPMENT_CANCELLED_SELECTOR = Selector("h4.od-status-message", text_contains="Cancelled")
 
     #####################################
     # CSS selectors for Item fields
