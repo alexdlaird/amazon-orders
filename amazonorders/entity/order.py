@@ -50,8 +50,7 @@ class Order(Parsable):
 
         #: ``True`` if the Order was cancelled. When ``True``, fields like ``grand_total`` and the totals on the
         #: details page may be ``None`` because Amazon stops rendering them.
-        self.cancelled: bool = clone.cancelled if clone else bool(
-            self.parsed and util.select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS))
+        self.cancelled: bool = clone.cancelled if clone else self._parse_cancelled()
 
         #: ``True`` if this is a Whole Foods Market purchase (an in-store/FOPO purchase or a Whole Foods receipt
         #: order). Unlike other unsupported order types, these expose a :attr:`grand_total` and (often) an
@@ -175,9 +174,21 @@ class Order(Parsable):
 
         return value
 
+    def _parse_cancelled(self) -> bool:
+        if not self.parsed:
+            return False
+
+        if util.select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS):
+            return True
+
+        statuses = util.select(self.parsed, self.config.selectors.ORDER_SHIPMENT_STATUS_SELECTOR)
+        cancelled = util.select(self.parsed, self.config.selectors.ORDER_SHIPMENT_CANCELLED_SELECTOR)
+
+        return bool(statuses) and len(cancelled) == len(statuses)
+
     def _parse_grand_total(self) -> Optional[float]:
         # Skip totals parsing for cancelled orders
-        if len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS)) > 0:
+        if self.cancelled:
             return None
 
         # Skip totals parsing for unsupported order types (Amazon Fresh, physical stores). Whole Foods Market

@@ -14,6 +14,9 @@ from tests.unittestcase import UnitTestCase
 
 
 class TestOrders(UnitTestCase):
+    DELIVERED_HEADING = ('<span class="a-text-bold">Delivered </span>'
+                         '<span class="a-text-bold a-nowrap">September 9</span>')
+
     temp_order_history_file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "output",
                                                 "temp-order-history.html")
     temp_order_details_file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "output",
@@ -735,6 +738,34 @@ class TestOrders(UnitTestCase):
         self.assertEqual(3, len(order.items))
         self.assertEqual(["Cancelled"], [shipment.delivery_status for shipment in order.shipments])
         self.assertEqual(3, len(order.shipments[0].items))
+
+    def test_parse_order_details_one_shipment_cancelled(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-111-6778632-7354601.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read().replace(self.DELIVERED_HEADING, "<span>Cancelled</span>", 1)
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(html, self.test_config)
+
+        # THEN
+        self.assertFalse(order.cancelled)
+        self.assertEqual(60.88, order.grand_total)
+        self.assertEqual(["Cancelled", "Delivered September 9"],
+                         [shipment.delivery_status for shipment in order.shipments])
+
+    def test_parse_order_details_every_shipment_cancelled(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-111-6778632-7354601.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read().replace(self.DELIVERED_HEADING, "<span>Cancelled</span>")
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(html, self.test_config)
+
+        # THEN
+        self.assertTrue(order.cancelled)
+        self.assertIsNone(order.grand_total)
 
     def test_parse_order_details_unparseable(self):
         # WHEN
