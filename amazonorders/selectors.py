@@ -131,8 +131,8 @@ class Selectors:
     # Digital Order history renders the count in the time filter label rather than in span.num-orders
     ORDER_HISTORY_COUNT_SELECTOR = [".js-yo-container span.num-orders",
                                     "form.js-time-filter-form label.time-filter__label b"]
-    ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR = Selector("div.csd-encrypted-sensitive script",
-                                                    text_contains="csdContent(")
+    # Readable pages also encrypt single fields in this, so a card is encrypted only if its Order number is unreadable
+    ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR = "div.csd-encrypted-sensitive"
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer",
                                      "div#odp-main-section"]
