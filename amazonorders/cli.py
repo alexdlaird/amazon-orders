@@ -94,8 +94,19 @@ def amazon_orders_cli(ctx: Context,
         data["max_auth_attempts"] = kwargs["max_auth_attempts"]
     if kwargs.get("domain"):
         data["domain"] = kwargs["domain"]
-    ctx.obj["conf"] = AmazonOrdersConfig(config_path=kwargs.get("config_path"),
-                                         data=data)
+    ctx.obj["conf_data"] = data
+
+    if ctx.invoked_subcommand == "version":
+        return
+
+    try:
+        ctx.obj["conf"] = AmazonOrdersConfig(config_path=kwargs.get("config_path"),
+                                             data=data)
+    except AmazonOrdersError as e:
+        if ctx.invoked_subcommand == "update-config":
+            return
+
+        ctx.fail(f"{e} Call the `update-config` command to fix it.")
 
     username = kwargs.get("username")
     password = kwargs.get("password")
@@ -394,9 +405,15 @@ def update_config(ctx: Context,
     """
     Persist the given config value to the config file.
     """
-    conf = ctx.obj["conf"]
+    typed_value = util.to_type(value)
 
-    conf.update_config(key, util.to_type(value))
+    try:
+        conf = AmazonOrdersConfig(config_path=ctx.obj.get("config_path"),
+                                  data={**ctx.obj["conf_data"], key: typed_value})
+    except AmazonOrdersError as e:
+        ctx.fail(f"Config \"{key}\" was not updated: {e}")
+
+    conf.update_config(key, typed_value)
 
     click.echo(f"Info: Config \"{key}\" updated to \"{value}\".\n")
 

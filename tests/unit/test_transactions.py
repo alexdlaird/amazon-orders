@@ -7,11 +7,14 @@ from unittest.mock import patch
 
 import responses
 from bs4 import BeautifulSoup
+from responses.matchers import json_params_matcher
+from responses.registries import OrderedRegistry
 
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.entity.transaction import Transaction
 from amazonorders.exception import AmazonOrdersAuthRedirectError, AmazonOrdersEntityError, AmazonOrdersError
 from amazonorders.session import AmazonSession
-from amazonorders.transactions import AmazonTransactions, _parse_transaction_form_tag
+from amazonorders.transactions import AmazonTransactions, TransactionsPage
 from tests.unittestcase import UnitTestCase
 
 
@@ -316,6 +319,68 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
 
+    @responses.activate(registry=OrderedRegistry)
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_with_custom_transactions_page(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2025, 5, 27)
+        config = AmazonOrdersConfig(data={
+            "output_dir": self.test_output_dir,
+            "cookie_jar_path": self.test_cookie_jar_path,
+            "transactions_page_class": "tests.unit.test_transactions.TokenPagedTransactionsPage"
+        })
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=config)
+        amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-with-next-page.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            first_page_resp = responses.add(responses.POST, config.constants.TRANSACTION_HISTORY_URL, body=f.read())
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-in-progress.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            api_resp = responses.add(responses.POST,
+                                     f"{config.constants.BASE_URL}{TokenPagedTransactionsPage.API_ROUTE}",
+                                     body=f.read(),
+                                     match=[json_params_matcher({"token": "the-token"})])
+
+        # WHEN
+        transactions = AmazonTransactions(amazon_session).get_transactions()
+
+        # THEN
+        self.assertEqual(40, len(transactions))
+        self.assertEqual(1, first_page_resp.call_count)
+        self.assertEqual(1, api_resp.call_count)
+
+    def test_parse_transactions_with_custom_transactions_page(self):
+        # GIVEN
+        self.test_config.transactions_page_cls = TokenPagedTransactionsPage
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-with-next-page.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        with patch.object(TokenPagedTransactionsPage, "parse_page", autospec=True,
+                          side_effect=TokenPagedTransactionsPage.parse_page) as parse_page:
+            transactions = AmazonTransactions.parse_transactions(html, self.test_config)
+
+        # THEN
+        self.assertEqual(20, len(transactions))
+        self.assertEqual(1, parse_page.call_count)
+
+    def test_parse_transactions_with_custom_transaction_class(self):
+        # GIVEN
+        self.test_config.transaction_cls = CustomTransaction
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        transactions = AmazonTransactions.parse_transactions(html, self.test_config)
+
+        # THEN
+        self.assertEqual(2, len(transactions))
+        self.assertTrue(all(isinstance(transaction, CustomTransaction) for transaction in transactions))
+
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_get_transactions_with_pending(self, mock_today):
@@ -413,9 +478,7 @@ class TestTransactions(UnitTestCase):
             form_tag = parsed.select_one("form")
 
         # WHEN
-        transactions, next_page_data = _parse_transaction_form_tag(
-            form_tag, self.test_config
-        )
+        transactions, next_page_data = TransactionsPage(self.test_config)._parse_transaction_form_tag(form_tag)
 
         # THEN
         self.assertEqual(len(transactions), 2)
@@ -432,3 +495,24 @@ class TestTransactions(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",
                   encoding="utf-8") as f:
             return f.read().replace("<span>October 11, 2024</span>", "<span>Not a date</span>")
+
+
+class TokenPagedTransactionsPage(TransactionsPage):
+    API_ROUTE = "/api/transactions"
+
+    def get_page(self, amazon_session, url, next_page_data=None):
+        if next_page_data and "token" in next_page_data:
+            page_response = amazon_session.post(f"{self.config.constants.BASE_URL}{self.API_ROUTE}",
+                                                json=next_page_data)
+            amazon_session.check_response(page_response, meta=next_page_data)
+            return self.parse_page(page_response.parsed)
+
+        return super().get_page(amazon_session, url, next_page_data)
+
+    def parse_page(self, parsed):
+        transactions, next_page_data = super().parse_page(parsed)
+        return transactions, {"token": "the-token"} if next_page_data else None
+
+
+class CustomTransaction(Transaction):
+    pass

@@ -47,16 +47,16 @@ class Item(Parsable):
         #: The Item Seller.
         self.seller: Optional[Seller] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_SELLER_SELECTOR,
-            text_contains="Sold by:",
+            text_contains=self.config.selectors.FIELD_ITEM_SELLER_TEXT,
             wrap_tag=Seller)
         #: The Item condition.
         self.condition: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_TAG_ITERATOR_SELECTOR,
-            prefix_split="Condition:")
+            prefix_split=self.config.selectors.FIELD_ITEM_CONDITION_PREFIX)
         #: The Item return eligible date.
         self.return_eligible_date: Optional[date] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_RETURN_SELECTOR,
-            text_contains="Return",
+            text_contains=self.config.selectors.FIELD_ITEM_RETURN_TEXT,
             parse_date=True)
         #: The Item image URL.
         self.image_link: Optional[str] = self.safe_simple_parse(
@@ -84,14 +84,15 @@ class Item(Parsable):
 
     def _parse_quantity(self) -> Optional[int]:
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ITEM_QUANTITY_SELECTOR):
-            quantity = util.to_count(tag.text, r"^\s*{count}\s*$")
+            quantity = self.config.constants.parse_count(tag.text, r"^\s*{count}\s*$")
             if quantity is not None:
                 return quantity
 
         # Whole Foods Market line items render quantity as "Qty: 1" (a whole count) or "Qty: 0.31 lb"
         # (sold by weight, which has no integer quantity).
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ITEM_WHOLE_FOODS_QUANTITY_SELECTOR):
-            quantity = util.to_count(tag.get_text(strip=True), r"^Qty:\s*{count}$")
+            quantity = self.config.constants.parse_count(tag.get_text(strip=True),
+                                                         self.config.selectors.FIELD_ITEM_WHOLE_FOODS_QUANTITY_REGEX)
             if quantity is not None:
                 return quantity
 

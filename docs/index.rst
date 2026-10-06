@@ -64,7 +64,7 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==4.6.*``, not ``==4.6.0``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==4.7.*``, not ``==4.7.0``)
 to ensure you always get the latest stable release.
 
 Basic Usage
@@ -201,8 +201,8 @@ Known Limitations
       they are officially supported. If you fork the repo and point the ``integration.yml`` workflow at a
       different domain with your own credentials, please `contact us <mailto:contact@alexlaird.com>`_ and
       we will start mentioning support for that version of the site. Languages other than English are
-      supported through separately published language packages rather than this library, as described
-      in the `Contribution Guide <https://github.com/alexdlaird/amazon-orders/blob/main/CONTRIBUTING.rst>`_.
+      supported through separately published language packages rather than this library; see
+      :doc:`language-packages`.
     - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
 - Amazon Business accounts are not supported
 - Device not remembered for OTP
@@ -222,6 +222,7 @@ For more advanced usage, dive deeper in to the rest of the documentation.
    api
    waf
    browser
+   language-packages
    troubleshooting
 
 .. include:: ../CONTRIBUTING.rst

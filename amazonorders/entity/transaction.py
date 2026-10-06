@@ -4,7 +4,7 @@ __license__ = "MIT"
 import logging
 import re
 from datetime import date
-from typing import Union, Optional
+from typing import Optional, Type, TypeVar, Union
 
 from bs4 import Tag
 
@@ -13,6 +13,8 @@ from amazonorders.entity.parsable import Parsable
 from amazonorders.exception import AmazonOrdersError
 
 logger = logging.getLogger(__name__)
+
+TransactionEntity = TypeVar("TransactionEntity", bound="Transaction")
 
 
 class Transaction(Parsable):
@@ -29,7 +31,7 @@ class Transaction(Parsable):
         #: The Transaction completed date.
         self.completed_date: date = completed_date
         #: The Transaction payment method.
-        self.payment_method: str = self.safe_simple_parse(
+        self.payment_method: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_TRANSACTION_PAYMENT_METHOD_SELECTOR
         )
         #: The Transaction payment method's last digits, parsed from :attr:`payment_method`.
@@ -42,9 +44,50 @@ class Transaction(Parsable):
         #: The Transaction Order number, or ``None`` when the row carries no Order number.
         self.order_number: Optional[str] = self.safe_parse(self._parse_order_number)
         #: The Transaction Order details link.
-        self.order_details_link: str = self.safe_parse(self._parse_order_details_link)
+        self.order_details_link: Optional[str] = self.safe_parse(self._parse_order_details_link)
         #: The Transaction seller name, or ``None`` when the row carries none.
         self.seller: Optional[str] = self.safe_parse(self._parse_seller)
+
+    @classmethod
+    def from_fields(cls: Type[TransactionEntity],
+                    config: AmazonOrdersConfig,
+                    completed_date: date,
+                    grand_total: float,
+                    payment_method: Optional[str] = None,
+                    payment_method_last_4: Optional[str] = None,
+                    order_number: Optional[str] = None,
+                    order_details_link: Optional[str] = None,
+                    seller: Optional[str] = None) -> TransactionEntity:
+        """
+        Build a Transaction from values already read off the page, for an Amazon site that renders its
+        Transactions as data rather than HTML (for instance, as embedded JSON). :attr:`is_refund`, and a
+        missing :attr:`payment_method_last_4` or :attr:`order_details_link`, are derived the same way as when parsing
+        HTML.
+
+        :param config: The config to use.
+        :param completed_date: The Transaction completed date.
+        :param grand_total: The Transaction grand total.
+        :param payment_method: The Transaction payment method, with any masked digits (e.g. ``Visa ****1234``).
+        :param payment_method_last_4: The payment method's last digits, if the page gives them separately from
+            :attr:`payment_method`.
+        :param order_number: The Transaction Order number.
+        :param order_details_link: The Transaction Order details link.
+        :param seller: The Transaction seller name.
+        :return: The Transaction.
+        """
+        transaction = cls.__new__(cls)
+        Parsable.__init__(transaction, None, config)  # type: ignore[arg-type]
+
+        transaction.completed_date = completed_date
+        transaction.payment_method = payment_method
+        transaction.payment_method_last_4 = payment_method_last_4 or transaction._parse_payment_method_last_4()
+        transaction.grand_total = grand_total
+        transaction.is_refund = grand_total > 0
+        transaction.order_number = order_number
+        transaction.order_details_link = order_details_link or transaction._order_details_link_fallback()
+        transaction.seller = seller
+
+        return transaction
 
     def __repr__(self) -> str:
         return f"<Transaction {self.completed_date}: \"Order #{self.order_number}, Grand Total: {self.grand_total}\">"
@@ -80,14 +123,14 @@ class Transaction(Parsable):
 
                 return None
 
-        match = re.match(r".*#([A-Z0-9-]+)$", value)
-        if not match:
+        order_number = self.config.constants.parse_order_number(value)
+        if not order_number:
             logger.warning(f"Transaction.order_number found but not an Order number: {value!r}. "
                            f"Check if Amazon changed the HTML.")
 
             return None
 
-        return match.group(1)
+        return order_number
 
     def _parse_seller(self) -> Optional[str]:
         value = self.simple_parse(self.config.selectors.FIELD_TRANSACTION_SELLER_NAME_SELECTOR)
@@ -100,10 +143,16 @@ class Transaction(Parsable):
     def _parse_order_details_link(self) -> Optional[str]:
         value = self.simple_parse(self.config.selectors.FIELD_TRANSACTION_ORDER_LINK_SELECTOR, attr_name="href")
 
-        if not value and self.order_number:
-            value = f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
+        if not value:
+            value = self._order_details_link_fallback()
 
         return value
+
+    def _order_details_link_fallback(self) -> Optional[str]:
+        if not self.order_number:
+            return None
+
+        return f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
 
     def _parse_payment_method_last_4(self) -> Optional[str]:
         if not self.payment_method:

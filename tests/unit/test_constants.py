@@ -201,6 +201,42 @@ class TestConstants(UnitTestCase):
         self.assertEqual("https://www.amazon.co.uk/?ref_=nav_custrec_signin",
                          config.constants.SIGN_IN_QUERY_PARAMS["openid.return_to"])
 
+    def test_parse_order_number_matches_by_shape_whatever_the_label(self):
+        # GIVEN
+        constants = Constants()
+
+        # WHEN / THEN
+        self.assertEqual("112-1234567-1234567", constants.parse_order_number("Order #112-1234567-1234567"))
+        self.assertEqual("112-1234567-1234567", constants.parse_order_number("Order# 112-1234567-1234567"))
+        self.assertEqual("302-1234567-1234567", constants.parse_order_number("Bestellnr. 302-1234567-1234567"))
+        self.assertEqual("D01-1234567-1234567", constants.parse_order_number("Order #D01-1234567-1234567"))
+        self.assertEqual("1234567890123456789", constants.parse_order_number("Refund: Order #1234567890123456789"))
+
+    def test_parse_order_number_no_order_number(self):
+        # GIVEN
+        constants = Constants()
+
+        # WHEN / THEN
+        self.assertIsNone(constants.parse_order_number("AMZN Mktp US"))
+        self.assertIsNone(constants.parse_order_number("X112-1234567-1234567"))
+        self.assertIsNone(constants.parse_order_number("12345678901234567890"))
+
+    def test_domain_sets_region_currency_symbol(self):
+        # GIVEN
+        expected_symbols = {
+            "amazon.ae": "AED", "amazon.com.be": "€", "amazon.com.br": "R$", "amazon.com.tr": "TL",
+            "amazon.de": "€", "amazon.eg": "EGP", "amazon.es": "€", "amazon.ie": "€", "amazon.it": "€",
+            "amazon.nl": "€", "amazon.pl": "zł", "amazon.sa": "SAR", "amazon.se": "kr",
+        }
+
+        for domain, expected_symbol in expected_symbols.items():
+            with self.subTest(domain=domain):
+                # WHEN
+                config = AmazonOrdersConfig(data={"domain": domain})
+
+                # THEN
+                self.assertEqual(expected_symbol, config.constants.CURRENCY_SYMBOL)
+
 
 class RegionOverrideConstants(Constants):
     SIGN_IN_QUERY_PARAMS = dict(Constants.SIGN_IN_QUERY_PARAMS, **{"openid.assoc_handle": "customflex"})

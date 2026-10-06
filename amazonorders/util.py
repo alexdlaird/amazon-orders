@@ -4,6 +4,7 @@ __license__ = "MIT"
 import importlib
 import logging
 import re
+import unicodedata
 from datetime import date, datetime
 from typing import List, Union, Optional, Callable, Any
 
@@ -154,6 +155,18 @@ def to_decimal_point(value: str) -> str:
     decimal_mark = re.search(r"[.,](\d{1,2})$", value)
     whole = re.sub(r"[.,']", "", value[:decimal_mark.start()] if decimal_mark else value)
     return f"{whole}.{decimal_mark.group(1)}" if decimal_mark else whole
+
+
+def strip_currency_text(value: str) -> str:
+    """
+    Remove the currency symbols (e.g. ``$``, ``€``, or ``￥``), currency-code letters (e.g. ``CDN`` or ``zł``), and
+    whitespace from an amount, leaving its digits, sign, and separators.
+
+    :param value: The amount to strip.
+    :return: The amount without its currency text.
+    """
+    return "".join(character for character in value
+                   if not (character.isalpha() or character.isspace() or unicodedata.category(character) == "Sc"))
 
 
 def to_count(value: str,

@@ -19,7 +19,8 @@ built, published, and maintained by their own authors, including running a night
 against that version of Amazon. Pull requests that add a language here won't be accepted, but once your
 package is published and its nightly run is passing, `request a link
 <https://github.com/alexdlaird/amazon-orders/issues/new?template=new-language.yml>`_ and we'll add it to
-the docs.
+the docs. See `Language Packages <https://amazon-orders.readthedocs.io/language-packages.html>`_ for how to
+build one.
 
 Also be sure to review the `Code of Conduct <https://github.com/alexdlaird/amazon-orders?tab=coc-ov-file#contributor-covenant-code-of-conduct>`_ before
 submitting issues or pull requests.

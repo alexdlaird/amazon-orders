@@ -3,8 +3,12 @@ __license__ = "MIT"
 
 import logging
 import os
-from typing import Dict, Optional, TYPE_CHECKING
+import re
+from datetime import date
+from typing import Dict, Optional, TYPE_CHECKING, Union
 from urllib.parse import urlencode, urlparse
+
+from amazonorders import util
 
 if TYPE_CHECKING:
     from amazonorders.conf import AmazonOrdersConfig
@@ -39,15 +43,27 @@ _REGION_LANGUAGES = {
     "sg": "en-SG,en;q=0.9,en-US;q=0.8",
 }
 
-#: ``CURRENCY_SYMBOL`` values for English-locale Amazon sites where the storefront actually
-#: prefixes prices with a non-``$`` symbol. amazon.com.au and amazon.ca render prices as
-#: plain ``$`` (single-currency context), so they keep the default and are intentionally
-#: omitted here. Skipped when ``AMAZON_CURRENCY_SYMBOL`` is set, or when a ``constants_class``
-#: override sets ``CURRENCY_SYMBOL``.
+#: ``CURRENCY_SYMBOL`` values for Amazon sites whose prices use a symbol other than ``$``, each verified
+#: against the site's own pages. amazon.ca, amazon.com.au, and amazon.com.mx render prices as plain ``$``,
+#: so they keep the default and are intentionally omitted here. Skipped when ``AMAZON_CURRENCY_SYMBOL`` is
+#: set, or when a ``constants_class`` override sets ``CURRENCY_SYMBOL``.
 _REGION_CURRENCIES = {
-    "co.uk": "£",
+    "ae": "AED",
     "co.jp": "¥",
+    "co.uk": "£",
+    "com.be": "€",
+    "com.br": "R$",
+    "com.tr": "TL",
+    "de": "€",
+    "eg": "EGP",
+    "es": "€",
+    "ie": "€",
     "in": "₹",
+    "it": "€",
+    "nl": "€",
+    "pl": "zł",
+    "sa": "SAR",
+    "se": "kr",
     "sg": "S$",
 }
 
@@ -180,6 +196,7 @@ class Constants:
     ##########################################################################
 
     COOKIES_SET_WHEN_AUTHENTICATED = ["x-main"]
+    SIGNED_OUT_TEXT = "Hello, sign in"
     JS_ROBOT_TEXT_REGEX = r"[.\s\S]*verify that you're not a robot[.\s\S]*Enable JavaScript[.\s\S]*"
     GOKU_PROPS_REGEX = r"window\.gokuProps\s*=\s*(\{.*?\});"
     ACIC_CHALLENGE_PATH = "/ax/aaut/verify/ap/challenge"
@@ -195,6 +212,8 @@ class Constants:
     #: ``constants_class`` subclass (e.g. for the CLI).
     CURRENCY_SYMBOL = os.environ.get("AMAZON_CURRENCY_SYMBOL", "$")
     CURRENCY_FORMAT = "{symbol}{amount}"
+    CURRENCY_FREE_TEXT = "free"
+    ORDER_NUMBER_REGEX = r"(?<![A-Z0-9-])(?:[A-Z0-9]{3}-\d{7}-\d{7}|\d{19})(?![A-Z0-9-])"
 
     def __init__(self,
                  config: Optional["AmazonOrdersConfig"] = None) -> None:
@@ -214,7 +233,8 @@ class Constants:
     def _apply_browser(self,
                        browser: str) -> None:
         """
-        Apply browser-specific header overrides for the given browser engine.
+        Apply browser-specific header overrides for the given browser engine. A header a subclass changed from
+        the default keeps its value.
 
         :param browser: Browser engine name — ``"firefox"`` or ``"chromium"``. Unknown values
             log a warning and leave ``BASE_HEADERS`` unchanged.
@@ -228,6 +248,8 @@ class Constants:
             return
         headers = dict(type(self).BASE_HEADERS)
         for key, value in preset.items():
+            if headers.get(key) != Constants.BASE_HEADERS.get(key):
+                continue
             if value is None:
                 headers.pop(key, None)
             else:
@@ -272,7 +294,8 @@ class Constants:
         headers["Origin"] = base_url
         headers["Host"] = urlparse(base_url).netloc
         headers["Referer"] = f"{sign_in_url}?{urlencode(sign_in_query_params)}"
-        if tld in _REGION_LANGUAGES:
+        if (tld in _REGION_LANGUAGES and
+                type(self).BASE_HEADERS.get("Accept-Language") == Constants.BASE_HEADERS.get("Accept-Language")):
             headers["Accept-Language"] = _REGION_LANGUAGES[tld]
         self.BASE_HEADERS = headers
 
@@ -304,3 +327,77 @@ class Constants:
         if round(amount, decimals) < 0:
             return f"-{formatted_amt}"
         return formatted_amt
+
+    def parse_currency(self,
+                       value: Union[str, int, float]) -> Union[int, float, None]:
+        """
+        Parse a currency amount as rendered on the page, stripping non-numeric values and returning it
+        as a primitive.
+
+        Strips any currency symbol (e.g. ``$``, ``€``, or the fullwidth ``￥`` used by amazon.co.jp) and
+        currency-code letters (e.g. ``CDN$``, ``AED``, or ``zł``), accepts accounting-style negatives in
+        parentheses (e.g. ``($1.99)``), and treats :attr:`CURRENCY_FREE_TEXT` as ``0.0``. Either decimal mark
+        is accepted: a trailing ``.`` or ``,`` followed by one or two digits is the decimal mark, and other
+        ``.``, ``,``, ``'``, and space separators group thousands (e.g. ``1,234.56``, ``1.234,56 €``, or
+        ``12,99 €``).
+
+        :param value: The currency to parse.
+        :return: The currency as a primitive, or ``None`` if it could not be parsed.
+        """
+        if isinstance(value, (int, float)):
+            return value
+
+        if not value:
+            return None
+
+        value = value.strip()
+
+        if value.casefold() == self.CURRENCY_FREE_TEXT.casefold():
+            return 0.0
+
+        if value.startswith("(") and value.endswith(")"):
+            value = "-" + value[1:-1]
+
+        value = util.strip_currency_text(value.replace("\u2212", "-"))
+        currency = util.to_type(util.to_decimal_point(value))
+
+        if isinstance(currency, str):
+            return None
+
+        return currency
+
+    def parse_order_number(self,
+                           value: str) -> Optional[str]:
+        """
+        Find an Order number, as matched by :attr:`ORDER_NUMBER_REGEX`, in text from the page.
+
+        :param value: The text containing the Order number.
+        :return: The Order number, or ``None`` if the text does not contain one.
+        """
+        match = re.search(self.ORDER_NUMBER_REGEX, value)
+        return match.group(0) if match else None
+
+    def parse_date(self,
+                   value: Optional[str],
+                   fuzzy: bool = False) -> Optional[date]:
+        """
+        Parse a date as rendered on the page. Delegates to :func:`~amazonorders.util.to_date`.
+
+        :param value: The date string to parse.
+        :param fuzzy: Whether to ignore unknown tokens when parsing.
+        :return: The parsed ``date``, or ``None`` if it could not be parsed.
+        """
+        return util.to_date(value, fuzzy=fuzzy)
+
+    def parse_count(self,
+                    value: str,
+                    pattern: str = r"^\s*{count}") -> Optional[int]:
+        """
+        Parse a whole number as rendered on the page. Delegates to :func:`~amazonorders.util.to_count`.
+
+        :param value: The text containing the number.
+        :param pattern: A regex locating the number, with ``{count}`` marking where it appears. Defaults to a
+            number at the start of the text.
+        :return: The number, or ``None`` if ``pattern`` does not match.
+        """
+        return util.to_count(value, pattern)

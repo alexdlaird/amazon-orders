@@ -32,6 +32,8 @@ class TestItem(UnitTestCase):
         self.assertEqual(parsable.to_currency("￥1,980"), 1980)
         self.assertEqual(parsable.to_currency("-¥1,980"), -1980)
         self.assertEqual(parsable.to_currency("(¥1,980)"), -1980)
+        self.assertEqual(parsable.to_currency("52,34\u00a0zł"), 52.34)
+        self.assertEqual(parsable.to_currency("\u20ba1.299,00"), 1299.0)
         self.assertIsNone(parsable.to_currency("not currency"))
 
     def test_to_currency_decimal_comma(self):
