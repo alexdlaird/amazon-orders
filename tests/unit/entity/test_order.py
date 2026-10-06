@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import os
+import re
 from unittest.mock import patch
 
 from bs4 import BeautifulSoup
@@ -75,6 +76,17 @@ class TestOrder(UnitTestCase):
         # THEN
         self.assertEqual(order.subscription_discount, -0.78)
         self.assertEqual(order.reward_points, -5.98)
+
+    def test_order_regex_label_skips_rows_containing_it_in_a_longer_label(self):
+        # GIVEN
+        self.test_config.selectors.FIELD_ORDER_TOTAL_BEFORE_TAX_LABELS = [re.compile(r"\btotal")]
+        parsed = self.given_order_subscriptions_and_reward_points()
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual(117.85, order.total_before_tax)
 
     def test_order_coupon_savings(self):
         # GIVEN
@@ -207,7 +219,7 @@ class TestOrder(UnitTestCase):
             Order(parsed, self.test_config, full_details=True)
 
         self.assertIn("grand_total could not be parsed", str(context.exception))
-        self.assertIn("warn_on_missing_required_field=False", str(context.exception))
+        self.assertIn("warn_on_missing_required_field=True", str(context.exception))
 
     def test_order_missing_grand_total_logs_warning_when_configured(self):
         # GIVEN
@@ -279,3 +291,9 @@ class TestOrder(UnitTestCase):
         self.assertIsNone(order.recipient)
         mock_logger.warning.assert_called_once()
         self.assertIn("Recipient parent not found", mock_logger.warning.call_args[0][0])
+
+    def given_order_subscriptions_and_reward_points(self):
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-subscriptions-and-reward-points-snippet.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            return BeautifulSoup(f.read(), self.test_config.bs4_parser)

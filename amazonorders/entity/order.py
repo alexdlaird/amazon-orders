@@ -15,7 +15,7 @@ from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersEntityError, AmazonOrdersError
 
 logger = logging.getLogger(__name__)
 
@@ -64,11 +64,9 @@ class Order(Parsable):
         self.items: List[Item] = clone.items if clone and not full_details else self._parse_items()
         # `required` is relaxed only when `order_number` is explicitly supplied (the `get_order()` path), so the
         # fallback is never silently applied when parsing the history list, where the parsed value must be present.
-        _parsed_order_number = None if clone else self.safe_simple_parse(
-            selector=self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR,
-            required=not self.cancelled and order_number is None,
-            prefix_split="#",
-            prefix_split_fuzzy=True)
+        _parsed_order_number = None if clone else self.safe_parse(
+            self._parse_order_number,
+            required=not self.cancelled and order_number is None)
         if _parsed_order_number is None and order_number is not None:
             logger.debug(f"Order number could not be parsed from the page; "
                          f"using supplied order_number={order_number}.")
@@ -83,7 +81,7 @@ class Order(Parsable):
         #: The Order placed date.
         self.order_placed_date: date = clone.order_placed_date if clone else self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ORDER_PLACED_DATE_SELECTOR,
-            suffix_split="Order #",
+            suffix_split=self.config.selectors.FIELD_ORDER_PLACED_DATE_SUFFIX,
             suffix_split_fuzzy=True,
             parse_date=True)
         #: The Order Recipients.
@@ -104,41 +102,48 @@ class Order(Parsable):
         #: The Order subtotal. Only populated when ``full_details`` is ``True``.
         self.subtotal: Optional[float] = self._if_full_details(self._parse_subtotal())
         #: The Order shipping total. Only populated when ``full_details`` is ``True``.
-        self.shipping_total: Optional[float] = self._if_full_details(self._parse_currency("shipping"))
+        self.shipping_total: Optional[float] = self._if_full_details(
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_SHIPPING_TOTAL_LABELS))
         #: The Order free shipping. Only populated when ``full_details`` is ``True``.
-        self.free_shipping: Optional[float] = self._if_full_details(self._parse_currency("free shipping"))
+        self.free_shipping: Optional[float] = self._if_full_details(
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_FREE_SHIPPING_LABELS))
         #: The Order promotion applied. Only populated when ``full_details`` is ``True``.
         self.promotion_applied: Optional[float] = self._if_full_details(
-            self._parse_currency("promotion", combine_multiple=True))
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_PROMOTION_APPLIED_LABELS,
+                                         combine_multiple=True))
         #: The Order coupon savings. Only populated when ``full_details`` is ``True``.
         self.coupon_savings: Optional[float] = self._if_full_details(
-            self._parse_currency("coupon", combine_multiple=True))
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_COUPON_SAVINGS_LABELS,
+                                         combine_multiple=True))
         #: The Order reward points. Only populated when ``full_details`` is ``True``.
         self.reward_points: Optional[float] = self._if_full_details(
-            self._parse_currency("reward", combine_multiple=True))
-        subscribe_discount = self._if_full_details(self._parse_currency("subscribe"))
-        subscription_discount = self._if_full_details(self._parse_currency("subscription"))
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_REWARD_POINTS_LABELS,
+                                         combine_multiple=True))
         #: The Order Subscribe & Save discount. Only populated when ``full_details`` is ``True``.
-        self.subscription_discount: Optional[float] = subscribe_discount if subscribe_discount is not None \
-            else subscription_discount
+        self.subscription_discount: Optional[float] = self._if_full_details(
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_SUBSCRIPTION_DISCOUNT_LABELS))
         #: The Order total before tax. Only populated when ``full_details`` is ``True``.
-        self.total_before_tax: Optional[float] = self._if_full_details(self._parse_currency("before tax"))
+        self.total_before_tax: Optional[float] = self._if_full_details(
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_TOTAL_BEFORE_TAX_LABELS))
         #: The Order estimated tax. Only populated when ``full_details`` is ``True``. For Whole Foods Market
         #: orders this is the "Tax and Fees" total from the receipt.
         self.estimated_tax: Optional[float] = self._if_full_details(self._parse_estimated_tax())
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
-        self.refund_total: Optional[float] = self._if_full_details(self._parse_currency("refund total"))
+        self.refund_total: Optional[float] = self._if_full_details(
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_REFUND_TOTAL_LABELS))
         #: The Multibuy discount. Only populated when ``full_details`` is ``True``.
-        self.multibuy_discount: Optional[float] = self._if_full_details(self._parse_currency("multibuy discount"))
+        self.multibuy_discount: Optional[float] = self._if_full_details(
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_MULTIBUY_DISCOUNT_LABELS))
         #: The Amazon discount. Only populated when ``full_details`` is ``True``.
-        self.amazon_discount: Optional[float] = self._if_full_details(self._parse_currency("amazon discount"))
-        gift_card_amount = self._if_full_details(self._parse_currency("gift card amount"))
-        gift_card = self._if_full_details(self._parse_currency("gift card"))
+        self.amazon_discount: Optional[float] = self._if_full_details(
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_AMAZON_DISCOUNT_LABELS))
         #: The Gift Card total (rendered as "Gift Card" on digital order details pages). Only
         #: populated when ``full_details`` is ``True``.
-        self.gift_card: Optional[float] = gift_card_amount if gift_card_amount is not None else gift_card
+        self.gift_card: Optional[float] = self._if_full_details(
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_GIFT_CARD_LABELS))
         #: The Gift Wrap total. Only populated when ``full_details`` is ``True``.
-        self.gift_wrap: Optional[float] = self._if_full_details(self._parse_currency("gift wrap"))
+        self.gift_wrap: Optional[float] = self._if_full_details(
+            self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_GIFT_WRAP_LABELS))
 
     def __repr__(self) -> str:
         return f"<Order #{self.order_number}: \"{self.items}\">"
@@ -165,6 +170,23 @@ class Order(Parsable):
                                                   self.config.selectors.ITEM_ENTITY_SELECTOR)]
         items.sort()
         return items
+
+    def _parse_order_number(self,
+                            required: bool) -> Optional[str]:
+        selectors = self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR
+        for selector in [selectors] if isinstance(selectors, str) else selectors:
+            tag = util.select_one(self.parsed, selector)
+            order_number = self.config.constants.parse_order_number(tag.text) if tag else None
+            if order_number:
+                return order_number
+
+        if required:
+            raise AmazonOrdersEntityError(
+                "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
+                    name=self.__class__.__name__,
+                    selector=selectors))
+
+        return None
 
     def _parse_order_details_link(self) -> Optional[str]:
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_DETAILS_LINK_SELECTOR, attr_name="href")
@@ -198,25 +220,22 @@ class Order(Parsable):
 
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
 
-        total_str = "total"
+        total_prefix = self.config.selectors.FIELD_ORDER_GRAND_TOTAL_PREFIX
 
         if not value:
-            value = self._parse_currency("grand total")
-            if value is None:
-                value = self._parse_currency("total for this order")
-        elif value.lower().startswith(total_str):
-            value = value[len(total_str):].strip()
+            value = self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_GRAND_TOTAL_LABELS)
+        elif value.lower().startswith(total_prefix.lower()):
+            value = value[len(total_prefix):].strip()
 
         value = self.to_currency(value)
 
         if value is None:  # pragma: no cover
             err_msg = (f"Order {getattr(self, 'order_number', 'UNKNOWN')} grand_total could not be parsed, but it's "
-                       f"required. Check if Amazon changed the HTML or set "
-                       f"warn_on_missing_required_field=False in config.")
+                       f"required. Check if Amazon changed the HTML")
             if not self.config.warn_on_missing_required_field:
-                raise AmazonOrdersError(err_msg)
+                raise AmazonOrdersError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
             else:
-                logger.warning(err_msg)
+                logger.warning(f"{err_msg}.")
 
         return value
 
@@ -247,26 +266,23 @@ class Order(Parsable):
         if self.is_whole_foods:
             return self._parse_masked_digits(
                 self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR, r"\*\s*(\d+)")
-        return self._parse_masked_digits(
-            self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR, r"(?:ending in\s+|^\s*)(\d+)")
+        return self._parse_masked_digits(self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR,
+                                         self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_REGEX)
 
     def _parse_subtotal(self) -> Optional[float]:
         if self.is_whole_foods:
             return self._parse_whole_foods_amount(self.config.selectors.FIELD_ORDER_WHOLE_FOODS_SUBTOTAL_SELECTOR)
-        return self._parse_currency("subtotal")
+        return self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_SUBTOTAL_LABELS)
 
     def _parse_estimated_tax(self) -> Optional[float]:
         if self.is_whole_foods:
             return self._parse_whole_foods_amount(self.config.selectors.FIELD_ORDER_WHOLE_FOODS_TAX_SELECTOR)
-        value = self._parse_currency("estimated tax")
-        if value is None:
-            value = self._parse_currency("tax collected")
-
-        return value
+        return self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_ESTIMATED_TAX_LABELS)
 
     def _parse_item_count(self) -> Optional[int]:
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_ITEM_COUNT_SELECTOR):
-            item_count = util.to_count(tag.text, r"{count}\s+items?\s+in this purchase")
+            item_count = self.config.constants.parse_count(tag.text,
+                                                           self.config.selectors.FIELD_ORDER_ITEM_COUNT_REGEX)
             if item_count is not None:
                 return item_count
 
@@ -328,12 +344,15 @@ class Order(Parsable):
         return util.select_one(parsed_parent, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
 
     def _parse_currency(self,
-                        contains: str,
+                        contains: Union[str, "re.Pattern[str]"],
                         combine_multiple: bool = False) -> Optional[float]:
         value = None
 
         for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
-            if (contains in tag.text.lower() and
+            row_text = tag.text.lower()
+            label_matches = (bool(contains.search(row_text)) if isinstance(contains, re.Pattern)
+                             else contains in row_text)
+            if (label_matches and
                     not util.select_one(tag,
                                         self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_POPOVER_PRELOAD_SELECTOR)):
                 inner_tag = util.select_one(tag, self.config.selectors.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
@@ -348,6 +367,16 @@ class Order(Parsable):
                         break
 
         return value
+
+    def _parse_labeled_currency(self,
+                                labels: List[Union[str, "re.Pattern[str]"]],
+                                combine_multiple: bool = False) -> Optional[float]:
+        for label in labels:
+            value = self._parse_currency(label, combine_multiple)
+            if value is not None:
+                return value
+
+        return None
 
     def _if_full_details(self,
                          value: Any) -> Union[Any, None]:

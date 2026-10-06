@@ -9,8 +9,14 @@ import yaml
 
 from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.constants import Constants
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersError
+from amazonorders.output import OutputFormatter
+from amazonorders.selectors import Selectors
+from amazonorders.transactions import TransactionsPage
+from tests.unit import example_language_package
+from tests.unit.test_constants import RegionOverrideConstants
 
 
 class CustomOrder(Order):
@@ -76,6 +82,7 @@ constants_class: amazonorders.constants.Constants
 cookie_jar_path: {cookie_jar_path}
 cookie_reattempt_wait: 0.5
 item_class: amazonorders.entity.item.Item
+language_package: null
 max_auth_attempts: 10
 max_auth_retries: 1
 max_cookie_attempts: 10
@@ -86,6 +93,8 @@ request_timeout: null
 selectors_class: amazonorders.selectors.Selectors
 shipment_class: amazonorders.entity.shipment.Shipment
 thread_pool_size: {thread_pool_size}
+transaction_class: amazonorders.entity.transaction.Transaction
+transactions_page_class: amazonorders.transactions.TransactionsPage
 warn_on_missing_required_field: false
 """
                              .format(connection_pool_size=thread_pool_size * 2,
@@ -203,3 +212,83 @@ some_custom_config: {custom_config}
 
         # THEN
         self.assertIn("order_class", str(cm.exception))
+
+    def test_language_package_provides_classes_left_at_default(self):
+        # WHEN
+        config = AmazonOrdersConfig(data={
+            "output_dir": self.test_output_dir,
+            "language_package": "tests.unit.example_language_package"
+        })
+
+        # THEN
+        self.assertIsInstance(config.selectors, example_language_package.Selectors)
+        self.assertIsInstance(config.constants, example_language_package.Constants)
+        self.assertEqual(Order, config.order_cls)
+        self.assertEqual(example_language_package.TransactionsPage, config.transactions_page_cls)
+        self.assertEqual(OutputFormatter, config.output_cls)
+
+    def test_explicit_class_wins_over_language_package(self):
+        # WHEN
+        config = AmazonOrdersConfig(data={
+            "output_dir": self.test_output_dir,
+            "language_package": "tests.unit.example_language_package",
+            "constants_class": "tests.unit.test_constants.RegionOverrideConstants"
+        })
+
+        # THEN
+        self.assertIsInstance(config.constants, RegionOverrideConstants)
+        self.assertIsInstance(config.selectors, example_language_package.Selectors)
+
+    def test_language_package_applies_over_saved_default_class_paths(self):
+        # GIVEN
+        config_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "config.yml")
+        AmazonOrdersConfig(config_path=config_path, data={"output_dir": self.test_output_dir}).save()
+
+        # WHEN
+        config = AmazonOrdersConfig(config_path=config_path,
+                                    data={"language_package": "tests.unit.example_language_package"})
+
+        # THEN
+        self.assertIsInstance(config.selectors, example_language_package.Selectors)
+        self.assertIsInstance(config.constants, example_language_package.Constants)
+
+    def test_unimportable_language_package_raises_at_construction(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonOrdersConfig(data={
+                "output_dir": self.test_output_dir,
+                "language_package": "does_not_exist"
+            })
+
+        # THEN
+        self.assertIn("language_package", str(cm.exception))
+
+    def test_language_package_that_is_not_a_module_path_raises(self):
+        for value in (True, 123, "not a module"):
+            with self.subTest(value=value):
+                # WHEN
+                with self.assertRaises(AmazonOrdersError) as cm:
+                    AmazonOrdersConfig(data={
+                        "output_dir": self.test_output_dir,
+                        "language_package": value
+                    })
+
+                # THEN
+                self.assertIn("language_package", str(cm.exception))
+
+    def test_language_package_classes_that_are_not_subclasses_are_ignored(self):
+        # WHEN
+        with self.assertLogs("amazonorders.conf", level="WARNING") as cm:
+            config = AmazonOrdersConfig(data={
+                "output_dir": self.test_output_dir,
+                "language_package": "tests.unit.misnamed_language_package"
+            })
+            transactions_page_cls = config.transactions_page_cls
+
+        # THEN
+        self.assertIs(Selectors, type(config.selectors))
+        self.assertIs(Constants, type(config.constants))
+        self.assertIs(TransactionsPage, transactions_page_cls)
+        self.assertEqual(3, len(cm.output))
+        self.assertIn("defines Selectors, but it isn't a subclass of amazonorders.selectors.Selectors",
+                      "".join(cm.output))

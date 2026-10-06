@@ -6,6 +6,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.6.1...HEAD)
 
+### Added
+
+- `parse_currency()`, `parse_date()`, `parse_count()`, and `parse_order_number()` on `Constants`, and page text attributes on `Selectors` (e.g. `FIELD_ORDER_GRAND_TOTAL_LABELS`), so every word and format the parsers use can be overridden.
+- `TransactionsPage`, `Transaction.from_fields()`, and the `transactions_page_class` and `transaction_class` config keys, to override how the Transactions page and its Transactions are parsed.
+- `language_package` config key, to use a separately published language package. See [the docs](https://amazon-orders.readthedocs.io/language-packages.html) for building one.
+- Currency symbols for more non-`.com` Amazon sites (e.g. `amazon.pl`, `amazon.com.tr`, `amazon.ae`).
+
+### Fixed
+
+- Bug fixes and stability improvements.
+
 ## [4.6.1](https://github.com/alexdlaird/amazon-orders/compare/4.6.0...4.6.1) - 2026-10-03
 
 ### Added

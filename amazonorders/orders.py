@@ -19,18 +19,20 @@ from amazonorders.session import AmazonSession
 logger = logging.getLogger(__name__)
 
 
-def _parse_order_count(order_count_tag: Optional[Tag]) -> Optional[int]:
+def _parse_order_count(order_count_tag: Optional[Tag],
+                       config: AmazonOrdersConfig) -> Optional[int]:
     """
     Parse the leading number out of an Order history count tag, so the count survives thousands
     separators (e.g. ``1,213``, ``1.213``, or ``1 213 orders``) and any trailing copy.
 
     :param order_count_tag: The Order history count tag, if one was found.
+    :param config: The config providing the count format.
     :return: The Order count, or ``None`` if it was absent or unparsable.
     """
     if not order_count_tag:
         return None
 
-    return util.to_count(order_count_tag.text)
+    return config.constants.parse_count(order_count_tag.text)
 
 
 def _parse_order_history(parsed: Tag,
@@ -49,7 +51,7 @@ def _parse_order_history(parsed: Tag,
 
     if not order_tags:
         order_count = _parse_order_count(
-            util.select_one(parsed, config.selectors.ORDER_HISTORY_COUNT_SELECTOR))
+            util.select_one(parsed, config.selectors.ORDER_HISTORY_COUNT_SELECTOR), config)
 
         if order_count is None or order_count > start_index:
             raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")

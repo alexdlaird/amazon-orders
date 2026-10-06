@@ -24,7 +24,7 @@ class Seller(Parsable):
 
         #: The Seller name.
         self.name: str = self.safe_simple_parse(self.config.selectors.FIELD_SELLER_NAME_SELECTOR,
-                                                prefix_split="Sold by:")
+                                                prefix_split=self.config.selectors.FIELD_SELLER_NAME_PREFIX)
         #: The Seller link.
         self.link: Optional[str] = self.safe_simple_parse(selector=self.config.selectors.FIELD_SELLER_LINK_SELECTOR,
                                                           attr_name="href")

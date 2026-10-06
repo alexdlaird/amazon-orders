@@ -27,6 +27,13 @@ class TestCli(UnitTestCase):
 
         self.runner = CliRunner()
 
+    def given_saved_config_value(self, key, value):
+        with open(self.test_config.config_path, "r") as f:
+            data = yaml.safe_load(f)
+        data[key] = value
+        with open(self.test_config.config_path, "w") as f:
+            yaml.dump(data, f)
+
     def given_runner_with_split_streams(self):
         try:
             return CliRunner(mix_stderr=False)
@@ -606,6 +613,45 @@ class TestCli(UnitTestCase):
         self.assertIn("max_auth_attempts\" updated", response.output)
         with open(self.test_config.config_path, "r") as f:
             self.assertIn("max_auth_attempts: 7", f.read())
+
+    def test_update_config_rejects_unimportable_language_package(self):
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "update-config", "language_package", "does_not_exist"
+                                      ])
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertIn("\"language_package\" was not updated", response.output)
+        with open(self.test_config.config_path, "r") as f:
+            self.assertIn("language_package: null", f.read())
+
+    def test_update_config_fixes_saved_language_package_that_cannot_be_imported(self):
+        # GIVEN
+        self.given_saved_config_value("language_package", "does_not_exist")
+
+        # WHEN
+        history_response = self.runner.invoke(amazon_orders_cli,
+                                              ["--config-path", self.test_config.config_path, "history"])
+        version_response = self.runner.invoke(amazon_orders_cli,
+                                              ["--config-path", self.test_config.config_path, "version"])
+        update_response = self.runner.invoke(amazon_orders_cli,
+                                             [
+                                                 "--config-path", self.test_config.config_path,
+                                                 "update-config", "language_package",
+                                                 "tests.unit.example_language_package"
+                                             ])
+
+        # THEN
+        self.assertEqual(2, history_response.exit_code)
+        self.assertIn("Could not import \"language_package\" (does_not_exist)", history_response.output)
+        self.assertIn("Call the `update-config` command to fix it.", history_response.output)
+        self.assertEqual(0, version_response.exit_code)
+        self.assertEqual(0, update_response.exit_code)
+        with open(self.test_config.config_path, "r") as f:
+            self.assertIn("language_package: tests.unit.example_language_package", f.read())
 
     @responses.activate
     def test_history_command_output_json(self):
