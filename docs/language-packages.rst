@@ -160,8 +160,9 @@ Getting Listed
 
 Once your language package is published and its nightly run is passing,
 `request a link <https://github.com/alexdlaird/amazon-orders/issues/new?template=new-language.yml>`_ and we'll add it
-to `Available Language Packages`_. If its nightly run keeps failing for more than 30 days, or its maintainers don't respond to an issue about it
-within 30 days, it will be removed. It can be listed again once it's passing.
+to `Available Language Packages`_. A listed package stays listed while it's maintained: its nightly run keeps passing,
+and issues about it get a response. If its nightly run stays broken, or an issue goes unanswered, for more than 30
+days, we'll pause the listing until it's back on track.
 
 If something your language package needs to override isn't exposed, please
 `open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=enhancement&projects=&template=enhancement.yml>`_
