@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Sequence
 import yaml
 
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.entity.gift_card_activity import GiftCardActivity
 from amazonorders.entity.order import Order
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.transaction import Transaction
@@ -84,6 +85,8 @@ class OutputFormatter:
             return self.order_text(entity)
         elif isinstance(entity, Transaction):
             return self.transaction_text(entity)
+        elif isinstance(entity, GiftCardActivity):
+            return self.gift_card_activity_text(entity)
 
         return str(entity)
 
@@ -149,6 +152,25 @@ Order #{order_number}
         transaction_str += f"\n  Order Details Link: {transaction.order_details_link}"
 
         return transaction_str
+
+    def gift_card_activity_text(self,
+                                activity: GiftCardActivity) -> str:
+        """
+        Render a GiftCardActivity as human-readable text.
+
+        :param activity: The GiftCardActivity to render.
+        :return: The GiftCardActivity as text.
+        """
+        activity_str = f"Gift Card Activity: {activity.activity_date}"
+        activity_str += f"\n  Description: {activity.description}"
+        if activity.amount is not None:
+            activity_str += f"\n  Amount: {self.config.constants.format_currency(activity.amount)}"
+        if activity.closing_balance is not None:
+            activity_str += f"\n  Closing Balance: {self.config.constants.format_currency(activity.closing_balance)}"
+        if activity.order_number:
+            activity_str += f"\n  Order #{activity.order_number}"
+
+        return activity_str
 
     def _csv(self,
              entities: List[Dict[str, Any]]) -> str:

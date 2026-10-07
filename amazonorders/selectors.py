@@ -131,8 +131,8 @@ class Selectors:
     # Digital Order history renders the count in the time filter label rather than in span.num-orders
     ORDER_HISTORY_COUNT_SELECTOR = [".js-yo-container span.num-orders",
                                     "form.js-time-filter-form label.time-filter__label b"]
-    ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR = Selector("div.csd-encrypted-sensitive script",
-                                                    text_contains="csdContent(")
+    # Readable pages also encrypt single fields in this, so a card is encrypted only if its Order number is unreadable
+    ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR = "div.csd-encrypted-sensitive"
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer",
                                      "div#odp-main-section"]
@@ -339,3 +339,19 @@ class Selectors:
         "div.apx-transactions-line-item-component-container a.a-link-normal"]
     FIELD_TRANSACTION_SELLER_NAME_SELECTOR = [
         "div.apx-transactions-line-item-component-container :has(a.a-link-normal) + div"]
+
+    #####################################
+    # CSS selectors for Gift Card fields
+    #####################################
+
+    GIFT_CARD_BALANCE_SELECTOR = "#gc-ui-balance-gc-balance-value"
+    GIFT_CARD_ACTIVITY_TABLE_SELECTOR = "div#gc-balance-table table.a-bordered"
+    GIFT_CARD_ACTIVITY_SELECTOR = "tr:has(> td)"
+    GIFT_CARD_ACTIVITY_NEXT_PAGE_LINK_SELECTOR = "div#gc-balance-table ul.a-pagination li.a-last a"
+
+    FIELD_GIFT_CARD_ACTIVITY_DATE_SELECTOR = "td:nth-of-type(1)"
+    FIELD_GIFT_CARD_ACTIVITY_DESCRIPTION_SELECTOR = "td:nth-of-type(2) span"
+    FIELD_GIFT_CARD_ACTIVITY_AMOUNT_SELECTOR = "td:nth-of-type(3)"
+    FIELD_GIFT_CARD_ACTIVITY_CLOSING_BALANCE_SELECTOR = "td:nth-of-type(4)"
+    FIELD_GIFT_CARD_ACTIVITY_ORDER_NUMBER_SELECTOR = "td:nth-of-type(2) a.a-link-normal span"
+    FIELD_GIFT_CARD_ACTIVITY_ORDER_LINK_SELECTOR = "td:nth-of-type(2) a.a-link-normal"

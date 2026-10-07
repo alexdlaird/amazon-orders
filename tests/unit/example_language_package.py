@@ -46,7 +46,7 @@ class Constants(constants.Constants):
     SIGNED_OUT_TEXT = "Lorem, ipsum"
     JS_ROBOT_TEXT_REGEX = r"[.\s\S]*sed do robotus[.\s\S]*"
     CURRENCY_FREE_TEXT = "nulla"
-    ORDER_NUMBER_REGEX = r"(?<![A-Z0-9-])(?:[A-Z0-9]{3}-\d{7}-\d{7}|\d{19})(?![A-Z0-9-])"
+    ORDER_NUMBER_REGEX = r"(?<![A-Z0-9-])(?:[A-Z0-9]{3}-\d{7}-\d{7}|\d{4}-\d{6}-\d{7}|\d{19})(?![A-Z0-9-])"
 
     def parse_currency(self, value):
         if isinstance(value, str) and value.strip().endswith("-"):

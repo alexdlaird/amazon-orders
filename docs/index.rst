@@ -113,12 +113,29 @@ You can also run any command available to the main Python interface from the com
     amazon-orders history --last-30-days
     amazon-orders history --last-3-months
 
+Gift Cards
+----------
+
+:class:`~amazonorders.gift_cards.AmazonGiftCards` reads the Gift Card balance and its activity, such as
+Gift Cards applied to Orders, claim code redemptions, Reloads, and refunds.
+
+.. code:: python
+
+    from amazonorders.gift_cards import AmazonGiftCards
+
+    amazon_gift_cards = AmazonGiftCards(amazon_session)
+
+    balance = amazon_gift_cards.get_balance()
+    activity = amazon_gift_cards.get_gift_card_activity(days=365)
+
+The same is available from the ``gift-card-balance`` and ``gift-card-activity`` CLI commands.
+
 Output Formats
 --------------
 
-The ``history``, ``order``, ``transactions``, and ``order-transactions`` commands accept ``--output``, which
-renders Orders and Transactions as ``text`` (the default), ``json``, ``yaml``, or ``csv``. Progress messages
-are written to ``stderr``, so redirecting ``stdout`` captures only the data.
+The ``history``, ``order``, ``transactions``, ``order-transactions``, and ``gift-card-activity`` commands accept
+``--output``, which renders Orders, Transactions, and Gift Card activity as ``text`` (the default), ``json``,
+``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout`` captures only the data.
 
 .. code:: sh
 

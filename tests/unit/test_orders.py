@@ -150,6 +150,23 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
+    def test_get_order_history_csd_encrypted(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-csd-encrypted-siege.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(responses.GET, f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-2026",
+                                 body=f.read(), status=200)
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order_history(year=2026, keep_paging=False)
+
+        # THEN
+        self.assertIn("encrypted", str(cm.exception))
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
     def test_get_order_history_errors_with_meta(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
@@ -874,6 +891,33 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assertIn("encrypted", str(cm.exception))
+
+    def test_parse_order_history_csd_encrypted_siege(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-csd-encrypted-siege.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonOrders.parse_order_history(html, self.test_config)
+
+        # THEN
+        self.assertIn("encrypted", str(cm.exception))
+
+    def test_parse_order_history_encrypted_field_in_readable_card(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-multiple-recipients.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read().replace('<span class="a-color-secondary a-text-caps">Ship to</span>',
+                                    '<span class="a-color-secondary a-text-caps">Ship to</span>'
+                                    '<div class="csd-encrypted-sensitive"></div>', 1)
+
+        # WHEN
+        orders = AmazonOrders.parse_order_history(html, self.test_config)
+
+        # THEN
+        self.assertEqual(3, len(orders))
 
     def test_parse_order_history_no_js_fallback_is_not_encrypted(self):
         # GIVEN

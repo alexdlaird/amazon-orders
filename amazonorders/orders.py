@@ -69,10 +69,6 @@ class AmazonOrders:
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
 
-        if util.select_one(parsed, config.selectors.ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR):
-            raise AmazonOrdersError("Could not parse Order history. Amazon served the page with its content "
-                                    "encrypted, so fetch it through an authenticated session instead.")
-
         order_tags = cls._parse_order_history(parsed, config, start_index)
 
         return [config.order_cls(tag, config, index=start_index + i) for i, tag in enumerate(order_tags)]
@@ -240,6 +236,24 @@ class AmazonOrders:
 
         return config.constants.parse_count(order_count_tag.text)
 
+    @staticmethod
+    def _is_csd_encrypted(order_tag: Tag,
+                          config: AmazonOrdersConfig) -> bool:
+        """
+        Whether an Order card was served encrypted for client-side decryption: it holds the decryption container and
+        its Order number is not readable. A readable card can encrypt a single field the same way.
+
+        :param order_tag: The Order card tag.
+        :param config: The config providing the selectors.
+        :return: ``True`` if the card is encrypted.
+        """
+        if not util.select_one(order_tag, config.selectors.ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR):
+            return False
+
+        order_number_tag = util.select_one(order_tag, config.selectors.FIELD_ORDER_NUMBER_SELECTOR)
+
+        return not (order_number_tag and order_number_tag.get_text(strip=True))
+
     @classmethod
     def _parse_order_history(cls,
                              parsed: Tag,
@@ -255,6 +269,10 @@ class AmazonOrders:
         :return: The Order card tags, or an empty list when the count confirms the window is spent.
         """
         order_tags = util.select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
+
+        if any(cls._is_csd_encrypted(order_tag, config) for order_tag in order_tags):
+            raise AmazonOrdersError("Could not parse Order history. Amazon served the page with its Order cards "
+                                    "encrypted; the same URL with disableCsd=no-js renders them readable.")
 
         if not order_tags:
             order_count = cls._parse_order_count(
