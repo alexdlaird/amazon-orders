@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `AmazonGiftCards`, the `GiftCardActivity` entity, and the `gift-card-balance` and `gift-card-activity` CLI commands, for the Gift Card balance and activity.
+- `AmazonPrime`, the `PrimePayment` entity, and the `prime-payments` CLI command, for the Prime membership payment history, whose fees are digital Orders not listed anywhere else.
 
 ### Fixed
 

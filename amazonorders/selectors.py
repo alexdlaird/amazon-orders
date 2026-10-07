@@ -313,6 +313,32 @@ class Selectors:
     FIELD_SELLER_LINK_SELECTOR = "a"
 
     #####################################
+    # CSS selectors for Prime payment fields
+    #####################################
+
+    PRIME_PAYMENTS_WIDGET_SELECTOR = "div[cel_widget_id^='prime-payment-history_']"
+    PRIME_PAYMENT_SELECTOR = "div.a-cardui"
+
+    FIELD_PRIME_PAYMENT_DATE_SELECTOR = "div.a-cardui-header h3"
+    # Each card body row is a label span followed by its value, so the row is found by its label and the value
+    # is read from the row (the label's parent). The cards' build-hashed classes change between deployments.
+    FIELD_PRIME_PAYMENT_LABEL_SELECTOR = "div.a-cardui-body span.a-color-tertiary"
+    FIELD_PRIME_PAYMENT_TOTAL_TEXT = "Total"
+    FIELD_PRIME_PAYMENT_ORDER_NUMBER_TEXT = "Order Number"
+    FIELD_PRIME_PAYMENT_RECEIPTS_TEXT = "Receipts"
+    FIELD_PRIME_PAYMENT_TOTAL_LABEL_SELECTOR = SelectorsFromText(
+        lambda label_selector, total_text: Selector(label_selector, total_text),
+        "FIELD_PRIME_PAYMENT_LABEL_SELECTOR", "FIELD_PRIME_PAYMENT_TOTAL_TEXT")
+    FIELD_PRIME_PAYMENT_ORDER_NUMBER_LABEL_SELECTOR = SelectorsFromText(
+        lambda label_selector, order_number_text: Selector(label_selector, order_number_text),
+        "FIELD_PRIME_PAYMENT_LABEL_SELECTOR", "FIELD_PRIME_PAYMENT_ORDER_NUMBER_TEXT")
+    FIELD_PRIME_PAYMENT_RECEIPTS_LABEL_SELECTOR = SelectorsFromText(
+        lambda label_selector, receipts_text: Selector(label_selector, receipts_text),
+        "FIELD_PRIME_PAYMENT_LABEL_SELECTOR", "FIELD_PRIME_PAYMENT_RECEIPTS_TEXT")
+    FIELD_PRIME_PAYMENT_VALUE_SELECTOR = "p"
+    FIELD_PRIME_PAYMENT_RECEIPT_LINK_SELECTOR = "a[href]"
+
+    #####################################
     # CSS selectors for Transaction fields
     #####################################
 

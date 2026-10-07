@@ -19,7 +19,7 @@ from tests.unittestcase import UnitTestCase
 _PACKAGE_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "amazonorders"))
 _PARSING_MODULES = (sorted(glob.glob(os.path.join(_PACKAGE_DIR, "entity", "*.py"))) +
                     [os.path.join(_PACKAGE_DIR, name) for name in ("orders.py", "transactions.py", "session.py",
-                                                                   "forms.py", "gift_cards.py")])
+                                                                   "forms.py", "gift_cards.py", "prime.py")])
 _MESSAGE_CALLS = {"debug", "info", "warning", "error", "exception", "critical", "echo", "prompt", "input"}
 _DISPLAY_METHODS = {"__repr__", "__str__"}
 _PLUMBING_LITERALS = {
