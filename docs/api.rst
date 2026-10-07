@@ -19,6 +19,12 @@ Main Interface
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.gift_cards
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 Session Management
 ------------------
 
@@ -133,6 +139,12 @@ Entities
     :show-inheritance:
 
 .. automodule:: amazonorders.entity.transaction
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: amazonorders.entity.gift_card_activity
     :members:
     :private-members:
     :undoc-members:
