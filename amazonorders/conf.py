@@ -51,6 +51,7 @@ class AmazonOrdersConfig:
 
         self._data: Dict[str, Any] = self._default_data()
         self._resolved_classes: Dict[str, Any] = {}
+        self._assigned_classes: Dict[str, Any] = {}
 
         with config_file_lock:
             if os.path.exists(self.config_path):
@@ -155,6 +156,9 @@ class AmazonOrdersConfig:
         :return: The resolved class.
         :raises AmazonOrdersError: If the configured class path cannot be imported.
         """
+        if key in self._assigned_classes:
+            return self._assigned_classes[key]
+
         if key not in self._resolved_classes:
             class_path = self._class_path(key)
             class_split = class_path.split(".")
@@ -215,7 +219,28 @@ class AmazonOrdersConfig:
         :param key: The config key naming the class.
         :param value: The class to use.
         """
-        self._resolved_classes[key] = value
+        self._assigned_classes[key] = value
+
+    def _validate_bs4_parser(self) -> None:
+        try:
+            BeautifulSoup("", str(self._data["bs4_parser"]))
+        except FeatureNotFound:
+            logger.debug(
+                f"Configured bs4_parser '{self._data['bs4_parser']}' is unavailable; "
+                f"using the default 'html.parser'. To use it, install the parser "
+                f"(e.g. `pip install amazon-orders[lxml]`)."
+            )
+            self._data["bs4_parser"] = "html.parser"
+
+    def _instantiate_constants(self) -> Any:
+        constants_class_split = self._class_path("constants_class").split(".")
+        constants_cls = util.load_class(constants_class_split[:-1], constants_class_split[-1])
+        # Pass ``self`` only when the constants class accepts a config arg, to keep backward
+        # compatibility with existing zero-arg ``constants_class`` subclasses.
+        init_params = inspect.signature(constants_cls.__init__).parameters
+        if len(init_params) > 1:
+            return constants_cls(self)
+        return constants_cls()
 
     @property
     def order_cls(self) -> Any:
@@ -277,27 +302,6 @@ class AmazonOrdersConfig:
                               value: Any) -> None:
         self._set_class("transactions_page_class", value)
 
-    def _validate_bs4_parser(self) -> None:
-        try:
-            BeautifulSoup("", str(self._data["bs4_parser"]))
-        except FeatureNotFound:
-            logger.debug(
-                f"Configured bs4_parser '{self._data['bs4_parser']}' is unavailable; "
-                f"using the default 'html.parser'. To use it, install the parser "
-                f"(e.g. `pip install amazon-orders[lxml]`)."
-            )
-            self._data["bs4_parser"] = "html.parser"
-
-    def _instantiate_constants(self) -> Any:
-        constants_class_split = self._class_path("constants_class").split(".")
-        constants_cls = util.load_class(constants_class_split[:-1], constants_class_split[-1])
-        # Pass ``self`` only when the constants class accepts a config arg, to keep backward
-        # compatibility with existing zero-arg ``constants_class`` subclasses.
-        init_params = inspect.signature(constants_cls.__init__).parameters
-        if len(init_params) > 1:
-            return constants_cls(self)
-        return constants_cls()
-
     def set_domain(self,
                    domain: str) -> None:
         """
@@ -318,11 +322,11 @@ class AmazonOrdersConfig:
         return key in self._data
 
     def __getstate__(self) -> Dict[str, Any]:
-        return self._data
+        return {"config_path": self.config_path, "_data": self._data, "_assigned_classes": self._assigned_classes}
 
     def __setstate__(self,
                      state: Dict[str, Any]) -> None:
-        self._data = state
+        self.__dict__.update(state)
         self._resolved_classes = {}
         self._load_classes()
 
@@ -338,7 +342,19 @@ class AmazonOrdersConfig:
         :param value: The new value.
         :param save: ``True`` if the config should be persisted.
         """
+        previous_data = dict(self._data)
         self._data[key] = value
+        try:
+            self._validate_bs4_parser()
+            self._validate_class_paths()
+            self._load_classes()
+        except (AmazonOrdersError, AttributeError, ImportError):
+            self._data = previous_data
+            self._load_classes()
+            raise
+
+        self._assigned_classes.pop(key, None)
+        self._resolved_classes = {}
 
         if save:
             self.save()

@@ -96,15 +96,6 @@ _REGION_AUTH_COOKIES = {
 }
 
 
-def _normalize_base_url(value: str) -> str:
-    value = value.strip().rstrip("/")
-    if value.startswith(("http://", "https://")):
-        return value
-    if value.startswith("www."):
-        return f"https://{value}"
-    return f"https://www.{value}"
-
-
 class Constants:
     """
     A class containing useful constants. Extend and override with ``constants_class`` in the config:
@@ -202,7 +193,7 @@ class Constants:
     ACIC_CHALLENGE_PATH = "/ax/aaut/verify/ap/challenge"
 
     ##########################################################################
-    # Number and Currency Formats
+    # Formats
     ##########################################################################
 
     DECIMAL_SEPARATOR = "."
@@ -263,7 +254,7 @@ class Constants:
 
         :param domain: The Amazon domain (e.g. ``amazon.com.au``) or full URL (e.g. ``https://www.amazon.com.au``).
         """
-        base_url = _normalize_base_url(domain)
+        base_url = self._normalize_base_url(domain)
 
         host = urlparse(base_url).netloc.lower().split(":")[0]
         if host.startswith("www."):
@@ -306,6 +297,15 @@ class Constants:
         if (tld in _REGION_AUTH_COOKIES and
                 type(self).COOKIES_SET_WHEN_AUTHENTICATED == Constants.COOKIES_SET_WHEN_AUTHENTICATED):
             self.COOKIES_SET_WHEN_AUTHENTICATED = [_REGION_AUTH_COOKIES[tld]]
+
+    @staticmethod
+    def _normalize_base_url(value: str) -> str:
+        value = value.strip().rstrip("/")
+        if value.startswith(("http://", "https://")):
+            return value
+        if value.startswith("www."):
+            return f"https://{value}"
+        return f"https://www.{value}"
 
     def format_currency(self,
                         amount: float) -> str:
@@ -366,17 +366,6 @@ class Constants:
 
         return currency
 
-    def parse_order_number(self,
-                           value: str) -> Optional[str]:
-        """
-        Find an Order number, as matched by :attr:`ORDER_NUMBER_REGEX`, in text from the page.
-
-        :param value: The text containing the Order number.
-        :return: The Order number, or ``None`` if the text does not contain one.
-        """
-        match = re.search(self.ORDER_NUMBER_REGEX, value)
-        return match.group(0) if match else None
-
     def parse_date(self,
                    value: Optional[str],
                    fuzzy: bool = False) -> Optional[date]:
@@ -401,3 +390,14 @@ class Constants:
         :return: The number, or ``None`` if ``pattern`` does not match.
         """
         return util.to_count(value, pattern)
+
+    def parse_order_number(self,
+                           value: str) -> Optional[str]:
+        """
+        Find an Order number, as matched by :attr:`ORDER_NUMBER_REGEX`, in text from the page.
+
+        :param value: The text containing the Order number.
+        :return: The Order number, or ``None`` if the text does not contain one.
+        """
+        match = re.search(self.ORDER_NUMBER_REGEX, value)
+        return match.group(0) if match else None

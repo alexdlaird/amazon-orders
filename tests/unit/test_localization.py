@@ -45,68 +45,6 @@ _CONSTANTS_HOOKS = ["SIGNED_OUT_TEXT", "JS_ROBOT_TEXT_REGEX", "CURRENCY_FREE_TEX
                     "parse_currency", "parse_date", "parse_count", "parse_order_number"]
 
 
-def _to_lorem_dates(html):
-    months = "|".join(sorted(_ENGLISH_TO_LOREM_MONTHS, key=len, reverse=True))
-    return re.sub(r"\b(" + months + r")\.? (\d{1,2}), (\d{4})",
-                  lambda m: f"{m.group(2)} {_ENGLISH_TO_LOREM_MONTHS[m.group(1)]} {m.group(3)}", html)
-
-
-def _to_trailing_minus_amounts(html):
-    return re.sub(r"-((?:[A-Z]{1,3})?\$[\d,]+\.\d{2})", r"\1-", html)
-
-
-def _translate(html, phrases):
-    for english, lorem in phrases.items():
-        html = html.replace(english, lorem)
-    return _to_trailing_minus_amounts(_to_lorem_dates(html))
-
-
-def _parents(tree):
-    for node in ast.walk(tree):
-        for child in ast.iter_child_nodes(node):
-            child.parent = node
-
-
-def _is_message_context(node):
-    while node is not None:
-        parent = getattr(node, "parent", None)
-        if isinstance(node, ast.Raise):
-            return True
-        if isinstance(node, ast.Call):
-            name = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
-            if name in _MESSAGE_CALLS or name.endswith(("Error", "Exception")) or name == "TypeVar":
-                return True
-        if isinstance(node, ast.Assign) and any("msg" in getattr(target, "id", "") or
-                                                getattr(target, "id", "").startswith("__")
-                                                for target in node.targets):
-            return True
-        if isinstance(node, ast.AugAssign) and "msg" in getattr(node.target, "id", ""):
-            return True
-        if isinstance(node, ast.FunctionDef) and node.name in _DISPLAY_METHODS:
-            return True
-        if isinstance(parent, ast.Expr) and isinstance(node, ast.Constant):
-            return True
-        if isinstance(parent, (ast.arg, ast.AnnAssign)) and node is parent.annotation:
-            return True
-        if isinstance(parent, ast.FunctionDef) and node is parent.returns:
-            return True
-        node = parent
-    return False
-
-
-def _page_text_literals():
-    found = []
-    for path in _PARSING_MODULES:
-        with open(path, encoding="utf-8") as f:
-            tree = ast.parse(f.read())
-        _parents(tree)
-        for node in ast.walk(tree):
-            if (isinstance(node, ast.Constant) and isinstance(node.value, str) and
-                    node.value not in _PLUMBING_LITERALS and not _is_message_context(node)):
-                found.append(f"{os.path.relpath(path, _PACKAGE_DIR)}:{node.lineno}: {node.value!r}")
-    return found
-
-
 class TestLocalization(UnitTestCase):
     def setUp(self):
         super().setUp()
@@ -119,7 +57,7 @@ class TestLocalization(UnitTestCase):
 
     def test_parsing_modules_have_no_page_text_literals(self):
         # WHEN
-        literals = _page_text_literals()
+        literals = self._page_text_literals()
 
         # THEN
         self.assertEqual([], literals,
@@ -144,7 +82,7 @@ class TestLocalization(UnitTestCase):
     def test_example_language_package_parses_translated_order_details(self):
         # GIVEN
         html = self.given_resource("orders", "order-subscriptions-and-reward-points-snippet.html")
-        lorem_html = _translate(html, {
+        lorem_html = self._translate(html, {
             "Item(s) Subtotal:": "Consectetur:",
             "Shipping &amp; Handling:": "Adipiscing:",
             "Free Shipping:": "Eiusmod:",
@@ -183,7 +121,7 @@ class TestLocalization(UnitTestCase):
         html = self.given_resource("orders", "order-history-2018-0.html")
         lorem_html = re.sub(r"^(\s*)Total$", r"\1Officia", html, flags=re.MULTILINE)
         lorem_html = re.sub(r"^(\s*)Order #$", r"\1Deserunt", lorem_html, flags=re.MULTILINE)
-        lorem_html = _translate(lorem_html, {"Return window closed on": "Commodo consequat"})
+        lorem_html = self._translate(lorem_html, {"Return window closed on": "Commodo consequat"})
 
         # WHEN
         orders = AmazonOrders.parse_order_history(lorem_html, self.example_config)
@@ -214,7 +152,7 @@ class TestLocalization(UnitTestCase):
     def test_example_language_package_parses_translated_transactions(self):
         # GIVEN
         html = self.given_resource("transactions", "get-transactions-snippet.html")
-        lorem_html = _translate(html, {"Order #": "Deserunt "})
+        lorem_html = self._translate(html, {"Order #": "Deserunt "})
 
         # WHEN
         transactions = AmazonTransactions.parse_transactions(lorem_html, self.example_config)
@@ -244,8 +182,8 @@ class TestLocalization(UnitTestCase):
         phrases = {">Cancelled<": ">Velit<", "was cancelled": "was velit"}
 
         # WHEN
-        orders = AmazonOrders.parse_order_history(_translate(history_html, phrases), self.example_config)
-        order = AmazonOrders.parse_order_details(_translate(details_html, phrases), self.example_config)
+        orders = AmazonOrders.parse_order_history(self._translate(history_html, phrases), self.example_config)
+        order = AmazonOrders.parse_order_details(self._translate(details_html, phrases), self.example_config)
 
         # THEN
         expected_orders = AmazonOrders.parse_order_history(history_html, self.test_config)
@@ -253,7 +191,7 @@ class TestLocalization(UnitTestCase):
         self.assertTrue(orders[0].cancelled)
         self.assertTrue(order.cancelled)
         with self.assertRaises(AmazonOrdersError):
-            AmazonOrders.parse_order_details(_translate(details_html, phrases), self.test_config)
+            AmazonOrders.parse_order_details(self._translate(details_html, phrases), self.test_config)
 
     def test_example_language_package_parses_translated_store_and_whole_foods_orders(self):
         # GIVEN
@@ -283,3 +221,59 @@ class TestLocalization(UnitTestCase):
     def given_resource(self, *path):
         with open(os.path.join(self.RESOURCES_DIR, *path), "r", encoding="utf-8") as f:
             return f.read()
+
+    def _to_lorem_dates(self, html):
+        months = "|".join(sorted(_ENGLISH_TO_LOREM_MONTHS, key=len, reverse=True))
+        return re.sub(r"\b(" + months + r")\.? (\d{1,2}), (\d{4})",
+                      lambda m: f"{m.group(2)} {_ENGLISH_TO_LOREM_MONTHS[m.group(1)]} {m.group(3)}", html)
+
+    def _to_trailing_minus_amounts(self, html):
+        return re.sub(r"-((?:[A-Z]{1,3})?\$[\d,]+\.\d{2})", r"\1-", html)
+
+    def _translate(self, html, phrases):
+        for english, lorem in phrases.items():
+            html = html.replace(english, lorem)
+        return self._to_trailing_minus_amounts(self._to_lorem_dates(html))
+
+    def _parents(self, tree):
+        for node in ast.walk(tree):
+            for child in ast.iter_child_nodes(node):
+                child.parent = node
+
+    def _is_message_context(self, node):
+        while node is not None:
+            parent = getattr(node, "parent", None)
+            if isinstance(node, ast.Raise):
+                return True
+            if isinstance(node, ast.Call):
+                name = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
+                if name in _MESSAGE_CALLS or name.endswith(("Error", "Exception")) or name == "TypeVar":
+                    return True
+            if isinstance(node, ast.Assign) and any("msg" in getattr(target, "id", "") or
+                                                    getattr(target, "id", "").startswith("__")
+                                                    for target in node.targets):
+                return True
+            if isinstance(node, ast.AugAssign) and "msg" in getattr(node.target, "id", ""):
+                return True
+            if isinstance(node, ast.FunctionDef) and node.name in _DISPLAY_METHODS:
+                return True
+            if isinstance(parent, ast.Expr) and isinstance(node, ast.Constant):
+                return True
+            if isinstance(parent, (ast.arg, ast.AnnAssign)) and node is parent.annotation:
+                return True
+            if isinstance(parent, ast.FunctionDef) and node is parent.returns:
+                return True
+            node = parent
+        return False
+
+    def _page_text_literals(self):
+        found = []
+        for path in _PARSING_MODULES:
+            with open(path, encoding="utf-8") as f:
+                tree = ast.parse(f.read())
+            self._parents(tree)
+            for node in ast.walk(tree):
+                if (isinstance(node, ast.Constant) and isinstance(node.value, str) and
+                        node.value not in _PLUMBING_LITERALS and not self._is_message_context(node)):
+                    found.append(f"{os.path.relpath(path, _PACKAGE_DIR)}:{node.lineno}: {node.value!r}")
+        return found
