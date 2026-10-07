@@ -32,7 +32,8 @@ ensure you always get the latest stable release.
 You'll use [`AmazonSession`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession) to
 authenticate your Amazon account, then [`AmazonOrders`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders),
 [`AmazonTransactions`](https://amazon-orders.readthedocs.io/api.html#amazonorders.transactions.AmazonTransactions),
-and [`AmazonGiftCards`](https://amazon-orders.readthedocs.io/api.html#amazonorders.gift_cards.AmazonGiftCards)
+[`AmazonGiftCards`](https://amazon-orders.readthedocs.io/api.html#amazonorders.gift_cards.AmazonGiftCards),
+and [`AmazonPrime`](https://amazon-orders.readthedocs.io/api.html#amazonorders.prime.AmazonPrime)
 to interact with account data. [`get_order_history`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order_history)
 and [`get_order`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order) are good places to start.
 
@@ -76,10 +77,10 @@ amazon-orders history --last-3-months
 
 ### Output Formats
 
-The `history`, `order`, `invoice-pdfs`, `transactions`, `order-transactions`, `gift-card-activity`, and
-`family-members` commands accept `--output`, which renders Orders, Invoice PDFs, Transactions, Gift Card activity, and
-Amazon Household members as `text` (the default), `json`, `yaml`, or `csv`. Progress messages are written to
-`stderr`, so redirecting `stdout` captures only the data.
+The `history`, `order`, `invoice-pdfs`, `transactions`, `order-transactions`, `gift-card-activity`, `family-members`,
+and `prime-payments` commands accept `--output`, which renders Orders, Invoice PDFs, Transactions, Gift Card activity,
+Amazon Household members, and Prime payments as `text` (the default), `json`, `yaml`, or `csv`. Progress messages are
+written to `stderr`, so redirecting `stdout` captures only the data.
 
 ```sh
 amazon-orders history --year 2023 --output json > orders.json
