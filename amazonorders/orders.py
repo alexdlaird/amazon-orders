@@ -20,23 +20,6 @@ from amazonorders.session import AmazonSession
 logger = logging.getLogger(__name__)
 
 
-def _parse_tracking(parsed: Tag,
-                    config: AmazonOrdersConfig) -> Optional[Tracking]:
-    """
-    Build a Tracking from a package tracking page.
-
-    :param parsed: The parsed package tracking page.
-    :param config: The config providing the selectors.
-    :return: The parsed Tracking, or ``None`` if the page is not a package tracking page.
-    """
-    tracking_tag = util.select_one(parsed, config.selectors.TRACKING_ENTITY_SELECTOR)
-
-    if not tracking_tag:
-        return None
-
-    return Tracking(tracking_tag, config)
-
-
 class AmazonOrders:
     """
     Using an authenticated :class:`~amazonorders.session.AmazonSession`, can be used to query Amazon
@@ -149,8 +132,9 @@ class AmazonOrders:
 
         return order
 
-    @staticmethod
-    def parse_tracking(html: str,
+    @classmethod
+    def parse_tracking(cls,
+                       html: str,
                        config: AmazonOrdersConfig) -> Tracking:
         """
         Parse an already-fetched Amazon package tracking page into a Tracking, without a session driving the
@@ -162,7 +146,7 @@ class AmazonOrders:
             milestones (no carrier tracking).
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
-        tracking = _parse_tracking(parsed, config)
+        tracking = cls._parse_tracking(parsed, config)
         if not tracking:
             raise AmazonOrdersError("Could not parse package tracking. Check if Amazon changed the HTML.")
         return tracking
@@ -196,7 +180,7 @@ class AmazonOrders:
                                             f"{shipment_id} of Order {order_id} was not found.",
                                             meta={"redirect_url": response_url})
 
-        tracking = _parse_tracking(tracking_response.parsed, self.config)
+        tracking = self._parse_tracking(tracking_response.parsed, self.config)
         if not tracking:
             raise AmazonOrdersError(f"Could not parse package tracking for Shipment {shipment_id} of Order "
                                     f"{order_id}. Check if Amazon changed the HTML.")
@@ -375,6 +359,23 @@ class AmazonOrders:
 
         return config.order_cls(order_details_tag, config, full_details=True, clone=clone,
                                 order_number=order_number)
+
+    @staticmethod
+    def _parse_tracking(parsed: Tag,
+                        config: AmazonOrdersConfig) -> Optional[Tracking]:
+        """
+        Build a Tracking from a package tracking page.
+
+        :param parsed: The parsed package tracking page.
+        :param config: The config providing the selectors.
+        :return: The parsed Tracking, or ``None`` if the page is not a package tracking page.
+        """
+        tracking_tag = util.select_one(parsed, config.selectors.TRACKING_ENTITY_SELECTOR)
+
+        if not tracking_tag:
+            return None
+
+        return Tracking(tracking_tag, config)
 
     async def _build_orders_async(self,
                                   next_page: Optional[str],

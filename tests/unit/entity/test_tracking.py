@@ -12,13 +12,13 @@ from tests.unittestcase import UnitTestCase
 
 
 class TestTracking(UnitTestCase):
-    def _read(self, filename):
+    def given_tracking_page(self, filename):
         with open(os.path.join(self.RESOURCES_DIR, "tracking", filename), "r", encoding="utf-8") as f:
             return f.read()
 
     def test_parse_tracking_carrier(self):
         # WHEN
-        tracking = AmazonOrders.parse_tracking(self._read("progress-tracker-ups.html"), self.test_config)
+        tracking = AmazonOrders.parse_tracking(self.given_tracking_page("progress-tracker-ups.html"), self.test_config)
 
         # THEN
         self.assertEqual("UPS", tracking.carrier)
@@ -26,17 +26,19 @@ class TestTracking(UnitTestCase):
 
     def test_parse_tracking_amazon_delivery(self):
         # WHEN
-        tracking = AmazonOrders.parse_tracking(self._read("progress-tracker-amazon.html"), self.test_config)
+        tracking = AmazonOrders.parse_tracking(self.given_tracking_page("progress-tracker-amazon.html"),
+                                               self.test_config)
 
         # THEN
         self.assertEqual("Amazon", tracking.carrier)
         self.assertEqual("TBA000000000000", tracking.tracking_number)
 
     def test_parse_tracking_status_only_page(self):
-        # GIVEN the layout that only shows the delivery milestones (no carrier tracking)
+        # GIVEN
+        html = self.given_tracking_page("progress-tracker-status-only.html")
 
         # WHEN
-        tracking = AmazonOrders.parse_tracking(self._read("progress-tracker-status-only.html"), self.test_config)
+        tracking = AmazonOrders.parse_tracking(html, self.test_config)
 
         # THEN
         self.assertIsNone(tracking.carrier)
@@ -44,14 +46,15 @@ class TestTracking(UnitTestCase):
 
     def test_parse_tracking_to_dict(self):
         # WHEN
-        tracking = AmazonOrders.parse_tracking(self._read("progress-tracker-ups.html"), self.test_config)
+        tracking = AmazonOrders.parse_tracking(self.given_tracking_page("progress-tracker-ups.html"), self.test_config)
 
         # THEN
         self.assertEqual({"carrier": "UPS", "tracking_number": "1Z999AA10123456784"}, tracking.to_dict())
 
     def test_tracking_number_all_digits_stays_text(self):
-        # GIVEN a USPS-style number: all digits, with leading zeros
-        html = self._read("progress-tracker-ups.html").replace("1Z999AA10123456784", "0094001118992231000000")
+        # GIVEN
+        html = self.given_tracking_page("progress-tracker-ups.html").replace("1Z999AA10123456784",
+                                                                             "0094001118992231000000")
 
         # WHEN
         tracking = AmazonOrders.parse_tracking(html, self.test_config)

@@ -1614,7 +1614,6 @@ class TestOrders(UnitTestCase):
     def test_get_tracking_not_found(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        # A redirect away from the tracking page (not to login) simulates a Shipment that doesn't exist
         responses.add(responses.GET, self.test_config.constants.TRACKING_URL, status=302,
                       headers={"Location": self.test_config.constants.ORDER_HISTORY_URL})
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",

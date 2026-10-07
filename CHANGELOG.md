@@ -8,8 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- `Tracking` entity (`carrier`, `tracking_number`), and `AmazonOrders.get_tracking()` / `AmazonOrders.parse_tracking()` for a Shipment's package tracking page.
-- `Shipment.shipment_id`, Amazon's identifier for the Shipment, taken from its tracking link.
+- `Tracking` entity, `AmazonOrders.get_tracking()` and `parse_tracking()`, and `Shipment.shipment_id`, for a Shipment's carrier and tracking number.
 
 ### Fixed
 
