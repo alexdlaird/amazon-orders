@@ -138,6 +138,12 @@ Entities
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.entity.tracking
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: amazonorders.entity.transaction
     :members:
     :private-members:

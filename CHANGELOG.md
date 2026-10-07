@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.7.1...HEAD)
 
+### Added
+
+- `Tracking` entity (`carrier`, `tracking_number`), and `AmazonOrders.get_tracking()` / `AmazonOrders.parse_tracking()` for a Shipment's package tracking page.
+- `Shipment.shipment_id`, Amazon's identifier for the Shipment, taken from its tracking link.
+
 ### Fixed
 
 - Bug fixes and stability improvements.

@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import logging
 from typing import List, Optional, TypeVar
+from urllib.parse import parse_qs, urlparse
 
 from bs4 import Tag
 
@@ -35,6 +36,10 @@ class Shipment(Parsable):
         self.tracking_link: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_SHIPMENT_TRACKING_LINK_SELECTOR,
             attr_name="href")
+        #: Amazon's identifier for the Shipment, taken from :attr:`tracking_link`. ``None`` when there is no
+        #: tracking link (Amazon stops showing it on older Orders), or the link carries no Shipment ID. Pass it
+        #: to :func:`~amazonorders.orders.AmazonOrders.get_tracking`.
+        self.shipment_id: Optional[str] = self.safe_parse(self._parse_shipment_id)
 
     def __repr__(self) -> str:
         return f"<Shipment: \"{self.items}\">"
@@ -48,6 +53,13 @@ class Shipment(Parsable):
             return self.delivery_status < str(other.delivery_status if other.delivery_status else "")
         else:
             return str(self.items) < str(other.items)
+
+    def _parse_shipment_id(self) -> Optional[str]:
+        if not self.tracking_link:
+            return None
+
+        values = parse_qs(urlparse(self.tracking_link).query).get(self.config.constants.SHIPMENT_ID_QUERY_PARAM)
+        return values[0] if values else None
 
     def _parse_items(self) -> List[Item]:
         if not self.parsed:

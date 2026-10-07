@@ -27,6 +27,7 @@ class TestShipment(UnitTestCase):
         self.assertEqual(1, len(order.shipments))
         self.assertTrue(order.shipments[0].tracking_link.startswith(
             f"{self.test_config.constants.BASE_URL}/progress-tracker/package?orderId=112-5234348-8033063"))
+        self.assertEqual("Nt6W1wShr", order.shipments[0].shipment_id)
 
     def test_shipment_cancel_items_link_is_not_a_tracking_link(self):
         # GIVEN
@@ -41,3 +42,4 @@ class TestShipment(UnitTestCase):
 
         # THEN
         self.assertIsNone(order.shipments[0].tracking_link)
+        self.assertIsNone(order.shipments[0].shipment_id)
