@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- `Shipment.tracking_link` is now populated on the current Order details layout, where the "Track package" link points to `/progress-tracker/package` (without matching that shipment's `/progress-tracker/package/preship/cancel-items` link).
+- Bug fixes and stability improvements.
 
 ## [4.7.1](https://github.com/alexdlaird/amazon-orders/compare/4.7.0...4.7.1) - 2026-10-07
 

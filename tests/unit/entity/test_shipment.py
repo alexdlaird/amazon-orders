@@ -10,15 +10,15 @@ from tests.unittestcase import UnitTestCase
 
 
 class TestShipment(UnitTestCase):
-    def _order_details_html(self):
+    def given_order_details_html(self):
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-112-5234348-8033063.html"),
                   "r",
                   encoding="utf-8") as f:
             return f.read()
 
     def test_shipment_tracking_link_current_order_details_layout(self):
-        # GIVEN a real page from the current Order details layout (payment-instrument layout)
-        html = self._order_details_html()
+        # GIVEN
+        html = self.given_order_details_html()
 
         # WHEN
         order = AmazonOrders.parse_order_details(html, self.test_config, order_number="112-5234348-8033063")
@@ -29,12 +29,12 @@ class TestShipment(UnitTestCase):
             f"{self.test_config.constants.BASE_URL}/progress-tracker/package?orderId=112-5234348-8033063"))
 
     def test_shipment_cancel_items_link_is_not_a_tracking_link(self):
-        # GIVEN the same real page with its "Track package" link removed, as on a Shipment that hasn't
-        # shipped yet, so only the "/progress-tracker/package/preship/cancel-items" link remains
-        parsed = BeautifulSoup(self._order_details_html(), self.test_config.bs4_parser)
+        # GIVEN
+        parsed = BeautifulSoup(self.given_order_details_html(), self.test_config.bs4_parser)
         for link in parsed.select("a[href^='/progress-tracker/package?']"):
             link.decompose()
-        self.assertTrue(parsed.select("a[href*='/progress-tracker/package/preship/cancel-items']"))
+        self.assertTrue(parsed.select("a[href*='/progress-tracker/package/preship/cancel-items']"),
+                        "With its Track package link removed, the Shipment should still have its cancel-items link")
 
         # WHEN
         order = AmazonOrders.parse_order_details(str(parsed), self.test_config, order_number="112-5234348-8033063")
