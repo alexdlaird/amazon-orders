@@ -19,7 +19,7 @@ from tests.unittestcase import UnitTestCase
 _PACKAGE_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "amazonorders"))
 _PARSING_MODULES = (sorted(glob.glob(os.path.join(_PACKAGE_DIR, "entity", "*.py"))) +
                     [os.path.join(_PACKAGE_DIR, name) for name in ("orders.py", "transactions.py", "session.py",
-                                                                   "forms.py")])
+                                                                   "forms.py", "gift_cards.py")])
 _MESSAGE_CALLS = {"debug", "info", "warning", "error", "exception", "critical", "echo", "prompt", "input"}
 _DISPLAY_METHODS = {"__repr__", "__str__"}
 _PLUMBING_LITERALS = {
@@ -29,9 +29,9 @@ _PLUMBING_LITERALS = {
     "^\\s*{count}\\s*$", "_parse_", "aa-challenge-page-captcha-container", "action", "alt", "choices", "config",
     "cvf_captcha_input", "data", "data-a-popover", "deviceId", "domain", "email", "field-keywords", "headers",
     "href", "http", "https://", "ie", "img", "index", "inlineContent", "input", "input[name='", "last30", "method",
-    "months-3", "name", "nav-item-signout", "not solved", "otpCode", "otpDeviceContext", "params", "parsed",
-    "password", "ppw-widgetState", "r", "rememberDevice", "rememberMe", "simple_parse", "src", "timeout", "true",
-    "utf-8", "value", "w", "year-", "{page_name}_{index}.html", "{url}/{path}",
+    "months-3", "name", "nav-item-signout", "next_page_url", "not solved", "otpCode", "otpDeviceContext", "params",
+    "parsed", "password", "ppw-widgetState", "r", "rememberDevice", "rememberMe", "simple_parse", "src", "timeout",
+    "true", "utf-8", "value", "w", "year-", "{page_name}_{index}.html", "{url}/{path}",
     "{url}?{query_param}={filter_value}{optional_order_filter}{optional_start_index}", "{}",
 }
 

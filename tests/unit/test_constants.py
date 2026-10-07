@@ -211,6 +211,7 @@ class TestConstants(UnitTestCase):
         self.assertEqual("302-1234567-1234567", constants.parse_order_number("Bestellnr. 302-1234567-1234567"))
         self.assertEqual("D01-1234567-1234567", constants.parse_order_number("Order #D01-1234567-1234567"))
         self.assertEqual("1234567890123456789", constants.parse_order_number("Refund: Order #1234567890123456789"))
+        self.assertEqual("4000-123456-1234567", constants.parse_order_number("4000-123456-1234567"))
 
     def test_parse_order_number_no_order_number(self):
         # GIVEN
@@ -220,6 +221,7 @@ class TestConstants(UnitTestCase):
         self.assertIsNone(constants.parse_order_number("AMZN Mktp US"))
         self.assertIsNone(constants.parse_order_number("X112-1234567-1234567"))
         self.assertIsNone(constants.parse_order_number("12345678901234567890"))
+        self.assertIsNone(constants.parse_order_number("4000-1234567-1234567"))
 
     def test_domain_sets_region_currency_symbol(self):
         # GIVEN

@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import logging
-import re
 from datetime import date
 from typing import Optional, Union
 
@@ -84,13 +83,12 @@ class GiftCardActivity(Parsable):
         if not value:
             return None
 
-        if not re.fullmatch(r"[A-Z0-9-]+", value):
+        order_number = self.config.constants.parse_order_number(value)
+        if not order_number:
             logger.warning(f"GiftCardActivity.order_number found but not an Order number: {value!r}. "
                            f"Check if Amazon changed the HTML.")
 
-            return None
-
-        return value
+        return order_number
 
     def _parse_order_details_link(self) -> Optional[str]:
         if not self.order_number:

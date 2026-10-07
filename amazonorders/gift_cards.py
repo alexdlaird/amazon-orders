@@ -10,35 +10,10 @@ from bs4 import BeautifulSoup, Tag
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.gift_card_activity import GiftCardActivity
-from amazonorders.entity.parsable import Parsable
 from amazonorders.exception import AmazonOrdersError
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
-
-
-def _parse_gift_card_activity_page(parsed: Tag,
-                                   config: AmazonOrdersConfig) -> Tuple[List[GiftCardActivity], Optional[str]]:
-    table_tag = util.select_one(parsed, config.selectors.GIFT_CARD_ACTIVITY_TABLE_SELECTOR)
-
-    if not table_tag:
-        # A balance with no table is an account that has no Gift Card activity
-        if util.select_one(parsed, config.selectors.GIFT_CARD_BALANCE_SELECTOR):
-            return [], None
-
-        raise AmazonOrdersError("Could not parse Gift Card activity. Check if Amazon changed the HTML.")
-
-    activity = [GiftCardActivity(row_tag, config)
-                for row_tag in util.select(table_tag, config.selectors.GIFT_CARD_ACTIVITY_SELECTOR)]
-
-    next_page_url = None
-    next_page_link = util.select_one(parsed, config.selectors.GIFT_CARD_ACTIVITY_NEXT_PAGE_LINK_SELECTOR)
-    if next_page_link and next_page_link.get("href"):
-        next_page_url = str(next_page_link["href"])
-        if not next_page_url.startswith("http"):
-            next_page_url = f"{config.constants.BASE_URL}{next_page_url}"
-
-    return activity, next_page_url
 
 
 class AmazonGiftCards:
@@ -66,8 +41,9 @@ class AmazonGiftCards:
         if self.debug:
             logger.setLevel(logging.DEBUG)
 
-    @staticmethod
-    def parse_gift_card_activity(html: str,
+    @classmethod
+    def parse_gift_card_activity(cls,
+                                 html: str,
                                  config: AmazonOrdersConfig) -> List[GiftCardActivity]:
         """
         Parse an already-fetched Amazon Gift Card balance page into its GiftCardActivity, without a session
@@ -78,7 +54,7 @@ class AmazonGiftCards:
         :return: A list of the parsed GiftCardActivity, newest first.
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
-        activity, _ = _parse_gift_card_activity_page(parsed, config)
+        activity, _ = cls._parse_gift_card_activity_page(parsed, config)
 
         return activity
 
@@ -95,7 +71,7 @@ class AmazonGiftCards:
         self.amazon_session.check_response(page_response)
 
         balance_tag = util.select_one(page_response.parsed, self.config.selectors.GIFT_CARD_BALANCE_SELECTOR)
-        balance = Parsable(balance_tag, self.config).to_currency(balance_tag.text) if balance_tag else None
+        balance = self.config.constants.parse_currency(balance_tag.text) if balance_tag else None
         if balance is None:
             raise AmazonOrdersError("Could not parse Gift Card balance. Check if Amazon changed the HTML.")
 
@@ -126,7 +102,7 @@ class AmazonGiftCards:
             page_response = self.amazon_session.get(url)
             self.amazon_session.check_response(page_response, meta={"next_page_url": url})
 
-            loaded_activity, next_page_url = _parse_gift_card_activity_page(page_response.parsed, self.config)
+            loaded_activity, next_page_url = self._parse_gift_card_activity_page(page_response.parsed, self.config)
 
             for entry in loaded_activity:
                 if entry.activity_date is None or entry.activity_date >= min_date:
@@ -138,3 +114,35 @@ class AmazonGiftCards:
             url = next_page_url if keep_paging else None
 
         return activity
+
+    @classmethod
+    def _parse_gift_card_activity_page(cls,
+                                       parsed: Tag,
+                                       config: AmazonOrdersConfig) -> Tuple[List[GiftCardActivity], Optional[str]]:
+        """
+        Parse the GiftCardActivity rows and the next page link off a Gift Card balance page.
+
+        :param parsed: The parsed Gift Card balance page.
+        :param config: The config providing the selectors.
+        :return: The page's GiftCardActivity, and the next page's URL or ``None`` on the last page.
+        """
+        table_tag = util.select_one(parsed, config.selectors.GIFT_CARD_ACTIVITY_TABLE_SELECTOR)
+
+        if not table_tag:
+            # A balance with no table is an account that has no Gift Card activity
+            if util.select_one(parsed, config.selectors.GIFT_CARD_BALANCE_SELECTOR):
+                return [], None
+
+            raise AmazonOrdersError("Could not parse Gift Card activity. Check if Amazon changed the HTML.")
+
+        activity = [GiftCardActivity(row_tag, config)
+                    for row_tag in util.select(table_tag, config.selectors.GIFT_CARD_ACTIVITY_SELECTOR)]
+
+        next_page_url = None
+        next_page_link = util.select_one(parsed, config.selectors.GIFT_CARD_ACTIVITY_NEXT_PAGE_LINK_SELECTOR)
+        if next_page_link and next_page_link.get("href"):
+            next_page_url = str(next_page_link["href"])
+            if not next_page_url.startswith("http"):
+                next_page_url = f"{config.constants.BASE_URL}{next_page_url}"
+
+        return activity, next_page_url

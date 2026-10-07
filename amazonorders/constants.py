@@ -211,7 +211,9 @@ class Constants:
     CURRENCY_SYMBOL = os.environ.get("AMAZON_CURRENCY_SYMBOL", "$")
     CURRENCY_FORMAT = "{symbol}{amount}"
     CURRENCY_FREE_TEXT = "free"
-    ORDER_NUMBER_REGEX = r"(?<![A-Z0-9-])(?:[A-Z0-9]{3}-\d{7}-\d{7}|\d{19})(?![A-Z0-9-])"
+    #: Order numbers by shape: ``111-…`` and digital ``D01-…`` IDs, older ``4000-…`` IDs (still listed on
+    #: Gift Card activity from around 2015), and 19-digit IDs.
+    ORDER_NUMBER_REGEX = r"(?<![A-Z0-9-])(?:[A-Z0-9]{3}-\d{7}-\d{7}|\d{4}-\d{6}-\d{7}|\d{19})(?![A-Z0-9-])"
 
     def __init__(self,
                  config: Optional["AmazonOrdersConfig"] = None) -> None:
