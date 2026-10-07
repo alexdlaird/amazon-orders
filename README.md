@@ -9,10 +9,9 @@
 
 `amazon-orders` is an unofficial library that provides a Python API (and CLI) for Amazon order history, line items, and transactions.
 
-Only the English, `.com` version of Amazon is officially supported. Other Amazon domains can be
-targeted by passing `domain` to [`AmazonSession`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession)
-(or `--domain` on the CLI), and other English-based sites may work by chance — see
-[Known Limitations](https://amazon-orders.readthedocs.io/index.html#known-limitations) for details.
+`amazon-orders` core supports Amazon's English `.com` site, validated nightly. Other English Amazon sites can be
+targeted with the `domain` config option, and other languages plug in through
+[language packages](https://amazon-orders.readthedocs.io/language-packages.html).
 
 > **Note:** This package works by parsing data from Amazon's consumer-facing website. A periodic build validates
 > functionality to ensure its stability, but as Amazon provides no official API to use, older versions of this
@@ -124,6 +123,14 @@ pip install amazon-orders[captcha]
 ```
 
 See [Login Challenges](https://amazon-orders.readthedocs.io/troubleshooting.html#login-challenges) for details.
+
+### Languages and Regions
+
+`amazon-orders` core supports the English `.com` site, validated nightly.
+
+- **Other English sites** (e.g. `amazon.ca`, `amazon.co.uk`): set the `domain` config option.
+- **Other languages**: install a language package and set `language_package`. See
+  [Language Packages](https://amazon-orders.readthedocs.io/language-packages.html).
 
 ## Documentation
 

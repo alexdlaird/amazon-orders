@@ -72,7 +72,8 @@ def amazon_orders_cli(ctx: Context,
     to ensure its stability, but as Amazon provides no official API to use, this package may break at any time. Check
     for updates regularly to ensure you always have the latest stable release.
 
-    This package only officially supports the English, .com version of Amazon.
+    This package supports the English, .com version of Amazon. Other English Amazon sites can be targeted with
+    --domain, and other languages are supported through language packages.
 
     Documentation can be found at https://amazon-orders.readthedocs.io.
     """

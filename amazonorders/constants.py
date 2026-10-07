@@ -117,8 +117,8 @@ class Constants:
     2. The ``AMAZON_BASE_URL`` environment variable.
     3. The default, ``amazon.com``.
 
-    Only the English, ``.com`` site is officially supported. Other domains may work; subclass and set
-    ``constants_class`` to override any values a particular site requires.
+    ``amazon-orders`` core supports the English ``.com`` site; subclass and set ``constants_class`` to override any
+    value another site requires.
     """
 
     ##########################################################################

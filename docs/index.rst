@@ -41,9 +41,9 @@ Amazon Orders - A Python library (and CLI) for Amazon order history, line items,
 
 ``amazon-orders`` is an unofficial library that provides a Python API (and CLI) for Amazon order history, line items, and transactions.
 
-Only the English, ``.com`` version of Amazon is officially supported. Other Amazon domains can be targeted by passing
-``domain`` to :class:`~amazonorders.session.AmazonSession` (or ``--domain`` on the CLI), and other English-based sites
-may work by chance -- see :ref:`Known Limitations <known-limitations>` for details.
+``amazon-orders`` core supports Amazon's English ``.com`` site, validated nightly. Other English Amazon sites can be
+targeted with the ``domain`` config option, and other languages plug in through
+:doc:`language packages <language-packages>`.
 
 .. note::
 
@@ -199,28 +199,19 @@ For **legacy Captcha auto-solve** on Python <=3.12, install with ``captcha`` ext
 
 See :ref:`Login Challenges <login-challenges>` for details.
 
+Languages and Regions
+---------------------
+
+``amazon-orders`` core supports the English ``.com`` site, validated nightly.
+
+- **Other English sites** (e.g. ``amazon.ca``, ``amazon.co.uk``): set the ``domain`` config option.
+- **Other languages**: install a language package and set ``language_package``. See :doc:`language-packages`.
+
 .. _known-limitations:
 
 Known Limitations
 -----------------
 
-- Non-English, non-``.com`` versions of Amazon are unsupported
-    - Pass ``domain`` to :class:`~amazonorders.session.AmazonSession` (or set ``domain`` in
-      :class:`~amazonorders.conf.AmazonOrdersConfig`, or pass ``--domain`` on the CLI) to point at another
-      Amazon site. URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are rewritten from
-      the domain, and ``Accept-Language``, the currency symbol, the OpenID ``assoc_handle``, and the
-      authenticated-session cookie are adjusted for a small set of known TLDs, so other English-based
-      versions of Amazon (e.g. ``amazon.ca``) may work by chance. Subclass
-      :class:`~amazonorders.constants.Constants` and set ``constants_class`` to override any value a
-      particular site requires; an overridden ``assoc_handle`` or ``COOKIES_SET_WHEN_AUTHENTICATED`` is
-      kept as-is. The ``AMAZON_BASE_URL`` environment variable continues to work as a fallback.
-    - We do not run nightly regressions against non-``.com`` versions of the site, and as such do not say
-      they are officially supported. If you fork the repo and point the ``integration.yml`` workflow at a
-      different domain with your own credentials, please `contact us <mailto:contact@alexlaird.com>`_ and
-      we will start mentioning support for that version of the site. Languages other than English are
-      supported through separately published language packages rather than this library; see
-      :doc:`language-packages`.
-    - See `issue #15 <https://github.com/alexdlaird/amazon-orders/issues/15>`_ for more details.
 - Amazon Business accounts are not supported
 - Device not remembered for OTP
     - Amazon will sometimes re-prompt for OTP even when a device has been remembered.

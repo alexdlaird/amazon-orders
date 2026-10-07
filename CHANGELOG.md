@@ -14,7 +14,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- Headers passed to an `AmazonSession` request now take precedence over `BASE_HEADERS`.
 - Bug fixes and stability improvements.
 
 ## [4.7.0](https://github.com/alexdlaird/amazon-orders/compare/4.6.1...4.7.0) - 2026-10-06
