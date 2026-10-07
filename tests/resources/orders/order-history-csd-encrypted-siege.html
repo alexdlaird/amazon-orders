@@ -1,0 +1,243 @@
+<section class="your-orders-content-container aok-relative js-yo-container">
+<div class="your-orders-content-container__content js-yo-main-content">
+<div class="a-section a-spacing-medium a-spacing-top-small">
+<ul class="breadcrumbs">
+<li class="breadcrumbs__crumb">
+<a class="a-link-normal" href="/your-account/ref=ppx_yo2ov_dt_b_ya_link">Your Account</a>
+</li>
+<li class="breadcrumbs__crumb breadcrumbs__crumb--divider">›</li>
+<li class="breadcrumbs__crumb breadcrumbs__crumb--current">
+<span class="a-color-state">Your Orders</span>
+</li>
+</ul>
+</div>
+<div class="a-row a-spacing-medium">
+<div class="a-column a-span6">
+<h1>Your Orders</h1>
+</div>
+<div class="a-column a-span6 a-span-last">
+<div class="search-bar">
+<form action="/your-orders/search/ref=ppx_yo2ov_dt_b_search" class="a-spacing-none" method="get">
+<input name="opt" type="hidden" value="ab"/>
+<div class="search-bar__input-container">
+<label class="a-form-label" for="searchOrdersInput"></label>
+<div aria-label="Search all orders" class="a-search a-span12"><i class="a-icon a-icon-search"></i><input aria-label="Search all orders" class="a-input-text a-span12" id="searchOrdersInput" name="search" placeholder="Search all orders" spellcheck="false" type="search"/></div>
+</div>
+<div class="search-bar__button-container">
+<span class="a-button a-button-search"><span class="a-button-inner"><input class="a-button-input" type="submit"/><span aria-hidden="true" class="a-button-text">Search Orders</span></span></span>
+</div>
+</form>
+</div>
+</div>
+</div>
+<div class="a-section a-spacing-medium page-tabs">
+<ul>
+<li class="page-tabs__tab">
+<a class="a-link-normal" href="/gp/your-account/order-history?ref_=ppx_yo2ov_dt_b_tb_all_m3">Orders</a>
+</li>
+<li class="page-tabs__tab">
+<a class="a-link-normal" href="/gp/buyagain?ref_=ppx_yo2ov_dt_b_tb_buy_again">Buy Again</a>
+</li>
+<li class="page-tabs__tab">
+<a class="a-link-normal" href="/your-orders/orders?ref_=ppx_yo2ov_dt_b_tb_open&amp;orderFilter=open">Not Yet Shipped</a>
+</li>
+<li class="page-tabs__tab page-tabs__tab--selected">
+                    Digital Orders
+                </li>
+<li class="page-tabs__tab">
+<a class="a-link-normal" href="https://pay.amazon.com/jr/your-account/orders?ref=ppx_yo2ov_dt_b_amazonPay">Amazon Pay</a>
+</li>
+</ul>
+</div>
+<div class="a-row a-spacing-base">
+<div class="a-column a-span8">
+<form action="/your-orders/orders" class="js-time-filter-form a-spacing-none" method="get">
+<label class="a-form-label time-filter__label aok-inline-block a-text-normal" for="time-filter">
+<b>3 orders</b> placed in
+</label>
+<span class="a-dropdown-container"><select autocomplete="off" class="a-native-dropdown" id="time-filter" name="timeFilter" tabindex="-1">
+<option data-ref="d30" value="last30">
+            last 30 days
+        </option>
+<option data-ref="m3" value="months-3">
+            past 3 months
+        </option>
+<option data-ref="y2026" selected="" value="year-2026">
+            2026
+        </option>
+<option data-ref="y2025" value="year-2025">
+            2025
+        </option>
+<option data-ref="y2024" value="year-2024">
+            2024
+        </option>
+<option data-ref="y2023" value="year-2023">
+            2023
+        </option>
+<option data-ref="y2022" value="year-2022">
+            2022
+        </option>
+<option data-ref="y2021" value="year-2021">
+            2021
+        </option>
+<option data-ref="y2020" value="year-2020">
+            2020
+        </option>
+<option data-ref="y2019" value="year-2019">
+            2019
+        </option>
+<option data-ref="y2018" value="year-2018">
+            2018
+        </option>
+<option data-ref="y2017" value="year-2017">
+            2017
+        </option>
+<option data-ref="y2016" value="year-2016">
+            2016
+        </option>
+<option data-ref="y2015" value="year-2015">
+            2015
+        </option>
+<option data-ref="y2014" value="year-2014">
+            2014
+        </option>
+<option data-ref="y2013" value="year-2013">
+            2013
+        </option>
+<option data-ref="y2012" value="year-2012">
+            2012
+        </option>
+<option data-ref="y2011" value="year-2011">
+            2011
+        </option>
+<option data-ref="y2010" value="year-2010">
+            2010
+        </option>
+<option data-ref="y2009" value="year-2009">
+            2009
+        </option>
+<option data-ref="y2008" value="year-2008">
+            2008
+        </option>
+<option data-ref="y2007" value="year-2007">
+            2007
+        </option>
+<option data-ref="y2006" value="year-2006">
+            2006
+        </option>
+<option data-ref="y2005" value="year-2005">
+            2005
+        </option>
+</select><span class="a-button a-button-dropdown" tabindex="-1"><span class="a-button-inner"><span aria-hidden="true" class="a-button-text a-declarative" data-action="a-dropdown-button" role="button" tabindex="0"><span class="a-dropdown-prompt">2026</span></span><i class="a-icon a-icon-dropdown"></i></span></span></span>
+<input name="ref_" type="hidden" value="ppx_yo2ov_dt_b_filter_digital"/>
+<input name="orderFilter" type="hidden" value="digital"/>
+</form>
+<script>
+            P.declare("time-filter-form-ready", {});
+        </script>
+</div>
+<div class="a-column a-span4 a-span-last">
+<div class="a-text-right" data-csa-c-content-id="yo-view-transactions-desktop" data-csa-c-item-id="yo-view-transactions-desktop" data-csa-c-item-type="link" data-csa-c-type="item" data-csa-op-log-render="">
+<a class="a-link-normal a-text-bold" data-csa-c-action="view-transactions" data-csa-c-type="link" href="/cpe/yourpayments/transactions?ref_=ppx_yo2ov_dt_b_view_transactions_link">
+                View transactions
+            </a>
+</div>
+</div>
+</div>
+
+
+
+
+
+
+
+
+
+<script>ue.count("OrdersView.OrderCardRendered", 1);</script>
+<div class="order-card js-order-card" data-csa-c-content-id="amzn1.yourorders.order-card" data-csa-c-slot-id="amzn1.yourorders.order-card.D01-0000000-0000001" data-csa-c-type="widget">
+<div class="a-box-group a-spacing-base">
+<script type="text/javascript">
+/* The inline SiegeClientSideDecryption library (154,359 characters of minified, page-independent JavaScript) was removed from this fixture. On the live page it sits here, inside the first card's a-box-group, before that card's csd-encrypted-sensitive container. */
+</script>
+<div class="csd-encrypted-sensitive" id="00000000-0000-4000-8000-000000000001">
+<script type="text/javascript">
+		(function(payload) {
+			var elementId = "00000000-0000-4000-8000-000000000001";
+			
+				try {
+					window.uet("cf", "Siege:Csd:LibLoadToDecrypt1Start", {wb: 1});
+					window.uex("ld", "Siege:Csd:LibLoadToDecrypt1Start", {wb: 1});
+				} catch (e) {}
+			
+			if (!window.SiegeClientSideDecryption) {
+				if (!window.csdFallbackDone) {
+					try {
+						ue.count("Siege:Csd:SafeFallback:missing-library", 1);
+					} catch (e) {}
+					window.location.href = "?disableCsd\u003Dmissing-library\u0026orderFilter\u003Ddigital\u0026startIndex\u003D0\u0026timeFilter\u003Dyear-2026";
+					window.csdFallbackDone = true;
+				}
+				return;
+			}
+			SiegeClientSideDecryption.decryptInElementWithId(elementId, payload, {callSource: "now"});
+		})({"ct":"cmkXf0xUQinLc1DKJyi6UCB8VkO3BVatj53lErSq94tyaRdATFRCKctzUMonKLpQL7xWQ7cFVq2PneUStKr3iw==","iv":"AQEBAQEBAQEBAQEB","kid":"000000"})
+	</script>
+<noscript><meta content="0;url=?disableCsd=no-js&amp;orderFilter=digital&amp;startIndex=0&amp;timeFilter=year-2026" http-equiv="refresh"/></noscript>
+</div>
+</div>
+</div>
+<script>ue.count("OrdersView.OrderCardRendered", 1);</script>
+<div class="order-card js-order-card" data-csa-c-content-id="amzn1.yourorders.order-card" data-csa-c-slot-id="amzn1.yourorders.order-card.D01-0000000-0000002" data-csa-c-type="widget">
+<div class="a-box-group a-spacing-base">
+<div class="csd-encrypted-sensitive" id="00000000-0000-4000-8000-000000000002">
+<script type="text/javascript">
+		(function(payload) {
+			var elementId = "00000000-0000-4000-8000-000000000002";
+			
+			if (!window.SiegeClientSideDecryption) {
+				if (!window.csdFallbackDone) {
+					try {
+						ue.count("Siege:Csd:SafeFallback:missing-library", 1);
+					} catch (e) {}
+					window.location.href = "?disableCsd\u003Dmissing-library\u0026orderFilter\u003Ddigital\u0026startIndex\u003D0\u0026timeFilter\u003Dyear-2026";
+					window.csdFallbackDone = true;
+				}
+				return;
+			}
+			SiegeClientSideDecryption.decryptInElementWithId(elementId, payload, {callSource: "now"});
+		})({"ct":"HCq2UCtyd1kBqpbqOyauia7jKGbnnSpp2g6Si0urFAUcKrZQK3J3WQGqluo7Jq6JruMoZuedKmnaDpKLS6sX9Q==","iv":"AgICAgICAgICAgIC","kid":"000000"})
+	</script>
+<noscript><meta content="0;url=?disableCsd=no-js&amp;orderFilter=digital&amp;startIndex=0&amp;timeFilter=year-2026" http-equiv="refresh"/></noscript>
+</div>
+</div>
+</div>
+<script type="text/javascript">if (typeof uet === "function") { uet('cf'); }</script>
+<script type="text/javascript">if (typeof uet === "function") { uet('af'); }</script>
+<script>ue.count("OrdersView.OrderCardRendered", 1);</script>
+<div class="order-card js-order-card" data-csa-c-content-id="amzn1.yourorders.order-card" data-csa-c-slot-id="amzn1.yourorders.order-card.D01-0000000-0000003" data-csa-c-type="widget">
+<div class="a-box-group a-spacing-base">
+<div class="csd-encrypted-sensitive" id="00000000-0000-4000-8000-000000000003">
+<script type="text/javascript">
+		(function(payload) {
+			var elementId = "00000000-0000-4000-8000-000000000003";
+			
+			if (!window.SiegeClientSideDecryption) {
+				if (!window.csdFallbackDone) {
+					try {
+						ue.count("Siege:Csd:SafeFallback:missing-library", 1);
+					} catch (e) {}
+					window.location.href = "?disableCsd\u003Dmissing-library\u0026orderFilter\u003Ddigital\u0026startIndex\u003D0\u0026timeFilter\u003Dyear-2026";
+					window.csdFallbackDone = true;
+				}
+				return;
+			}
+			SiegeClientSideDecryption.decryptInElementWithId(elementId, payload, {callSource: "now"});
+		})({"ct":"klgCIsAAkXtLtNeLUwz3USTBCMT4PBLSXS2SSA5fatuSWAIizABRe0u014tTDPdRJMEIxPgA4tJdLZJIDl9q2w==","iv":"AwMDAwMDAwMDAwMD","kid":"000000"})
+	</script>
+<noscript><meta content="0;url=?disableCsd=no-js&amp;orderFilter=digital&amp;startIndex=0&amp;timeFilter=year-2026" http-equiv="refresh"/></noscript>
+</div>
+</div>
+</div>
+
+</div>
+</section>
