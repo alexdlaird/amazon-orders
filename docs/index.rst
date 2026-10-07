@@ -130,12 +130,34 @@ Gift Cards applied to Orders, claim code redemptions, Reloads, and refunds.
 
 The same is available from the ``gift-card-balance`` and ``gift-card-activity`` CLI commands.
 
+Prime Membership Payments
+-------------------------
+
+Prime membership fees are digital Orders that neither the Order history nor the Digital Orders tab lists.
+:class:`~amazonorders.prime.AmazonPrime` reads them from the Prime payments page, and each
+:class:`~amazonorders.entity.prime_payment.PrimePayment` carries the Order number to fetch the Order with.
+
+.. code:: python
+
+    from amazonorders.orders import AmazonOrders
+    from amazonorders.prime import AmazonPrime
+
+    amazon_prime = AmazonPrime(amazon_session)
+    payments = amazon_prime.get_prime_payments()
+
+    order = AmazonOrders(amazon_session).get_order(payments[0].order_number)
+
+The same is available from the ``prime-payments`` CLI command. Fetching the page is best-effort, as Amazon has served
+the library an error page in its place; a copy of the page saved from a browser can be parsed with
+:func:`~amazonorders.prime.AmazonPrime.parse_prime_payments`.
+
 Output Formats
 --------------
 
-The ``history``, ``order``, ``transactions``, ``order-transactions``, and ``gift-card-activity`` commands accept
-``--output``, which renders Orders, Transactions, and Gift Card activity as ``text`` (the default), ``json``,
-``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout`` captures only the data.
+The ``history``, ``order``, ``transactions``, ``order-transactions``, ``gift-card-activity``, and ``prime-payments``
+commands accept ``--output``, which renders Orders, Transactions, Gift Card activity, and Prime payments as ``text``
+(the default), ``json``, ``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout``
+captures only the data.
 
 .. code:: sh
 
