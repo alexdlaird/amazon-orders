@@ -327,6 +327,104 @@ class TestCli(UnitTestCase):
         self.assertIn("Order #112-2961628-4757846", response.output)
 
     @responses.activate
+    def test_prime_payments_command(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        with open(os.path.join(self.RESOURCES_DIR, "prime", "prime-payments.html"), "r", encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.PRIME_PAYMENTS_URL}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(
+            amazon_orders_cli,
+            [
+                "--config-path", self.test_config.config_path,
+                "--username", "some-username@gmail.com",
+                "--password", "some-password",
+                "prime-payments",
+            ],
+        )
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, resp.call_count)
+        self.assert_login_responses_success()
+        self.assertIn("PrimePayment 2025-11-17: Order #D01-1000008-2000008, Total: 148.38", response.output)
+        self.assertIn("8 Prime payments parsed", response.output)
+
+    @responses.activate
+    def test_prime_payments_command_json(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        with open(os.path.join(self.RESOURCES_DIR, "prime", "prime-payments.html"), "r", encoding="utf-8") as f:
+            responses.add(
+                responses.GET,
+                f"{self.test_config.constants.PRIME_PAYMENTS_URL}",
+                body=f.read(),
+                status=200,
+            )
+        runner = self.given_runner_with_split_streams()
+
+        # WHEN
+        response = runner.invoke(
+            amazon_orders_cli,
+            [
+                "--config-path", self.test_config.config_path,
+                "--username", "some-username@gmail.com",
+                "--password", "some-password",
+                "prime-payments", "--output", "json",
+            ],
+        )
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        payments = json.loads(response.stdout)
+        self.assertEqual(8, len(payments))
+        self.assertEqual({"payment_date": "2025-11-17",
+                          "total": 148.38,
+                          "order_number": "D01-1000008-2000008",
+                          "order_details_link": "https://www.amazon.com/gp/your-account/order-details"
+                                                "?orderID=D01-1000008-2000008",
+                          "receipt_link": "https://www.amazon.com/gp/digital/your-account/order-summary.html"
+                                          "/ref=primecentral?ie=UTF8&orderID=D01-1000008-2000008&print=1"},
+                         payments[0])
+
+    @responses.activate
+    def test_prime_payments_command_error(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        with open(os.path.join(self.RESOURCES_DIR, "prime", "prime-payments-error.html"), "r",
+                  encoding="utf-8") as f:
+            responses.add(
+                responses.GET,
+                f"{self.test_config.constants.PRIME_PAYMENTS_URL}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(
+            amazon_orders_cli,
+            [
+                "--config-path", self.test_config.config_path,
+                "--username", "some-username@gmail.com",
+                "--password", "some-password",
+                "prime-payments",
+            ],
+        )
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertIn("Could not parse Prime payments. Check if Amazon changed the HTML.", response.output)
+
+    @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_transactions_command(self, mock_today):
         # GIVEN

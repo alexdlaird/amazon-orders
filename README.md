@@ -31,7 +31,8 @@ ensure you always get the latest stable release.
 You'll use [`AmazonSession`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession) to
 authenticate your Amazon account, then [`AmazonOrders`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders),
 [`AmazonTransactions`](https://amazon-orders.readthedocs.io/api.html#amazonorders.transactions.AmazonTransactions),
-and [`AmazonGiftCards`](https://amazon-orders.readthedocs.io/api.html#amazonorders.gift_cards.AmazonGiftCards)
+[`AmazonGiftCards`](https://amazon-orders.readthedocs.io/api.html#amazonorders.gift_cards.AmazonGiftCards),
+and [`AmazonPrime`](https://amazon-orders.readthedocs.io/api.html#amazonorders.prime.AmazonPrime)
 to interact with account data. [`get_order_history`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order_history)
 and [`get_order`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order) are good places to start.
 
@@ -74,9 +75,9 @@ amazon-orders history --last-3-months
 
 ### Output Formats
 
-The `history`, `order`, `transactions`, `order-transactions`, and `gift-card-activity` commands accept
-`--output`, which renders Orders, Transactions, and Gift Card activity as `text` (the default), `json`,
-`yaml`, or `csv`. Progress messages are written to `stderr`, so redirecting `stdout` captures only the data.
+The `history`, `order`, `transactions`, `order-transactions`, `gift-card-activity`, and `prime-payments` commands
+accept `--output`, which renders Orders, Transactions, Gift Card activity, and Prime payments as `text` (the default),
+`json`, `yaml`, or `csv`. Progress messages are written to `stderr`, so redirecting `stdout` captures only the data.
 
 ```sh
 amazon-orders history --year 2023 --output json > orders.json

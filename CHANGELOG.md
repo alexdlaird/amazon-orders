@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.8.0...HEAD)
 
+### Added
+
+- `AmazonPrime`, the `PrimePayment` entity, and the `prime-payments` CLI command, for the Prime membership payment history, whose fees are digital Orders not listed anywhere else.
+
 ### Fixed
 
 - Bug fixes and stability improvements.

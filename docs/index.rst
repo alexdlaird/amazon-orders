@@ -67,8 +67,9 @@ Basic Usage
 ===========
 
 You'll use :class:`~amazonorders.session.AmazonSession` to authenticate your Amazon account, then
-:class:`~amazonorders.orders.AmazonOrders`, :class:`~amazonorders.transactions.AmazonTransactions`, and
-:class:`~amazonorders.gift_cards.AmazonGiftCards` to interact with account data.
+:class:`~amazonorders.orders.AmazonOrders`, :class:`~amazonorders.transactions.AmazonTransactions`,
+:class:`~amazonorders.gift_cards.AmazonGiftCards`, and :class:`~amazonorders.prime.AmazonPrime` to interact with
+account data.
 :func:`~amazonorders.orders.AmazonOrders.get_order_history` and
 :func:`~amazonorders.orders.AmazonOrders.get_order` are good places to start.
 
@@ -113,9 +114,10 @@ You can also run any command available to the main Python interface from the com
 Output Formats
 --------------
 
-The ``history``, ``order``, ``transactions``, ``order-transactions``, and ``gift-card-activity`` commands accept
-``--output``, which renders Orders, Transactions, and Gift Card activity as ``text`` (the default), ``json``,
-``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout`` captures only the data.
+The ``history``, ``order``, ``transactions``, ``order-transactions``, ``gift-card-activity``, and ``prime-payments``
+commands accept ``--output``, which renders Orders, Transactions, Gift Card activity, and Prime payments as ``text``
+(the default), ``json``, ``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout``
+captures only the data.
 
 .. code:: sh
 
