@@ -385,7 +385,7 @@ def gift_card_balance(ctx: Context) -> None:
               help="The number of days of Gift Card activity to get.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
-def gift_card_activity(ctx: Context, **kwargs: Any):
+def gift_card_activity(ctx: Context, **kwargs: Any) -> None:
     """
     Get Amazon Gift Card activity for a given number of days.
     """

@@ -52,11 +52,11 @@ class GiftCardActivity(Parsable):
 
         if value is None:
             err_msg = ("GiftCardActivity.activity_date could not be parsed, but it's required. "
-                       "Check if Amazon changed the HTML or set warn_on_missing_required_field=True in config.")
+                       "Check if Amazon changed the HTML")
             if not self.config.warn_on_missing_required_field:
-                raise AmazonOrdersError(err_msg)
+                raise AmazonOrdersError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
 
-            logger.warning(err_msg)
+            logger.warning(f"{err_msg}.")
 
         return value
 
@@ -65,11 +65,11 @@ class GiftCardActivity(Parsable):
 
         if value is None:
             err_msg = ("GiftCardActivity.amount could not be parsed, but it's required. "
-                       "Check if Amazon changed the HTML or set warn_on_missing_required_field=True in config.")
+                       "Check if Amazon changed the HTML")
             if not self.config.warn_on_missing_required_field:
-                raise AmazonOrdersError(err_msg)
+                raise AmazonOrdersError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
 
-            logger.warning(err_msg)
+            logger.warning(f"{err_msg}.")
 
         return value
 
