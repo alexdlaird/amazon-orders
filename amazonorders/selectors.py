@@ -318,6 +318,21 @@ class Selectors:
     FIELD_SELLER_LINK_SELECTOR = "a"
 
     #####################################
+    # CSS selectors for Tracking fields
+    #####################################
+
+    #: The package tracking page: the carrier layout (with a map), or the status-only layout (milestones only,
+    #: no carrier or tracking number)
+    TRACKING_ENTITY_SELECTOR = ["div.pt-main-container",
+                                "#pt-page-container-inner",
+                                "#mainContent-container:has(section.pt-card)"]
+    FIELD_TRACKING_NUMBER_SELECTOR = [".pt-delivery-card-trackingId"]
+    FIELD_TRACKING_NUMBER_PREFIX = "Tracking ID:"
+    FIELD_TRACKING_CARRIER_SELECTOR = [".tracking-event-carrier-header"]
+    #: Matched case-insensitively and removed from the carrier header, e.g. "Shipped with UPS" -> "UPS".
+    FIELD_TRACKING_CARRIER_REGEX = r"^(?:shipped with|delivered by|delivery (?:facilitated )?by|carrier:?)\s+"
+
+    #####################################
     # CSS selectors for Transaction fields
     #####################################
 
