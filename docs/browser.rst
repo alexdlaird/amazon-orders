@@ -45,7 +45,7 @@ Signing In with a Browser
 -------------------------
 
 Instead of giving ``amazon-orders`` your credentials, you can sign in on Amazon's own page, in a **visible** browser
-window. Your password, one-time password, and any challenge are entered there and never reach ``amazon-orders``,
+window. Your password, one-time passcode, and any challenge are entered there and never reach ``amazon-orders``,
 which only keeps the resulting session:
 
 .. code-block:: shell

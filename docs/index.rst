@@ -105,7 +105,7 @@ Secure Sign-In
 --------------
 
 The most secure way to use ``amazon-orders`` is to sign in on Amazon's own page, in a browser window, so your password,
-one-time password, and any challenge never reach ``amazon-orders``:
+one-time passcode, and any challenge never reach ``amazon-orders``:
 
 .. code:: sh
 

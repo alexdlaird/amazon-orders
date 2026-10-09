@@ -631,7 +631,7 @@ class PlaywrightManualWafForm(PlaywrightAuthForm):
 
 class PlaywrightBrowserLogin:
     """
-    Signs in to Amazon in a **visible** browser window, so the password, one-time password, and any challenge are
+    Signs in to Amazon in a **visible** browser window, so the password, one-time passcode, and any challenge are
     entered on Amazon's own page and never reach ``amazon-orders``. Once the sign-in completes, the browser's Amazon
     cookies become the session and are persisted, so later calls need no credentials.
 
