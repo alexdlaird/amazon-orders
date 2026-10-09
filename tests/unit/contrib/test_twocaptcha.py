@@ -192,4 +192,4 @@ class TestTwoCaptchaWafForm(UnitTestCase):
         with patch.dict(sys.modules, {"twocaptcha": None}):
             with self.assertRaises(AmazonOrdersError) as cm:
                 form._solve_token("https://www.amazon.com/login", goku, challenge_script)
-        self.assertIn("2captcha-python", str(cm.exception))
+        self.assertIn("pip install amazon-orders[2captcha]", str(cm.exception))

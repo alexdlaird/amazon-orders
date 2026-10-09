@@ -150,7 +150,7 @@ class AuthForm(ABC):
             if AmazonCaptcha is None:
                 self.amazon_session.io.echo(
                     "Info: Captcha auto-solve is unavailable. Install with "
-                    "`pip install amazon-orders[captcha]` to enable it (only compatible with Python <=3.12.")
+                    "`pip install amazon-orders[captcha]` to enable it (only compatible with Python <=3.12).")
             else:
                 self.amazon_session.io.echo("Info: The Captcha couldn't be auto-solved.")
 

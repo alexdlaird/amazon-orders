@@ -175,4 +175,4 @@ class TestAntiCaptchaWafForm(UnitTestCase):
         with patch.dict(sys.modules, {"anticaptchaofficial.amazonproxyless": None}):
             with self.assertRaises(AmazonOrdersError) as cm:
                 form._solve_token("https://www.amazon.com/login", goku, challenge_script)
-        self.assertIn("anticaptchaofficial", str(cm.exception).lower())
+        self.assertIn("pip install amazon-orders[anticaptcha]", str(cm.exception))

@@ -101,6 +101,27 @@ to the ``history`` CLI command), since by default it is ``False`` (enabling it s
 request for each order is necessary). Have a look at the :class:`~amazonorders.entity.order.Order` entity's docs to see
 what fields are only populated with full details.
 
+Secure Sign-In
+--------------
+
+The most secure way to use ``amazon-orders`` is to sign in on Amazon's own page, in a browser window, so your password,
+one-time password, and any challenge never reach ``amazon-orders``:
+
+.. code:: sh
+
+    amazon-orders login --browser
+
+The session is persisted, so neither the CLI nor the Python API needs credentials:
+
+.. code:: python
+
+    from amazonorders.session import AmazonSession
+
+    amazon_session = AmazonSession()
+    amazon_session.login()
+
+See :doc:`browser` for details.
+
 Command Line Usage
 ------------------
 

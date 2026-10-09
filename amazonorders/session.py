@@ -206,8 +206,7 @@ class AmazonSession:
         if persist_cookies:
             cookies = dict_from_cookiejar(self.session.cookies)
             with cookies_file_lock:
-                with open(self.config.cookie_jar_path, "w", encoding="utf-8") as f:
-                    f.write(json.dumps(cookies))
+                self._write_cookie_jar(cookies)
 
         if self.debug:
             url_str = ""
@@ -327,10 +326,16 @@ class AmazonSession:
             cookies = dict_from_cookiejar(self.session.cookies)
             for cookie in self.config.constants.COOKIES_SET_WHEN_AUTHENTICATED:
                 cookies.pop(cookie, None)
-            with open(self.config.cookie_jar_path, "w") as f:
-                f.write(json.dumps(cookies))
+            self._write_cookie_jar(cookies)
 
         self.is_authenticated = False
+
+    def _write_cookie_jar(self,
+                          cookies: Dict[str, str]) -> None:
+        file_descriptor = os.open(self.config.cookie_jar_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(file_descriptor, "w", encoding="utf-8") as f:
+            f.write(json.dumps(cookies))
+        os.chmod(self.config.cookie_jar_path, 0o600)
 
     def build_response_error(self,
                              response: Response) -> str:

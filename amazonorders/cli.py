@@ -15,6 +15,7 @@ from click.core import Context
 
 from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.contrib.browser.playwright import PlaywrightBrowserLogin
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError, AmazonOrdersAuthRedirectError
 from amazonorders.gift_cards import AmazonGiftCards
 from amazonorders.orders import AmazonOrders
@@ -440,7 +441,10 @@ def check_session(ctx: Context) -> None:
 
 @amazon_orders_cli.command()
 @click.pass_context
-def login(ctx: Context) -> None:
+@click.option("--browser", is_flag=True, default=False,
+              help="Sign in with a browser window, so credentials are entered on Amazon's own page and never reach "
+                   "amazon-orders. Requires the browser extra.")
+def login(ctx: Context, **kwargs: Any) -> None:
     """
     Login to establish an Amazon session and cookies.
     """
@@ -450,7 +454,14 @@ def login(ctx: Context) -> None:
         click.echo(
             "Info: A persisted session exists. Call the `logout` command first to change users.\n")
     else:
-        _authenticate(amazon_session)
+        try:
+            if kwargs["browser"]:
+                PlaywrightBrowserLogin(amazon_session).login()
+            else:
+                _authenticate(amazon_session)
+        except AmazonOrdersError as e:
+            logger.debug("An error occurred.", exc_info=True)
+            ctx.fail(str(e))
 
         click.echo("Info: Successfully logged in to Amazon, session persisted.\n")
 
