@@ -141,6 +141,17 @@ max-line-length = 119
 statistics = true
 exclude = "scripts/*,docs/*,venv/*,build/*,dist/*,.egg-info/*,.mypy_cache/*,.claude/*"
 
+[tool.mypy]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_subclassing_any = true
+warn_redundant_casts = true
+warn_unreachable = true
+warn_unused_configs = true
+strict_equality = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "redundant-self", "truthy-bool", "unused-awaitable"]
+
 [[tool.mypy.overrides]]
 module = "amazoncaptcha.*"
 ignore_missing_imports = true

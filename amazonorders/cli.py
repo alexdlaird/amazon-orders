@@ -316,7 +316,7 @@ def order_transactions(ctx: Context,
               help="The number of days of Transactions to get.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
-def transactions(ctx: Context, **kwargs: Any):
+def transactions(ctx: Context, **kwargs: Any) -> None:
     """
     Get Amazon Transaction history for a given number of days.
     """

@@ -401,7 +401,8 @@ class AmazonSession:
         session.mount('https://', adapter)
         return session
 
-    def _process_forms(self, last_response):
+    def _process_forms(self,
+                       last_response: AmazonSessionResponse) -> Optional[AmazonSessionResponse]:
         for form in self.auth_forms:
             if form.select_form(self, last_response.parsed):
                 form.fill_form()
@@ -409,7 +410,7 @@ class AmazonSession:
 
         return None
 
-    def _provision_cookies(self):
+    def _provision_cookies(self) -> None:
         last_response = None
         attempts = 0
         # We have to retry for stability here, to ensure Amazon returns us the desktop version of the site; if we
