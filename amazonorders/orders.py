@@ -6,13 +6,14 @@ import concurrent.futures
 import datetime
 import logging
 from typing import Any, Callable, List, Optional
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from bs4 import BeautifulSoup, Tag
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
+from amazonorders.entity.tracking import Tracking
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError
 from amazonorders.session import AmazonSession
 
@@ -130,6 +131,60 @@ class AmazonOrders:
             raise AmazonOrdersError(f"Could not parse details for Order {order_id}. Check if Amazon changed the HTML.")
 
         return order
+
+    @classmethod
+    def parse_tracking(cls,
+                       html: str,
+                       config: AmazonOrdersConfig) -> Tracking:
+        """
+        Parse an already-fetched Amazon package tracking page into a Tracking, without a session driving the
+        fetch. Useful for parsing HTML obtained elsewhere and for network-free testing.
+
+        :param html: The package tracking page HTML to parse.
+        :param config: The config providing the selectors used for parsing.
+        :return: The parsed Tracking. Its fields are ``None`` on a page that only shows the delivery
+            milestones (no carrier tracking).
+        """
+        parsed = BeautifulSoup(html, config.bs4_parser)
+        tracking = cls._parse_tracking(parsed, config)
+        if not tracking:
+            raise AmazonOrdersError("Could not parse package tracking. Check if Amazon changed the HTML.")
+        return tracking
+
+    def get_tracking(self,
+                     order_id: str,
+                     shipment_id: str) -> Tracking:
+        """
+        Get the carrier and tracking number of a Shipment from its package tracking page. This executes one
+        request per call.
+
+        :param order_id: The Amazon Order ID of the Shipment.
+        :param shipment_id: The Shipment's :attr:`~amazonorders.entity.shipment.Shipment.shipment_id`.
+            Amazon stops showing the tracking link it comes from on older Orders.
+        :return: The requested Tracking. Its fields are ``None`` when the page only shows the delivery
+            milestones (no carrier tracking).
+        """
+        if not self.amazon_session.is_authenticated:
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
+
+        constants = self.config.constants
+        query = urlencode({constants.TRACKING_ORDER_ID_QUERY_PARAM: order_id,
+                           constants.SHIPMENT_ID_QUERY_PARAM: shipment_id,
+                           constants.TRACKING_PACKAGE_INDEX_QUERY_PARAM: 0})
+        tracking_response = self.amazon_session.get(f"{constants.TRACKING_URL}?{query}")
+        self.amazon_session.check_response(tracking_response)
+
+        response_url = tracking_response.response.url
+        if not response_url.startswith(constants.TRACKING_URL):
+            raise AmazonOrdersNotFoundError(f"Amazon redirected to {response_url}, which likely means Shipment "
+                                            f"{shipment_id} of Order {order_id} was not found.",
+                                            meta={"redirect_url": response_url})
+
+        tracking = self._parse_tracking(tracking_response.parsed, self.config)
+        if not tracking:
+            raise AmazonOrdersError(f"Could not parse package tracking for Shipment {shipment_id} of Order "
+                                    f"{order_id}. Check if Amazon changed the HTML.")
+        return tracking
 
     def get_invoice(self,
                     order_id: str) -> util.AmazonSessionResponse:
@@ -304,6 +359,23 @@ class AmazonOrders:
 
         return config.order_cls(order_details_tag, config, full_details=True, clone=clone,
                                 order_number=order_number)
+
+    @staticmethod
+    def _parse_tracking(parsed: Tag,
+                        config: AmazonOrdersConfig) -> Optional[Tracking]:
+        """
+        Build a Tracking from a package tracking page.
+
+        :param parsed: The parsed package tracking page.
+        :param config: The config providing the selectors.
+        :return: The parsed Tracking, or ``None`` if the page is not a package tracking page.
+        """
+        tracking_tag = util.select_one(parsed, config.selectors.TRACKING_ENTITY_SELECTOR)
+
+        if not tracking_tag:
+            return None
+
+        return Tracking(tracking_tag, config)
 
     async def _build_orders_async(self,
                                   next_page: Optional[str],

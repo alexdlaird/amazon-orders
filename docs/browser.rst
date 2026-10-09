@@ -41,6 +41,32 @@ Then install the Chromium browser binary:
 
     playwright install chromium
 
+Signing In with a Browser
+-------------------------
+
+Instead of giving ``amazon-orders`` your credentials, you can sign in on Amazon's own page, in a **visible** browser
+window. Your password, one-time password, and any challenge are entered there and never reach ``amazon-orders``,
+which only keeps the resulting session:
+
+.. code-block:: shell
+
+    amazon-orders login --browser
+
+Or from Python:
+
+.. code-block:: python
+
+    from amazonorders.contrib.browser.playwright import PlaywrightBrowserLogin
+    from amazonorders.session import AmazonSession
+
+    amazon_session = AmazonSession()
+    PlaywrightBrowserLogin(amazon_session).login()
+
+The session is persisted, so later calls need no credentials. When Amazon expires it, sign in again.
+
+Because it requires a display and a user at the keyboard, it is intended for local/interactive use only, not headless
+environments.
+
 Configuration
 -------------
 
@@ -102,7 +128,7 @@ browser window, lets you solve the WAF challenge yourself, and automatically har
 resulting cookies once the browser navigates away from the challenge page.
 
 Because it requires a display and a user at the keyboard, it is intended for local/interactive
-use only — not headless servers or CI.
+use only — not headless environments.
 
 Register it in your ``~/.config/amazonorders/config.yml``:
 

@@ -39,7 +39,7 @@ class CapSolverWafForm(AwsWafForm):
             import capsolver
         except ImportError as e:
             raise AmazonOrdersError(
-                "CapSolverWafForm requires the 'capsolver' package. "
+                "CapSolverWafForm requires the [capsolver] extra. "
                 "Install it with: `pip install amazon-orders[capsolver]`"
             ) from e
 
@@ -85,7 +85,7 @@ class CapSolverWafForm(AwsWafForm):
             import capsolver
         except ImportError as e:
             raise AmazonOrdersError(
-                "CapSolverWafForm requires the 'capsolver' package. "
+                "CapSolverWafForm requires the [capsolver] extra. "
                 "Install it with: `pip install amazon-orders[capsolver]`"
             ) from e
 

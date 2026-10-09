@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.7.1...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.8.0...HEAD)
+
+## [4.8.0](https://github.com/alexdlaird/amazon-orders/compare/4.7.1...4.8.0) - 2026-10-09
+
+### Added
+
+- `login --browser`, and `PlaywrightBrowserLogin`, to sign in on Amazon's own page in a browser window, so `amazon-orders` never needs to store or know your credentials.
+- `Tracking` entity, `AmazonOrders.get_tracking()` and `parse_tracking()`, and `Shipment.shipment_id`, for a Shipment's carrier and tracking number.
+
+### Fixed
+
+- Bug fixes and stability improvements.
 
 ## [4.7.1](https://github.com/alexdlaird/amazon-orders/compare/4.7.0...4.7.1) - 2026-10-07
 
@@ -14,7 +25,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- Headers passed to an `AmazonSession` request now take precedence over `BASE_HEADERS`.
 - Bug fixes and stability improvements.
 
 ## [4.7.0](https://github.com/alexdlaird/amazon-orders/compare/4.6.1...4.7.0) - 2026-10-06

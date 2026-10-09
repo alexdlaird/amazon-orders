@@ -15,6 +15,7 @@ from click.core import Context
 
 from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.contrib.browser.playwright import PlaywrightBrowserLogin
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthError, AmazonOrdersAuthRedirectError
 from amazonorders.gift_cards import AmazonGiftCards
 from amazonorders.orders import AmazonOrders
@@ -72,7 +73,8 @@ def amazon_orders_cli(ctx: Context,
     to ensure its stability, but as Amazon provides no official API to use, this package may break at any time. Check
     for updates regularly to ensure you always have the latest stable release.
 
-    This package only officially supports the English, .com version of Amazon.
+    This package supports the English, .com version of Amazon. Other English Amazon sites can be targeted with
+    --domain, and other languages are supported through language packages.
 
     Documentation can be found at https://amazon-orders.readthedocs.io.
     """
@@ -315,7 +317,7 @@ def order_transactions(ctx: Context,
               help="The number of days of Transactions to get.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
-def transactions(ctx: Context, **kwargs: Any):
+def transactions(ctx: Context, **kwargs: Any) -> None:
     """
     Get Amazon Transaction history for a given number of days.
     """
@@ -439,7 +441,10 @@ def check_session(ctx: Context) -> None:
 
 @amazon_orders_cli.command()
 @click.pass_context
-def login(ctx: Context) -> None:
+@click.option("--browser", is_flag=True, default=False,
+              help="Sign in with a browser window, so credentials are entered on Amazon's own page and never reach "
+                   "amazon-orders. Requires the browser extra.")
+def login(ctx: Context, **kwargs: Any) -> None:
     """
     Login to establish an Amazon session and cookies.
     """
@@ -449,7 +454,14 @@ def login(ctx: Context) -> None:
         click.echo(
             "Info: A persisted session exists. Call the `logout` command first to change users.\n")
     else:
-        _authenticate(amazon_session)
+        try:
+            if kwargs["browser"]:
+                PlaywrightBrowserLogin(amazon_session).login()
+            else:
+                _authenticate(amazon_session)
+        except AmazonOrdersError as e:
+            logger.debug("An error occurred.", exc_info=True)
+            ctx.fail(str(e))
 
         click.echo("Info: Successfully logged in to Amazon, session persisted.\n")
 

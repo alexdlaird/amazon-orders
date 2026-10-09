@@ -7,10 +7,19 @@ languages comes from separately published language packages. A language package 
 currency formats, and Transactions page handling ``amazon-orders`` uses to parse Amazon's pages, all through the
 config.
 
+Other English Amazon sites don't need a language package: set the ``domain`` config option (or pass ``--domain`` on
+the CLI). URLs, headers, the currency symbol, and sign-in values adjust for known domains, and anything else a site
+needs can be overridden by subclassing :class:`~amazonorders.constants.Constants` and setting ``constants_class``.
+
 .. note::
 
     Language packages are built, published, and maintained by their own authors, not in this repo. See
     `Getting Listed`_ to have yours added to these docs.
+
+Available Language Packages
+---------------------------
+
+- None yet. Be the first! See `Building a Language Package`_ to get started.
 
 Configuration
 -------------
@@ -123,7 +132,7 @@ placeholder text.
 Compatibility
 -------------
 
-Starting with ``amazon-orders`` 4.7.0, everything a language package relies on is considered public API:
+Starting with ``amazon-orders`` 4.7.0, everything a language package relies on is kept stable:
 
 - Attributes and methods on ``Selectors`` and ``Constants`` without a leading underscore
 - ``TransactionsPage.get_page`` and ``TransactionsPage.parse_page``, and ``Transaction.from_fields``
@@ -141,20 +150,19 @@ Testing
   :func:`~amazonorders.orders.AmazonOrders.parse_order_history`,
   :func:`~amazonorders.orders.AmazonOrders.parse_order_details`, and
   :func:`~amazonorders.transactions.AmazonTransactions.parse_transactions`.
-- Run a nightly integration test against the live site in your own repo, with the account's credentials stored as
-  secrets, so a change on Amazon's side is caught before your users find it. The
+- Run a nightly integration test against the live site from your language package's own repo, with the account's
+  credentials stored as secrets, so a change on Amazon's side is caught before your users find it. Start from the
   `integration.yml <https://github.com/alexdlaird/amazon-orders/blob/main/.github/workflows/integration.yml>`_
-  workflow in ``amazon-orders`` is a working example.
+  workflow in ``amazon-orders``.
 
 Getting Listed
 --------------
 
 Once your language package is published and its nightly run is passing,
 `request a link <https://github.com/alexdlaird/amazon-orders/issues/new?template=new-language.yml>`_ and we'll add it
-below. If its nightly run keeps failing for more than 30 days, or its maintainers don't respond to an issue about it
-within 30 days, it will be removed. It can be listed again once it's passing.
-
-No language packages have been listed yet.
+to `Available Language Packages`_. A listed package stays listed while it's maintained: its nightly run keeps passing,
+and issues about it get a response. If its nightly run stays broken, or an issue goes unanswered, for more than 30
+days, we'll pause the listing until it's back on track.
 
 If something your language package needs to override isn't exposed, please
 `open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=enhancement&projects=&template=enhancement.yml>`_

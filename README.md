@@ -9,10 +9,9 @@
 
 `amazon-orders` is an unofficial library that provides a Python API (and CLI) for Amazon order history, line items, and transactions.
 
-Only the English, `.com` version of Amazon is officially supported. Other Amazon domains can be
-targeted by passing `domain` to [`AmazonSession`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession)
-(or `--domain` on the CLI), and other English-based sites may work by chance — see
-[Known Limitations](https://amazon-orders.readthedocs.io/index.html#known-limitations) for details.
+`amazon-orders` core supports Amazon's English `.com` site, validated nightly. Other English Amazon sites can be
+targeted with the `domain` config option, and other languages plug in through
+[language packages](https://amazon-orders.readthedocs.io/language-packages.html).
 
 > **Note:** This package works by parsing data from Amazon's consumer-facing website. A periodic build validates
 > functionality to ensure its stability, but as Amazon provides no official API to use, older versions of this
@@ -28,7 +27,7 @@ pip install amazon-orders --upgrade
 
 That's it! `amazon-orders` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (ex. `==4.7.*`, not `==4.7.0`) to
+If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (ex. `==4.8.*`, not `==4.8.0`) to
 ensure you always get the latest stable release.
 
 ## Basic Usage
@@ -64,6 +63,26 @@ If the fields you're looking for aren't populated with the above, set `full_deta
 the `history` CLI command), since by default it is `False` (enabling it slows down querying, since an additional
 request for each order is necessary). Have a look at the [Order](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order) entity's docs to see what fields are only
 populated with full details.
+
+### Secure Sign-In
+
+The most secure way to use `amazon-orders` is to sign in on Amazon's own page, in a browser window, so your password,
+one-time password, and any challenge never reach `amazon-orders`:
+
+```sh
+amazon-orders login --browser
+```
+
+The session is persisted, so neither the CLI nor the Python API needs credentials:
+
+```python
+from amazonorders.session import AmazonSession
+
+amazon_session = AmazonSession()
+amazon_session.login()
+```
+
+See [Browser Automation](https://amazon-orders.readthedocs.io/browser.html#signing-in-with-a-browser) for details.
 
 ### Command Line Usage
 
@@ -124,6 +143,14 @@ pip install amazon-orders[captcha]
 ```
 
 See [Login Challenges](https://amazon-orders.readthedocs.io/troubleshooting.html#login-challenges) for details.
+
+### Languages and Regions
+
+`amazon-orders` core supports the English `.com` site, validated nightly.
+
+- **Other English sites** (e.g. `amazon.ca`, `amazon.co.uk`): set the `domain` config option.
+- **Other languages**: install a language package and set `language_package`. See
+  [Language Packages](https://amazon-orders.readthedocs.io/language-packages.html).
 
 ## Documentation
 

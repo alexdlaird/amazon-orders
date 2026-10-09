@@ -225,7 +225,7 @@ class AmazonOrdersConfig:
         try:
             BeautifulSoup("", str(self._data["bs4_parser"]))
         except FeatureNotFound:
-            logger.debug(
+            logger.warning(
                 f"Configured bs4_parser '{self._data['bs4_parser']}' is unavailable; "
                 f"using the default 'html.parser'. To use it, install the parser "
                 f"(e.g. `pip install amazon-orders[lxml]`)."

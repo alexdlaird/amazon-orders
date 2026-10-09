@@ -161,7 +161,7 @@ class UnitTestCase(TestCase):
                                                    method=responses.GET):
         return responses.add(
             method,
-            re.compile(f"{self.test_config.constants.BASE_URL}/(gp|cpe|gc|your-orders)/.*"),
+            re.compile(f"{self.test_config.constants.BASE_URL}/(gp|cpe|gc|your-orders|progress-tracker)/.*"),
             status=302,
             headers={"Location": self.test_config.constants.SIGN_IN_URL}
         )

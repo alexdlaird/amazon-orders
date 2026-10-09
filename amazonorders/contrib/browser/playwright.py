@@ -6,15 +6,17 @@ import json
 import logging
 import os
 import re
+import sys
+import time
 from abc import abstractmethod
-from typing import Any, Dict, Optional, TYPE_CHECKING
-from urllib.parse import urlparse
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from urllib.parse import urlencode, urlparse
 
 from bs4 import Tag
 from requests import Response
 
 from amazonorders.conf import AmazonOrdersConfig
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersAuthRedirectError, AmazonOrdersError
 from amazonorders.forms import AuthForm
 from amazonorders.util import AmazonSessionResponse
 
@@ -25,6 +27,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 BODY_TEXT_LENGTH_JS = "() => (document.body && document.body.innerText || '').length"
+SIGN_IN_POLL_INTERVAL_MS = 2000
+SIGN_IN_SETTLE_MS = 2000
 
 
 class PlaywrightAuthForm(AuthForm):
@@ -78,6 +82,7 @@ class PlaywrightAuthForm(AuthForm):
 
         try:
             from playwright.sync_api import (  # type: ignore[import-not-found]
+                Error as PlaywrightError,
                 sync_playwright,
                 TimeoutError as PlaywrightTimeoutError,
             )
@@ -103,7 +108,15 @@ class PlaywrightAuthForm(AuthForm):
                     f"Unsupported browser: {browser_name!r}. "
                     f"Valid values: firefox, chromium."
                 )
-            browser = browser_launcher.launch(headless=self.headless)
+            try:
+                browser = browser_launcher.launch(headless=self.headless)
+            except PlaywrightError as e:
+                detail = str(e).partition("\n")[0]
+                raise AmazonOrdersError(
+                    f"Could not launch {browser_name}. If it is not installed, run: "
+                    f"`playwright install {browser_name}`. ({detail})"
+                ) from e
+
             context = browser.new_context()
 
             self._inject_cookies(context, original_url)
@@ -558,7 +571,7 @@ class PlaywrightManualWafForm(PlaywrightAuthForm):
 
     Because it opens a browser window it requires a display and a user at the
     keyboard, making it suitable for local/interactive use but not for headless
-    servers or CI.
+    environments.
 
     Detects the challenge via the ``window.gokuProps`` blob and the
     ``challenge.js`` script tag (same signals as
@@ -614,3 +627,142 @@ class PlaywrightManualWafForm(PlaywrightAuthForm):
 
     def _is_challenge_url(self, url: str, original_url: str) -> bool:
         return url.split("?")[0] == original_url.split("?")[0]
+
+
+class PlaywrightBrowserLogin:
+    """
+    Signs in to Amazon in a **visible** browser window, so the password, one-time password, and any challenge are
+    entered on Amazon's own page and never reach ``amazon-orders``. Once the sign-in completes, the browser's Amazon
+    cookies become the session and are persisted, so later calls need no credentials.
+
+    Because it opens a browser window it requires a display and a user at the keyboard, making it suitable for
+    local/interactive use but not for headless environments.
+
+    Requires the ``[browser]`` extra: ``pip install amazon-orders[browser]``, then ``playwright install chromium``.
+    """
+
+    def __init__(self,
+                 amazon_session: "AmazonSession") -> None:
+        #: The session to sign in.
+        self.amazon_session: "AmazonSession" = amazon_session
+        #: The config to use.
+        self.config: AmazonOrdersConfig = amazon_session.config
+        #: Whether to launch the browser in headless mode. Defaults to ``False``, since a person completes the
+        #: sign-in. Only meant to be changed for automated testing.
+        self.headless: bool = False
+
+    def login(self,
+              timeout: int = 300) -> None:
+        """
+        Open a browser window at Amazon's sign-in page, wait for the sign-in to be completed there, then persist the
+        resulting session. On success, ``is_authenticated`` is set to ``True`` on the session.
+
+        :param timeout: The number of seconds to wait for the sign-in to be completed.
+        :raises AmazonOrdersError: If the ``[browser]`` extra is not installed, there is no display, the browser stops
+            or the timeout passes before the sign-in completes, or Amazon does not accept the browser's session.
+        """
+        try:
+            from playwright.sync_api import (  # type: ignore[import-not-found]
+                Error as PlaywrightError,
+                sync_playwright,
+            )
+        except ImportError as e:
+            raise AmazonOrdersError(
+                f"{type(self).__name__} requires the [browser] extra. "
+                "Install it with: `pip install amazon-orders[browser]`, then: `playwright install chromium`"
+            ) from e
+
+        self._require_display()
+
+        constants = self.config.constants
+        sign_in_url = f"{constants.SIGN_IN_URL}?{urlencode(constants.SIGN_IN_QUERY_PARAMS)}"
+        browser_name = self.config.browser or "chromium"
+
+        with sync_playwright() as pw:
+            browser_launcher = getattr(pw, browser_name, None)
+            if browser_launcher is None:
+                raise AmazonOrdersError(
+                    f"Unsupported browser: {browser_name!r}. "
+                    f"Valid values: firefox, chromium."
+                )
+
+            try:
+                browser = browser_launcher.launch(headless=self.headless)
+            except PlaywrightError as e:
+                detail = str(e).partition("\n")[0]
+                raise AmazonOrdersError(
+                    f"Could not launch {browser_name}. If it is not installed, run: "
+                    f"`playwright install {browser_name}`. ({detail})"
+                ) from e
+
+            try:
+                context = browser.new_context()
+                page = context.new_page()
+                page.goto(sign_in_url)
+
+                message = ("Info: A browser window has opened. Sign in to Amazon there, and this will continue "
+                           "once you're signed in.")
+                logger.info(message)
+                self.amazon_session.io.echo(message)
+
+                self._wait_for_sign_in(context, page, timeout)
+                page.wait_for_timeout(SIGN_IN_SETTLE_MS)
+                self._harvest_cookies(context)
+            except PlaywrightError as e:
+                raise AmazonOrdersError(f"The browser stopped before sign-in completed: {e}") from e
+            finally:
+                browser.close()
+
+        self._verify_session()
+
+    def _require_display(self) -> None:
+        if (not self.headless and sys.platform.startswith("linux") and
+                not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))):
+            raise AmazonOrdersError("Signing in with a browser requires a display, and this machine doesn't have one.")
+
+    def _wait_for_sign_in(self,
+                          context: Any,
+                          page: Any,
+                          timeout: int) -> None:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if self._is_signed_in(context.cookies()):
+                return
+
+            page.wait_for_timeout(SIGN_IN_POLL_INTERVAL_MS)
+
+        raise AmazonOrdersError(f"Timed out after {timeout} seconds waiting for sign-in to complete in the browser.")
+
+    def _is_signed_in(self,
+                      cookies: List[Dict[str, Any]]) -> bool:
+        cookie_names = {cookie["name"] for cookie in self._amazon_cookies(cookies)}
+
+        return all(name in cookie_names for name in self.config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
+
+    def _amazon_cookies(self,
+                        cookies: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        base_domain = (urlparse(self.config.constants.BASE_URL).hostname or "").removeprefix("www.")
+
+        return [cookie for cookie in cookies if self._is_domain_or_subdomain(cookie["domain"], base_domain)]
+
+    @staticmethod
+    def _is_domain_or_subdomain(domain: str,
+                                parent_domain: str) -> bool:
+        return f".{domain.lstrip('.')}".endswith(f".{parent_domain}")
+
+    def _harvest_cookies(self,
+                         context: Any) -> None:
+        cookie_jar = self.amazon_session.session.cookies
+        cookie_jar.clear()
+        for cookie in self._amazon_cookies(context.cookies()):
+            cookie_jar.set(cookie["name"], cookie["value"], domain=cookie["domain"], path=cookie.get("path", "/"))
+
+    def _verify_session(self) -> None:
+        try:
+            response = self.amazon_session.get(self.config.constants.ORDER_HISTORY_URL, persist_cookies=True)
+            self.amazon_session.check_response(response)
+        except AmazonOrdersAuthRedirectError as e:
+            raise AmazonOrdersAuthError("Amazon did not accept the browser's session when it was used outside the "
+                                        "browser. Try signing in again.") from e
+
+        self.amazon_session.is_authenticated = True

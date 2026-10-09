@@ -39,7 +39,7 @@ class AntiCaptchaWafForm(AwsWafForm):
             from anticaptchaofficial.amazonproxyless import amazonProxyless
         except ImportError as e:
             raise AmazonOrdersError(
-                "AntiCaptchaWafForm requires the 'anticaptchaofficial' package. "
+                "AntiCaptchaWafForm requires the [anticaptcha] extra. "
                 "Install it with: `pip install amazon-orders[anticaptcha]`"
             ) from e
 

@@ -85,7 +85,7 @@ class Order(Parsable):
             suffix_split_fuzzy=True,
             parse_date=True)
         #: The Order Recipients.
-        self.recipient: Recipient = clone.recipient if clone else self.safe_parse(self._parse_recipient)
+        self.recipient: Optional[Recipient] = clone.recipient if clone else self.safe_parse(self._parse_recipient)
         #: The number of items in the purchase, when Amazon summarizes the count instead of listing the items
         #: (e.g. Whole Foods Market orders show "N items in this purchase"). ``None`` when no such summary is shown.
         self.item_count: Optional[int] = clone.item_count if clone else self.safe_parse(self._parse_item_count)

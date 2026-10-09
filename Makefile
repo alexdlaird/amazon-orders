@@ -73,16 +73,15 @@ check: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev,docs]"; \
-		mypy amazonorders; \
-		flake8; \
+		mypy amazonorders && flake8; \
 	)
 
 local:
 	@rm -rf *.egg-info dist
 	@( \
-		$(PYTHON_BIN) -m pip install --upgrade pip; \
-        $(PYTHON_BIN) -m pip install --upgrade build; \
-		$(PYTHON_BIN) -m build; \
+		$(PYTHON_BIN) -m pip install --upgrade pip && \
+        $(PYTHON_BIN) -m pip install --upgrade build && \
+		$(PYTHON_BIN) -m build && \
 		$(PYTHON_BIN) -m pip install "$$(ls dist/*.tar.gz)"; \
 	)
 
@@ -94,7 +93,7 @@ validate-release:
 
 upload: local
 	@( \
-        $(PYTHON_BIN) -m pip install --upgrade twine; \
-		$(PYTHON_BIN) -m build; \
+        $(PYTHON_BIN) -m pip install --upgrade twine && \
+		$(PYTHON_BIN) -m build && \
 		$(PYTHON_BIN) -m twine upload dist/*; \
 	)

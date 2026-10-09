@@ -7,7 +7,7 @@ body:
 - type: markdown
   attributes:
     value: |
-      Languages other than English are provided by separately published language packages, not by `amazon-orders` itself, so pull requests that add a language won't be accepted. Use this form once your package is published, to request that we link to it from the docs. See the [Contribution Guide](https://github.com/alexdlaird/amazon-orders/blob/main/CONTRIBUTING.rst) for details.
+      Languages other than English are provided by separately published language packages, not by `amazon-orders` itself, so pull requests that add a language won't be accepted. Use this form once your package is published, to request that we link to it from the docs. See [Getting Listed](https://amazon-orders.readthedocs.io/language-packages.html#getting-listed) for the requirements.
 
 - type: checkboxes
   id: ack
@@ -22,7 +22,7 @@ body:
       required: true
     - label: The package's tests use real Amazon pages (anonymized), not generated ones
       required: true
-    - label: I will maintain the package, and keep it working as Amazon changes the site
+    - label: I will maintain the package, keeping its nightly run passing and responding to issues as Amazon changes the site
       required: true
 
 - type: input
@@ -63,6 +63,7 @@ body:
   attributes:
     label: Nightly Integration Run
     description: A link to the workflow (or its status badge) that runs the integration test nightly.
+    placeholder: https://github.com/.../actions/workflows/integration.yml
   validations:
     required: true
 
