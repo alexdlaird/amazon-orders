@@ -71,8 +71,9 @@ Basic Usage
 ===========
 
 You'll use :class:`~amazonorders.session.AmazonSession` to authenticate your Amazon account, then
-:class:`~amazonorders.orders.AmazonOrders` and :class:`~amazonorders.transactions.AmazonTransactions` to interact with
-account data. :func:`~amazonorders.orders.AmazonOrders.get_order_history` and
+:class:`~amazonorders.orders.AmazonOrders`, :class:`~amazonorders.transactions.AmazonTransactions`, and
+:class:`~amazonorders.gift_cards.AmazonGiftCards` to interact with account data.
+:func:`~amazonorders.orders.AmazonOrders.get_order_history` and
 :func:`~amazonorders.orders.AmazonOrders.get_order` are good places to start.
 
 .. code:: python
@@ -133,23 +134,6 @@ You can also run any command available to the main Python interface from the com
     amazon-orders history --year 2023
     amazon-orders history --last-30-days
     amazon-orders history --last-3-months
-
-Gift Cards
-----------
-
-:class:`~amazonorders.gift_cards.AmazonGiftCards` reads the Gift Card balance and its activity, such as
-Gift Cards applied to Orders, claim code redemptions, Reloads, and refunds.
-
-.. code:: python
-
-    from amazonorders.gift_cards import AmazonGiftCards
-
-    amazon_gift_cards = AmazonGiftCards(amazon_session)
-
-    balance = amazon_gift_cards.get_balance()
-    activity = amazon_gift_cards.get_gift_card_activity(days=365)
-
-The same is available from the ``gift-card-balance`` and ``gift-card-activity`` CLI commands.
 
 Output Formats
 --------------
