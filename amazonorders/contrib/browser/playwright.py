@@ -631,9 +631,17 @@ class PlaywrightManualWafForm(PlaywrightAuthForm):
 
 class PlaywrightBrowserLogin:
     """
-    Signs in to Amazon in a **visible** browser window, so the password, one-time passcode, and any challenge are
-    entered on Amazon's own page and never reach ``amazon-orders``. Once the sign-in completes, the browser's Amazon
-    cookies become the session and are persisted, so later calls need no credentials.
+    Signs in to Amazon on Amazon's own page, in a **visible** browser window, so ``amazon-orders`` never needs to store
+    your credentials. Once the sign-in completes, the browser's Amazon cookies become the session and are persisted, so
+    later calls need no credentials.
+
+    .. code-block:: python
+
+        from amazonorders.contrib.browser.playwright import PlaywrightBrowserLogin
+        from amazonorders.session import AmazonSession
+
+        amazon_session = AmazonSession()
+        PlaywrightBrowserLogin(amazon_session).login()
 
     Because it opens a browser window it requires a display and a user at the keyboard, making it suitable for
     local/interactive use but not for headless environments.

@@ -9,10 +9,6 @@
 
 `amazon-orders` is an unofficial library that provides a Python API (and CLI) for Amazon order history, line items, and transactions.
 
-`amazon-orders` core supports Amazon's English `.com` site, validated nightly. Other English Amazon sites can be
-targeted with the `domain` config option, and other languages plug in through
-[language packages](https://amazon-orders.readthedocs.io/language-packages.html).
-
 > **Note:** This package works by parsing data from Amazon's consumer-facing website. A periodic build validates
 > functionality to ensure its stability, but as Amazon provides no official API to use, older versions of this
 > package may break at any time, so it's recommended that you use the latest version.
@@ -27,7 +23,7 @@ pip install amazon-orders --upgrade
 
 That's it! `amazon-orders` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (ex. `==4.8.*`, not `==4.8.0`) to
+If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (e.g. `==4.8.*`, not `==4.8.0`) to
 ensure you always get the latest stable release.
 
 ## Basic Usage
@@ -65,10 +61,50 @@ the `history` CLI command), since by default it is `False` (enabling it slows do
 request for each order is necessary). Have a look at the [Order](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.order.Order) entity's docs to see what fields are only
 populated with full details.
 
+### Command Line Usage
+
+You can also run any command available to the main Python interface from the command line:
+
+```sh
+amazon-orders login
+amazon-orders history --year 2023
+amazon-orders history --last-30-days
+amazon-orders history --last-3-months
+```
+
+### Output Formats
+
+The `history`, `order`, `transactions`, `order-transactions`, and `gift-card-activity` commands accept
+`--output`, which renders Orders, Transactions, and Gift Card activity as `text` (the default), `json`,
+`yaml`, or `csv`. Progress messages are written to `stderr`, so redirecting `stdout` captures only the data.
+
+```sh
+amazon-orders history --year 2023 --output json > orders.json
+amazon-orders history --last-30-days --output csv > orders.csv
+```
+
+To serialize from Python instead, every entity has [`to_dict()`](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.parsable.Parsable.to_dict),
+which converts it and its nested entities to a `dict` of primitives.
+
+```python
+import json
+
+from amazonorders.orders import AmazonOrders
+
+amazon_orders = AmazonOrders(amazon_session)
+orders = amazon_orders.get_order_history(year=2023)
+
+# [{"order_number": "112-9685975-5907428", "grand_total": 35.98, ...}]
+print(json.dumps([order.to_dict() for order in orders], indent=2))
+```
+
+See [`OutputFormatter`](https://amazon-orders.readthedocs.io/api.html#amazonorders.output.OutputFormatter) for each format's contract, and to override how
+entities are rendered.
+
 ### Secure Sign-In
 
-The most secure way to use `amazon-orders` is to sign in on Amazon's own page, in a browser window, so your password,
-one-time passcode, and any challenge never reach `amazon-orders`:
+The most secure way to use `amazon-orders` is to sign in on Amazon's own page, in a browser window, so `amazon-orders`
+never needs to store your credentials:
 
 ```sh
 amazon-orders login --browser
@@ -83,28 +119,7 @@ amazon_session = AmazonSession()
 amazon_session.login()
 ```
 
-See [Browser Automation](https://amazon-orders.readthedocs.io/browser.html#signing-in-with-a-browser) for details.
-
-### Command Line Usage
-
-You can also run any command available to the main Python interface from the command line:
-
-```sh
-amazon-orders login
-amazon-orders history --year 2023
-amazon-orders history --last-30-days
-amazon-orders history --last-3-months
-```
-
-Pass `--output` to get `json`, `yaml`, or `csv` instead of the default text:
-
-```sh
-amazon-orders history --year 2023 --output json > orders.json
-amazon-orders history --last-30-days --output csv > orders.csv
-```
-
-See [Output Formats](https://amazon-orders.readthedocs.io/index.html#output-formats) for details, including
-[`to_dict()`](https://amazon-orders.readthedocs.io/api.html#amazonorders.entity.parsable.Parsable.to_dict).
+This requires a display and the `browser` extra (see [Browser Automation](https://amazon-orders.readthedocs.io/browser.html#installation) to install it).
 
 ### Automating Authentication
 
@@ -115,39 +130,11 @@ environment variables `amazon-orders` looks for are:
 
 - `AMAZON_USERNAME`
 - `AMAZON_PASSWORD`
-- `AMAZON_OTP_SECRET_KEY` (see [docs for usage](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key))
-
-To enable **WAF auto-solve** via a third-party integration, install with the relevant extra:
-
-```sh
-pip install amazon-orders[capsolver]
-pip install amazon-orders[anticaptcha]
-pip install amazon-orders[2captcha]
-```
-
-See [Solving WAF Challenges](https://amazon-orders.readthedocs.io/waf.html) for details.
-
-To enable **browser-based challenge handling** (ACIC and JavaScript bot-detection pages) via
-a headless browser, install with the `browser` extra:
-
-```sh
-pip install amazon-orders[browser]
-playwright install chromium
-```
-
-See [Browser Automation](https://amazon-orders.readthedocs.io/browser.html) for details.
-
-For **legacy Captcha auto-solve** on Python <=3.12, install with `captcha` extra:
-
-```sh
-pip install amazon-orders[captcha]
-```
-
-See [Login Challenges](https://amazon-orders.readthedocs.io/troubleshooting.html#login-challenges) for details.
+- `AMAZON_OTP_SECRET_KEY` (see [`otp_secret_key`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key))
 
 ### Languages and Regions
 
-`amazon-orders` core supports the English `.com` site, validated nightly.
+`amazon-orders` core supports the English `.com` site.
 
 - **Other English sites** (e.g. `amazon.ca`, `amazon.co.uk`): set the `domain` config option.
 - **Other languages**: install a language package and set `language_package`. See
@@ -156,7 +143,9 @@ See [Login Challenges](https://amazon-orders.readthedocs.io/troubleshooting.html
 ## Documentation
 
 For more advanced usage, `amazon-orders`'s official documentation is available
-at [Read the Docs](http://amazon-orders.readthedocs.io).
+at [Read the Docs](http://amazon-orders.readthedocs.io), including
+[handling login challenges](https://amazon-orders.readthedocs.io/index.html#handling-challenges) (AWS WAF and JavaScript
+checks, with optional extras) and [troubleshooting](https://amazon-orders.readthedocs.io/troubleshooting.html).
 
 ## Contributing
 
