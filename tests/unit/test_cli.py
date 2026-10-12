@@ -18,6 +18,7 @@ from amazonorders.cli import _invoice_pdf_path, amazon_orders_cli
 from amazonorders.entity.invoice_pdf import InvoicePdf
 from amazonorders.entity.order import Order
 from amazonorders.entity.parsable import Parsable
+from amazonorders.entity.prime_payment import PrimePayment
 from amazonorders.entity.transaction import Transaction
 from amazonorders.exception import AmazonOrdersBrowserNotInstalledError
 from amazonorders.output import OutputFormatter
@@ -722,7 +723,11 @@ class TestCli(UnitTestCase):
         self.assertEqual(0, response.exit_code)
         self.assertEqual(1, resp.call_count)
         self.assert_login_responses_success()
-        self.assertIn("PrimePayment 2025-11-17: Order #D01-1000008-2000008, Total: 148.38", response.output)
+        self.assertIn("Prime Payment: 2025-11-17\n  Order #D01-1000008-2000008\n  Total: $148.38\n"
+                      "  Order Details Link: https://www.amazon.com/gp/your-account/order-details"
+                      "?orderID=D01-1000008-2000008\n"
+                      "  Receipt Link: https://www.amazon.com/gp/digital/your-account/order-summary.html"
+                      "/ref=primecentral?ie=UTF8&orderID=D01-1000008-2000008&print=1", response.output)
         self.assertIn("8 Prime payments parsed", response.output)
 
     @responses.activate
@@ -1358,6 +1363,21 @@ class TestOutputFormatter(UnitTestCase):
 
         # THEN
         self.assertEqual("StubEntity: First\n\nStubEntity: Second\n", text)
+
+    def test_format_text_prime_payment_omits_missing_total(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "prime", "prime-payments.html"), "r", encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+        payment = PrimePayment(parsed.select_one(self.test_config.selectors.PRIME_PAYMENT_SELECTOR),
+                               self.test_config)
+        payment.total = None
+
+        # WHEN
+        text = self.given_formatter().format([payment], "text")
+
+        # THEN
+        self.assertIn("Prime Payment: 2025-11-17\n  Order #D01-1000008-2000008\n  Order Details Link: ", text)
+        self.assertNotIn("Total", text)
 
     def test_csv_flattens_nested_entities_and_lists(self):
         # GIVEN
