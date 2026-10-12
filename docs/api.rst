@@ -13,6 +13,12 @@ Main Interface
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.prime
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: amazonorders.transactions
     :members:
     :private-members:
@@ -115,6 +121,12 @@ Entities
     :show-inheritance:
 
 .. automodule:: amazonorders.entity.order
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: amazonorders.entity.prime_payment
     :members:
     :private-members:
     :undoc-members:

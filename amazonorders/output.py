@@ -13,6 +13,7 @@ from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.gift_card_activity import GiftCardActivity
 from amazonorders.entity.order import Order
 from amazonorders.entity.parsable import Parsable
+from amazonorders.entity.prime_payment import PrimePayment
 from amazonorders.entity.transaction import Transaction
 
 logger = logging.getLogger(__name__)
@@ -87,6 +88,8 @@ class OutputFormatter:
             return self.transaction_text(entity)
         elif isinstance(entity, GiftCardActivity):
             return self.gift_card_activity_text(entity)
+        elif isinstance(entity, PrimePayment):
+            return self.prime_payment_text(entity)
 
         return str(entity)
 
@@ -171,6 +174,26 @@ Order #{order_number}
             activity_str += f"\n  Order #{activity.order_number}"
 
         return activity_str
+
+    def prime_payment_text(self,
+                           payment: PrimePayment) -> str:
+        """
+        Render a PrimePayment as human-readable text.
+
+        :param payment: The PrimePayment to render.
+        :return: The PrimePayment as text.
+        """
+        payment_str = f"Prime Payment: {payment.payment_date}"
+        if payment.order_number:
+            payment_str += f"\n  Order #{payment.order_number}"
+        if payment.total is not None:
+            payment_str += f"\n  Total: {self.config.constants.format_currency(payment.total)}"
+        if payment.order_details_link:
+            payment_str += f"\n  Order Details Link: {payment.order_details_link}"
+        if payment.receipt_link:
+            payment_str += f"\n  Receipt Link: {payment.receipt_link}"
+
+        return payment_str
 
     def _csv(self,
              entities: List[Dict[str, Any]]) -> str:
