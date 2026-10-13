@@ -29,7 +29,8 @@ class Invoice(Parsable):
         self.order_number: Optional[str] = order_number
         #: The document's name, as Amazon lists it, e.g. ``Invoice``, ``Invoice 2``, or ``Credit note``.
         self.name: Optional[str] = self.safe_parse(self._parse_name)
-        #: The link to download the document.
+        #: The link to download the document. Amazon generates a new one on each request, so don't store it, get the
+        #: Order's invoices again instead.
         self.link: Optional[str] = self.safe_parse(self._parse_link)
         #: ``True`` if the document is a credit note (a refund) rather than an invoice.
         self.credit_note: bool = self.safe_parse(self._parse_credit_note) or False
