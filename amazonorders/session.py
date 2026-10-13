@@ -256,12 +256,11 @@ class AmazonSession:
             return
 
         domain = urlparse(self.config.constants.BASE_URL).hostname
-        # Replace, rather than add to, a cookie of the same name that Amazon (or the persisted cookie jar) set, since
-        # Amazon sets some, like the site's language, again on every response
-        for cookie in [cookie for cookie in self.session.cookies if cookie.name in request_cookies]:
-            self.session.cookies.clear(cookie.domain, cookie.path, cookie.name)
-        for name, value in request_cookies.items():
-            self.session.cookies.set(name, value, domain=domain, path="/")
+        with self.session.cookies._cookies_lock:  # type: ignore[attr-defined]
+            for cookie in [cookie for cookie in self.session.cookies if cookie.name in request_cookies]:
+                self.session.cookies.clear(cookie.domain, cookie.path, cookie.name)
+            for name, value in request_cookies.items():
+                self.session.cookies.set(name, value, domain=domain, path="/")
 
     def auth_cookies_stored(self) -> bool:
         cookies = dict_from_cookiejar(self.session.cookies)

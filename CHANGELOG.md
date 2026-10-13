@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- `Constants.REQUEST_COOKIES`, for a language package whose site picks its language from a cookie rather than from `Accept-Language`.
+- `Constants.REQUEST_COOKIES`, to send cookies with every request.
 
 ### Fixed
 

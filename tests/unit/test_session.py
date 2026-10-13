@@ -126,7 +126,6 @@ class TestSession(UnitTestCase):
             "cookie_jar_path": self.test_cookie_jar_path,
         })
         amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=config)
-        # Set by Amazon on every response, or loaded from a persisted cookie jar
         amazon_session.session.cookies.set("lc-acbde", "de_DE", domain=".amazon.de", path="/")
         amazon_session.session.cookies.set("session-id", "some-session-id", domain=".amazon.de", path="/")
         url = f"{config.constants.BASE_URL}/some/page"
