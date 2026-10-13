@@ -23,16 +23,21 @@ _PARSING_MODULES = (sorted(glob.glob(os.path.join(_PACKAGE_DIR, "entity", "*.py"
 _MESSAGE_CALLS = {"debug", "info", "warning", "error", "exception", "critical", "echo", "prompt", "input"}
 _DISPLAY_METHODS = {"__repr__", "__str__"}
 _PLUMBING_LITERALS = {
-    "", "\n", " ", " - (redirected) ", "&", "&startIndex=", "']", ".", "/",
+    "", "\n", " ", " ****", " - (redirected) ", "&", "&startIndex=", "']", ".", "/",
     "/(?:dp|gp/product|product)/([A-Z0-9]{10})(?:[/?]|$)", ": ", "://", "=", "?", "?orderID=", "?transactionTag=",
-    "AMAZON_OTP_SECRET_KEY", "AMAZON_PASSWORD", "AMAZON_USERNAME", "GET", "POST", "\\*+(\\d+)$", "\\*\\s*(\\d+)",
-    "^\\s*{count}\\s*$", "_parse_", "aa-challenge-page-captcha-container", "action", "alt", "choices", "config",
-    "cvf_captcha_input", "data", "data-a-popover", "deviceId", "domain", "email", "field-keywords", "headers",
-    "href", "http", "https://", "ie", "img", "index", "inlineContent", "input", "input[name='", "last30", "method",
-    "months-3", "name", "nav-item-signout", "next_page_url", "not solved", "otpCode", "otpDeviceContext", "params",
-    "parsed", "password", "ppw-widgetState", "r", "rememberDevice", "rememberMe", "simple_parse", "src", "timeout",
-    "true", "utf-8", "value", "w", "year-", "{page_name}_{index}.html", "{url}/{path}",
-    "{url}?{query_param}={filter_value}{optional_order_filter}{optional_start_index}", "{}",
+    "AMAZON_OTP_SECRET_KEY", "AMAZON_PASSWORD", "AMAZON_USERNAME", "Accept", "GET", "GetTransactions", "POST",
+    "Referer", "\\*+(\\d+)$", "\\*\\s*(\\d+)", "^\\s*{count}\\s*$", "_parse_", "aa-challenge-page-captcha-container",
+    "action", "alt", "application/json", "choices", "config", "cvf_captcha_input", "data", "data-a-popover",
+    "deviceId", "displayResponse", "domain", "email", "exclusiveStartKey", "field-keywords", "formattedAmount",
+    "formattedDate", "hasMore", "headers", "href", "http", "https://", "ie", "img", "index", "inlineContent", "input",
+    "input[name='", "last30", "lastDigits", "lastEvaluatedKey", "lastEvaluatedPageKey", "locale", "method",
+    "months-3", "name", "nav-item-signout", "next_page_url", "not solved", "orderData", "orderDetailsUrl",
+    "orderDisplayString", "otpCode", "otpDeviceContext", "pageProps", "params", "parsed", "password",
+    "paymentMethodDisplayStringData", "paymentMethodName", "paymentMethodNumber", "ppw-widgetState", "props", "r",
+    "rememberDevice", "rememberMe", "request", "simple_parse", "src", "state", "statementDescriptor", "timeout",
+    "token", "transactionList", "transactionResponseState", "transactionsList", "true", "type", "utf-8", "value",
+    "visibleTransactionResponse", "w", "widgetName", "x-amzn-upx-token", "year-", "{page_name}_{index}.html",
+    "{url}/{path}", "{url}?{query_param}={filter_value}{optional_order_filter}{optional_start_index}", "{}",
 }
 
 _ENGLISH_TO_LOREM_MONTHS = {

@@ -2,12 +2,13 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import datetime
+import json
 import os
 from unittest.mock import patch
 
 import responses
 from bs4 import BeautifulSoup
-from responses.matchers import json_params_matcher
+from responses.matchers import header_matcher, json_params_matcher
 from responses.registries import OrderedRegistry
 
 from amazonorders.conf import AmazonOrdersConfig
@@ -204,6 +205,66 @@ class TestTransactions(UnitTestCase):
 
         # THEN
         self.assertEqual([], transactions)
+
+    def test_parse_transactions_embedded_data(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-nextjs.html"), "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN
+        transactions, next_page_data = TransactionsPage(self.test_config).parse_page(parsed)
+
+        # THEN
+        self.assertEqual(20, len(transactions))
+        self.assertEqual(self.given_embedded_next_page_data(), next_page_data)
+        transaction = transactions[0]
+        self.assertEqual(datetime.date(2026, 3, 16), transaction.completed_date)
+        self.assertEqual("Visa Card ****7986", transaction.payment_method)
+        self.assertEqual("7986", transaction.payment_method_last_4)
+        self.assertEqual(-45.68, transaction.grand_total)
+        self.assertEqual("112-2951294-1503648", transaction.order_number)
+        self.assertEqual("AMZN Mktp US", transaction.seller)
+        self.assertEqual(4, len([t for t in transactions if t.is_refund]))
+        self.assertIsNone(transactions[13].seller)
+
+    @responses.activate
+    def test_get_transactions_embedded_data_next_page(self):
+        # GIVEN
+        next_page_data = self.given_embedded_next_page_data()
+        responses.add(responses.POST, self.test_config.constants.TRANSACTION_DATA_URL,
+                      body=self.given_embedded_next_page_body(), status=200,
+                      match=[json_params_matcher({"type": "GetTransactions",
+                                                  "locale": "en_US",
+                                                  "exclusiveStartKey": "REDACTED",
+                                                  "widgetName": "ViewTransactions"}),
+                             header_matcher({"x-amzn-upx-token": "REDACTED",
+                                             "Accept": "application/json"})])
+
+        # WHEN
+        transactions, next_page_data = TransactionsPage(self.test_config).get_page(
+            self.amazon_session, self.test_config.constants.TRANSACTION_HISTORY_URL, next_page_data)
+
+        # THEN
+        self.assertEqual(20, len(transactions))
+        self.assertEqual(self.given_embedded_next_page_data(), next_page_data)
+        self.assertEqual(datetime.date(2026, 2, 14), transactions[0].completed_date)
+
+    @responses.activate
+    def test_get_transactions_embedded_data_last_page(self):
+        # GIVEN
+        body = json.loads(self.given_embedded_next_page_body())
+        del body["displayResponse"]["lastEvaluatedKey"]
+        responses.add(responses.POST, self.test_config.constants.TRANSACTION_DATA_URL, json=body, status=200)
+
+        # WHEN
+        transactions, next_page_data = TransactionsPage(self.test_config).get_page(
+            self.amazon_session, self.test_config.constants.TRANSACTION_HISTORY_URL,
+            self.given_embedded_next_page_data())
+
+        # THEN
+        self.assertEqual(20, len(transactions))
+        self.assertIsNone(next_page_data)
 
     def test_parse_transactions_unparseable(self):
         # WHEN
@@ -490,6 +551,15 @@ class TestTransactions(UnitTestCase):
                 'ppw-widgetEvent:DefaultNextPageNavigationEvent:{"nextPageKey":"key"}': "",
             },
         )
+
+    def given_embedded_next_page_data(self):
+        return {"exclusiveStartKey": "REDACTED", "token": "REDACTED", "locale": "en_US",
+                "widgetName": "ViewTransactions"}
+
+    def given_embedded_next_page_body(self):
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-nextjs-next-page.json"), "r",
+                  encoding="utf-8") as f:
+            return f.read()
 
     def given_transactions_html_with_unparseable_date(self):
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",

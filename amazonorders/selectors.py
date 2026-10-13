@@ -338,6 +338,7 @@ class Selectors:
 
     TRANSACTION_HISTORY_FORM_SELECTOR = "form:has(input[name='ppw-widgetState'])"
     TRANSACTION_HISTORY_CONTAINER_SELECTOR = ".pmts-portal-component"
+    TRANSACTION_HISTORY_DATA_SELECTOR = "script#__NEXT_DATA__"
     TRANSACTION_HISTORY_EMPTY_TEXT = "don't have any transactions"
     TRANSACTION_DATE_CONTAINERS_SELECTOR = "div.apx-transaction-date-container"
     TRANSACTIONS_CONTAINER_SELECTOR = "div"

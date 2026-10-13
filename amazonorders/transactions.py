@@ -2,6 +2,7 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import datetime
+import json
 import logging
 from typing import Dict, List, Optional, Tuple, Any
 
@@ -53,6 +54,15 @@ class TransactionsPage:
         :return: The page's Transactions, and the data to request the next page with (``None`` if this is the
             last page).
         """
+        if next_page_data and "exclusiveStartKey" in next_page_data:
+            return self._get_data_page(amazon_session, next_page_data)
+
+        return self._get_form_page(amazon_session, url, next_page_data)
+
+    def _get_form_page(self,
+                       amazon_session: AmazonSession,
+                       url: str,
+                       next_page_data: Optional[Dict[str, Any]]) -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
         page_response = amazon_session.post(url, data=next_page_data)
         amazon_session.check_response(page_response, meta=next_page_data)
 
@@ -71,6 +81,10 @@ class TransactionsPage:
         form_tag = util.select_one(parsed, self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
 
         if not form_tag:
+            data_tag = util.select_one(parsed, self.config.selectors.TRANSACTION_HISTORY_DATA_SELECTOR)
+            if data_tag:
+                return self._parse_transaction_data_tag(data_tag)
+
             container_tag = util.select_one(parsed, self.config.selectors.TRANSACTION_HISTORY_CONTAINER_SELECTOR)
             if container_tag and self.config.selectors.TRANSACTION_HISTORY_EMPTY_TEXT in container_tag.text:
                 return [], None
@@ -78,6 +92,95 @@ class TransactionsPage:
             raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.")
 
         return self._parse_transaction_form_tag(form_tag)
+
+    def _parse_transaction_data_tag(self,
+                                    data_tag: Tag) -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
+        try:
+            page_props = json.loads(data_tag.string or "")["props"]["pageProps"]
+            state = page_props["state"]["transactionResponseState"]
+            transaction_list = state["visibleTransactionResponse"]["transactionList"]
+            next_page_data = None
+            if state.get("hasMore") and state.get("lastEvaluatedPageKey"):
+                next_page_data = {
+                    "exclusiveStartKey": state["lastEvaluatedPageKey"],
+                    "token": page_props["token"],
+                    "locale": page_props["request"]["locale"],
+                    "widgetName": page_props["request"]["widgetName"],
+                }
+        except (KeyError, TypeError, ValueError) as e:
+            raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.") from e
+
+        return self._parse_transaction_list(transaction_list), next_page_data
+
+    def _get_data_page(self,
+                       amazon_session: AmazonSession,
+                       next_page_data: Dict[str, Any]) -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
+        constants = self.config.constants
+        page_response = amazon_session.post(
+            constants.TRANSACTION_DATA_URL,
+            json={
+                "type": "GetTransactions",
+                "locale": next_page_data["locale"],
+                "exclusiveStartKey": next_page_data["exclusiveStartKey"],
+                "widgetName": next_page_data["widgetName"],
+            },
+            headers={
+                "Accept": "application/json",
+                "Referer": constants.TRANSACTION_HISTORY_URL,
+                "x-amzn-upx-token": next_page_data["token"],
+            })
+        amazon_session.check_response(page_response, meta=next_page_data)
+
+        try:
+            display_response = page_response.response.json()["displayResponse"]
+            transaction_list = display_response["transactionsList"]
+        except (KeyError, TypeError, ValueError) as e:
+            raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.",
+                                    meta=next_page_data) from e
+
+        transactions = self._parse_transaction_list(transaction_list)
+        last_key = display_response.get("lastEvaluatedKey")
+
+        return transactions, {**next_page_data, "exclusiveStartKey": last_key} if last_key and transactions else None
+
+    def _parse_transaction_list(self,
+                                transaction_list: List[Dict[str, Any]]) -> List[Transaction]:
+        config = self.config
+        transactions = []
+        for transaction_data in transaction_list:
+            date_str = transaction_data.get("formattedDate")
+            total_str = transaction_data.get("formattedAmount")
+            date = config.constants.parse_date(date_str)
+            grand_total = config.constants.parse_currency(total_str) if total_str else None
+            if date is None or grand_total is None:
+                err_msg = (f"Transaction date {date_str!r} or total {total_str!r} could not be parsed, but both are "
+                           f"required. Check if Amazon changed the HTML")
+                if not config.warn_on_missing_required_field:
+                    raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
+
+                logger.warning(f"{err_msg}.")
+                continue
+
+            order_data: Dict[str, Any] = next(iter(transaction_data.get("orderData") or []), {})
+            payment_method_data = transaction_data.get("paymentMethodDisplayStringData") or {}
+            payment_method_name = payment_method_data.get("paymentMethodName")
+            last_digits = (payment_method_data.get("paymentMethodNumber") or {}).get("lastDigits")
+            payment_method = f"{payment_method_name} ****{last_digits}" if payment_method_name and last_digits \
+                else payment_method_name
+            order_number = config.constants.parse_order_number(order_data.get("orderDisplayString") or "")
+            seller = transaction_data.get("statementDescriptor")
+
+            transactions.append(config.transaction_cls.from_fields(
+                config,
+                date,
+                grand_total,
+                payment_method=payment_method,
+                payment_method_last_4=last_digits,
+                order_number=order_number,
+                order_details_link=order_data.get("orderDetailsUrl"),
+                seller=None if seller == order_number else seller))
+
+        return transactions
 
     def _parse_transaction_form_tag(self,
                                     form_tag: Tag) -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
