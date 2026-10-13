@@ -74,8 +74,8 @@ amazon-orders history --last-3-months
 
 ### Output Formats
 
-The `history`, `order`, `transactions`, `order-transactions`, and `gift-card-activity` commands accept
-`--output`, which renders Orders, Transactions, and Gift Card activity as `text` (the default), `json`,
+The `history`, `order`, `invoices`, `transactions`, `order-transactions`, and `gift-card-activity` commands
+accept `--output`, which renders Orders, Invoices, Transactions, and Gift Card activity as `text` (the default), `json`,
 `yaml`, or `csv`. Progress messages are written to `stderr`, so redirecting `stdout` captures only the data.
 
 ```sh

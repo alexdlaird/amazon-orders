@@ -25,7 +25,8 @@ _DISPLAY_METHODS = {"__repr__", "__str__"}
 _PLUMBING_LITERALS = {
     "", "\n", " ", " ****", " - (redirected) ", "&", "&startIndex=", "']", ".", "/",
     "/(?:dp|gp/product|product)/([A-Z0-9]{10})(?:[/?]|$)", ": ", "://", "=", "?", "?orderID=", "?transactionTag=",
-    "AMAZON_OTP_SECRET_KEY", "AMAZON_PASSWORD", "AMAZON_USERNAME", "Accept", "GET", "GetTransactions", "POST",
+    "AMAZON_OTP_SECRET_KEY", "AMAZON_PASSWORD", "AMAZON_USERNAME", "Accept", "Content-Type", "GET",
+    "GetTransactions", "POST",
     "Referer", "\\*+(\\d+)$", "\\*\\s*(\\d+)", "^\\s*{count}\\s*$", "_parse_", "aa-challenge-page-captcha-container",
     "action", "alt", "application/json", "choices", "config", "cvf_captcha_input", "data", "data-a-popover",
     "deviceId", "displayResponse", "domain", "email", "exclusiveStartKey", "field-keywords", "formattedAmount",

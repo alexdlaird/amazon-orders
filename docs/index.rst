@@ -113,8 +113,8 @@ You can also run any command available to the main Python interface from the com
 Output Formats
 --------------
 
-The ``history``, ``order``, ``transactions``, ``order-transactions``, and ``gift-card-activity`` commands accept
-``--output``, which renders Orders, Transactions, and Gift Card activity as ``text`` (the default), ``json``,
+The ``history``, ``order``, ``invoices``, ``transactions``, ``order-transactions``, and ``gift-card-activity``
+commands accept ``--output``, which renders Orders, Invoices, Transactions, and Gift Card activity as ``text`` (the default), ``json``,
 ``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout`` captures only the data.
 
 .. code:: sh
@@ -139,6 +139,32 @@ which converts it and its nested entities to a ``dict`` of primitives.
 
 See :class:`~amazonorders.output.OutputFormatter` for each format's contract, and to override how
 entities are rendered.
+
+Invoices
+--------
+
+Amazon lists an Order's invoice documents (PDFs), invoices and credit notes alike, under its "Invoice" link, one or
+more per Order. :func:`~amazonorders.orders.AmazonOrders.get_invoices` returns them as
+:class:`~amazonorders.entity.invoice.Invoice` entities, and
+:func:`~amazonorders.orders.AmazonOrders.download_invoice` gets a document's content. A seller's proof of purchase
+("Warranty/Pslip"), which Amazon lists there for some marketplace Orders, isn't an invoice and is left out. A single
+document may hold several invoices, e.g. from different sellers, as Amazon sometimes combines them. Download links
+change on each request, so get them again rather than storing them.
+
+.. code:: python
+
+    for invoice in amazon_orders.get_invoices("112-9685975-5907428"):
+        with open(f"{invoice.order_number}_{invoice.name}.pdf", "wb") as f:
+            f.write(amazon_orders.download_invoice(invoice))
+
+From the command line, ``invoices`` lists the documents of one or more Orders, and ``--download`` saves them as
+``<order number>_<name>.pdf`` (e.g. ``112-9685975-5907428_invoice-2.pdf``):
+
+.. code:: sh
+
+    amazon-orders invoices 112-9685975-5907428 --download invoices/
+
+The ``invoice`` command, by contrast, prints the HTML of the printable order summary.
 
 .. _secure-sign-in:
 
