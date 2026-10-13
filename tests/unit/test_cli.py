@@ -14,7 +14,8 @@ import yaml
 from bs4 import BeautifulSoup
 from click.testing import CliRunner
 
-from amazonorders.cli import amazon_orders_cli
+from amazonorders.cli import _invoice_path, amazon_orders_cli
+from amazonorders.entity.invoice import Invoice
 from amazonorders.entity.parsable import Parsable
 from amazonorders.output import OutputFormatter
 from tests.unittestcase import UnitTestCase
@@ -369,6 +370,64 @@ class TestCli(UnitTestCase):
         self.assertEqual(0, response.exit_code)
         self.assertIn("No invoice documents for Order 302-0000000-0000003.", response.output)
         self.assertIn("0 Invoices for 1 Orders", response.output)
+
+    @responses.activate
+    def test_invoices_command_download_not_a_document(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        self.given_invoice_list("invoices-single.html")
+        responses.add(responses.GET, re.compile(f"{self.test_config.constants.BASE_URL}/-/en/documents/download/.*"),
+                      body="<html></html>", status=200, content_type="text/html")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "invoices", "302-0000000-0000001", "--download",
+                                          os.path.join(self.test_output_dir, "invoices")
+                                      ])
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertIn("returned Content-Type \"text/html\", not a document", response.output)
+
+    @responses.activate
+    def test_invoices_command_session_expires(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        auth_redirect_response = self.given_authenticated_url_redirects_to_login()
+        self.given_logout_response_success()
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "invoices", "302-0000000-0000001"
+                                      ])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, auth_redirect_response.call_count)
+        self.assertIn("Amazon redirected to login", response.output)
+
+    def test_invoice_path_counts_repeated_names(self):
+        # GIVEN
+        invoice = Invoice(BeautifulSoup('<a href="/documents/download/x/invoice.pdf">Invoice</a>', "html.parser").a,
+                          self.test_config, order_number="302-0000000-0000001")
+        saved_paths = set()
+
+        # WHEN
+        paths = [_invoice_path("invoices", invoice, saved_paths) for _ in range(3)]
+
+        # THEN
+        self.assertEqual([os.path.join("invoices", "302-0000000-0000001_invoice.pdf"),
+                          os.path.join("invoices", "302-0000000-0000001_invoice-2.pdf"),
+                          os.path.join("invoices", "302-0000000-0000001_invoice-3.pdf")], paths)
 
     def given_invoice_list(self, filename):
         with open(os.path.join(self.RESOURCES_DIR, "invoices", filename), "r", encoding="utf-8") as f:

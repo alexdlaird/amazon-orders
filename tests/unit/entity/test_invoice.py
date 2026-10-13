@@ -3,6 +3,9 @@ __license__ = "MIT"
 
 import os
 
+from bs4 import BeautifulSoup
+
+from amazonorders.entity.invoice import Invoice
 from amazonorders.orders import AmazonOrders
 from tests.unittestcase import UnitTestCase
 
@@ -52,6 +55,15 @@ class TestInvoice(UnitTestCase):
 
         # THEN
         self.assertEqual([], invoices)
+
+    def test_invoice_without_name_or_link(self):
+        # WHEN
+        invoice = Invoice(BeautifulSoup("<a> </a>", "html.parser").a, self.test_config)
+
+        # THEN
+        self.assertIsNone(invoice.name)
+        self.assertIsNone(invoice.link)
+        self.assertFalse(invoice.credit_note)
 
     def test_invoice_to_dict(self):
         # GIVEN
