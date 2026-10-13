@@ -4,14 +4,7 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.8.1...HEAD)
-
-### Fixed
-
-- Transactions on Amazon's new Your Payments page.
-- Bug fixes and stability improvements.
-
-## [4.8.1](https://github.com/alexdlaird/amazon-orders/compare/4.8.0...4.8.1) - 2026-10-13
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.8.0...HEAD)
 
 ### Added
 
