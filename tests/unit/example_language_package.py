@@ -39,6 +39,7 @@ class Selectors(selectors.Selectors):
     FIELD_FAMILY_MEMBER_NAME_SUFFIX = " Voluptas"
     FIELD_TRACKING_NUMBER_PREFIX = "Laboris:"
     FIELD_TRACKING_CARRIER_REGEX = r"^(?:nisi ut aliquip)\s+"
+    FIELD_INVOICE_CREDIT_NOTE_TEXT = "Ex ea commodo"
     TRANSACTION_HISTORY_EMPTY_TEXT = "laborum"
     ORDER_PHYSICAL_STORE_TEXT = "Sint culpa"
     ORDER_WHOLE_FOODS_TEXT = "Anim id est"

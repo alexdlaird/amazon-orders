@@ -76,10 +76,10 @@ amazon-orders history --last-3-months
 
 ### Output Formats
 
-The `history`, `order`, `transactions`, `order-transactions`, `gift-card-activity`, and `family-members` commands
-accept `--output`, which renders Orders, Transactions, Gift Card activity, and Amazon Household members as `text` (the
-default), `json`, `yaml`, or `csv`. Progress messages are written to `stderr`, so redirecting `stdout` captures only
-the data.
+The `history`, `order`, `invoices`, `transactions`, `order-transactions`, `gift-card-activity`, and `family-members`
+commands accept `--output`, which renders Orders, Invoices, Transactions, Gift Card activity, and Amazon Household
+members as `text` (the default), `json`, `yaml`, or `csv`. Progress messages are written to `stderr`, so redirecting
+`stdout` captures only the data.
 
 ```sh
 amazon-orders history --year 2023 --output json > orders.json

@@ -81,6 +81,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `Constants.REQUEST_COOKIES`, to send cookies with every request.
+- `Invoice` entity, `AmazonOrders.get_invoices()`, `parse_invoices()`, and `download_invoice()`, and the `invoices` CLI command (with `--download`), for an Order's invoice documents (PDFs), including credit notes.
 
 ### Fixed
 

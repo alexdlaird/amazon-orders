@@ -6,6 +6,7 @@ import datetime
 import io
 import json
 import os
+import re
 from unittest.mock import patch
 
 import responses
@@ -499,6 +500,62 @@ class TestCli(UnitTestCase):
         self.assertEqual(1, resp.call_count)
         self.assertIn(f"orderID={order_id}", resp.calls[0].request.url)
         self.assertIn("Order Details", response.output)
+
+    @responses.activate
+    def test_invoices_command(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        resp = self.given_invoice_list("invoices-multiple.html")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "invoices", "302-0000000-0000002", "-o", "json"
+                                      ])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assert_login_responses_success()
+        self.assertEqual(1, resp.call_count)
+        self.assertIn('"name": "Credit note"', response.output)
+        self.assertIn("5 Invoices for 1 Orders", response.output)
+
+    @responses.activate
+    def test_invoices_command_download(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        self.given_invoice_list("invoices-multiple.html")
+        download_resp = responses.add(responses.GET,
+                                      re.compile(f"{self.test_config.constants.BASE_URL}/-/en/documents/download/.*"),
+                                      body=b"%PDF-1.4 some-pdf", status=200, content_type="application/pdf")
+        download_dir = os.path.join(self.test_output_dir, "invoices")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "invoices", "302-0000000-0000002", "--download", download_dir
+                                      ])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(5, download_resp.call_count)
+        self.assertEqual(["302-0000000-0000002_credit-note.pdf", "302-0000000-0000002_invoice-1.pdf",
+                          "302-0000000-0000002_invoice-2.pdf", "302-0000000-0000002_invoice-3.pdf",
+                          "302-0000000-0000002_invoice-4.pdf"], sorted(os.listdir(download_dir)))
+        with open(os.path.join(download_dir, "302-0000000-0000002_credit-note.pdf"), "rb") as f:
+            self.assertEqual(b"%PDF-1.4 some-pdf", f.read())
+
+    def given_invoice_list(self, filename):
+        with open(os.path.join(self.RESOURCES_DIR, "invoices", filename), "r", encoding="utf-8") as f:
+            return responses.add(responses.GET, self.test_config.constants.INVOICES_URL, body=f.read(), status=200)
 
     @responses.activate
     def test_order_command(self):

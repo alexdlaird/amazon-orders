@@ -7,10 +7,11 @@ import datetime
 import logging
 import os
 import platform
+import re
 import sys
 import threading
 import time
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Set, Tuple
 
 import click
 from click.core import Context
@@ -18,6 +19,7 @@ from click.core import Context
 from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.contrib.browser.playwright import PlaywrightBrowserLauncher, PlaywrightBrowserLogin
+from amazonorders.entity.invoice import Invoice
 from amazonorders.exception import (
     AmazonOrdersAuthError,
     AmazonOrdersAuthRedirectError,
@@ -445,6 +447,55 @@ def invoice(ctx: Context,
         ctx.fail(str(e))
 
 
+@amazon_orders_cli.command()
+@click.pass_context
+@click.argument("order_ids", nargs=-1, required=True)
+@click.option("--download", "download_dir", type=click.Path(file_okay=False),
+              help="Save the documents (PDFs) to this directory.")
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+              help="The output format. Defaults to text.")
+def invoices(ctx: Context,
+             order_ids: Tuple[str, ...],
+             download_dir: Optional[str],
+             **kwargs: Any) -> None:
+    """
+    Get the invoice documents (invoices and credit notes) for the given Amazon Order IDs, and optionally download
+    them.
+    """
+    amazon_session = ctx.obj["amazon_session"]
+
+    try:
+        CliAuth(amazon_session).authenticate()
+
+        config = ctx.obj["conf"]
+        amazon_orders = AmazonOrders(amazon_session,
+                                     config=config)
+
+        output = kwargs["output"]
+
+        invoice_list = []
+        for order_id in order_ids:
+            invoice_list += amazon_orders.get_invoices(order_id)
+
+        click.echo(config.output_cls(config).format(invoice_list, output))
+
+        if download_dir:
+            os.makedirs(download_dir, exist_ok=True)
+            saved_paths: Set[str] = set()
+            for document in invoice_list:
+                path = _invoice_path(download_dir, document, saved_paths)
+                with open(path, "wb") as invoice_file:
+                    invoice_file.write(amazon_orders.download_invoice(document))
+                click.echo(f"Saved {path}", err=True)
+
+        click.echo(f"... {len(invoice_list)} Invoices for {len(order_ids)} Orders.\n", err=True)
+    except AmazonOrdersAuthRedirectError:
+        IOClick.echo_session_expired()
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+
 @amazon_orders_cli.command("order-transactions")
 @click.pass_context
 @click.argument("order_id")
@@ -723,6 +774,21 @@ def version(ctx: Context) -> None:
 
 def _is_interactive_terminal() -> bool:
     return sys.stderr.isatty() and os.environ.get("TERM") != "dumb"
+
+
+def _invoice_path(download_dir: str,
+                  invoice: Invoice,
+                  saved_paths: Set[str]) -> str:
+    # e.g. "302-0000000-0000000_invoice-2.pdf", with a counter if the name repeats within an Order. A file from an
+    # earlier run is overwritten, so downloading again doesn't duplicate it.
+    name = re.sub(r"[^a-z0-9]+", "-", (invoice.name or "").lower()).strip("-") or "invoice"
+    path = os.path.join(download_dir, f"{invoice.order_number}_{name}.pdf")
+    i = 2
+    while path in saved_paths:
+        path = os.path.join(download_dir, f"{invoice.order_number}_{name}-{i}.pdf")
+        i += 1
+    saved_paths.add(path)
+    return path
 
 
 if __name__ == "__main__":
