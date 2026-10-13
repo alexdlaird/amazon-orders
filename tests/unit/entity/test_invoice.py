@@ -45,6 +45,14 @@ class TestInvoice(UnitTestCase):
         # THEN
         self.assertEqual([], invoices)
 
+    def test_parse_invoices_leaves_out_seller_receipt(self):
+        # WHEN
+        invoices = AmazonOrders.parse_invoices(self.given_invoice_list("invoices-receipt-only.html"),
+                                               self.test_config)
+
+        # THEN
+        self.assertEqual([], invoices)
+
     def test_invoice_to_dict(self):
         # GIVEN
         invoice = AmazonOrders.parse_invoices(self.given_invoice_list("invoices-single.html"), self.test_config,
