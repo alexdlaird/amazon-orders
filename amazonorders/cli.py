@@ -442,11 +442,11 @@ def check_session(ctx: Context) -> None:
 @amazon_orders_cli.command()
 @click.pass_context
 @click.option("--browser", is_flag=True, default=False,
-              help="Sign in with a browser window, so credentials are entered on Amazon's own page and never reach "
-                   "amazon-orders. Requires the browser extra.")
+              help="Sign in with a browser window, so amazon-orders never needs to store your credentials. "
+                   "Requires the browser extra.")
 def login(ctx: Context, **kwargs: Any) -> None:
     """
-    Login to establish an Amazon session and cookies.
+    Log in to establish an Amazon session and cookies.
     """
     amazon_session = ctx.obj["amazon_session"]
 
@@ -470,7 +470,7 @@ def login(ctx: Context, **kwargs: Any) -> None:
 @click.pass_context
 def logout(ctx: Context) -> None:
     """
-    Logout of existing Amazon sessions and clear cookies.
+    Log out of existing Amazon sessions and clear cookies.
     """
     amazon_session = ctx.obj["amazon_session"]
     amazon_session.logout()
@@ -548,7 +548,7 @@ def _authenticate(amazon_session: AmazonSession,
 
 def _prompt_to_reauth_flow() -> None:
     click.echo("... Amazon redirected to login, which likely means the persisted session is stale. It was logged "
-               "out, so try running the command again.\n")
+               "out, so call the `login` command again, or `login --browser` to log in on Amazon's own page.\n")
 
 
 if __name__ == "__main__":

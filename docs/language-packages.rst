@@ -119,6 +119,10 @@ placeholder text.
   the site's language with ``Accept-Language``
   (``BASE_HEADERS = {**constants.Constants.BASE_HEADERS, "Accept-Language": "<LANGUAGE>"}``). A header set here isn't
   replaced by the ``browser`` option.
+- **Request cookies** — set ``REQUEST_COOKIES`` on :class:`~amazonorders.constants.Constants` for a site that picks
+  its language from a cookie rather than from ``Accept-Language`` (e.g. ``REQUEST_COOKIES = {"lc-acbde": "en_GB"}`` on
+  amazon.de). These are sent with every request to the active domain, replacing any cookie of the same name Amazon
+  set.
 - **Transactions page** — if the site builds this page differently (for instance, rendering it from embedded data or
   loading more pages from an API), subclass :class:`~amazonorders.transactions.TransactionsPage` and override
   :func:`~amazonorders.transactions.TransactionsPage.get_page` and

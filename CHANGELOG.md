@@ -4,13 +4,23 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.8.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.8.1...HEAD)
+
+## [4.8.1](https://github.com/alexdlaird/amazon-orders/compare/4.8.0...4.8.1) - 2026-10-13
+
+### Added
+
+- `Constants.REQUEST_COOKIES`, to send cookies with every request.
+
+### Fixed
+
+- Bug fixes and stability improvements.
 
 ## [4.8.0](https://github.com/alexdlaird/amazon-orders/compare/4.7.1...4.8.0) - 2026-10-09
 
 ### Added
 
-- `login --browser`, and `PlaywrightBrowserLogin`, to sign in on Amazon's own page in a browser window, so `amazon-orders` never needs to store or know your credentials.
+- `login --browser`, and `PlaywrightBrowserLogin`, to sign in on Amazon's own page in a browser window, so `amazon-orders` never needs to store your credentials.
 - `Tracking` entity, `AmazonOrders.get_tracking()` and `parse_tracking()`, and `Shipment.shipment_id`, for a Shipment's carrier and tracking number.
 
 ### Fixed

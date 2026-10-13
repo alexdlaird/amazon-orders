@@ -687,7 +687,7 @@ class TestCli(UnitTestCase):
         self.assertEqual(1, signout_response.call_count)
         self.assert_no_auth_cookies_persisted()
         self.assertIn("Amazon redirected to login", response.output)
-        self.assertIn("logged out, so try running the command again", response.output)
+        self.assertIn("logged out, so call the `login` command again, or `login --browser`", response.output)
 
     def test_update_config(self):
         # GIVEN

@@ -199,6 +199,8 @@ class AmazonSession:
         if self.config.request_timeout is not None:
             kwargs.setdefault("timeout", self.config.request_timeout)
 
+        self._set_request_cookies()
+
         response = self.session.request(method, url, **kwargs)
         amazon_session_response = AmazonSessionResponse(response,
                                                         self.config.bs4_parser)
@@ -247,6 +249,18 @@ class AmazonSession:
         :return: The response from the executed request.
         """
         return self.request("POST", url, **kwargs)
+
+    def _set_request_cookies(self) -> None:
+        request_cookies = self.config.constants.REQUEST_COOKIES
+        if not request_cookies:
+            return
+
+        domain = urlparse(self.config.constants.BASE_URL).hostname
+        with self.session.cookies._cookies_lock:  # type: ignore[attr-defined]
+            for cookie in [cookie for cookie in self.session.cookies if cookie.name in request_cookies]:
+                self.session.cookies.clear(cookie.domain, cookie.path, cookie.name)
+            for name, value in request_cookies.items():
+                self.session.cookies.set(name, value, domain=domain, path="/")
 
     def auth_cookies_stored(self) -> bool:
         cookies = dict_from_cookiejar(self.session.cookies)
