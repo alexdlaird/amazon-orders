@@ -164,6 +164,8 @@ class Constants:
 
     TRANSACTION_HISTORY_ROUTE = "/cpe/yourpayments/transactions"
     TRANSACTION_HISTORY_URL = f"{BASE_URL}{TRANSACTION_HISTORY_ROUTE}"
+    TRANSACTION_DATA_ROUTE = "/payments-portal/data/iris/live/v1/data/manage/get-transactions"
+    TRANSACTION_DATA_URL = f"{BASE_URL}{TRANSACTION_DATA_ROUTE}"
 
     ##########################################################################
     # URLs for Gift Cards
@@ -299,6 +301,7 @@ class Constants:
         self.ORDER_INVOICE_URL = f"{base_url}/gp/css/summary/print.html"
         self.TRACKING_URL = f"{base_url}{self.TRACKING_ROUTE}"
         self.TRANSACTION_HISTORY_URL = f"{base_url}{self.TRANSACTION_HISTORY_ROUTE}"
+        self.TRANSACTION_DATA_URL = f"{base_url}{self.TRANSACTION_DATA_ROUTE}"
         self.GIFT_CARD_BALANCE_URL = f"{base_url}{self.GIFT_CARD_BALANCE_ROUTE}"
 
         headers = dict(vars(self).get("BASE_HEADERS", type(self).BASE_HEADERS))

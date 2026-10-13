@@ -146,6 +146,20 @@ These will only be renamed or removed in a major release. New ones may be added 
 package's minimum version to the release that added the newest one you use, and cap it below the next major version
 (e.g. ``amazon-orders>=4.7.0,<5``).
 
+If you need to enforce a minimum version with your language package, also check the installed version when the
+package is imported, since an older version ignores an attribute it doesn't have without any error (e.g.
+``REQUEST_COOKIES`` before 4.8.1):
+
+.. code-block:: python
+
+    from amazonorders import __version__
+    from amazonorders.exception import AmazonOrdersError
+
+    MINIMUM_VERSION = (4, 8, 1)
+
+    if tuple(int(part) for part in __version__.split(".")[:3]) < MINIMUM_VERSION:
+        raise AmazonOrdersError(f"my_language_package requires amazon-orders>=4.8.1, but {__version__} is installed")
+
 Testing
 -------
 
