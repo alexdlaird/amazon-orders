@@ -148,7 +148,8 @@ Invoices
 Amazon lists an Order's invoice documents (PDFs), invoices and credit notes alike, under its "Invoice" link, one or
 more per Order. :func:`~amazonorders.orders.AmazonOrders.get_invoices` returns them as
 :class:`~amazonorders.entity.invoice.Invoice` entities, and
-:func:`~amazonorders.orders.AmazonOrders.download_invoice` gets a document's content.
+:func:`~amazonorders.orders.AmazonOrders.download_invoice` gets a document's content. A seller's proof of purchase
+("Warranty/Pslip"), which Amazon lists there for some marketplace Orders, isn't an invoice and is left out.
 
 .. code:: python
 
