@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.8.0...HEAD)
 
+### Added
+
+- `Constants.REQUEST_COOKIES`, for a language package whose site picks its language from a cookie rather than from `Accept-Language`.
+
 ### Fixed
 
 - Bug fixes and stability improvements.

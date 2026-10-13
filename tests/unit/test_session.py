@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from responses.matchers import query_string_matcher, urlencoded_params_matcher
 
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.constants import Constants
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
 from amazonorders.forms import JSAuthBlocker, MfaDeviceSelectForm
 from amazonorders.session import AmazonSession, IODefault
@@ -114,6 +115,46 @@ class TestSession(UnitTestCase):
         # THEN the debug write provisioned the output dir itself
         self.assertTrue(os.path.exists(self.test_output_dir))
         self.assertEqual(1, len(os.listdir(self.test_output_dir)))
+
+    @responses.activate
+    def test_request_cookies(self):
+        # GIVEN
+        config = AmazonOrdersConfig(data={
+            "constants_class": "tests.unit.test_session.RequestCookiesConstants",
+            "domain": "amazon.de",
+            "output_dir": self.test_output_dir,
+            "cookie_jar_path": self.test_cookie_jar_path,
+        })
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=config)
+        # Set by Amazon on every response, or loaded from a persisted cookie jar
+        amazon_session.session.cookies.set("lc-acbde", "de_DE", domain=".amazon.de", path="/")
+        amazon_session.session.cookies.set("session-id", "some-session-id", domain=".amazon.de", path="/")
+        url = f"{config.constants.BASE_URL}/some/page"
+        responses.add(responses.GET, url, body="<html></html>", status=200,
+                      headers={"Set-Cookie": "lc-acbde=de_DE; Domain=.amazon.de; Path=/"})
+
+        # WHEN
+        amazon_session.get(url)
+        amazon_session.get(url)
+
+        # THEN
+        for call in responses.calls:
+            cookie_header = call.request.headers["Cookie"]
+            self.assertIn("lc-acbde=en_GB", cookie_header)
+            self.assertNotIn("de_DE", cookie_header)
+            self.assertIn("session-id=some-session-id", cookie_header)
+
+    @responses.activate
+    def test_no_request_cookies_by_default(self):
+        # GIVEN
+        url = f"{self.test_config.constants.BASE_URL}/some/page"
+        responses.add(responses.GET, url, body="<html></html>", status=200)
+
+        # WHEN
+        self.amazon_session.get(url)
+
+        # THEN
+        self.assertNotIn("Cookie", responses.calls[0].request.headers)
 
     @responses.activate
     def test_login_claim_invalid_username(self):
@@ -990,3 +1031,7 @@ class TestMfaDeviceSelectForm(UnitTestCase):
         self.assertEqual([f"1: {self.SMS_DEVICE_VALUE}",
                           f"2: {self.VOICE_DEVICE_VALUE}"],
                          self.io.choices)
+
+
+class RequestCookiesConstants(Constants):
+    REQUEST_COOKIES = {"lc-acbde": "en_GB"}

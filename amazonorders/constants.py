@@ -193,6 +193,10 @@ class Constants:
         "Upgrade-Insecure-Requests": "1",
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",  # noqa: E501
     }
+    #: Cookies sent with every request to the active Amazon domain, replacing any cookie of the same name Amazon
+    #: set, for a site that picks something like its language from a cookie (e.g. ``{"lc-acbde": "en_GB"}`` on
+    #: amazon.de) rather than from ``Accept-Language``.
+    REQUEST_COOKIES: Dict[str, str] = {}
 
     ##########################################################################
     # Authentication
