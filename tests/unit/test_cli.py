@@ -349,6 +349,27 @@ class TestCli(UnitTestCase):
         with open(os.path.join(download_dir, "302-0000000-0000002_credit-note.pdf"), "rb") as f:
             self.assertEqual(b"%PDF-1.4 some-pdf", f.read())
 
+    @responses.activate
+    def test_invoices_command_order_without_invoices(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        self.given_invoice_list("invoices-none.html")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "invoices", "302-0000000-0000003"
+                                      ])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertIn("No invoice documents for Order 302-0000000-0000003.", response.output)
+        self.assertIn("0 Invoices for 1 Orders", response.output)
+
     def given_invoice_list(self, filename):
         with open(os.path.join(self.RESOURCES_DIR, "invoices", filename), "r", encoding="utf-8") as f:
             return responses.add(responses.GET, self.test_config.constants.INVOICES_URL, body=f.read(), status=200)

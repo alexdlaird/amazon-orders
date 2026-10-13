@@ -303,7 +303,10 @@ def invoices(ctx: Context,
 
         invoice_list = []
         for order_id in order_ids:
-            invoice_list += amazon_orders.get_invoices(order_id)
+            order_invoices = amazon_orders.get_invoices(order_id)
+            if not order_invoices:
+                click.echo(f"No invoice documents for Order {order_id}.", err=True)
+            invoice_list += order_invoices
 
         click.echo(config.output_cls(config).format(invoice_list, output))
 
