@@ -2073,6 +2073,19 @@ class TestOrders(UnitTestCase):
 
         self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
 
+    def test_download_invoice_without_link(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        invoice = self.given_invoice()
+        invoice.link = None
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.download_invoice(invoice)
+
+        # THEN
+        self.assertEqual("Invoice \"Invoice\" of Order 302-0000000-0000001 has no link.", str(cm.exception))
+
     def given_invoice(self):
         with open(os.path.join(self.RESOURCES_DIR, "invoices", "invoices-single.html"), "r",
                   encoding="utf-8") as f:
