@@ -38,6 +38,7 @@ class Selectors(selectors.Selectors):
     FIELD_SELLER_NAME_PREFIX = "Ullamco:"
     FIELD_TRACKING_NUMBER_PREFIX = "Laboris:"
     FIELD_TRACKING_CARRIER_REGEX = r"^(?:nisi ut aliquip)\s+"
+    FIELD_INVOICE_CREDIT_NOTE_TEXT = "Ex ea commodo"
     TRANSACTION_HISTORY_EMPTY_TEXT = "laborum"
     ORDER_PHYSICAL_STORE_TEXT = "Sint culpa"
     ORDER_WHOLE_FOODS_TEXT = "Anim id est"
