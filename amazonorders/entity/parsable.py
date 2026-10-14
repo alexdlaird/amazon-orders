@@ -33,23 +33,26 @@ class Parsable:
         state.pop("parsed")
         return state
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self,
+                exclude_none: bool = False) -> Dict[str, Any]:
         """
         Serialize the entity to a ``dict`` of primitives, suitable for JSON, YAML, or CSV output.
         Nested entities and lists of them are converted recursively, dates become ISO 8601 strings,
         and the parsed ``Tag`` and the config are omitted.
 
+        :param exclude_none: Leave out fields whose value is ``None``, in nested entities too. Only ``None`` is left
+            out: ``False``, ``0``, and empty lists are values.
         :return: The entity's fields as a ``dict``.
         """
         serialized: Dict[str, Any] = {}
         for field, value in vars(self).items():
-            if field in ["parsed", "config"]:
+            if field in ["parsed", "config"] or (exclude_none and value is None):
                 continue
 
             if isinstance(value, Parsable):
-                serialized[field] = value.to_dict()
+                serialized[field] = value.to_dict(exclude_none=exclude_none)
             elif isinstance(value, (list, tuple)):
-                serialized[field] = [item.to_dict() if isinstance(item, Parsable) else item
+                serialized[field] = [item.to_dict(exclude_none=exclude_none) if isinstance(item, Parsable) else item
                                      for item in value]
             elif isinstance(value, date):
                 serialized[field] = value.isoformat()

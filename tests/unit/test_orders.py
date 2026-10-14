@@ -1,9 +1,12 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import datetime
+import json
 import os
 import unittest
 from datetime import date
+from unittest.mock import patch
 
 import responses
 
@@ -346,15 +349,7 @@ class TestOrders(UnitTestCase):
         self.amazon_session.is_authenticated = True
         year = 2010
         resp1 = self.given_order_history_exists(year, start_index=0)
-        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-history-{year}-10.html"), "r",
-                  encoding="utf-8") as f:
-            resp2 = responses.add(
-                responses.GET,
-                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}"
-                "&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2",
-                body=f.read(),
-                status=200,
-            )
+        resp2 = self.given_order_history_next_page_exists(year)
 
         # WHEN
         orders = self.amazon_orders.get_order_history(year=year)
@@ -363,6 +358,138 @@ class TestOrders(UnitTestCase):
         self.assertEqual(12, len(orders))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
+
+    @responses.activate
+    def test_get_order_history_page_limit_stops_at_page_boundary(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2010
+        resp1 = self.given_order_history_exists(year, start_index=0)
+        resp2 = self.given_order_history_next_page_exists(year)
+
+        # WHEN
+        page = self.amazon_orders.get_order_history_page(year=year, limit=5)
+
+        # THEN
+        self.assertEqual(10, len(page.items))
+        self.assertTrue(page.has_more)
+        self.assertEqual({"start_index": 10, "time_filter": "year-2010", "order_filter": None}, page.cursor)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(0, resp2.call_count)
+
+    @responses.activate
+    def test_get_order_history_page_cursor_resumes(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2010
+        self.given_order_history_exists(year, start_index=0)
+        resp2 = self.given_order_history_exists(year, start_index=10)
+        first_page = self.amazon_orders.get_order_history_page(year=year, limit=5)
+        cursor = json.loads(json.dumps(first_page.cursor))
+
+        # WHEN
+        page = self.amazon_orders.get_order_history_page(cursor=cursor)
+
+        # THEN
+        self.assertEqual(2, len(page.items))
+        self.assertEqual([10, 11], [order.index for order in page.items])
+        self.assertFalse(page.has_more)
+        self.assertIsNone(page.cursor)
+        self.assertEqual(1, resp2.call_count)
+
+    @responses.activate
+    @patch("amazonorders.orders.datetime", wraps=datetime)
+    def test_get_order_history_page_cursor_keeps_default_year(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2010, 12, 31)
+        self.amazon_session.is_authenticated = True
+        self.given_order_history_exists(2010, start_index=0)
+        resp2 = self.given_order_history_exists(2010, start_index=10)
+        first_page = self.amazon_orders.get_order_history_page(limit=5)
+        mock_today.date.today.return_value = datetime.date(2011, 1, 1)
+
+        # WHEN
+        page = self.amazon_orders.get_order_history_page(cursor=first_page.cursor)
+
+        # THEN
+        self.assertEqual("year-2010", first_page.cursor["time_filter"])
+        self.assertEqual(2, len(page.items))
+        self.assertEqual(1, resp2.call_count)
+
+    @responses.activate
+    def test_get_order_history_page_without_limit_fetches_every_page(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2010
+        self.given_order_history_exists(year, start_index=0)
+        self.given_order_history_next_page_exists(year)
+
+        # WHEN
+        page = self.amazon_orders.get_order_history_page(year=year)
+
+        # THEN
+        self.assertEqual(12, len(page.items))
+        self.assertIsNone(page.cursor)
+
+    @responses.activate
+    def test_get_order_history_page_to_dict(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2010
+        self.given_order_history_exists(year, start_index=0)
+        page = self.amazon_orders.get_order_history_page(year=year, limit=5)
+
+        # WHEN
+        page_dict = page.to_dict(exclude_none=True)
+
+        # THEN
+        self.assertEqual({"items", "cursor", "has_more"}, set(page_dict.keys()))
+        self.assertEqual(10, len(page_dict["items"]))
+        self.assertEqual(page.items[0].to_dict(exclude_none=True), page_dict["items"][0])
+        self.assertEqual(page.cursor, page_dict["cursor"])
+        self.assertTrue(page_dict["has_more"])
+        json.dumps(page_dict)
+
+    @responses.activate
+    def test_get_order_history_reports_progress_per_page(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2010
+        self.given_order_history_exists(year, start_index=0)
+        self.given_order_history_next_page_exists(year)
+        counts = []
+
+        # WHEN
+        self.amazon_orders.get_order_history(year=year, progress=counts.append)
+
+        # THEN
+        self.assertEqual([10, 12], counts)
+
+    @responses.activate
+    def test_get_order_history_page_reports_progress_per_batch(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2010
+        self.given_order_history_exists(year, start_index=0)
+        self.given_order_history_exists(year, start_index=10)
+        first_counts = []
+        next_counts = []
+
+        # WHEN
+        first_page = self.amazon_orders.get_order_history_page(year=year, limit=5, progress=first_counts.append)
+        self.amazon_orders.get_order_history_page(cursor=first_page.cursor, progress=next_counts.append)
+
+        # THEN
+        self.assertEqual([10], first_counts)
+        self.assertEqual([2], next_counts)
+
+    def test_get_order_history_page_unauthenticated(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order_history_page()
+
+        # THEN
+        self.assertIn("Call AmazonSession.login() to authenticate first.", str(cm.exception))
 
     @responses.activate
     def test_get_order_history_fresh(self):
@@ -1694,3 +1821,14 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertIn("Amazon redirected to login.", str(cm.exception))
         self.assertFalse(self.amazon_session.is_authenticated)
+
+    def given_order_history_next_page_exists(self, year):
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-history-{year}-10.html"), "r",
+                  encoding="utf-8") as f:
+            return responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}"
+                "&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2",
+                body=f.read(),
+                status=200,
+            )

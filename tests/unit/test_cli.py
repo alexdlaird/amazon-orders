@@ -234,6 +234,8 @@ class TestCli(UnitTestCase):
         self.assertIn("Order #112-2545298-6805068", response.output)
         self.assertIn("Order #113-4970960-6452217", response.output)
         self.assertIn("Order #112-9733602-9062669", response.output)
+        self.assertIn("Info: 10 Orders found so far ...", response.stderr)
+        self.assertNotIn("found so far", response.stdout)
 
     @responses.activate
     def test_history_command_with_order_filter(self):

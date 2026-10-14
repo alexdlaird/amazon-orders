@@ -62,7 +62,8 @@ class Item(Parsable):
         self.image_link: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_IMG_LINK_SELECTOR,
             attr_name="src")
-        #: The Item quantity. ``None`` for items sold by weight (e.g. Whole Foods), which have no whole-unit count.
+        #: The Item quantity. ``None`` when the page shows none, and for items sold by weight (e.g. Whole Foods), which
+        #: have no whole-unit count.
         self.quantity: Optional[int] = self.safe_parse(self._parse_quantity)
 
     def __repr__(self) -> str:

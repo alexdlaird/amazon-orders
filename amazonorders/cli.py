@@ -9,7 +9,7 @@ import os
 import platform
 import sys
 import time
-from typing import Any, List, Optional
+from typing import Any, Callable, List, Optional
 
 import click
 from click.core import Context
@@ -75,6 +75,16 @@ class IOClick(IODefault):
     @staticmethod
     def print_banner() -> None:
         click.echo(banner.format(version=__version__), err=True)
+
+    @staticmethod
+    def echo_progress(noun: str) -> Callable[[int], None]:
+        """
+        Build a ``progress`` callback that tells the user, on ``stderr``, how many ``noun`` have been found so far.
+        """
+        def echo(count: int) -> None:
+            click.echo(f"Info: {count} {noun} found so far ...", err=True)
+
+        return echo
 
     @staticmethod
     def echo_session_expired() -> None:
@@ -294,7 +304,8 @@ Order History for {filter_description}{optional_start_index}{optional_full_detai
                                                  full_details=full_details,
                                                  keep_paging=not single_page,
                                                  time_filter=time_filter,
-                                                 order_filter=order_filter)
+                                                 order_filter=order_filter,
+                                                 progress=IOClick.echo_progress("Orders"))
         end_time = time.time()
 
         click.echo(config.output_cls(config).format(orders, output))
@@ -436,7 +447,8 @@ Transaction History for {days} days
                                                  config=config)
 
         start_time = time.time()
-        transaction_list = amazon_transactions.get_transactions(days=days)
+        transaction_list = amazon_transactions.get_transactions(days=days,
+                                                                progress=IOClick.echo_progress("Transactions"))
         end_time = time.time()
 
         click.echo(config.output_cls(config).format(transaction_list, output))
@@ -506,7 +518,8 @@ Gift Card Activity for {days} days
                                             config=config)
 
         start_time = time.time()
-        activity = amazon_gift_cards.get_gift_card_activity(days=days)
+        activity = amazon_gift_cards.get_gift_card_activity(
+            days=days, progress=IOClick.echo_progress("Gift Card activity entries"))
         end_time = time.time()
 
         click.echo(config.output_cls(config).format(activity, output))
