@@ -347,30 +347,13 @@ class TestTransactions(UnitTestCase):
         self.assertIsNone(transaction.seller)
         self.assertEqual(1, resp.call_count)
 
-    @responses.activate
+    @responses.activate(registry=OrderedRegistry)
     @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_get_transactions_paginated(self, mock_today):
         # GIVEN
         mock_today.date.today.return_value = datetime.date(2025, 5, 27)
         self.amazon_session.is_authenticated = True
-        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-with-next-page.html"),
-                  "r",
-                  encoding="utf-8") as f:
-            resp1 = responses.add(
-                responses.POST,
-                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
-                body=f.read(),
-                status=200,
-            )
-        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-in-progress.html"),
-                  "r",
-                  encoding="utf-8") as f:
-            resp2 = responses.add(
-                responses.POST,
-                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
-                body=f.read(),
-                status=200,
-            )
+        resp1, resp2 = self.given_two_transaction_pages_exist()
 
         # WHEN
         transactions = self.amazon_transactions.get_transactions()
@@ -379,6 +362,98 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(40, len(transactions))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
+
+    @responses.activate(registry=OrderedRegistry)
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_page_limit_stops_at_page_boundary(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2025, 5, 27)
+        self.amazon_session.is_authenticated = True
+        resp1, resp2 = self.given_two_transaction_pages_exist()
+
+        # WHEN
+        page = self.amazon_transactions.get_transactions_page(limit=5)
+
+        # THEN
+        self.assertEqual(20, len(page.items))
+        self.assertTrue(page.has_more)
+        self.assertEqual("2024-05-27", page.cursor["min_date"])
+        self.assertIsNone(page.cursor["order_id"])
+        self.assertIsNotNone(page.cursor["next_page_data"])
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(0, resp2.call_count)
+
+    @responses.activate(registry=OrderedRegistry)
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_page_cursor_is_json_safe_and_resumes(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2025, 5, 27)
+        self.amazon_session.is_authenticated = True
+        _, resp2 = self.given_two_transaction_pages_exist()
+        first_page = self.amazon_transactions.get_transactions_page(limit=5)
+        cursor = json.loads(json.dumps(first_page.cursor))
+
+        # WHEN
+        page = self.amazon_transactions.get_transactions_page(cursor=cursor)
+
+        # THEN
+        self.assertEqual(20, len(page.items))
+        self.assertFalse(page.has_more)
+        self.assertIsNone(page.cursor)
+        self.assertEqual(1, resp2.call_count)
+
+    @responses.activate(registry=OrderedRegistry)
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_page_without_limit_fetches_every_page(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2025, 5, 27)
+        self.amazon_session.is_authenticated = True
+        self.given_two_transaction_pages_exist()
+
+        # WHEN
+        page = self.amazon_transactions.get_transactions_page()
+
+        # THEN
+        self.assertEqual(40, len(page.items))
+        self.assertIsNone(page.cursor)
+
+    @responses.activate(registry=OrderedRegistry)
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_reports_progress_per_page(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2025, 5, 27)
+        self.amazon_session.is_authenticated = True
+        self.given_two_transaction_pages_exist()
+        counts = []
+
+        # WHEN
+        self.amazon_transactions.get_transactions(progress=counts.append)
+
+        # THEN
+        self.assertEqual([20, 40], counts)
+
+    @responses.activate(registry=OrderedRegistry)
+    @patch("amazonorders.transactions.datetime", wraps=datetime)
+    def test_get_transactions_page_reports_progress_per_batch(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2025, 5, 27)
+        self.amazon_session.is_authenticated = True
+        self.given_two_transaction_pages_exist()
+        counts = []
+
+        # WHEN
+        self.amazon_transactions.get_transactions_page(limit=5, progress=counts.append)
+
+        # THEN
+        self.assertEqual([20], counts)
+
+    def test_get_transactions_page_unauthenticated(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_transactions.get_transactions_page()
+
+        # THEN
+        self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
 
     @responses.activate(registry=OrderedRegistry)
     @patch("amazonorders.transactions.datetime", wraps=datetime)
@@ -551,6 +626,16 @@ class TestTransactions(UnitTestCase):
                 'ppw-widgetEvent:DefaultNextPageNavigationEvent:{"nextPageKey":"key"}': "",
             },
         )
+
+    def given_two_transaction_pages_exist(self):
+        responses_added = []
+        for html_file in ["transactions-with-next-page.html", "transactions-in-progress.html"]:
+            with open(os.path.join(self.RESOURCES_DIR, "transactions", html_file), "r", encoding="utf-8") as f:
+                responses_added.append(responses.add(responses.POST,
+                                                     self.test_config.constants.TRANSACTION_HISTORY_URL,
+                                                     body=f.read(),
+                                                     status=200))
+        return responses_added
 
     def given_embedded_next_page_data(self):
         return {"exclusiveStartKey": "REDACTED", "token": "REDACTED", "locale": "en_US",

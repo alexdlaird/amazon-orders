@@ -136,6 +136,7 @@ class Selectors:
     ORDER_DETAILS_ENTITY_SELECTOR = ["div#orderDetails",
                                      "div#ordersContainer",
                                      "div#odp-main-section"]
+    ORDER_DETAILS_ERROR_SELECTOR = "[data-component='errorbanner']"
     # A history card renders Items as .item-box, a .yo-enhanced-flex-card grid, or a
     # .yo-enhanced-card carousel, by how many the Shipment holds, and one Order mixes them
     ITEM_ENTITY_SELECTOR = ["[data-component='purchasedItems'] .a-fixed-left-grid",
@@ -326,6 +327,7 @@ class Selectors:
     TRACKING_ENTITY_SELECTOR = ["div.pt-main-container",
                                 "#pt-page-container-inner",
                                 "#mainContent-container:has(section.pt-card)"]
+    TRACKING_ERROR_SELECTOR = "div#errorPageContainer"
     FIELD_TRACKING_NUMBER_SELECTOR = [".pt-delivery-card-trackingId"]
     FIELD_TRACKING_NUMBER_PREFIX = "Tracking ID:"
     FIELD_TRACKING_CARRIER_SELECTOR = [".tracking-event-carrier-header"]

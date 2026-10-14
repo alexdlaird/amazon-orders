@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import re
+import subprocess
 import sys
 import time
 from abc import abstractmethod
@@ -16,7 +17,12 @@ from bs4 import Tag
 from requests import Response
 
 from amazonorders.conf import AmazonOrdersConfig
-from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersAuthRedirectError, AmazonOrdersError
+from amazonorders.exception import (
+    AmazonOrdersAuthError,
+    AmazonOrdersAuthRedirectError,
+    AmazonOrdersBrowserNotInstalledError,
+    AmazonOrdersError,
+)
 from amazonorders.forms import AuthForm
 from amazonorders.util import AmazonSessionResponse
 
@@ -31,6 +37,149 @@ SIGN_IN_POLL_INTERVAL_MS = 2000
 SIGN_IN_SETTLE_MS = 2000
 
 
+class PlaywrightBrowserLauncher:
+    """
+    Launches the browser the config selects, from whatever Playwright supports. ``browser`` is either a browser that's
+    already installed, as a Playwright channel like ``chrome`` or ``msedge``, or a browser type Playwright installs,
+    like ``chromium`` or ``firefox``. ``browser_executable_path`` launches any other browser of that type. With neither
+    set, the installed Chrome is used, or Playwright's Chromium if Chrome isn't installed.
+    """
+
+    #: The installed browser launched when ``browser`` isn't set.
+    DEFAULT_BROWSER_CHANNEL = "chrome"
+    #: The Playwright browser type launched when ``browser`` isn't set and the default channel isn't installed.
+    FALLBACK_BROWSER_TYPE = "chromium"
+
+    def __init__(self,
+                 config: AmazonOrdersConfig) -> None:
+        #: The config that selects the browser.
+        self.config: AmazonOrdersConfig = config
+
+    def launch(self,
+               pw: Any,
+               headless: bool) -> Any:
+        """
+        Launch the browser the config selects.
+
+        :param pw: The running Playwright instance.
+        :param headless: Whether to launch the browser without a window.
+        :return: The launched Playwright ``Browser``.
+        :raises AmazonOrdersBrowserNotInstalledError: If no browser is installed to launch.
+        :raises AmazonOrdersError: If the browser can't be launched.
+        """
+        from playwright.sync_api import Error as PlaywrightError  # type: ignore[import-not-found]
+
+        browser_name = self.config.browser
+        executable_path = self.config.browser_executable_path
+        if not browser_name and not executable_path:
+            return self._launch_default(pw, headless)
+
+        launch_options: Dict[str, Any] = {"headless": headless}
+        channel = None
+        browser_type = self._browser_types(pw).get(browser_name or self.FALLBACK_BROWSER_TYPE)
+        if browser_type is None:
+            channel = browser_name
+            browser_type = pw.chromium
+            launch_options["channel"] = channel
+        if executable_path:
+            launch_options["executable_path"] = executable_path
+        elif not channel and not self._is_installed(browser_type):
+            raise AmazonOrdersBrowserNotInstalledError(
+                f"{browser_type.name} isn't installed. Install it with: `playwright install {browser_type.name}`",
+                meta={"browser_types": [browser_type.name]}
+            )
+
+        try:
+            return browser_type.launch(**launch_options)
+        except PlaywrightError as e:
+            raise AmazonOrdersError(
+                f"{self._describe_launch_failure(browser_type.name, channel, executable_path)} "
+                f"({self._first_line(e)})"
+            ) from e
+
+    def install(self,
+                browser_type: str) -> bool:
+        """
+        Download a Playwright browser type (what ``playwright install <browser_type>`` does). If the config wouldn't
+        otherwise launch it, ``browser`` is set to it and persisted to the config file.
+
+        :param browser_type: The Playwright browser type to download, like ``chromium`` or ``firefox``.
+        :return: ``True`` if ``browser`` was set to the downloaded browser type.
+        :raises AmazonOrdersError: If the download fails.
+        """
+        if subprocess.run([sys.executable, "-m", "playwright", "install", browser_type]).returncode != 0:
+            raise AmazonOrdersError(f"Could not download {browser_type}. To try again yourself, run: "
+                                    f"`playwright install {browser_type}`")
+
+        if browser_type == (self.config.browser or self.FALLBACK_BROWSER_TYPE):
+            return False
+
+        self._select(browser_type)
+        return True
+
+    def _select(self,
+                browser_type: str) -> None:
+        AmazonOrdersConfig(config_path=self.config.config_path).update_config("browser", browser_type)
+        self.config.update_config("browser", browser_type, save=False)
+
+    def _launch_default(self,
+                        pw: Any,
+                        headless: bool) -> Any:
+        from playwright.sync_api import Error as PlaywrightError  # type: ignore[import-not-found]
+
+        try:
+            return pw.chromium.launch(headless=headless, channel=self.DEFAULT_BROWSER_CHANNEL)
+        except PlaywrightError as chrome_error:
+            logger.debug(f"Could not launch {self.DEFAULT_BROWSER_CHANNEL}, so using Playwright's Chromium: "
+                         f"{self._first_line(chrome_error)}")
+
+        browser_types = self._browser_types(pw)
+        fallback = browser_types[self.FALLBACK_BROWSER_TYPE]
+        if not self._is_installed(fallback):
+            installable = [self.FALLBACK_BROWSER_TYPE] + sorted(name for name in browser_types
+                                                                if name != self.FALLBACK_BROWSER_TYPE)
+            raise AmazonOrdersBrowserNotInstalledError(
+                "Chrome isn't installed, and neither is Playwright's Chromium. Install Chrome, or run: "
+                "`playwright install chromium`",
+                meta={"browser_types": installable}
+            )
+
+        try:
+            return fallback.launch(headless=headless)
+        except PlaywrightError as e:
+            raise AmazonOrdersError(
+                f"{self._describe_launch_failure(self.FALLBACK_BROWSER_TYPE, None, None)} ({self._first_line(e)})"
+            ) from e
+
+    @staticmethod
+    def _browser_types(pw: Any) -> Dict[str, Any]:
+        from playwright.sync_api import BrowserType  # type: ignore[import-not-found]
+
+        return {name: getattr(pw, name) for name in dir(pw)
+                if not name.startswith("_") and isinstance(getattr(pw, name), BrowserType)}
+
+    @staticmethod
+    def _is_installed(browser_type: Any) -> bool:
+        return os.path.exists(browser_type.executable_path)
+
+    @staticmethod
+    def _first_line(error: Exception) -> str:
+        return str(error).partition("\n")[0]
+
+    @staticmethod
+    def _describe_launch_failure(browser_type_name: str,
+                                 channel: Optional[str],
+                                 executable_path: Optional[str]) -> str:
+        if executable_path:
+            return f"Could not launch the browser at {executable_path}. Check that it exists and is a " \
+                   f"{browser_type_name} browser."
+        if channel:
+            return f"Could not launch {channel}. Check that it is installed, or set `browser` to `chromium` and " \
+                   f"run: `playwright install chromium`."
+        return f"Could not launch {browser_type_name}. If it is not installed, run: " \
+               f"`playwright install {browser_type_name}`."
+
+
 class PlaywrightAuthForm(AuthForm):
     """
     Shared base for Playwright-based JavaScript challenge solvers. Subclasses implement
@@ -41,8 +190,8 @@ class PlaywrightAuthForm(AuthForm):
     between :mod:`requests` and the Playwright browser context, and re-fetching the final
     URL once the challenge resolves.
 
-    Requires the ``[browser]`` extra: ``pip install amazon-orders[browser]``,
-    then ``playwright install chromium``.
+    Requires the ``[browser]`` extra: ``pip install amazon-orders[browser]``. Defaults to Chrome, or
+    Playwright's Chromium (``playwright install chromium``) if Chrome isn't installed.
     """
 
     def __init__(self,
@@ -82,14 +231,13 @@ class PlaywrightAuthForm(AuthForm):
 
         try:
             from playwright.sync_api import (  # type: ignore[import-not-found]
-                Error as PlaywrightError,
                 sync_playwright,
                 TimeoutError as PlaywrightTimeoutError,
             )
         except ImportError as e:
             raise AmazonOrdersError(
                 f"{type(self).__name__} requires the [browser] extra. "
-                "Install it with: `pip install amazon-orders[browser]`, then: `playwright install chromium`"
+                "Install it with: `pip install amazon-orders[browser]`"
             ) from e
 
         debug = self.amazon_session.debug
@@ -100,22 +248,8 @@ class PlaywrightAuthForm(AuthForm):
         output_dir = self.config.output_dir if debug else None
         original_url = last_response.url
 
-        browser_name = self.config.browser or "chromium"
         with sync_playwright() as pw:
-            browser_launcher = getattr(pw, browser_name, None)
-            if browser_launcher is None:
-                raise AmazonOrdersError(
-                    f"Unsupported browser: {browser_name!r}. "
-                    f"Valid values: firefox, chromium."
-                )
-            try:
-                browser = browser_launcher.launch(headless=self.headless)
-            except PlaywrightError as e:
-                detail = str(e).partition("\n")[0]
-                raise AmazonOrdersError(
-                    f"Could not launch {browser_name}. If it is not installed, run: "
-                    f"`playwright install {browser_name}`. ({detail})"
-                ) from e
+            browser = PlaywrightBrowserLauncher(self.config).launch(pw, self.headless)
 
             context = browser.new_context()
 
@@ -230,12 +364,8 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
     Detects the challenge via the ``#aa-challenge-page-captcha-container`` element and
     waits for navigation away from ``/ax/aaut/verify/ap/challenge``.
 
-    Register via ``auth_forms_classes`` in :class:`~amazonorders.conf.AmazonOrdersConfig`:
-
-    .. code-block:: yaml
-
-        auth_forms_classes:
-          - "amazonorders.contrib.browser.playwright.PlaywrightAcicForm"
+    Register by adding ``amazonorders.contrib.browser.playwright.PlaywrightAcicForm`` to ``auth_forms_classes`` in
+    :class:`~amazonorders.conf.AmazonOrdersConfig`.
     """
 
     def select_form(self,
@@ -501,12 +631,8 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
     Detects the challenge via ``JS_ROBOT_TEXT_REGEX``
     and waits for navigation away from the original challenge URL path.
 
-    Register via ``auth_forms_classes`` in :class:`~amazonorders.conf.AmazonOrdersConfig`:
-
-    .. code-block:: yaml
-
-        auth_forms_classes:
-          - "amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm"
+    Register by adding ``amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm`` to ``auth_forms_classes`` in
+    :class:`~amazonorders.conf.AmazonOrdersConfig`.
     """
 
     def __init__(self,
@@ -578,12 +704,8 @@ class PlaywrightManualWafForm(PlaywrightAuthForm):
     :class:`~amazonorders.contrib.waf.base.AwsWafForm`), and waits for navigation
     away from the original challenge URL path.
 
-    Register via ``auth_forms_classes`` in :class:`~amazonorders.conf.AmazonOrdersConfig`:
-
-    .. code-block:: yaml
-
-        auth_forms_classes:
-          - amazonorders.contrib.browser.playwright.PlaywrightManualWafForm
+    Register by adding ``amazonorders.contrib.browser.playwright.PlaywrightManualWafForm`` to ``auth_forms_classes`` in
+    :class:`~amazonorders.conf.AmazonOrdersConfig`.
     """
 
     def __init__(self,
@@ -646,7 +768,8 @@ class PlaywrightBrowserLogin:
     Because it opens a browser window it requires a display and a user at the keyboard, making it suitable for
     local/interactive use but not for headless environments.
 
-    Requires the ``[browser]`` extra: ``pip install amazon-orders[browser]``, then ``playwright install chromium``.
+    Requires the ``[browser]`` extra: ``pip install amazon-orders[browser]``. Defaults to Chrome, or
+    Playwright's Chromium (``playwright install chromium``) if Chrome isn't installed.
     """
 
     def __init__(self,
@@ -666,6 +789,7 @@ class PlaywrightBrowserLogin:
         resulting session. On success, ``is_authenticated`` is set to ``True`` on the session.
 
         :param timeout: The number of seconds to wait for the sign-in to be completed.
+        :raises AmazonOrdersBrowserNotInstalledError: If no browser is installed to sign in with.
         :raises AmazonOrdersError: If the ``[browser]`` extra is not installed, there is no display, the browser stops
             or the timeout passes before the sign-in completes, or Amazon does not accept the browser's session.
         """
@@ -677,31 +801,16 @@ class PlaywrightBrowserLogin:
         except ImportError as e:
             raise AmazonOrdersError(
                 f"{type(self).__name__} requires the [browser] extra. "
-                "Install it with: `pip install amazon-orders[browser]`, then: `playwright install chromium`"
+                "Install it with: `pip install amazon-orders[browser]`"
             ) from e
 
         self._require_display()
 
         constants = self.config.constants
         sign_in_url = f"{constants.SIGN_IN_URL}?{urlencode(constants.SIGN_IN_QUERY_PARAMS)}"
-        browser_name = self.config.browser or "chromium"
 
         with sync_playwright() as pw:
-            browser_launcher = getattr(pw, browser_name, None)
-            if browser_launcher is None:
-                raise AmazonOrdersError(
-                    f"Unsupported browser: {browser_name!r}. "
-                    f"Valid values: firefox, chromium."
-                )
-
-            try:
-                browser = browser_launcher.launch(headless=self.headless)
-            except PlaywrightError as e:
-                detail = str(e).partition("\n")[0]
-                raise AmazonOrdersError(
-                    f"Could not launch {browser_name}. If it is not installed, run: "
-                    f"`playwright install {browser_name}`. ({detail})"
-                ) from e
+            browser = PlaywrightBrowserLauncher(self.config).launch(pw, self.headless)
 
             try:
                 context = browser.new_context()

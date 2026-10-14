@@ -2,51 +2,73 @@
 Language Packages
 =================
 
-``amazon-orders`` implements English, along with international date and currency formats. Support for other
-languages comes from separately published language packages. A language package can override the words, date and
-currency formats, and Transactions page handling ``amazon-orders`` uses to parse Amazon's pages, all through the
-config.
+``amazon-orders`` reads Amazon's pages in English. Many Amazon sites can serve their pages in English, whatever
+language they default to, so support for a site comes in three tiers:
 
-Other English Amazon sites don't need a language package: set the ``domain`` config option (or pass ``--domain`` on
-the CLI). URLs, headers, the currency symbol, and sign-in values adjust for known domains, and anything else a site
-needs can be overridden by subclassing :class:`~amazonorders.constants.Constants` and setting ``constants_class``.
+- **amazon.com** — validated by a nightly integration run against the live site.
+- **Any other Amazon site that offers English** (e.g. amazon.co.uk, or amazon.de): no
+  language package needed, just set ``domain`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>` (or pass ``--domain`` on the CLI). Supported on a
+  best-effort basis.
+- **Any Amazon site, in another language** (a site with no English pages, or e.g. amazon.com in Spanish): install a
+  language package. A language package lets ``amazon-orders`` read a site's pages in that language, by overriding
+  the words, date and number formats, and page handling it parses them with, all through the config. It's validated
+  by its own maintainer's integration run.
+
+.. _supported-sites:
+
+Supported Sites
+---------------
+
+To check whether a site offers English, open its language selector. If English is listed, the site is in the
+second tier above. If it isn't, reading it needs a language package.
+
+Sites in English
+~~~~~~~~~~~~~~~~
+
+These sites are supported on a best-effort basis, alongside amazon.com. This list is generated from the region data
+``amazon-orders`` reads from Amazon's own pages, so it matches the version of the docs you're reading:
+
+.. supported-sites::
+
+If a site that offers English isn't listed, or doesn't work with ``domain``, please `open an issue`_, ideally with an
+anonymized page from the site attached, or see `Adding a Site`_.
+
+Available Language Packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- None yet. Be the first! See `Building a Language Package`_ to get started.
 
 .. note::
 
     Language packages are built, published, and maintained by their own authors, not in this repo. See
     `Getting Listed`_ to have yours added to these docs.
 
-Available Language Packages
----------------------------
+Adding a Site
+-------------
 
-- None yet. Be the first! See `Building a Language Package`_ to get started.
+Which Amazon sites offer English, and how to request it, is generated from Amazon's own pages, so a new site that
+offers English is supported in the next release without a pull request. The cookie that marks it signed in can't be
+read that way, since Amazon only sets it on sign-in, so a pull request adding it, from someone who uses that site, is
+welcome.
+
+To improve a site's support, open a pull request to ``amazon-orders`` itself with tests using real pages from that site
+(anonymized). English wording that differs from amazon.com (e.g. British labels like "Postage & Packing") belongs there,
+so every user of that site gets it.
+
+A language package is the place for anything else: reading a site in a language other than English, or a fuller
+implementation of a site with its own integration run and releases.
+
+A language package can also target an English site, to replace the best-effort support of ``amazon-orders`` with its
+own, validated by its own integration run. Fixes for an English site's pages still belong in ``amazon-orders`` itself
+(see `Adding a Site`_), so every user of that site gets them, whether or not they install the package.
+
+A language package changes what ``amazon-orders`` can read, not what it says: the CLI, error messages, and logs of
+``amazon-orders`` are always in English, whichever package is installed, and translating them isn't planned.
 
 Configuration
 -------------
 
-Install the language package, then set ``language_package`` in your ``~/.config/amazonorders/config.yml``:
-
-.. code-block:: yaml
-
-    language_package: my_language_package
-
-Or set it from the command line:
-
-.. code-block:: shell
-
-    amazon-orders update-config language_package my_language_package
-
-Or pass it inline when constructing :class:`~amazonorders.conf.AmazonOrdersConfig`:
-
-.. code-block:: python
-
-    from amazonorders.conf import AmazonOrdersConfig
-    from amazonorders.session import AmazonSession
-
-    config = AmazonOrdersConfig(data={"language_package": "my_language_package"})
-    amazon_session = AmazonSession("<AMAZON_EMAIL>",
-                                   "<AMAZON_PASSWORD>",
-                                   config=config)
+Install the language package, then set ``language_package`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>`.
 
 Set ``domain`` (or pass ``--domain``) to the Amazon site the language package targets.
 
@@ -66,6 +88,11 @@ Any ``*_class`` set in the config to something other than its default takes prec
 
 Building a Language Package
 ---------------------------
+
+.. tip::
+
+    Before translating, check whether the site offers its pages in English (see `Supported Sites`_). If it does, the
+    site belongs in ``amazon-orders`` itself, so see `Adding a Site`_ instead.
 
 A language package is a Python package that subclasses the defaults and overrides only what differs. The classes
 must be importable from the package itself, for instance in its ``__init__.py``:
@@ -119,10 +146,12 @@ placeholder text.
   the site's language with ``Accept-Language``
   (``BASE_HEADERS = {**constants.Constants.BASE_HEADERS, "Accept-Language": "<LANGUAGE>"}``). A header set here isn't
   replaced by the ``browser`` option.
-- **Request cookies** — set ``REQUEST_COOKIES`` on :class:`~amazonorders.constants.Constants` for a site that picks
-  its language from a cookie rather than from ``Accept-Language`` (e.g. ``REQUEST_COOKIES = {"lc-acbde": "en_GB"}`` on
-  amazon.de). These are sent with every request to the active domain, replacing any cookie of the same name Amazon
-  set.
+- **Request cookies** — set ``REQUEST_COOKIES`` on :class:`~amazonorders.constants.Constants` to the cookie that
+  picks the site's page language. On a site that offers English, ``amazon-orders`` sets that cookie to English unless
+  ``REQUEST_COOKIES`` or ``Accept-Language`` is overridden, so a package reading another language there should set it
+  to that language (e.g.
+  ``REQUEST_COOKIES = {"lc-acbde": "de_DE"}`` on amazon.de, or ``{"lc-main": "es_US"}`` on amazon.com). These are sent
+  with every request to the active domain, replacing any cookie of the same name Amazon set.
 - **Transactions page** — if the site builds this page differently (for instance, rendering it from embedded data or
   loading more pages from an API), subclass :class:`~amazonorders.transactions.TransactionsPage` and override
   :func:`~amazonorders.transactions.TransactionsPage.get_page` and
@@ -168,20 +197,24 @@ Testing
   :func:`~amazonorders.orders.AmazonOrders.parse_order_history`,
   :func:`~amazonorders.orders.AmazonOrders.parse_order_details`, and
   :func:`~amazonorders.transactions.AmazonTransactions.parse_transactions`.
-- Run a nightly integration test against the live site from your language package's own repo, with the account's
-  credentials stored as secrets, so a change on Amazon's side is caught before your users find it. Start from the
+- Run an integration test against the live site at least weekly from your language package's own repo, with the
+  account's credentials stored as secrets, so a change on Amazon's side is caught before your users find it. Running
+  it more often signs in more often, which makes Amazon more likely to challenge the login, so weekly is usually
+  enough. Start from the
   `integration.yml <https://github.com/alexdlaird/amazon-orders/blob/main/.github/workflows/integration.yml>`_
-  workflow in ``amazon-orders``.
+  workflow in ``amazon-orders``. GitHub disables a public repo's scheduled workflows after 60 days without activity,
+  so check that yours is still enabled if your repo goes quiet.
 
 Getting Listed
 --------------
 
-Once your language package is published and its nightly run is passing,
+Once your language package is published and its scheduled integration run is passing,
 `request a link <https://github.com/alexdlaird/amazon-orders/issues/new?template=new-language.yml>`_ and we'll add it
-to `Available Language Packages`_. A listed package stays listed while it's maintained: its nightly run keeps passing,
-and issues about it get a response. If its nightly run stays broken, or an issue goes unanswered, for more than 30
-days, we'll pause the listing until it's back on track.
+to `Available Language Packages`_. A listed package stays listed while it's maintained: its integration run keeps
+passing, and issues about it get a response. If its integration run stays broken, or an issue goes unanswered, for
+more than 30 days, we'll pause the listing until it's back on track.
 
-If something your language package needs to override isn't exposed, please
-`open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=enhancement&projects=&template=enhancement.yml>`_
-or a `pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.
+If something your language package needs to override isn't exposed, please `open an issue`_ or a
+`pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.
+
+.. _open an issue: https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=enhancement&projects=&template=enhancement.yml

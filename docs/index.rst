@@ -60,7 +60,7 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==4.8.*``, not ``==4.8.0``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==4.9.*``, not ``==4.9.0``)
 to ensure you always get the latest stable release.
 
 Basic Usage
@@ -174,6 +174,8 @@ environment variables ``amazon-orders`` looks for are:
 - ``AMAZON_PASSWORD``
 - ``AMAZON_OTP_SECRET_KEY`` (see :attr:`~amazonorders.session.AmazonSession.otp_secret_key`)
 
+Any other config value can be set the same way, as ``AMAZON_<KEY>`` (see :class:`~amazonorders.conf.AmazonOrdersConfig`).
+
 Handling Challenges
 -------------------
 
@@ -193,7 +195,6 @@ a headless browser, install with the ``browser`` extra:
 .. code:: sh
 
     pip install amazon-orders[browser]
-    playwright install chromium
 
 See :doc:`browser` for details.
 
@@ -208,10 +209,13 @@ See :ref:`Login Challenges <login-challenges>` for details.
 Languages and Regions
 ---------------------
 
-``amazon-orders`` core supports the English ``.com`` site.
+``amazon-orders`` reads Amazon's pages in English. The ``.com`` site is validated nightly.
 
-- **Other English sites** (e.g. ``amazon.ca``, ``amazon.co.uk``): set the ``domain`` config option.
-- **Other languages**: install a language package and set ``language_package``. See :doc:`language-packages`.
+- **Any other site that offers English** (e.g. ``amazon.co.uk``, or ``amazon.de``): set the
+  ``domain`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>`. These are supported on a best-effort basis. See :ref:`Supported Sites <supported-sites>`.
+- **Any site, in another language**: install a language package and set ``language_package``. A language package
+  lets ``amazon-orders`` read the site's pages; its own CLI and messages stay in English. See
+  :doc:`language-packages`.
 
 .. _known-limitations:
 

@@ -161,6 +161,23 @@ class TestGiftCards(UnitTestCase):
 
     @responses.activate
     @patch("amazonorders.gift_cards.datetime", wraps=datetime)
+    def test_get_gift_card_activity_reports_progress_per_page(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2026, 5, 15)
+        self.amazon_session.is_authenticated = True
+        self.given_gift_card_page_exists("gift-card-balance-activity.html")
+        self.given_gift_card_page_exists("gift-card-balance-activity-page-2.html")
+        self.given_gift_card_page_exists("gift-card-balance-activity-last-page.html")
+        counts = []
+
+        # WHEN
+        self.amazon_gift_cards.get_gift_card_activity(days=4000, progress=counts.append)
+
+        # THEN
+        self.assertEqual([15, 30, 41], counts)
+
+    @responses.activate
+    @patch("amazonorders.gift_cards.datetime", wraps=datetime)
     def test_get_gift_card_activity_days_filter(self, mock_today):
         # GIVEN
         mock_today.date.today.return_value = datetime.date(2026, 5, 12)

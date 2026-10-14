@@ -25,6 +25,15 @@ class AmazonOrdersNotFoundError(AmazonOrdersError):
     pass
 
 
+class AmazonOrdersUnavailableError(AmazonOrdersError):
+    """
+    Raised when Amazon shows a page saying it could not load what was requested. Amazon shows this page both when
+    what was requested does not exist and when Amazon had an issue on their end, so trying again later may succeed.
+    ``meta["amazon_message"]`` is the text Amazon's page showed.
+    """
+    pass
+
+
 class AmazonOrdersAuthError(AmazonOrdersError):
     """
     Raised when an ``amazon-orders`` authentication error has occurred.
@@ -43,5 +52,13 @@ class AmazonOrdersAuthRedirectError(AmazonOrdersAuthError):
 class AmazonOrdersEntityError(AmazonOrdersError):
     """
     Raised when an ``amazon-orders`` entity parsing error has occurred.
+    """
+    pass
+
+
+class AmazonOrdersBrowserNotInstalledError(AmazonOrdersError):
+    """
+    Raised when no browser is installed to sign in with. ``meta["browser_types"]`` lists the Playwright browser types
+    that can be installed in its place, the default first.
     """
     pass

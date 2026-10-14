@@ -23,7 +23,7 @@ pip install amazon-orders --upgrade
 
 That's it! `amazon-orders` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (e.g. `==4.8.*`, not `==4.8.0`) to
+If pinning, be sure to use a wildcard for the [minor version](https://semver.org/) (e.g. `==4.9.*`, not `==4.9.0`) to
 ensure you always get the latest stable release.
 
 ## Basic Usage
@@ -132,12 +132,17 @@ environment variables `amazon-orders` looks for are:
 - `AMAZON_PASSWORD`
 - `AMAZON_OTP_SECRET_KEY` (see [`otp_secret_key`](https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.otp_secret_key))
 
+Any other config value can be set the same way, as `AMAZON_<KEY>` (see [`AmazonOrdersConfig`](https://amazon-orders.readthedocs.io/api.html#amazonorders.conf.AmazonOrdersConfig)).
+
 ### Languages and Regions
 
-`amazon-orders` core supports the English `.com` site.
+`amazon-orders` reads Amazon's pages in English. The `.com` site is validated nightly.
 
-- **Other English sites** (e.g. `amazon.ca`, `amazon.co.uk`): set the `domain` config option.
-- **Other languages**: install a language package and set `language_package`. See
+- **Any other site that offers English** (e.g. `amazon.co.uk`, or `amazon.de`): set the
+  `domain` config option. These are supported on a best-effort basis. See
+  [Supported Sites](https://amazon-orders.readthedocs.io/language-packages.html#supported-sites).
+- **Any site, in another language**: install a language package and set `language_package`. A language package
+  lets `amazon-orders` read the site's pages; its own CLI and messages stay in English. See
   [Language Packages](https://amazon-orders.readthedocs.io/language-packages.html).
 
 ## Documentation

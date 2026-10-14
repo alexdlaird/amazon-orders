@@ -70,7 +70,7 @@ Amazon, but there are at least a few ways you can try to reduce the likelihood y
 Captcha challenges:
 
 - Ensure credentials are correct. Too many failed login attempts in a short period of time increases the chances of
-  being given a Captcha challenge. Persisting authentication in the config or the environment (see `docs <https://amazon-orders.readthedocs.io/api.html#amazonorders.session.AmazonSession.username>`_)
+  being given a Captcha challenge. Persisting authentication in the config or the environment (see :attr:`~amazonorders.session.AmazonSession.username`)
   can help ensure passwords are never entered incorrectly.
 - Wait several hours (sometimes over a day is necessary) before trying again.
 - Enable 2FA. One-time password (OTP) challenges during login can be auto-solved with :attr:`~amazonorders.session.AmazonSession.otp_secret_key`,
@@ -95,12 +95,12 @@ There are some situations where this parser is not preferred, either because it 
 some cases it leads to parsing issues, where fields like ``title``, ``currency``, etc. are populated with mangled data.
 ``amazon-orders`` should work with any `BeautifulSoup-compatible HTML parser <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-a-parser>`_,
 and many prefer to use `lxml <https://pypi.org/project/lxml/>`_ instead. If another parser is installed, you can change
-the parser ``amazon-orders`` will use with ``AmazonOrdersConfig.bs4_parser``.
+the parser ``amazon-orders`` will use by setting ``bs4_parser`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>`.
 
 Concurrency Workers Exhausted
 -----------------------------
 
-If you see this or similar errors, you may need to tweak ``AmazonOrdersConfig.thread_pool_size``. Increasing it is the
+If you see this or similar errors, you may need to tweak ``thread_pool_size`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>`. Increasing it is the
 likely solution, but doing so may also have an effect on how many active URL connections to Amazon can be executed at
 any given time, so adjusting both may be necessary. See also `URL Connection Pool Full`_.
 
@@ -112,7 +112,8 @@ URL Connection Pool Full
     WARNING:requests.packages.urllib3.connectionpool:HttpConnectionPool
     is full, discarding connection:
 
-If you see this or similar errors, you may need to tweak ``AmazonOrdersConfig.connection_pool_size``. Increasing it is
+If you see this or similar errors, you may need to tweak ``connection_pool_size`` in the
+:class:`config <amazonorders.conf.AmazonOrdersConfig>`. Increasing it is
 the likely solution, but the issue may also be linked to the number of async tasks being executed at a given time.
 Adjusting one or both of these values up or down may be necessary to find the correct threshold. See also
 `Concurrency Workers Exhausted`_.
@@ -132,9 +133,8 @@ In ``amazon-orders``, look for code that uses `BeautifulSoup's CSS select() meth
 
 More advanced troubleshooting can be done by extending :class:`~amazonorders.selectors.Selectors`,
 :class:`~amazonorders.constants.Constants`, and :class:`~amazonorders.transactions.TransactionsPage`, for instance to
-try different CSS selectors for parsing a field. When these classes are extended, use
-``AmazonOrdersConfig.selectors_class``, ``AmazonOrdersConfig.constants_class``, and
-``AmazonOrdersConfig.transactions_page_class`` to provide override classes.
+try different CSS selectors for parsing a field. When these classes are extended, set ``selectors_class``,
+``constants_class``, and ``transactions_page_class`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>` to provide override classes.
 
 If you identify the issue, please `submit a bug report <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_.
 If you're able to resolve the issue, please `also submit a PR <https://github.com/alexdlaird/amazon-orders/compare>`_

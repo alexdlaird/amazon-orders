@@ -3,16 +3,33 @@ __license__ = "MIT"
 
 import os
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import call, MagicMock, patch
 
 from bs4 import BeautifulSoup
 
 from amazonorders.conf import AmazonOrdersConfig
-from amazonorders.contrib.browser.playwright import PlaywrightAcicForm, PlaywrightJSAuthForm, PlaywrightManualWafForm
+from amazonorders.contrib.browser.playwright import (
+    PlaywrightAcicForm,
+    PlaywrightBrowserLauncher,
+    PlaywrightJSAuthForm,
+    PlaywrightManualWafForm,
+)
 from amazonorders.contrib.waf.base import AwsWafForm
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersBrowserNotInstalledError, AmazonOrdersError
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
+
+
+class _FakeBrowserType:
+    name = ""
+    executable_path = ""
+
+    def launch(self, **kwargs):
+        pass  # pragma: no cover
+
+
+class _FakePlaywrightError(Exception):
+    pass
 
 
 def _make_mock_playwright(final_url="https://www.amazon.com/ap/success",
@@ -35,8 +52,12 @@ def _make_mock_playwright(final_url="https://www.amazon.com/ap/success",
     mock_browser.new_context.return_value = mock_context
 
     mock_pw_instance = MagicMock()
-    mock_pw_instance.chromium.launch.return_value = mock_browser
-    mock_pw_instance.firefox.launch.return_value = mock_browser
+    for browser_type_name in ("chromium", "firefox", "webkit"):
+        browser_type = MagicMock(spec=_FakeBrowserType)
+        browser_type.name = browser_type_name
+        browser_type.executable_path = sys.executable
+        browser_type.launch.return_value = mock_browser
+        setattr(mock_pw_instance, browser_type_name, browser_type)
 
     mock_sync_playwright_cm = MagicMock()
     mock_sync_playwright_cm.__enter__ = MagicMock(return_value=mock_pw_instance)
@@ -56,7 +77,233 @@ def _playwright_module(sync_playwright, timeout_error_cls=None):
     fake = MagicMock()
     fake.sync_playwright = sync_playwright
     fake.TimeoutError = timeout_error_cls or type("TimeoutError", (Exception,), {})
+    fake.BrowserType = _FakeBrowserType
+    fake.Error = _FakePlaywrightError
     return fake
+
+
+class TestLaunchBrowser(UnitTestCase):
+    def given_playwright(self):
+        mock_sync_playwright, _, _, mock_browser = _make_mock_playwright()
+        pw = mock_sync_playwright.return_value.__enter__.return_value
+        return pw, _playwright_module(mock_sync_playwright), mock_browser
+
+    def test_launches_installed_chrome_by_default(self):
+        # GIVEN
+        pw, fake_module, mock_browser = self.given_playwright()
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            browser = PlaywrightBrowserLauncher(AmazonOrdersConfig(data={})).launch(pw, headless=True)
+
+        # THEN
+        self.assertEqual(mock_browser, browser)
+        pw.chromium.launch.assert_called_once_with(headless=True, channel="chrome")
+
+    def test_falls_back_to_playwright_chromium_without_chrome(self):
+        # GIVEN
+        pw, fake_module, mock_browser = self.given_playwright()
+        pw.chromium.launch.side_effect = [_FakePlaywrightError("Chromium distribution 'chrome' is not found"),
+                                          mock_browser]
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            browser = PlaywrightBrowserLauncher(AmazonOrdersConfig(data={})).launch(pw, headless=True)
+
+        # THEN
+        self.assertEqual(mock_browser, browser)
+        self.assertEqual([call(headless=True, channel="chrome"), call(headless=True)],
+                         pw.chromium.launch.call_args_list)
+
+    def test_default_without_chrome_or_chromium_offers_every_browser_type(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+        pw.chromium.launch.side_effect = _FakePlaywrightError("Chromium distribution 'chrome' is not found")
+        pw.chromium.executable_path = "/not/installed/chromium"
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            with self.assertRaises(AmazonOrdersBrowserNotInstalledError) as cm:
+                PlaywrightBrowserLauncher(AmazonOrdersConfig(data={})).launch(pw, headless=True)
+
+        # THEN
+        self.assertEqual("Chrome isn't installed, and neither is Playwright's Chromium. Install Chrome, or run: "
+                         "`playwright install chromium`", str(cm.exception))
+        self.assertEqual(["chromium", "firefox", "webkit"], cm.exception.meta["browser_types"])
+        pw.chromium.launch.assert_called_once_with(headless=True, channel="chrome")
+
+    def test_explicit_browser_type_not_installed_offers_only_it(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+        pw.firefox.executable_path = "/not/installed/firefox"
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            with self.assertRaises(AmazonOrdersBrowserNotInstalledError) as cm:
+                PlaywrightBrowserLauncher(AmazonOrdersConfig(data={"browser": "firefox"})).launch(pw, headless=True)
+
+        # THEN
+        self.assertEqual("firefox isn't installed. Install it with: `playwright install firefox`",
+                         str(cm.exception))
+        self.assertEqual(["firefox"], cm.exception.meta["browser_types"])
+        pw.firefox.launch.assert_not_called()
+
+    def test_explicit_browser_does_not_fall_back(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+        pw.chromium.launch.side_effect = _FakePlaywrightError("Chromium distribution 'chrome' is not found")
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            with self.assertRaises(AmazonOrdersError):
+                PlaywrightBrowserLauncher(AmazonOrdersConfig(data={"browser": "chrome"})).launch(pw, headless=True)
+
+        # THEN
+        pw.chromium.launch.assert_called_once_with(headless=True, channel="chrome")
+
+    def test_launches_installed_browser_as_chromium_channel(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            PlaywrightBrowserLauncher(AmazonOrdersConfig(data={"browser": "chrome"})).launch(pw, headless=False)
+
+        # THEN
+        pw.chromium.launch.assert_called_once_with(headless=False, channel="chrome")
+
+    def test_launches_playwright_browser_type_without_channel(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            PlaywrightBrowserLauncher(AmazonOrdersConfig(data={"browser": "firefox"})).launch(pw, headless=True)
+
+        # THEN
+        pw.firefox.launch.assert_called_once_with(headless=True)
+        pw.chromium.launch.assert_not_called()
+
+    def test_passes_executable_path_to_playwright(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+        config = AmazonOrdersConfig(data={"browser_executable_path": "/opt/brave/brave"})
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            PlaywrightBrowserLauncher(config).launch(pw, headless=False)
+
+        # THEN
+        pw.chromium.launch.assert_called_once_with(headless=False, executable_path="/opt/brave/brave")
+
+    def test_reads_browser_settings_from_environment(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+
+        # WHEN
+        with patch.dict(os.environ, {"AMAZON_BROWSER": "msedge", "AMAZON_BROWSER_EXECUTABLE_PATH": "/opt/edge"}):
+            with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+                PlaywrightBrowserLauncher(AmazonOrdersConfig(data={})).launch(pw, headless=True)
+
+        # THEN
+        pw.chromium.launch.assert_called_once_with(headless=True, channel="msedge", executable_path="/opt/edge")
+
+    def test_environment_wins_over_config(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+
+        # WHEN
+        with patch.dict(os.environ, {"AMAZON_BROWSER": "firefox"}):
+            with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+                PlaywrightBrowserLauncher(AmazonOrdersConfig(data={"browser": "chrome"})).launch(pw, headless=True)
+
+        # THEN
+        pw.firefox.launch.assert_called_once_with(headless=True)
+        pw.chromium.launch.assert_not_called()
+
+    def test_launch_failure_of_installed_browser_names_it(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+        pw.chromium.launch.side_effect = _FakePlaywrightError("Chromium distribution 'msedge' is not found\nmore")
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            with self.assertRaises(AmazonOrdersError) as cm:
+                PlaywrightBrowserLauncher(AmazonOrdersConfig(data={"browser": "msedge"})).launch(pw, headless=True)
+
+        # THEN
+        self.assertEqual("Could not launch msedge. Check that it is installed, or set `browser` to `chromium` and "
+                         "run: `playwright install chromium`. (Chromium distribution 'msedge' is not found)",
+                         str(cm.exception))
+
+    def test_launch_failure_of_playwright_browser_suggests_install(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+        pw.firefox.launch.side_effect = _FakePlaywrightError("Executable doesn't exist")
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            with self.assertRaises(AmazonOrdersError) as cm:
+                PlaywrightBrowserLauncher(AmazonOrdersConfig(data={"browser": "firefox"})).launch(pw, headless=True)
+
+        # THEN
+        self.assertEqual("Could not launch firefox. If it is not installed, run: `playwright install firefox`. "
+                         "(Executable doesn't exist)", str(cm.exception))
+
+
+class TestInstallBrowser(UnitTestCase):
+    @patch("amazonorders.contrib.browser.playwright.subprocess.run")
+    def test_install_runs_playwright_install(self, mock_run):
+        # GIVEN
+        mock_run.return_value.returncode = 0
+
+        # WHEN
+        selected = PlaywrightBrowserLauncher(self.test_config).install("chromium")
+
+        # THEN
+        mock_run.assert_called_once_with([sys.executable, "-m", "playwright", "install", "chromium"])
+        self.assertFalse(selected)
+        self.assertIsNone(self.test_config.browser)
+
+    @patch("amazonorders.contrib.browser.playwright.subprocess.run")
+    def test_install_of_non_default_browser_type_selects_and_persists_it(self, mock_run):
+        # GIVEN
+        mock_run.return_value.returncode = 0
+        self.test_config.save()
+
+        # WHEN
+        selected = PlaywrightBrowserLauncher(self.test_config).install("firefox")
+
+        # THEN
+        self.assertTrue(selected)
+        self.assertEqual("firefox", self.test_config.browser)
+        self.assertEqual("firefox", AmazonOrdersConfig(config_path=self.test_config.config_path).browser)
+
+    @patch("amazonorders.contrib.browser.playwright.subprocess.run")
+    def test_install_of_configured_browser_type_keeps_config(self, mock_run):
+        # GIVEN
+        mock_run.return_value.returncode = 0
+        self.test_config.update_config("browser", "firefox", save=False)
+
+        # WHEN
+        selected = PlaywrightBrowserLauncher(self.test_config).install("firefox")
+
+        # THEN
+        self.assertFalse(selected)
+
+    @patch("amazonorders.contrib.browser.playwright.subprocess.run")
+    def test_install_failure_says_how_to_retry(self, mock_run):
+        # GIVEN
+        mock_run.return_value.returncode = 1
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            PlaywrightBrowserLauncher(self.test_config).install("webkit")
+
+        # THEN
+        self.assertEqual("Could not download webkit. To try again yourself, run: `playwright install webkit`",
+                         str(cm.exception))
+        self.assertIsNone(self.test_config.browser)
 
 
 class TestPlaywrightAcicForm(UnitTestCase):

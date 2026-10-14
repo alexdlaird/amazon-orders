@@ -1,0 +1,78 @@
+name: Site Checks
+
+run-name: Site Checks ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * *"
+
+permissions:
+  contents: read
+  issues: none
+  pull-requests: none
+
+concurrency:
+  group: amazon-orders-site-checks-singleton
+
+jobs:
+  test:
+    name: Signed-Out Site Checks
+
+    env:
+      FORCE_COLOR: 1
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Signed-out site checks
+        run: make test-integration-sites
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v6
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./build/test-results
+          report_type: test_results
+
+  generate:
+    name: Generate Region Data
+
+    env:
+      FORCE_COLOR: 1
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Generate region data
+        run: make generate-region-data
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.RELEASE_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+      - name: Open a pull request for changes
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          branch: region-data
+          commit-message: Update region data from Amazon's own pages
+          title: Update region data from Amazon's own pages
+          body-path: build/region-data-report.md
+          add-paths: amazonorders/region_data.py
+          delete-branch: true

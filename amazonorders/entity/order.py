@@ -104,22 +104,23 @@ class Order(Parsable):
         #: The Order shipping total. Only populated when ``full_details`` is ``True``.
         self.shipping_total: Optional[float] = self._if_full_details(
             self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_SHIPPING_TOTAL_LABELS))
-        #: The Order free shipping. Only populated when ``full_details`` is ``True``.
+        #: The Order free shipping, as a negative amount. Only populated when ``full_details`` is ``True``.
         self.free_shipping: Optional[float] = self._if_full_details(
             self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_FREE_SHIPPING_LABELS))
-        #: The Order promotion applied. Only populated when ``full_details`` is ``True``.
+        #: The Order promotion applied, as a negative amount. Only populated when ``full_details`` is ``True``.
         self.promotion_applied: Optional[float] = self._if_full_details(
             self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_PROMOTION_APPLIED_LABELS,
                                          combine_multiple=True))
-        #: The Order coupon savings. Only populated when ``full_details`` is ``True``.
+        #: The Order coupon savings, as a negative amount. Only populated when ``full_details`` is ``True``.
         self.coupon_savings: Optional[float] = self._if_full_details(
             self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_COUPON_SAVINGS_LABELS,
                                          combine_multiple=True))
-        #: The Order reward points. Only populated when ``full_details`` is ``True``.
+        #: The Order reward points, as a negative amount of currency (not a count of points). Only populated when
+        #: ``full_details`` is ``True``.
         self.reward_points: Optional[float] = self._if_full_details(
             self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_REWARD_POINTS_LABELS,
                                          combine_multiple=True))
-        #: The Order Subscribe & Save discount. Only populated when ``full_details`` is ``True``.
+        #: The Order Subscribe & Save discount, as a negative amount. Only populated when ``full_details`` is ``True``.
         self.subscription_discount: Optional[float] = self._if_full_details(
             self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_SUBSCRIPTION_DISCOUNT_LABELS))
         #: The Order total before tax. Only populated when ``full_details`` is ``True``.
@@ -131,13 +132,13 @@ class Order(Parsable):
         #: The Order refund total. Only populated when ``full_details`` is ``True``.
         self.refund_total: Optional[float] = self._if_full_details(
             self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_REFUND_TOTAL_LABELS))
-        #: The Multibuy discount. Only populated when ``full_details`` is ``True``.
+        #: The Multibuy discount, as a negative amount. Only populated when ``full_details`` is ``True``.
         self.multibuy_discount: Optional[float] = self._if_full_details(
             self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_MULTIBUY_DISCOUNT_LABELS))
-        #: The Amazon discount. Only populated when ``full_details`` is ``True``.
+        #: The Amazon discount, as a negative amount. Only populated when ``full_details`` is ``True``.
         self.amazon_discount: Optional[float] = self._if_full_details(
             self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_AMAZON_DISCOUNT_LABELS))
-        #: The Gift Card total (rendered as "Gift Card" on digital order details pages). Only
+        #: The Gift Card total (rendered as "Gift Card" on digital order details pages), as a negative amount. Only
         #: populated when ``full_details`` is ``True``.
         self.gift_card: Optional[float] = self._if_full_details(
             self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_GIFT_CARD_LABELS))

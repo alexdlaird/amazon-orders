@@ -19,10 +19,9 @@ class UnitTestCase(TestCase):
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources"))
 
     def setUp(self):
-        # Temporarily clear these if they are set in the environment, so they don't interfere with unit tests
-        self.username = os.environ.pop('AMAZON_USERNAME', None)
-        self.password = os.environ.pop('AMAZON_PASSWORD', None)
-        self.otp_secret_key = os.environ.pop('AMAZON_OTP_SECRET_KEY', None)
+        # Temporarily clear any config set in the environment, so it doesn't interfere with unit tests
+        self.cleared_environment = {name: os.environ.pop(name) for name in list(os.environ)
+                                    if name.startswith(conf.ENVIRONMENT_VARIABLE_PREFIX)}
 
         conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".config")
         self.test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")
@@ -42,12 +41,7 @@ class UnitTestCase(TestCase):
             shutil.rmtree(conf.DEFAULT_CONFIG_DIR)
 
         # Reset environment variables that were temporarily cleared
-        if self.username:
-            os.environ["AMAZON_USERNAME"] = self.username
-        if self.password:
-            os.environ["AMAZON_PASSWORD"] = self.password
-        if self.otp_secret_key:
-            os.environ["AMAZON_OTP_SECRET_KEY"] = self.otp_secret_key
+        os.environ.update(self.cleared_environment)
 
     def given_unauthenticated_home_page(self,
                                         auth_file="unauth-index.html"):
@@ -183,16 +177,28 @@ class UnitTestCase(TestCase):
             status=200,
         )
 
-    def given_order_history_exists(self, year, start_index=0):
+    @staticmethod
+    def history_page_query(start_index):
+        page = start_index // 10
+        return f"&page={page}&startIndex={page * 10}" if page else ""
+
+    def order_history_url(self, year, start_index=0):
+        return (f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}"
+                f"{self.history_page_query(start_index)}")
+
+    def given_order_history_exists(self, year, start_index=0, ref=None):
         with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-history-{year}-{start_index}.html"), "r",
                   encoding="utf-8") as f:
-            optional_start_index = f"&startIndex={start_index}" if start_index else ""
+            if ref:
+                optional_paging = f"&startIndex={start_index}&ref_={ref}"
+            else:
+                optional_paging = self.history_page_query(start_index)
             return responses.add(
                 responses.GET,
                 "{url}?timeFilter=year-{year}"
-                "{optional_start_index}".format(url=self.test_config.constants.ORDER_HISTORY_URL,
-                                                year=year,
-                                                optional_start_index=optional_start_index),
+                "{optional_paging}".format(url=self.test_config.constants.ORDER_HISTORY_URL,
+                                           year=year,
+                                           optional_paging=optional_paging),
                 body=f.read(),
                 status=200,
             )
@@ -200,13 +206,12 @@ class UnitTestCase(TestCase):
     def given_order_history_exists_for_time_filter(self, time_filter, html_file, start_index=0):
         with open(os.path.join(self.RESOURCES_DIR, "orders", html_file), "r",
                   encoding="utf-8") as f:
-            optional_start_index = f"&startIndex={start_index}" if start_index else ""
             return responses.add(
                 responses.GET,
                 "{url}?timeFilter={time_filter}"
-                "{optional_start_index}".format(url=self.test_config.constants.ORDER_HISTORY_URL,
-                                                time_filter=time_filter,
-                                                optional_start_index=optional_start_index),
+                "{optional_paging}".format(url=self.test_config.constants.ORDER_HISTORY_URL,
+                                           time_filter=time_filter,
+                                           optional_paging=self.history_page_query(start_index)),
                 body=f.read(),
                 status=200,
             )

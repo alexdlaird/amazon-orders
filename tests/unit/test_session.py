@@ -6,6 +6,7 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
+import requests
 import responses
 from bs4 import BeautifulSoup
 from responses.matchers import query_string_matcher, urlencoded_params_matcher
@@ -144,7 +145,7 @@ class TestSession(UnitTestCase):
             self.assertIn("session-id=some-session-id", cookie_header)
 
     @responses.activate
-    def test_no_request_cookies_by_default(self):
+    def test_only_language_cookie_by_default(self):
         # GIVEN
         url = f"{self.test_config.constants.BASE_URL}/some/page"
         responses.add(responses.GET, url, body="<html></html>", status=200)
@@ -153,7 +154,7 @@ class TestSession(UnitTestCase):
         self.amazon_session.get(url)
 
         # THEN
-        self.assertNotIn("Cookie", responses.calls[0].request.headers)
+        self.assertEqual("lc-main=en_US", responses.calls[0].request.headers["Cookie"])
 
     @responses.activate
     def test_login_claim_invalid_username(self):
@@ -950,6 +951,65 @@ class TestSession(UnitTestCase):
 
             # THEN
             self.assertEqual(5, mock_request.call_args.kwargs["timeout"])
+
+    @responses.activate
+    def test_request_connection_dropped(self):
+        # GIVEN
+        url = "https://www.amazon.com/"
+        responses.add(responses.GET, url,
+                      body=requests.ConnectionError("Remote end closed connection without response"))
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_session.get(url)
+
+        # THEN
+        self.assertEqual("The page https://www.amazon.com/ returned no response: Remote end closed connection "
+                         "without response. Amazon had an issue on their end, or may be temporarily blocking your "
+                         "requests. Wait a bit before trying again.", str(cm.exception))
+        self.assertIsInstance(cm.exception.__cause__, requests.ConnectionError)
+
+    @responses.activate
+    def test_request_timed_out(self):
+        # GIVEN
+        url = "https://www.amazon.com/"
+        responses.add(responses.GET, url, body=requests.ReadTimeout("Read timed out"))
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_session.get(url)
+
+        # THEN
+        self.assertIn("returned no response: Read timed out. Amazon had an issue on their end", str(cm.exception))
+        self.assertIsInstance(cm.exception.__cause__, requests.ReadTimeout)
+
+    @responses.activate
+    def test_request_too_many_redirects(self):
+        # GIVEN
+        url = "https://www.amazon.com/"
+        responses.add(responses.GET, url, body=requests.TooManyRedirects("Exceeded 30 redirects"))
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_session.get(url)
+
+        # THEN
+        self.assertEqual("The page https://www.amazon.com/ returned no response: Exceeded 30 redirects.",
+                         str(cm.exception))
+
+    def test_credentials_environment_variables_win_over_arguments_and_config(self):
+        # GIVEN
+        with patch.dict(os.environ, {"AMAZON_USERNAME": "env-username", "AMAZON_OTP_SECRET_KEY": "env-otp"}):
+            config = self._config_with(username="config-username", password="config-password")
+
+        # WHEN
+        amazon_session = AmazonSession("argument-username", "argument-password", config=config,
+                                       otp_secret_key="argument-otp")
+
+        # THEN
+        self.assertEqual("env-username", amazon_session.username)
+        self.assertEqual("argument-password", amazon_session.password)
+        self.assertEqual("env-otp", amazon_session.otp_secret_key)
 
 
 class RecordingIO(IODefault):

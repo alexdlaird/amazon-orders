@@ -1,4 +1,4 @@
-.PHONY: all install nopyc clean test test-integration build-test-resources docs check local validate-release upload install-waf install-browser
+.PHONY: all install nopyc clean test test-integration test-integration-sites generate-region-data build-test-resources docs check local validate-release upload install-waf install-browser
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -52,7 +52,20 @@ test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev,integration]"; \
-		pytest -v --ignore=tests/unit -o junit_suite_name=integration --reruns ${INTEGRATION_TEST_RERUN} --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY} ${PYTEST_EXTRA_ARGS}; \
+		pytest -v --ignore=tests/unit --ignore=tests/integration/test_integration_sites.py -o junit_suite_name=integration --reruns ${INTEGRATION_TEST_RERUN} --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY} ${PYTEST_EXTRA_ARGS}; \
+	)
+
+test-integration-sites: install
+	@( \
+		source $(PROJECT_VENV)/bin/activate; \
+		python -m pip install ".[dev,integration]"; \
+		pytest -v -rs tests/integration/test_integration_sites.py -o junit_suite_name=integration-sites ${PYTEST_EXTRA_ARGS}; \
+	)
+
+generate-region-data: install
+	@( \
+		source $(PROJECT_VENV)/bin/activate; \
+		python scripts/generate-region-data.py; \
 	)
 
 build-test-resources: install
@@ -66,7 +79,7 @@ docs: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[docs]"; \
-		sphinx-build -M html docs build/docs -n; \
+		sphinx-build -M html docs build/docs -n -E; \
 	)
 
 check: install

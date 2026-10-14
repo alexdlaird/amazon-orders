@@ -41,18 +41,14 @@ Add the ``[capsolver]`` extra:
 
     pip install amazon-orders[capsolver]
 
-Set your API key as an environment variable (or via :class:`~amazonorders.conf.AmazonOrdersConfig`):
+Set your API key as an environment variable:
 
 .. code-block:: shell
 
     export CAPSOLVER_API_KEY=your-capsolver-key
 
-Register the form in your ``~/.config/amazonorders/config.yml``:
-
-.. code-block:: yaml
-
-    auth_forms_classes:
-      - amazonorders.contrib.waf.capsolver.CapSolverWafForm
+Add ``amazonorders.contrib.waf.capsolver.CapSolverWafForm`` to ``auth_forms_classes`` in the
+:class:`config <amazonorders.conf.AmazonOrdersConfig>`.
 
 Now ``amazon-orders login`` will clear any AWS WAF challenge it encounters during authentication.
 
@@ -65,18 +61,14 @@ Add the ``[anticaptcha]`` extra:
 
     pip install amazon-orders[anticaptcha]
 
-Set your API key as an environment variable (or via :class:`~amazonorders.conf.AmazonOrdersConfig`):
+Set your API key as an environment variable:
 
 .. code-block:: shell
 
     export ANTICAPTCHA_API_KEY=your-anticaptcha-key
 
-Register the form in your ``~/.config/amazonorders/config.yml``:
-
-.. code-block:: yaml
-
-    auth_forms_classes:
-      - amazonorders.contrib.waf.anticaptcha.AntiCaptchaWafForm
+Add ``amazonorders.contrib.waf.anticaptcha.AntiCaptchaWafForm`` to ``auth_forms_classes`` in the
+:class:`config <amazonorders.conf.AmazonOrdersConfig>`.
 
 2Captcha
 --------
@@ -87,18 +79,14 @@ Add the ``[2captcha]`` extra:
 
     pip install amazon-orders[2captcha]
 
-Set your API key as an environment variable (or via :class:`~amazonorders.conf.AmazonOrdersConfig`):
+Set your API key as an environment variable:
 
 .. code-block:: shell
 
     export TWOCAPTCHA_API_KEY=your-2captcha-key
 
-Register the form in your ``~/.config/amazonorders/config.yml``:
-
-.. code-block:: yaml
-
-    auth_forms_classes:
-      - amazonorders.contrib.waf.twocaptcha.TwoCaptchaWafForm
+Add ``amazonorders.contrib.waf.twocaptcha.TwoCaptchaWafForm`` to ``auth_forms_classes`` in the
+:class:`config <amazonorders.conf.AmazonOrdersConfig>`.
 
 Writing Your Own
 ----------------

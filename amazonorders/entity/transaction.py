@@ -37,7 +37,7 @@ class Transaction(Parsable):
         #: The Transaction payment method's last digits, parsed from :attr:`payment_method`.
         #: ``None`` if no masked digits.
         self.payment_method_last_4: Optional[str] = self.safe_parse(self._parse_payment_method_last_4)
-        #: The Transaction grand total.
+        #: The Transaction grand total, negative for a charge and positive for a refund.
         self.grand_total: float = self.safe_parse(self._parse_grand_total)
         #: The Transaction was a refund or not.
         self.is_refund: bool = self.grand_total > 0
