@@ -6,14 +6,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.9.0...HEAD)
 
+### Added
+
+- `--progress` and `--no-progress` CLI flags, to force the progress status on or off.
+
+### Fixed
+
+- The CLI's progress spammed a newline for every update in `4.9.0` instead of animating.
+- Bug fixes and stability improvements.
+
 ## [4.9.0](https://github.com/alexdlaird/amazon-orders/compare/4.8.1...4.9.0) - 2026-10-14
 
 ### Added
 
-- English pages on any Amazon site that offers them, with `domain` and no language package (e.g. `amazon.de`, `amazon.fr`, `amazon.co.jp`).
+- English pages on any Amazon site that offers them, whatever language the account is set to, including `amazon.com`, and with `domain` and no language package (e.g. `amazon.de`, `amazon.fr`, `amazon.co.jp`).
 - Sign-in and currency symbols for more non-`.com` Amazon sites (e.g. `amazon.fr`, `amazon.co.za`).
 - Browser sign-in with any browser Playwright supports, using the installed Chrome by default, with `browser` and `browser_executable_path`.
-- `AMAZON_<KEY>` environment variables for every config value (e.g. `AMAZON_MAX_AUTH_ATTEMPTS`).
+- `AMAZON_<KEY>` environment variables for every config value (e.g. `AMAZON_MAX_AUTH_ATTEMPTS`), which take precedence over `config.yml`.
+- Progress status while the CLI fetches history, and a `progress` callback to do the same with the API.
 
 ### Changed
 
@@ -25,7 +35,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Removed
 
-- `AMAZON_CURRENCY_SYMBOL`.
+- `AMAZON_CURRENCY_SYMBOL`, superseded by full regional support.
 
 ### Fixed
 

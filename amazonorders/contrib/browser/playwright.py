@@ -22,6 +22,7 @@ from amazonorders.exception import (
     AmazonOrdersAuthRedirectError,
     AmazonOrdersBrowserNotInstalledError,
     AmazonOrdersError,
+    AmazonOrdersWafSolverError,
 )
 from amazonorders.forms import AuthForm
 from amazonorders.util import AmazonSessionResponse
@@ -447,6 +448,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
         :param context: The Playwright ``BrowserContext``.
         :param output_dir: Directory for debug snapshots, or ``None``.
         :return: ``True`` if a WAF token was obtained and injected, ``False`` otherwise.
+        :raises AmazonOrdersWafSolverError: If the WAF solver fails.
         """
         try:
             from playwright.sync_api import TimeoutError as PlaywrightTimeoutError  # type: ignore[import-not-found]
@@ -485,6 +487,8 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
 
         try:
             token = waf_form._solve_token(page.url, goku, challenge_script)
+        except AmazonOrdersWafSolverError:
+            raise
         except Exception:
             logger.info("WAF solver failed to solve embedded WAF challenge.", exc_info=True)
             return False
@@ -515,6 +519,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
         :param context: The Playwright ``BrowserContext``.
         :param output_dir: Directory for debug snapshots, or ``None``.
         :return: ``True`` if the Puzzle was solved and submitted, ``False`` otherwise.
+        :raises AmazonOrdersWafSolverError: If the WAF solver fails.
         """
         try:
             from playwright.sync_api import TimeoutError as PlaywrightTimeoutError  # type: ignore[import-not-found]
@@ -569,6 +574,8 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
 
         try:
             answer = waf_form._solve_visual_captcha(page.url, challenge_images, question)
+        except AmazonOrdersWafSolverError:
+            raise
         except Exception:
             logger.info("WAF solver failed to solve Puzzle.", exc_info=True)
             return False
@@ -577,7 +584,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
             logger.info(f"{waf_form.PROVIDER_NAME} does not support Puzzle solving.")
             return False
 
-        message = f"Info: Puzzle solved via {waf_form.PROVIDER_NAME}."
+        message = f"Info: Puzzle answered via {waf_form.PROVIDER_NAME}."
         logger.info(message)
         self.amazon_session.io.echo(message)
 

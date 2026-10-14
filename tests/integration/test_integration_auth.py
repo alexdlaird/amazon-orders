@@ -47,8 +47,8 @@ class TestIntegrationAuth(IntegrationTestCase):
         # THEN
         self.assertTrue(amazon_session.is_authenticated)
         self.assertTrue(amazon_session.auth_cookies_stored())
-        # Navigating to a non-existent Order when authenticated returns 404 (rather than redirecting to login), which
-        # indicates we're successfully logged in
+        # When authenticated, Amazon redirects a non-existent Order somewhere other than sign-in, so get_order() raises
+        # AmazonOrdersNotFoundError rather than an auth error, which indicates we're successfully logged in
         with self.assertRaises(AmazonOrdersNotFoundError):
             amazon_orders.get_order(order_id="1234-fake-id")
 

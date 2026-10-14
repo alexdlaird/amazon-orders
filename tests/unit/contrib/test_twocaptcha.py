@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.contrib.waf.twocaptcha import TwoCaptchaWafForm
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersWafSolverError
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
 
@@ -162,7 +162,7 @@ class TestTwoCaptchaWafForm(UnitTestCase):
         self.assertIn("existing_token", str(cm.exception))
 
     @patch.dict(os.environ, {"TWOCAPTCHA_API_KEY": "test-api-key"})
-    def test_solve_token_sdk_exception_wraps_as_amazon_orders_error(self):
+    def test_solve_token_sdk_exception_raises_waf_solver_error(self):
         # GIVEN
         fake_solver_instance = MagicMock()
         fake_solver_instance.amazon_waf.side_effect = RuntimeError("ERROR_ZERO_BALANCE")
@@ -176,10 +176,12 @@ class TestTwoCaptchaWafForm(UnitTestCase):
 
         # WHEN / THEN
         with patch.dict(sys.modules, {"twocaptcha": fake_module}):
-            with self.assertRaises(AmazonOrdersError) as cm:
+            with self.assertRaises(AmazonOrdersWafSolverError) as cm:
                 form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("2Captcha", str(cm.exception))
         self.assertIn("ERROR_ZERO_BALANCE", str(cm.exception))
+        self.assertEqual("2Captcha", cm.exception.meta["provider"])
+        self.assertIn(cm.exception.meta["provider_error"], str(cm.exception))
 
     @patch.dict(os.environ, {"TWOCAPTCHA_API_KEY": "test-api-key"})
     def test_solve_token_missing_twocaptcha_package_raises(self):

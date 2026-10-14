@@ -8,8 +8,9 @@ import logging
 import os
 import platform
 import sys
+import threading
 import time
-from typing import Any, Callable, List, Optional
+from typing import Any, List, Optional
 
 import click
 from click.core import Context
@@ -77,19 +78,64 @@ class IOClick(IODefault):
         click.echo(banner.format(version=__version__), err=True)
 
     @staticmethod
-    def echo_progress(noun: str) -> Callable[[int], None]:
-        """
-        Build a ``progress`` callback that tells the user, on ``stderr``, how many ``noun`` have been found so far.
-        """
-        def echo(count: int) -> None:
-            click.echo(f"Info: {count} {noun} found so far ...", err=True)
-
-        return echo
-
-    @staticmethod
     def echo_session_expired() -> None:
         click.echo("... Amazon redirected to login, which likely means the persisted session is stale. It was logged "
                    "out, so call the `login` command again, or `login --browser` to log in on Amazon's own page.\n")
+
+
+class ProgressSpinner:
+    """
+    While a fetch runs, show a spinner and how many ``noun`` have been found so far on a single ``stderr`` line,
+    redrawn in place. The line is cleared when the fetch ends, whether or not it succeeded. Pass it as a ``progress``
+    callback. When not ``enabled``, nothing is shown.
+    """
+
+    FRAMES = "|/-\\"
+    INTERVAL_SECONDS = 0.1
+
+    def __init__(self,
+                 noun: str,
+                 enabled: bool) -> None:
+        self.noun: str = noun
+        self.enabled: bool = enabled
+        self._count: int = 0
+        self._line_length: int = 0
+        self._lock: threading.Lock = threading.Lock()
+        self._stopped: threading.Event = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+
+    def __call__(self,
+                 count: int) -> None:
+        with self._lock:
+            self._count = count
+
+    def __enter__(self) -> "ProgressSpinner":
+        if self.enabled:
+            self._thread = threading.Thread(target=self._spin, daemon=True)
+            self._thread.start()
+
+        return self
+
+    def __exit__(self,
+                 *exc_info: Any) -> None:
+        if self._thread:
+            self._stopped.set()
+            self._thread.join()
+            click.echo(f"\r{' ' * self._line_length}\r", nl=False, err=True)
+
+    def _spin(self) -> None:
+        frame = 0
+        while not self._stopped.is_set():
+            with self._lock:
+                count = self._count
+            self._redraw(f"{self.FRAMES[frame % len(self.FRAMES)]} {self.noun} found so far: {count}")
+            frame += 1
+            self._stopped.wait(self.INTERVAL_SECONDS)
+
+    def _redraw(self,
+                line: str) -> None:
+        click.echo(f"\r{line.ljust(self._line_length)}", nl=False, err=True)
+        self._line_length = max(self._line_length, len(line))
 
 
 class CliAuth:
@@ -168,6 +214,9 @@ class CliAuth:
 @click.option("--domain",
               help="The Amazon domain to target (e.g. amazon.com, amazon.co.uk, amazon.com.au). "
                    "Defaults to amazon.com.")
+@click.option("--progress/--no-progress", default=None,
+              help="Show a running count while fetching. Defaults to showing it only in an interactive terminal, "
+                   "and not with --debug.")
 @click.pass_context
 def amazon_orders_cli(ctx: Context,
                       **kwargs: Any) -> None:
@@ -194,6 +243,9 @@ def amazon_orders_cli(ctx: Context,
     if kwargs["debug"]:
         logger.setLevel(logging.DEBUG)
         logger.addHandler(logging.StreamHandler())
+
+    ctx.obj["show_progress"] = (kwargs["progress"] if kwargs["progress"] is not None
+                                else _is_interactive_terminal() and not kwargs["debug"])
 
     data = {}
     if kwargs.get("output_dir"):
@@ -293,20 +345,22 @@ Order History for {filter_description}{optional_start_index}{optional_full_detai
                    .format(filter_description=filter_description,
                            optional_start_index=optional_start_index,
                            optional_full_details=optional_full_details), err=True)
-        click.echo("Info: Fetching Order history, this might take a minute ...", err=True)
+        if not ctx.obj["show_progress"]:
+            click.echo("Info: Fetching Order history, this might take a minute ...", err=True)
 
         config = ctx.obj["conf"]
         amazon_orders = AmazonOrders(amazon_session,
                                      config=config)
 
         start_time = time.time()
-        orders = amazon_orders.get_order_history(year=year,
-                                                 start_index=start_index,
-                                                 full_details=full_details,
-                                                 keep_paging=not single_page,
-                                                 time_filter=time_filter,
-                                                 order_filter=order_filter,
-                                                 progress=IOClick.echo_progress("Orders"))
+        with ProgressSpinner("Orders", ctx.obj["show_progress"]) as progress:
+            orders = amazon_orders.get_order_history(year=year,
+                                                     start_index=start_index,
+                                                     full_details=full_details,
+                                                     keep_paging=not single_page,
+                                                     time_filter=time_filter,
+                                                     order_filter=order_filter,
+                                                     progress=progress)
         end_time = time.time()
 
         click.echo(config.output_cls(config).format(orders, output))
@@ -403,7 +457,8 @@ def order_transactions(ctx: Context,
         output = kwargs["output"]
 
         start_time = time.time()
-        order_transaction_list = amazon_transactions.get_transactions(order_id=order_id)
+        with ProgressSpinner("Transactions", ctx.obj["show_progress"]) as progress:
+            order_transaction_list = amazon_transactions.get_transactions(order_id=order_id, progress=progress)
         end_time = time.time()
 
         click.echo(config.output_cls(config).format(order_transaction_list, output))
@@ -441,15 +496,16 @@ def transactions(ctx: Context, **kwargs: Any) -> None:
 Transaction History for {days} days
 -----------------------------------------------------------------------\n""".format(days=days), err=True
         )
-        click.echo("Info: Fetching Transaction history, this might take a minute ...", err=True)
+        if not ctx.obj["show_progress"]:
+            click.echo("Info: Fetching Transaction history, this might take a minute ...", err=True)
 
         config = ctx.obj["conf"]
         amazon_transactions = AmazonTransactions(amazon_session,
                                                  config=config)
 
         start_time = time.time()
-        transaction_list = amazon_transactions.get_transactions(days=days,
-                                                                progress=IOClick.echo_progress("Transactions"))
+        with ProgressSpinner("Transactions", ctx.obj["show_progress"]) as progress:
+            transaction_list = amazon_transactions.get_transactions(days=days, progress=progress)
         end_time = time.time()
 
         click.echo(config.output_cls(config).format(transaction_list, output))
@@ -512,15 +568,16 @@ def gift_card_activity(ctx: Context, **kwargs: Any) -> None:
 Gift Card Activity for {days} days
 -----------------------------------------------------------------------\n""".format(days=days), err=True
         )
-        click.echo("Info: Fetching Gift Card activity, this might take a minute ...", err=True)
+        if not ctx.obj["show_progress"]:
+            click.echo("Info: Fetching Gift Card activity, this might take a minute ...", err=True)
 
         config = ctx.obj["conf"]
         amazon_gift_cards = AmazonGiftCards(amazon_session,
                                             config=config)
 
         start_time = time.time()
-        activity = amazon_gift_cards.get_gift_card_activity(
-            days=days, progress=IOClick.echo_progress("Gift Card activity entries"))
+        with ProgressSpinner("Gift Card activity entries", ctx.obj["show_progress"]) as progress:
+            activity = amazon_gift_cards.get_gift_card_activity(days=days, progress=progress)
         end_time = time.time()
 
         click.echo(config.output_cls(config).format(activity, output))
@@ -618,6 +675,10 @@ def version(ctx: Context) -> None:
     """
     click.echo(f"amazon-orders/{__version__} Python/{platform.python_version()}")
     ctx.exit(0)
+
+
+def _is_interactive_terminal() -> bool:
+    return sys.stderr.isatty() and os.environ.get("TERM") != "dumb"
 
 
 if __name__ == "__main__":

@@ -15,7 +15,11 @@ from amazonorders.contrib.browser.playwright import (
     PlaywrightManualWafForm,
 )
 from amazonorders.contrib.waf.base import AwsWafForm
-from amazonorders.exception import AmazonOrdersBrowserNotInstalledError, AmazonOrdersError
+from amazonorders.exception import (
+    AmazonOrdersBrowserNotInstalledError,
+    AmazonOrdersError,
+    AmazonOrdersWafSolverError,
+)
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
 
@@ -677,6 +681,68 @@ class TestPlaywrightAcicForm(UnitTestCase):
         fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
 
         # WHEN — no WAF CAPTCHA on page, should not raise
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            result = form.submit(last_response)
+
+        # THEN
+        mock_page.reload.assert_not_called()
+        self.assertEqual("refetched", result)
+
+    def test_embedded_waf_solver_failure_raises(self):
+        # GIVEN
+        form = PlaywrightAcicForm(self.test_config)
+        parsed = BeautifulSoup(self.acic_html, self.test_config.bs4_parser)
+        form.select_form(self.amazon_session, parsed)
+
+        last_response = MagicMock()
+        last_response.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        self.amazon_session.get = MagicMock(return_value="refetched")
+
+        mock_waf = MagicMock(spec=AwsWafForm)
+        mock_waf.PROVIDER_NAME = "TestSolver"
+        mock_waf._solve_token.side_effect = AmazonOrdersWafSolverError(
+            "TestSolver failed to solve AWS WAF challenge: ERROR_ZERO_BALANCE",
+            meta={"provider": "TestSolver", "provider_error": "ERROR_ZERO_BALANCE"})
+        self.amazon_session.auth_forms.append(mock_waf)
+
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        mock_sync_playwright, mock_page, _, _ = _make_mock_playwright()
+        mock_page.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        mock_page.evaluate.side_effect = [goku, "https://challenge.awswaf.com/challenge.js"]
+        fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            with self.assertRaises(AmazonOrdersWafSolverError) as cm:
+                form.submit(last_response)
+
+        # THEN
+        self.assertEqual("ERROR_ZERO_BALANCE", cm.exception.meta["provider_error"])
+        mock_page.reload.assert_not_called()
+        self.amazon_session.get.assert_not_called()
+
+    def test_embedded_waf_other_solve_error_is_skipped(self):
+        # GIVEN
+        form = PlaywrightAcicForm(self.test_config)
+        parsed = BeautifulSoup(self.acic_html, self.test_config.bs4_parser)
+        form.select_form(self.amazon_session, parsed)
+
+        last_response = MagicMock()
+        last_response.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        self.amazon_session.get = MagicMock(return_value="refetched")
+
+        mock_waf = MagicMock(spec=AwsWafForm)
+        mock_waf.PROVIDER_NAME = "TestSolver"
+        mock_waf._solve_token.side_effect = AmazonOrdersError("TestSolverWafForm requires the [testsolver] extra.")
+        self.amazon_session.auth_forms.append(mock_waf)
+
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        mock_sync_playwright, mock_page, _, _ = _make_mock_playwright()
+        mock_page.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        mock_page.evaluate.side_effect = [goku, "https://challenge.awswaf.com/challenge.js"]
+        fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
+
+        # WHEN
         with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
             result = form.submit(last_response)
 

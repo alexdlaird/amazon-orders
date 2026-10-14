@@ -56,6 +56,15 @@ class AmazonOrdersEntityError(AmazonOrdersError):
     pass
 
 
+class AmazonOrdersWafSolverError(AmazonOrdersError):
+    """
+    Raised when a third-party WAF solver fails (e.g. its balance ran out, its API key was rejected, or the service
+    is down), rather than Amazon rejecting a solved challenge. ``meta["provider"]`` is the solver's name, and
+    ``meta["provider_error"]`` is the error it gave.
+    """
+    pass
+
+
 class AmazonOrdersBrowserNotInstalledError(AmazonOrdersError):
     """
     Raised when no browser is installed to sign in with. ``meta["browser_types"]`` lists the Playwright browser types

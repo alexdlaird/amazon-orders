@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.contrib.waf.capsolver import CapSolverWafForm
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersWafSolverError
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
 
@@ -205,7 +205,7 @@ class TestCapSolverWafForm(UnitTestCase):
         self.assertIn("AWS WAF", echo_msg)
 
     @patch.dict(os.environ, {"CAPSOLVER_API_KEY": "test-api-key"})
-    def test_solve_token_sdk_exception_wraps_as_amazon_orders_error(self):
+    def test_solve_token_sdk_exception_raises_waf_solver_error(self):
         # GIVEN
         fake_capsolver = MagicMock()
         fake_capsolver.solve.side_effect = RuntimeError("ERROR_NO_FUNDS")
@@ -216,10 +216,12 @@ class TestCapSolverWafForm(UnitTestCase):
 
         # WHEN / THEN
         with patch.dict(sys.modules, {"capsolver": fake_capsolver}):
-            with self.assertRaises(AmazonOrdersError) as cm:
+            with self.assertRaises(AmazonOrdersWafSolverError) as cm:
                 form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("CapSolver", str(cm.exception))
         self.assertIn("ERROR_NO_FUNDS", str(cm.exception))
+        self.assertEqual("CapSolver", cm.exception.meta["provider"])
+        self.assertIn(cm.exception.meta["provider_error"], str(cm.exception))
 
     @patch.dict(os.environ, {"CAPSOLVER_API_KEY": "test-api-key"})
     def test_solve_token_missing_capsolver_package_raises(self):
