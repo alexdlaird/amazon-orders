@@ -1,10 +1,10 @@
 [project]
 name = "amazon-orders"
 dynamic = ["version"]
-description = "A Python library (and CLI) for Amazon order history"
+description = "A Python library (and CLI) for Amazon order history, line items, and transactions"
 readme = "README.md"
 license = "MIT"
-keywords = ["amazon", "orders", "order-history", "scraper", "web-scraping", "receipts", "cli"]
+keywords = ["amazon", "order-history", "transactions", "receipts", "web-scraping", "beautifulsoup", "cli"]
 authors = [{ name = "Alex Laird", email = "contact@alexlaird.com" }]
 maintainers = [{ name = "Alex Laird", email = "contact@alexlaird.com" }]
 requires-python = ">=3.9"
