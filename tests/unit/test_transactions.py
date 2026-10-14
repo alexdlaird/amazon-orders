@@ -48,9 +48,9 @@ class TestTransactions(UnitTestCase):
             self.amazon_transactions.get_transactions(keep_paging=False)
 
         self.assertIn("Amazon redirected to login.", str(cm.exception))
-        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertTrue(self.amazon_session.is_authenticated)
         self.assertEqual(1, auth_redirect_response.call_count)
-        self.assertEqual(1, signout_response.call_count)
+        self.assertEqual(0, signout_response.call_count)
 
     @responses.activate
     @patch("amazonorders.transactions.datetime", wraps=datetime)

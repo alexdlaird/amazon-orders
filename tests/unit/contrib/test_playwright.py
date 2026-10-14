@@ -104,10 +104,11 @@ class TestLaunchBrowser(UnitTestCase):
         self.assertEqual(mock_browser, browser)
         pw.chromium.launch.assert_called_once_with(headless=True, channel="chrome")
 
-    def test_falls_back_to_playwright_chromium_without_chrome(self):
+    def test_falls_back_to_playwright_chromium_without_chrome_or_edge(self):
         # GIVEN
         pw, fake_module, mock_browser = self.given_playwright()
         pw.chromium.launch.side_effect = [_FakePlaywrightError("Chromium distribution 'chrome' is not found"),
+                                          _FakePlaywrightError("Chromium distribution 'msedge' is not found"),
                                           mock_browser]
 
         # WHEN
@@ -116,10 +117,11 @@ class TestLaunchBrowser(UnitTestCase):
 
         # THEN
         self.assertEqual(mock_browser, browser)
-        self.assertEqual([call(headless=True, channel="chrome"), call(headless=True)],
+        self.assertEqual([call(headless=True, channel="chrome"), call(headless=True, channel="msedge"),
+                          call(headless=True)],
                          pw.chromium.launch.call_args_list)
 
-    def test_default_without_chrome_or_chromium_offers_every_browser_type(self):
+    def test_default_without_chrome_edge_or_chromium_offers_every_browser_type(self):
         # GIVEN
         pw, fake_module, _ = self.given_playwright()
         pw.chromium.launch.side_effect = _FakePlaywrightError("Chromium distribution 'chrome' is not found")
@@ -131,10 +133,11 @@ class TestLaunchBrowser(UnitTestCase):
                 PlaywrightBrowserLauncher(AmazonOrdersConfig(data={})).launch(pw, headless=True)
 
         # THEN
-        self.assertEqual("Chrome isn't installed, and neither is Playwright's Chromium. Install Chrome, or run: "
+        self.assertEqual("No default browser was found. Set `browser` to one that's installed, or run: "
                          "`playwright install chromium`", str(cm.exception))
         self.assertEqual(["chromium", "firefox", "webkit"], cm.exception.meta["browser_types"])
-        pw.chromium.launch.assert_called_once_with(headless=True, channel="chrome")
+        self.assertEqual([call(headless=True, channel="chrome"), call(headless=True, channel="msedge")],
+                         pw.chromium.launch.call_args_list)
 
     def test_explicit_browser_type_not_installed_offers_only_it(self):
         # GIVEN

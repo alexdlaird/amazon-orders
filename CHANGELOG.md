@@ -9,10 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `--progress` and `--no-progress` CLI flags, to force the progress status on or off.
+- Browser sign-in first tries Chrome, then Edge, and then falls back to downloading a browser.
 
 ### Fixed
 
-- The CLI's progress spammed a newline for every update in `4.9.0` instead of animating.
+- The CLI's progress spammed a newline for every update in `4.9.0` instead of animating, and now shows the overall total when known.
 - Bug fixes and stability improvements.
 
 ## [4.9.0](https://github.com/alexdlaird/amazon-orders/compare/4.8.1...4.9.0) - 2026-10-14

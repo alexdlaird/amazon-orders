@@ -60,15 +60,6 @@ class TransactionsPage:
 
         return self._get_form_page(amazon_session, url, next_page_data)
 
-    def _get_form_page(self,
-                       amazon_session: AmazonSession,
-                       url: str,
-                       next_page_data: Optional[Dict[str, Any]]) -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
-        page_response = amazon_session.post(url, data=next_page_data)
-        amazon_session.check_response(page_response, meta=next_page_data)
-
-        return self.parse_page(page_response.parsed)
-
     def parse_page(self,
                    parsed: Tag) -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
         """
@@ -112,6 +103,15 @@ class TransactionsPage:
             raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.") from e
 
         return self._parse_transaction_list(transaction_list), next_page_data
+
+    def _get_form_page(self,
+                       amazon_session: AmazonSession,
+                       url: str,
+                       next_page_data: Optional[Dict[str, Any]]) -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
+        page_response = amazon_session.post(url, data=next_page_data)
+        amazon_session.check_response(page_response, meta=next_page_data)
+
+        return self.parse_page(page_response.parsed)
 
     def _get_data_page(self,
                        amazon_session: AmazonSession,

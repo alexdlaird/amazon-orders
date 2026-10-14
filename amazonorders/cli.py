@@ -79,15 +79,16 @@ class IOClick(IODefault):
 
     @staticmethod
     def echo_session_expired() -> None:
-        click.echo("... Amazon redirected to login, which likely means the persisted session is stale. It was logged "
-                   "out, so call the `login` command again, or `login --browser` to log in on Amazon's own page.\n")
+        click.echo("... Amazon redirected to login, so it wants the persisted session's sign-in confirmed. Call the "
+                   "`login` command to sign in again, or `login --browser` to log in on Amazon's own page.\n")
 
 
 class ProgressSpinner:
     """
     While a fetch runs, show a spinner and how many ``noun`` have been found so far on a single ``stderr`` line,
-    redrawn in place. The line is cleared when the fetch ends, whether or not it succeeded. Pass it as a ``progress``
-    callback. When not ``enabled``, nothing is shown.
+    redrawn in place, and how many are expected if a total is known. The line is cleared when the fetch ends, whether
+    or not it succeeded. Pass it as a ``progress`` or ``progress_with_total`` callback. When not ``enabled``, nothing
+    is shown.
     """
 
     FRAMES = "|/-\\"
@@ -99,15 +100,18 @@ class ProgressSpinner:
         self.noun: str = noun
         self.enabled: bool = enabled
         self._count: int = 0
+        self._total: Optional[int] = None
         self._line_length: int = 0
         self._lock: threading.Lock = threading.Lock()
         self._stopped: threading.Event = threading.Event()
         self._thread: Optional[threading.Thread] = None
 
     def __call__(self,
-                 count: int) -> None:
+                 count: int,
+                 total: Optional[int] = None) -> None:
         with self._lock:
             self._count = count
+            self._total = total
 
     def __enter__(self) -> "ProgressSpinner":
         if self.enabled:
@@ -128,7 +132,8 @@ class ProgressSpinner:
         while not self._stopped.is_set():
             with self._lock:
                 count = self._count
-            self._redraw(f"{self.FRAMES[frame % len(self.FRAMES)]} {self.noun} found so far: {count}")
+                optional_total = f" of {self._total}" if self._total is not None else ""
+            self._redraw(f"{self.FRAMES[frame % len(self.FRAMES)]} {self.noun} found so far: {count}{optional_total}")
             frame += 1
             self._stopped.wait(self.INTERVAL_SECONDS)
 
@@ -151,7 +156,7 @@ class CliAuth:
                 if amazon_session.username or amazon_session.password:
                     click.echo(
                         "Info: The given username and password are being ignored because a previous session still "
-                        "exists. To reauthenticate, call the `logout` command first.\n")
+                        "exists. To reauthenticate, call the `login` command.\n")
             else:
                 if not amazon_session.username:
                     amazon_session.username = click.prompt("Username")
@@ -189,7 +194,7 @@ class CliAuth:
                     raise
                 browser_type = browser_types[0]
             else:
-                click.echo("Info: Chrome isn't installed, so a browser to sign in with needs to be downloaded.\n")
+                click.echo("Info: No default browser was found, so one to sign in with needs to be downloaded.\n")
                 browser_type = IOClick.prompt_for_choice("Choose a browser to download", browser_types)
 
             browser_selected = PlaywrightBrowserLauncher(self.amazon_session.config).install(browser_type)
@@ -360,7 +365,7 @@ Order History for {filter_description}{optional_start_index}{optional_full_detai
                                                      keep_paging=not single_page,
                                                      time_filter=time_filter,
                                                      order_filter=order_filter,
-                                                     progress=progress)
+                                                     progress_with_total=progress)
         end_time = time.time()
 
         click.echo(config.output_cls(config).format(orders, output))
@@ -616,20 +621,20 @@ def login(ctx: Context, **kwargs: Any) -> None:
     """
     amazon_session = ctx.obj["amazon_session"]
 
-    if amazon_session.auth_cookies_stored():
-        click.echo(
-            "Info: A persisted session exists. Call the `logout` command first to change users.\n")
-    else:
-        try:
-            if kwargs["browser"]:
-                CliAuth(amazon_session).authenticate_with_browser()
-            else:
-                CliAuth(amazon_session).authenticate()
-        except AmazonOrdersError as e:
-            logger.debug("An error occurred.", exc_info=True)
-            ctx.fail(str(e))
+    try:
+        if amazon_session.auth_cookies_stored():
+            click.echo("Info: Logging out of the persisted session first, so this login starts fresh.\n")
+            amazon_session.logout()
 
-        click.echo("Info: Successfully logged in to Amazon, session persisted.\n")
+        if kwargs["browser"]:
+            CliAuth(amazon_session).authenticate_with_browser()
+        else:
+            CliAuth(amazon_session).authenticate()
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+    click.echo("Info: Successfully logged in to Amazon, session persisted.\n")
 
 
 @amazon_orders_cli.command()

@@ -258,7 +258,8 @@ class AmazonOrders:
                           keep_paging: bool = True,
                           time_filter: Optional[str] = None,
                           order_filter: Optional[str] = None,
-                          progress: Optional[Callable[[int], None]] = None) -> List[Order]:
+                          progress: Optional[Callable[[int], None]] = None,
+                          progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None) -> List[Order]:
         """
         Get the Amazon Order history for a given time period.
 
@@ -277,6 +278,9 @@ class AmazonOrders:
         :param order_filter: The order type filter to use. If provided, appended alongside the time filter.
         :param progress: Called after each page of history is fetched, with the number of Orders found so far
             (before their full details are fetched, if ``full_details`` is ``True``).
+        :param progress_with_total: Like ``progress``, but also called with the number of Orders expected in total,
+            from the count Amazon shows on the history page. The total is ``None`` if Amazon doesn't show one, or if
+            ``order_filter`` is provided, since Amazon's count may not reflect it.
         :return: A list of the requested Orders.
         """
         if not self.amazon_session.is_authenticated:
@@ -286,7 +290,9 @@ class AmazonOrders:
         current_index = int(start_index) if start_index else 0
 
         orders, _, _ = asyncio.run(self._build_orders_async(next_page, keep_paging, full_details, current_index,
-                                                            progress=progress))
+                                                            progress=progress,
+                                                            progress_with_total=progress_with_total,
+                                                            total_known=not order_filter))
         return orders
 
     def get_order_history_page(self,
@@ -297,7 +303,9 @@ class AmazonOrders:
                                order_filter: Optional[str] = None,
                                limit: Optional[int] = None,
                                cursor: Optional[Dict[str, Any]] = None,
-                               progress: Optional[Callable[[int], None]] = None) -> PagedResults[Order]:
+                               progress: Optional[Callable[[int], None]] = None,
+                               progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None
+                               ) -> PagedResults[Order]:
         """
         Get a batch of the Amazon Order history for a given time period, with a cursor to fetch the next batch.
         Takes the same filters as :func:`get_order_history`.
@@ -317,6 +325,8 @@ class AmazonOrders:
             next one. The filters it was fetched with carry over.
         :param progress: Called after each page of history is fetched, with the number of Orders found so far in
             this batch (before their full details are fetched, if ``full_details`` is ``True``).
+        :param progress_with_total: Like ``progress``, but also called with the number of Orders expected in this
+            batch, as in :func:`get_order_history`, and at most ``limit`` until the batch ends.
         :return: The batch of Orders, and the cursor for the next one.
         """
         if not self.amazon_session.is_authenticated:
@@ -333,7 +343,8 @@ class AmazonOrders:
         current_index = int(start_index) if start_index else 0
 
         orders, next_page, current_index = asyncio.run(
-            self._build_orders_async(next_page, True, full_details, current_index, limit, progress))
+            self._build_orders_async(next_page, True, full_details, current_index, limit, progress,
+                                     progress_with_total, not order_filter))
         next_cursor = {
             "start_index": current_index,
             "time_filter": time_filter,
@@ -501,9 +512,12 @@ class AmazonOrders:
                                   full_details: bool,
                                   current_index: int,
                                   limit: Optional[int] = None,
-                                  progress: Optional[Callable[[int], None]] = None
+                                  progress: Optional[Callable[[int], None]] = None,
+                                  progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
+                                  total_known: bool = False
                                   ) -> Tuple[List[Order], Optional[str], int]:
         order_tasks: List[Coroutine[Any, Any, Order]] = []
+        start_index = current_index
         orders_before_start_on_page = current_index % self.config.constants.ORDER_HISTORY_PAGE_SIZE
 
         while next_page and (limit is None or len(order_tasks) < limit):
@@ -523,9 +537,6 @@ class AmazonOrders:
                 current_index += 1
             orders_before_start_on_page = 0
 
-            if progress:
-                progress(len(order_tasks))
-
             next_page = None
             if keep_paging:
                 next_page_tag = util.select_one(page_response.parsed,
@@ -539,7 +550,45 @@ class AmazonOrders:
             else:
                 logger.debug("keep_paging is False, not paging")
 
+            if progress:
+                progress(len(order_tasks))
+            if progress_with_total:
+                order_count = self._parse_order_count(
+                    util.select_one(page_response.parsed, self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR),
+                    self.config) if total_known else None
+                progress_with_total(len(order_tasks),
+                                    self._expected_total(order_count, start_index, len(order_tasks), limit,
+                                                         bool(next_page)))
+
         return await asyncio.gather(*order_tasks), next_page, current_index
+
+    @staticmethod
+    def _expected_total(order_count: Optional[int],
+                        start_index: int,
+                        found: int,
+                        limit: Optional[int],
+                        has_next_page: bool) -> Optional[int]:
+        """
+        The number of Orders a fetch is expected to find in total, so it never reads below what's already found, and
+        is exactly what was found once the last page is in.
+
+        :param order_count: The Order count Amazon shows on the history page, if known.
+        :param start_index: The index the fetch started from.
+        :param found: The number of Orders found so far.
+        :param limit: The number of Orders the fetch stops at, if any.
+        :param has_next_page: Whether another page will be fetched.
+        :return: The expected total, or ``None`` if it isn't known.
+        """
+        if order_count is None:
+            return None
+        if not has_next_page:
+            return found
+
+        expected = max(order_count - start_index, found)
+        if limit is not None:
+            expected = min(expected, max(limit, found))
+
+        return expected
 
     def _build_order(self,
                      order_tag: List[Tag],

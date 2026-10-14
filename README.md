@@ -145,6 +145,13 @@ Any other config value can be set the same way, as `AMAZON_<KEY>` (see [`AmazonO
   lets `amazon-orders` read the site's pages; its own CLI and messages stay in English. See
   [Language Packages](https://amazon-orders.readthedocs.io/language-packages.html).
 
+### AI Assistants
+
+To ask an AI assistant about your Amazon orders, use
+[`amazon-orders-mcp`](https://github.com/alexdlaird/amazon-orders-mcp#readme), an MCP server built on `amazon-orders`. It
+reuses the session `amazon-orders login --browser` saves, so it never sees your credentials. See its README for setup
+with Claude and other MCP clients.
+
 ## Documentation
 
 For more advanced usage, `amazon-orders`'s official documentation is available

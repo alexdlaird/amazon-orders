@@ -66,8 +66,8 @@ class TestOrders(UnitTestCase):
             self.amazon_orders.get_order("1234-fake-id")
 
         self.assertIn("Amazon redirected to login.", str(cm.exception))
-        self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertEqual(2, resp.call_count)
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assertEqual(1, resp.call_count)
 
     def test_get_invoice_unauthenticated(self):
         # WHEN
@@ -102,8 +102,8 @@ class TestOrders(UnitTestCase):
             self.amazon_orders.get_invoice("1234-fake-id")
 
         self.assertIn("Amazon redirected to login.", str(cm.exception))
-        self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertEqual(2, resp.call_count)
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assertEqual(1, resp.call_count)
 
     @responses.activate
     def test_get_invoice_not_found(self):
@@ -156,8 +156,8 @@ class TestOrders(UnitTestCase):
             self.amazon_orders.get_order_history()
 
         self.assertIn("Amazon redirected to login.", str(cm.exception))
-        self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertEqual(2, resp.call_count)
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assertEqual(1, resp.call_count)
 
     @responses.activate
     def test_get_order_history(self):
@@ -1878,4 +1878,4 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assertIn("Amazon redirected to login.", str(cm.exception))
-        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertTrue(self.amazon_session.is_authenticated)

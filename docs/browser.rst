@@ -44,8 +44,8 @@ Configuration
 Choosing a Browser
 ~~~~~~~~~~~~~~~~~~
 
-``amazon-orders`` uses Chrome by default, falling back to Playwright's Chromium if Chrome isn't installed. To
-use a different browser, set ``browser`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>`.
+``amazon-orders`` uses Chrome by default, then Edge if Chrome isn't installed, then Playwright's Chromium if
+neither is. To use a different browser, set ``browser`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>`.
 
 Any browser `Playwright supports <https://playwright.dev/python/docs/browsers>`_ works, either one that's installed,
 e.g. ``msedge``, or one Playwright installs, e.g. ``firefox``. For any other, set
