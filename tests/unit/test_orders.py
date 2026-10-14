@@ -10,7 +10,8 @@ from unittest.mock import patch
 
 import responses
 
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError, AmazonOrdersAuthRedirectError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError, AmazonOrdersAuthRedirectError, \
+    AmazonOrdersUnavailableError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
@@ -33,6 +34,9 @@ class TestOrders(UnitTestCase):
                                             config=self.test_config)
 
         self.amazon_orders = AmazonOrders(self.amazon_session)
+
+    def given_order_history_next_page_exists(self, year):
+        return self.given_order_history_exists(year, start_index=10, ref="ppx_yo2ov_dt_b_pagination_1_2")
 
     def test_get_order_unauthenticated(self):
         # WHEN
@@ -121,19 +125,22 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
 
     @responses.activate
-    def test_get_invoice_well_formed_but_unknown_order_id_not_found(self):
+    def test_get_invoice_unavailable(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "112-1234567-7654321"
         resp = self.given_any_invoice_exists("invoice-not-found-snippet.html")
 
         # WHEN
-        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+        with self.assertRaises(AmazonOrdersUnavailableError) as cm:
             self.amazon_orders.get_invoice(order_id)
 
         # THEN
         self.assertEqual(1, resp.call_count)
         self.assertIn(order_id, str(cm.exception))
+        self.assertEqual("We're unable to load your order details Please try again later Go to Your Orders "
+                         "Continue shopping", cm.exception.meta["amazon_message"])
+        self.assertIn(f"Amazon's page said: \"{cm.exception.meta['amazon_message']}\"", str(cm.exception))
 
     @responses.activate
     def test_get_order_history_session_expires(self):
@@ -192,7 +199,7 @@ class TestOrders(UnitTestCase):
         start_index = 40
         resp = responses.add(
             responses.GET,
-            f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+            self.order_history_url(year, start_index),
             status=503,
         )
 
@@ -215,7 +222,7 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+                self.order_history_url(year, start_index),
                 body=f.read(),
                 status=200,
             )
@@ -448,7 +455,7 @@ class TestOrders(UnitTestCase):
         self.assertEqual(page.items[0].to_dict(exclude_none=True), page_dict["items"][0])
         self.assertEqual(page.cursor, page_dict["cursor"])
         self.assertTrue(page_dict["has_more"])
-        json.dumps(page_dict)
+        self.assertEqual(page_dict, json.loads(json.dumps(page_dict)))
 
     @responses.activate
     def test_get_order_history_reports_progress_per_page(self):
@@ -489,7 +496,7 @@ class TestOrders(UnitTestCase):
             self.amazon_orders.get_order_history_page()
 
         # THEN
-        self.assertIn("Call AmazonSession.login() to authenticate first.", str(cm.exception))
+        self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
 
     @responses.activate
     def test_get_order_history_fresh(self):
@@ -745,6 +752,31 @@ class TestOrders(UnitTestCase):
         self.assert_orders_list_index(orders)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(10, resp2.call_count)
+
+    @responses.activate
+    def test_get_order_history_start_index_within_page(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2020
+        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-history-{year}-40.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&page=4&startIndex=40",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year,
+                                                      start_index=43,
+                                                      keep_paging=False)
+
+        # THEN
+        self.assertEqual(7, len(orders))
+        self.assertEqual("114-9460922-7737063", orders[0].order_number)
+        self.assertEqual(list(range(43, 50)), [order.index for order in orders])
+        self.assertEqual(1, resp.call_count)
 
     @responses.activate
     def test_get_order_history_multiple_items(self):
@@ -1224,26 +1256,23 @@ class TestOrders(UnitTestCase):
         self.assertEqual(cm.exception.meta["index"], index)
 
     @responses.activate
-    def test_get_order_well_formed_but_unknown_order_id_not_found(self):
+    def test_get_order_unavailable(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         order_id = "112-1234567-7654321"
-        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-not-found-snippet.html"), "r",
-                  encoding="utf-8") as f:
-            resp = responses.add(
-                responses.GET,
-                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
-                body=f.read(),
-                status=200,
-            )
+        resp = self.given_any_order_details_exists("order-details-not-found-snippet.html")
 
         # WHEN
-        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+        with self.assertRaises(AmazonOrdersUnavailableError) as cm:
             self.amazon_orders.get_order(order_id)
 
         # THEN
         self.assertEqual(1, resp.call_count)
         self.assertIn(order_id, str(cm.exception))
+        self.assertNotIsInstance(cm.exception, AmazonOrdersNotFoundError)
+        self.assertEqual("We're unable to load your order details Please try again later Go to Your Orders "
+                         "Continue shopping", cm.exception.meta["amazon_message"])
+        self.assertIn(f"Amazon's page said: \"{cm.exception.meta['amazon_message']}\"", str(cm.exception))
 
     @responses.activate
     def test_get_order_whole_foods(self):
@@ -1451,7 +1480,7 @@ class TestOrders(UnitTestCase):
     def test_get_order_history_start_index_equal_orders_count(self):
         for start_index in [10, 20]:
             year = 2023
-            uri = f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}"
+            uri = self.order_history_url(year, start_index)
             with self.subTest(start_index=start_index):
                 with responses.RequestsMock() as rsps:
                     # GIVEN
@@ -1482,7 +1511,7 @@ class TestOrders(UnitTestCase):
                   encoding="utf-8") as f:
             resp = responses.add(
                 responses.GET,
-                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+                self.order_history_url(year, start_index),
                 body=f.read(),
                 status=200,
             )
@@ -1530,7 +1559,7 @@ class TestOrders(UnitTestCase):
             body = f.read().replace("<b>213 orders</b>", "<b>1,213 orders</b>")
         resp = responses.add(
             responses.GET,
-            f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}&startIndex={start_index}",
+            self.order_history_url(year, start_index),
             body=body,
             status=200,
         )
@@ -1775,7 +1804,7 @@ class TestOrders(UnitTestCase):
         self.assertIsNone(tracking.tracking_number)
 
     @responses.activate
-    def test_get_tracking_well_formed_but_unknown_shipment_not_found(self):
+    def test_get_tracking_unavailable(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         with open(os.path.join(self.RESOURCES_DIR, "tracking", "tracking-not-found-snippet.html"), "r",
@@ -1783,12 +1812,14 @@ class TestOrders(UnitTestCase):
             resp = responses.add(responses.GET, self.test_config.constants.TRACKING_URL, body=f.read(), status=200)
 
         # WHEN
-        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+        with self.assertRaises(AmazonOrdersUnavailableError) as cm:
             self.amazon_orders.get_tracking("112-0000000-0000000", "AbCdEfGhI")
 
         # THEN
         self.assertEqual(1, resp.call_count)
         self.assertIn("AbCdEfGhI", str(cm.exception))
+        self.assertEqual("Sorry, we are unable to get the tracking information right now. Redirecting to Order "
+                         "Details in 7 seconds. View order details", cm.exception.meta["amazon_message"])
 
     @responses.activate
     def test_get_tracking_not_found(self):
@@ -1821,14 +1852,3 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertIn("Amazon redirected to login.", str(cm.exception))
         self.assertFalse(self.amazon_session.is_authenticated)
-
-    def given_order_history_next_page_exists(self, year):
-        with open(os.path.join(self.RESOURCES_DIR, "orders", f"order-history-{year}-10.html"), "r",
-                  encoding="utf-8") as f:
-            return responses.add(
-                responses.GET,
-                f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-{year}"
-                "&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2",
-                body=f.read(),
-                status=200,
-            )

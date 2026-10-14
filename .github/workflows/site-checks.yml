@@ -5,7 +5,7 @@ run-name: Site Checks ${{ github.ref_name }}
 on:
   workflow_dispatch:
   schedule:
-   - cron: "0 8 * * *"
+    - cron: "0 8 * * *"
 
 permissions:
   contents: read

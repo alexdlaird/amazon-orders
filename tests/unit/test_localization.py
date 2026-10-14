@@ -23,7 +23,7 @@ _PARSING_MODULES = (sorted(glob.glob(os.path.join(_PACKAGE_DIR, "entity", "*.py"
 _MESSAGE_CALLS = {"debug", "info", "warning", "error", "exception", "critical", "echo", "prompt", "input"}
 _DISPLAY_METHODS = {"__repr__", "__str__"}
 _PLUMBING_LITERALS = {
-    "", "\n", " ", " ****", " - (redirected) ", "&", "&startIndex=", "']", ".", "/",
+    "", "\n", " ", " ****", " - (redirected) ", "&", "']", ".", "/",
     "/(?:dp|gp/product|product)/([A-Z0-9]{10})(?:[/?]|$)", ": ", "://", "=", "?", "?orderID=", "?transactionTag=",
     "Accept", "GET", "GetTransactions", "POST",
     "Referer", "\\*+(\\d+)$", "\\*\\s*(\\d+)", "^\\s*{count}\\s*$", "_parse_", "aa-challenge-page-captcha-container",
@@ -38,7 +38,7 @@ _PLUMBING_LITERALS = {
     "request", "simple_parse", "src", "start_index", "state", "statementDescriptor", "time_filter", "timeout",
     "token", "transactionList", "transactionResponseState", "transactionsList", "true", "type", "username", "utf-8",
     "value", "visibleTransactionResponse", "w", "widgetName", "x-amzn-upx-token", "year-", "{page_name}_{index}.html",
-    "{url}/{path}", "{url}?{query_param}={filter_value}{optional_order_filter}{optional_start_index}", "{}",
+    "{url}/{path}", "{url}?{query_param}={filter_value}{optional_order_filter}{optional_page}", "{}",
 }
 
 _ENGLISH_TO_LOREM_MONTHS = {

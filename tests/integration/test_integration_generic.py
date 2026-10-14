@@ -6,7 +6,7 @@ import os
 
 from parameterized import parameterized
 
-from amazonorders.exception import AmazonOrdersNotFoundError
+from amazonorders.exception import AmazonOrdersNotFoundError, AmazonOrdersUnavailableError
 from tests.integrationtestcase import IntegrationTestCase
 
 
@@ -61,7 +61,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
     ])
     def test_get_order_does_not_exist(self, _, order_id):
         # WHEN
-        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+        with self.assertRaises((AmazonOrdersNotFoundError, AmazonOrdersUnavailableError)) as cm:
             self.amazon_orders.get_order(order_id)
 
         # THEN
@@ -73,7 +73,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
     ])
     def test_get_tracking_does_not_exist(self, _, order_id, shipment_id):
         # WHEN
-        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+        with self.assertRaises((AmazonOrdersNotFoundError, AmazonOrdersUnavailableError)) as cm:
             self.amazon_orders.get_tracking(order_id, shipment_id)
 
         # THEN
@@ -85,7 +85,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
     ])
     def test_get_invoice_does_not_exist(self, _, order_id):
         # WHEN
-        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+        with self.assertRaises((AmazonOrdersNotFoundError, AmazonOrdersUnavailableError)) as cm:
             self.amazon_orders.get_invoice(order_id)
 
         # THEN

@@ -127,6 +127,9 @@ class Constants:
     ORDER_INVOICE_URL = f"{BASE_URL}/gp/css/summary/print.html"
     HISTORY_FILTER_QUERY_PARAM = "timeFilter"
     ORDER_FILTER_QUERY_PARAM = "orderFilter"
+    HISTORY_PAGE_QUERY_PARAM = "page"
+    HISTORY_START_INDEX_QUERY_PARAM = "startIndex"
+    ORDER_HISTORY_PAGE_SIZE = 10
     WHOLE_FOODS_DETAILS_ROUTES = ["/fopo/order-details", "/wholefoodsmarket/receipts/order/"]
     TRACKING_ROUTE = "/progress-tracker/package"
     TRACKING_URL = f"{BASE_URL}{TRACKING_ROUTE}"

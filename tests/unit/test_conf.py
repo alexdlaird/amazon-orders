@@ -3,8 +3,6 @@ __license__ = "MIT"
 
 import os
 import pickle
-import shutil
-from unittest import TestCase
 from unittest.mock import patch
 
 import yaml
@@ -19,28 +17,14 @@ from amazonorders.selectors import Selectors
 from amazonorders.transactions import TransactionsPage
 from tests.unit import example_language_package
 from tests.unit.test_constants import RegionOverrideConstants
+from tests.unittestcase import UnitTestCase
 
 
 class CustomOrder(Order):
     pass
 
 
-class TestConf(TestCase):
-    def setUp(self):
-        # Temporarily clear any config set in the environment, so it doesn't interfere with unit tests
-        self.cleared_environment = {name: os.environ.pop(name) for name in list(os.environ)
-                                    if name.startswith(conf.ENVIRONMENT_VARIABLE_PREFIX)}
-
-        conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".config")
-        self.test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")
-        self.test_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.json")
-
-    def tearDown(self):
-        if os.path.exists(conf.DEFAULT_CONFIG_DIR):
-            shutil.rmtree(conf.DEFAULT_CONFIG_DIR)
-
-        os.environ.update(self.cleared_environment)
-
+class TestConf(UnitTestCase):
     def test_provision_config(self):
         # WHEN
         config_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "config.yml")

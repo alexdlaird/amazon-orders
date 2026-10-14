@@ -213,12 +213,13 @@ class TestCli(UnitTestCase):
         resp = self.given_order_history_exists(year, start_index)
 
         # WHEN
-        response = self.runner.invoke(amazon_orders_cli,
-                                      [
-                                          "--config-path", self.test_config.config_path,
-                                          "--username", "some-username@gmail.com",
-                                          "--password", "some-password",
-                                          "history", "--year", year, "--start-index", start_index, "--single-page"])
+        response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
+                                                                 [
+                                                                     "--config-path", self.test_config.config_path,
+                                                                     "--username", "some-username@gmail.com",
+                                                                     "--password", "some-password",
+                                                                     "history", "--year", year, "--start-index",
+                                                                     start_index, "--single-page"])
 
         # THEN
         self.assertEqual(0, response.exit_code)

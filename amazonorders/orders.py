@@ -14,7 +14,7 @@ from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
 from amazonorders.entity.tracking import Tracking
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError, AmazonOrdersUnavailableError
 from amazonorders.paging import PagedResults
 from amazonorders.session import AmazonSession
 
@@ -125,10 +125,13 @@ class AmazonOrders:
                                             f"{order_id} was not found.",
                                             meta={**(meta or {}), "redirect_url": response_url})
 
-        if util.select_one(order_details_response.parsed, self.config.selectors.ORDER_DETAILS_ERROR_SELECTOR):
-            raise AmazonOrdersNotFoundError(f"Amazon could not load Order {order_id}, which likely means it was not "
-                                            f"found.",
-                                            meta=meta)
+        amazon_message = self._unavailable_message(order_details_response.parsed,
+                                                   self.config.selectors.ORDER_DETAILS_ERROR_SELECTOR)
+        if amazon_message:
+            raise AmazonOrdersUnavailableError(f"Amazon could not load Order {order_id}. It may not exist, or Amazon "
+                                               f"had an issue on their end. Wait a bit before trying again. "
+                                               f"Amazon's page said: \"{amazon_message}\"",
+                                               meta={**(meta or {}), "amazon_message": amazon_message})
 
         order = self._parse_order_details(order_details_response.parsed, self.config, order_number=order_id,
                                           clone=clone)
@@ -137,6 +140,22 @@ class AmazonOrders:
             raise AmazonOrdersError(f"Could not parse details for Order {order_id}. Check if Amazon changed the HTML.")
 
         return order
+
+    @staticmethod
+    def _unavailable_message(parsed: Tag,
+                             error_selector: str) -> Optional[str]:
+        """
+        Get the text of Amazon's "could not load" page, if Amazon showed it in place of the requested page. Amazon
+        shows it both when what was requested does not exist and when Amazon had an issue on their end, so its text
+        is passed along for the caller to judge.
+
+        :param parsed: The parsed page.
+        :param error_selector: The selector for Amazon's error container.
+        :return: The error container's text with whitespace collapsed, or ``None`` if the page is not an error page.
+        """
+        error_tag = util.select_one(parsed, error_selector)
+
+        return " ".join(error_tag.get_text(" ").split()) if error_tag else None
 
     @classmethod
     def parse_tracking(cls,
@@ -186,9 +205,14 @@ class AmazonOrders:
                                             f"{shipment_id} of Order {order_id} was not found.",
                                             meta={"redirect_url": response_url})
 
-        if util.select_one(tracking_response.parsed, self.config.selectors.TRACKING_ERROR_SELECTOR):
-            raise AmazonOrdersNotFoundError(f"Amazon could not load tracking for Shipment {shipment_id} of Order "
-                                            f"{order_id}, which likely means it was not found.")
+        amazon_message = self._unavailable_message(tracking_response.parsed,
+                                                   self.config.selectors.TRACKING_ERROR_SELECTOR)
+        if amazon_message:
+            raise AmazonOrdersUnavailableError(f"Amazon could not load tracking for Shipment {shipment_id} of Order "
+                                               f"{order_id}. It may not exist, or Amazon had an issue on their end. "
+                                               f"Wait a bit before trying again. Amazon's page said: "
+                                               f"\"{amazon_message}\"",
+                                               meta={"amazon_message": amazon_message})
 
         tracking = self._parse_tracking(tracking_response.parsed, self.config)
         if not tracking:
@@ -217,9 +241,13 @@ class AmazonOrders:
             raise AmazonOrdersNotFoundError(f"Amazon redirected to {response_url}, which likely means Order "
                                             f"{order_id} was not found.", meta={"redirect_url": response_url})
 
-        if util.select_one(invoice_response.parsed, self.config.selectors.ORDER_DETAILS_ERROR_SELECTOR):
-            raise AmazonOrdersNotFoundError(f"Amazon could not load Order {order_id}, which likely means it was not "
-                                            f"found.")
+        amazon_message = self._unavailable_message(invoice_response.parsed,
+                                                   self.config.selectors.ORDER_DETAILS_ERROR_SELECTOR)
+        if amazon_message:
+            raise AmazonOrdersUnavailableError(f"Amazon could not load Order {order_id}. It may not exist, or Amazon "
+                                               f"had an issue on their end. Wait a bit before trying again. "
+                                               f"Amazon's page said: \"{amazon_message}\"",
+                                               meta={"amazon_message": amazon_message})
 
         return invoice_response
 
@@ -343,20 +371,26 @@ class AmazonOrders:
                            start_index: Optional[int],
                            time_filter: Optional[str],
                            order_filter: Optional[str]) -> str:
+        constants = self.config.constants
         filter_value = self._history_filter_value(year, time_filter)
-        optional_start_index = f"&startIndex={start_index}" if start_index else ""
+        page = int(start_index) // constants.ORDER_HISTORY_PAGE_SIZE if start_index else 0
+        optional_page = (
+            f"&{constants.HISTORY_PAGE_QUERY_PARAM}={page}"
+            f"&{constants.HISTORY_START_INDEX_QUERY_PARAM}={page * constants.ORDER_HISTORY_PAGE_SIZE}"
+            if page else ""
+        )
         optional_order_filter = (
-            f"&{self.config.constants.ORDER_FILTER_QUERY_PARAM}={quote(order_filter, safe='')}"
+            f"&{constants.ORDER_FILTER_QUERY_PARAM}={quote(order_filter, safe='')}"
             if order_filter else ""
         )
         return (
-            "{url}?{query_param}={filter_value}{optional_order_filter}{optional_start_index}"
+            "{url}?{query_param}={filter_value}{optional_order_filter}{optional_page}"
         ).format(
-            url=self.config.constants.ORDER_HISTORY_URL,
-            query_param=self.config.constants.HISTORY_FILTER_QUERY_PARAM,
+            url=constants.ORDER_HISTORY_URL,
+            query_param=constants.HISTORY_FILTER_QUERY_PARAM,
             filter_value=filter_value,
             optional_order_filter=optional_order_filter,
-            optional_start_index=optional_start_index
+            optional_page=optional_page
         )
 
     @staticmethod
@@ -470,21 +504,24 @@ class AmazonOrders:
                                   progress: Optional[Callable[[int], None]] = None
                                   ) -> Tuple[List[Order], Optional[str], int]:
         order_tasks: List[Coroutine[Any, Any, Order]] = []
+        orders_before_start_on_page = current_index % self.config.constants.ORDER_HISTORY_PAGE_SIZE
 
         while next_page and (limit is None or len(order_tasks) < limit):
             page_response = self.amazon_session.get(next_page)
             self.amazon_session.check_response(page_response, meta={"index": current_index})
 
-            order_tags = self._parse_order_history(page_response.parsed, self.config, current_index)
+            order_tags = self._parse_order_history(page_response.parsed, self.config,
+                                                   current_index - orders_before_start_on_page)
 
             if not order_tags:
                 next_page = None
                 break
 
-            for order_tag in order_tags:
+            for order_tag in order_tags[orders_before_start_on_page:]:
                 order_tasks.append(self._async_wrapper(self._build_order, order_tag, full_details, current_index))
 
                 current_index += 1
+            orders_before_start_on_page = 0
 
             if progress:
                 progress(len(order_tasks))

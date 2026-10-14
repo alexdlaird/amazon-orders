@@ -5,7 +5,7 @@ import os
 from unittest.mock import patch
 
 from amazonorders.conf import AmazonOrdersConfig
-from amazonorders.constants import Constants, _BROWSER_PRESETS
+from amazonorders.constants import Constants, _BROWSER_PRESETS, _REGION_CURRENCY_OVERRIDES
 from amazonorders.region_data import REGION_SITES
 from tests.unittestcase import UnitTestCase
 
@@ -141,37 +141,17 @@ class TestConstants(UnitTestCase):
         self.assertEqual("-$1.99", constants.format_currency(-1.99))
 
     def test_domain_sets_region_assoc_handle(self):
-        # GIVEN
-        expected_assoc_handles = {
-            "amazon.ae": "aeflex",
-            "amazon.ca": "caflex",
-            "amazon.co.jp": "jpflex",
-            "amazon.co.uk": "gbflex",
-            "amazon.co.za": "zaflex",
-            "amazon.com.au": "auflex",
-            "amazon.com.be": "beflex",
-            "amazon.de": "deflex",
-            "amazon.eg": "egflex",
-            "amazon.es": "esflex",
-            "amazon.fr": "frflex",
-            "amazon.ie": "ieflex",
-            "amazon.in": "inflex",
-            "amazon.it": "itflex",
-            "amazon.nl": "nlflex",
-            "amazon.sa": "saflex",
-            "amazon.se": "seflex",
-            "amazon.sg": "sgflex",
-        }
-
-        for domain, expected_assoc_handle in expected_assoc_handles.items():
-            with self.subTest(domain=domain):
-                # WHEN
-                config = AmazonOrdersConfig(data={"domain": domain})
+        for tld, site in REGION_SITES.items():
+            if not site.assoc_handle:
+                continue
+            with self.subTest(tld=tld):
+                # GIVEN / WHEN
+                config = AmazonOrdersConfig(data={"domain": f"amazon.{tld}"})
 
                 # THEN
-                self.assertEqual(expected_assoc_handle,
+                self.assertEqual(site.assoc_handle,
                                  config.constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"])
-                self.assertIn(f"openid.assoc_handle={expected_assoc_handle}",
+                self.assertIn(f"openid.assoc_handle={site.assoc_handle}",
                               config.constants.BASE_HEADERS["Referer"])
 
     def test_domain_sets_region_authenticated_cookie(self):
@@ -213,36 +193,15 @@ class TestConstants(UnitTestCase):
         self.assertEqual({}, config.constants.REQUEST_COOKIES)
 
     def test_domain_sets_region_language_cookie(self):
-        # GIVEN
-        expected_cookies = {
-            "amazon.ae": {"lc-acbae": "en_AE"},
-            "amazon.ca": {"lc-acbca": "en_CA"},
-            "amazon.co.jp": {"lc-acbjp": "en_US"},
-            "amazon.co.uk": {"lc-acbuk": "en_GB"},
-            "amazon.co.za": {"lc-acbza": "en_ZA"},
-            "amazon.com": {"lc-main": "en_US"},
-            "amazon.com.au": {"lc-acbau": "en_AU"},
-            "amazon.com.be": {"lc-acbbe": "en_GB"},
-            "amazon.de": {"lc-acbde": "en_GB"},
-            "amazon.eg": {"lc-acbeg": "en_AE"},
-            "amazon.es": {"lc-acbes": "en_GB"},
-            "amazon.fr": {"lc-acbfr": "en_GB"},
-            "amazon.ie": {"lc-acbie": "en_IE"},
-            "amazon.in": {"lc-acbin": "en_IN"},
-            "amazon.it": {"lc-acbit": "en_GB"},
-            "amazon.nl": {"lc-acbnl": "en_GB"},
-            "amazon.sa": {"lc-acbsa": "en_AE"},
-            "amazon.se": {"lc-acbse": "en_GB"},
-            "amazon.sg": {"lc-acbsg": "en_SG"},
-        }
-
-        for domain, expected_cookie in expected_cookies.items():
-            with self.subTest(domain=domain):
-                # WHEN
-                config = AmazonOrdersConfig(data={"domain": domain})
+        for tld, site in REGION_SITES.items():
+            if not (site.english_locale and site.language_cookie):
+                continue
+            with self.subTest(tld=tld):
+                # GIVEN / WHEN
+                config = AmazonOrdersConfig(data={"domain": f"amazon.{tld}"})
 
                 # THEN
-                self.assertEqual(expected_cookie, config.constants.REQUEST_COOKIES)
+                self.assertEqual({site.language_cookie: site.english_locale}, config.constants.REQUEST_COOKIES)
 
     def test_no_domain_sets_com_language_cookie(self):
         # GIVEN / WHEN
@@ -254,14 +213,15 @@ class TestConstants(UnitTestCase):
 
     def test_language_cookie_and_accept_language_request_the_same_locale(self):
         for tld, site in REGION_SITES.items():
-            if not site.english_locale:
+            if not (site.english_locale and site.language_cookie):
                 continue
             with self.subTest(tld=tld):
                 # GIVEN / WHEN
                 config = AmazonOrdersConfig(data={"domain": f"amazon.{tld}"})
+                cookie_locale = next(iter(config.constants.REQUEST_COOKIES.values()))
 
                 # THEN
-                self.assertEqual(site.english_locale.replace("_", "-"),
+                self.assertEqual(cookie_locale.replace("_", "-"),
                                  config.constants.BASE_HEADERS["Accept-Language"].split(",")[0],
                                  f"amazon.{tld}'s Accept-Language asks for a different locale than its cookie")
 
@@ -312,18 +272,13 @@ class TestConstants(UnitTestCase):
         self.assertIsNone(constants.parse_order_number("4000-1234567-1234567"))
 
     def test_domain_sets_region_currency_symbol(self):
-        # GIVEN
-        expected_symbols = {
-            "amazon.ae": "AED", "amazon.ca": "$", "amazon.co.za": "R", "amazon.com.au": "$", "amazon.com.be": "€",
-            "amazon.com.br": "R$", "amazon.com.mx": "$", "amazon.com.tr": "TL",
-            "amazon.de": "€", "amazon.eg": "EGP", "amazon.es": "€", "amazon.fr": "€", "amazon.ie": "€",
-            "amazon.it": "€", "amazon.nl": "€", "amazon.pl": "zł", "amazon.sa": "SAR", "amazon.se": "kr",
-        }
-
-        for domain, expected_symbol in expected_symbols.items():
-            with self.subTest(domain=domain):
-                # WHEN
-                config = AmazonOrdersConfig(data={"domain": domain})
+        for tld, site in REGION_SITES.items():
+            expected_symbol = _REGION_CURRENCY_OVERRIDES.get(tld) or site.currency_symbol
+            if not expected_symbol:
+                continue
+            with self.subTest(tld=tld):
+                # GIVEN / WHEN
+                config = AmazonOrdersConfig(data={"domain": f"amazon.{tld}"})
 
                 # THEN
                 self.assertEqual(expected_symbol, config.constants.CURRENCY_SYMBOL)

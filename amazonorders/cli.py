@@ -284,7 +284,8 @@ def history(ctx: Context,
                 year = datetime.date.today().year
             filter_description = str(year)
 
-        optional_start_index = f", startIndex={start_index}, one page" if single_page else ", all pages"
+        optional_start_index = f", from index {start_index}" if start_index else ""
+        optional_start_index += ", one page" if single_page else ", all pages"
         optional_full_details = ", with full details" if full_details else ""
         click.echo("""-----------------------------------------------------------------------
 Order History for {filter_description}{optional_start_index}{optional_full_details}

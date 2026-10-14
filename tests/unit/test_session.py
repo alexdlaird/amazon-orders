@@ -954,10 +954,7 @@ class TestSession(UnitTestCase):
     def test_credentials_environment_variables_win_over_arguments_and_config(self):
         # GIVEN
         with patch.dict(os.environ, {"AMAZON_USERNAME": "env-username", "AMAZON_OTP_SECRET_KEY": "env-otp"}):
-            config = AmazonOrdersConfig(data={"output_dir": self.test_output_dir,
-                                              "cookie_jar_path": self.test_cookie_jar_path,
-                                              "username": "config-username",
-                                              "password": "config-password"})
+            config = self._config_with(username="config-username", password="config-password")
 
         # WHEN
         amazon_session = AmazonSession("argument-username", "argument-password", config=config,

@@ -263,7 +263,7 @@ class TestInstallBrowser(UnitTestCase):
         # THEN
         mock_run.assert_called_once_with([sys.executable, "-m", "playwright", "install", "chromium"])
         self.assertFalse(selected)
-        self.assertIsNone(self.test_config._data.get("browser"))
+        self.assertIsNone(self.test_config.browser)
 
     @patch("amazonorders.contrib.browser.playwright.subprocess.run")
     def test_install_of_non_default_browser_type_selects_and_persists_it(self, mock_run):
@@ -303,7 +303,7 @@ class TestInstallBrowser(UnitTestCase):
         # THEN
         self.assertEqual("Could not download webkit. To try again yourself, run: `playwright install webkit`",
                          str(cm.exception))
-        self.assertIsNone(self.test_config._data.get("browser"))
+        self.assertIsNone(self.test_config.browser)
 
 
 class TestPlaywrightAcicForm(UnitTestCase):

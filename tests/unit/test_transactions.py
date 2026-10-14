@@ -347,30 +347,13 @@ class TestTransactions(UnitTestCase):
         self.assertIsNone(transaction.seller)
         self.assertEqual(1, resp.call_count)
 
-    @responses.activate
+    @responses.activate(registry=OrderedRegistry)
     @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_get_transactions_paginated(self, mock_today):
         # GIVEN
         mock_today.date.today.return_value = datetime.date(2025, 5, 27)
         self.amazon_session.is_authenticated = True
-        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-with-next-page.html"),
-                  "r",
-                  encoding="utf-8") as f:
-            resp1 = responses.add(
-                responses.POST,
-                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
-                body=f.read(),
-                status=200,
-            )
-        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transactions-in-progress.html"),
-                  "r",
-                  encoding="utf-8") as f:
-            resp2 = responses.add(
-                responses.POST,
-                f"{self.test_config.constants.TRANSACTION_HISTORY_URL}",
-                body=f.read(),
-                status=200,
-            )
+        resp1, resp2 = self.given_two_transaction_pages_exist()
 
         # WHEN
         transactions = self.amazon_transactions.get_transactions()
@@ -380,7 +363,7 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
 
-    @responses.activate
+    @responses.activate(registry=OrderedRegistry)
     @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_get_transactions_page_limit_stops_at_page_boundary(self, mock_today):
         # GIVEN
@@ -400,7 +383,7 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(0, resp2.call_count)
 
-    @responses.activate
+    @responses.activate(registry=OrderedRegistry)
     @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_get_transactions_page_cursor_is_json_safe_and_resumes(self, mock_today):
         # GIVEN
@@ -419,7 +402,7 @@ class TestTransactions(UnitTestCase):
         self.assertIsNone(page.cursor)
         self.assertEqual(1, resp2.call_count)
 
-    @responses.activate
+    @responses.activate(registry=OrderedRegistry)
     @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_get_transactions_page_without_limit_fetches_every_page(self, mock_today):
         # GIVEN
@@ -434,7 +417,7 @@ class TestTransactions(UnitTestCase):
         self.assertEqual(40, len(page.items))
         self.assertIsNone(page.cursor)
 
-    @responses.activate
+    @responses.activate(registry=OrderedRegistry)
     @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_get_transactions_reports_progress_per_page(self, mock_today):
         # GIVEN
@@ -449,7 +432,7 @@ class TestTransactions(UnitTestCase):
         # THEN
         self.assertEqual([20, 40], counts)
 
-    @responses.activate
+    @responses.activate(registry=OrderedRegistry)
     @patch("amazonorders.transactions.datetime", wraps=datetime)
     def test_get_transactions_page_reports_progress_per_batch(self, mock_today):
         # GIVEN
@@ -470,7 +453,7 @@ class TestTransactions(UnitTestCase):
             self.amazon_transactions.get_transactions_page()
 
         # THEN
-        self.assertIn("Call AmazonSession.login() to authenticate first.", str(cm.exception))
+        self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
 
     @responses.activate(registry=OrderedRegistry)
     @patch("amazonorders.transactions.datetime", wraps=datetime)
