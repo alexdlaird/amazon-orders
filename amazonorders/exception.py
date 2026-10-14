@@ -45,3 +45,11 @@ class AmazonOrdersEntityError(AmazonOrdersError):
     Raised when an ``amazon-orders`` entity parsing error has occurred.
     """
     pass
+
+
+class AmazonOrdersBrowserNotInstalledError(AmazonOrdersError):
+    """
+    Raised when no browser is installed to sign in with. ``meta["browser_types"]`` lists the Playwright browser types
+    that can be installed in its place, the default first.
+    """
+    pass

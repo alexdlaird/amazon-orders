@@ -38,58 +38,27 @@ Add the ``[browser]`` extra:
 
     pip install amazon-orders[browser]
 
-Then install the Chromium browser binary:
-
-.. code-block:: shell
-
-    playwright install chromium
-
 Configuration
 -------------
 
 Choosing a Browser
 ~~~~~~~~~~~~~~~~~~
 
-``amazon-orders`` supports both Chromium (default) and Firefox user agents. Set ``browser``
-in your ``~/.config/amazonorders/config.yml`` to switch:
+``amazon-orders`` uses Chrome by default, falling back to Playwright's Chromium if Chrome isn't installed. To
+use a different browser, set ``browser`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>`.
 
-.. code-block:: yaml
+Any browser `Playwright supports <https://playwright.dev/python/docs/browsers>`_ works, either one that's installed,
+e.g. ``msedge``, or one Playwright installs, e.g. ``firefox``. For any other, set
+``browser_executable_path`` to its path.
 
-    browser: firefox
-
-Or as an environment variable:
-
-.. code-block:: shell
-
-    export AMAZON_BROWSER=firefox
-
-Or pass it inline when constructing :class:`~amazonorders.conf.AmazonOrdersConfig`:
-
-.. code-block:: python
-
-    from amazonorders.conf import AmazonOrdersConfig
-    from amazonorders.session import AmazonSession
-
-    config = AmazonOrdersConfig(data={"browser": "firefox"})
-    session = AmazonSession(..., config=config)
-
-Firefox is particularly useful on **ARM64 Linux**, where prebuilt Chromium binaries are
-unavailable. When using Firefox, install the Firefox binary instead of Chromium:
-
-.. code-block:: shell
-
-    playwright install firefox
+On **ARM64 Linux**, where Chrome and Playwright's Chromium are unavailable, use ``firefox``.
 
 Registering Forms
 ~~~~~~~~~~~~~~~~~
 
-Register one or both forms in your ``~/.config/amazonorders/config.yml``:
-
-.. code-block:: yaml
-
-    auth_forms_classes:
-      - amazonorders.contrib.browser.playwright.PlaywrightAcicForm
-      - amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm
+Add one or both forms to ``auth_forms_classes`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>`, in
+this order: ``amazonorders.contrib.browser.playwright.PlaywrightAcicForm``, then
+``amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm``.
 
 :class:`~amazonorders.contrib.browser.playwright.PlaywrightAcicForm` handles the ACIC challenge
 page and should be registered first. :class:`~amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm`
@@ -107,21 +76,9 @@ resulting cookies once the browser navigates away from the challenge page.
 Because it requires a display and a user at the keyboard, it is intended for local/interactive
 use only — not headless environments.
 
-Register it in your ``~/.config/amazonorders/config.yml``:
-
-.. code-block:: yaml
-
-    auth_forms_classes:
-      - amazonorders.contrib.browser.playwright.PlaywrightManualWafForm
-
-It can be combined with other forms. For example, to handle both the ACIC challenge (headless)
-and a standalone WAF challenge (manual):
-
-.. code-block:: yaml
-
-    auth_forms_classes:
-      - amazonorders.contrib.browser.playwright.PlaywrightAcicForm
-      - amazonorders.contrib.browser.playwright.PlaywrightManualWafForm
+Add ``amazonorders.contrib.browser.playwright.PlaywrightManualWafForm`` to ``auth_forms_classes`` in the
+:class:`config <amazonorders.conf.AmazonOrdersConfig>`. It can be combined with other forms, for example after
+``PlaywrightAcicForm`` to handle both the ACIC challenge (headless) and a standalone WAF challenge (manual).
 
 Combining with a WAF Solver
 ---------------------------
@@ -134,24 +91,10 @@ cannot solve them. Two options are available:
   browser itself opens visibly and hands the embedded challenge — whether a WAF token challenge or
   a visual grid Puzzle — to you to solve yourself. No WAF solver extra is required.
 
-  .. code-block:: yaml
-
-      auth_forms_classes:
-        - amazonorders.contrib.browser.playwright.PlaywrightAcicForm
-        - amazonorders.contrib.browser.playwright.PlaywrightManualWafForm
-
 - **Automated** — register a :doc:`WAF solver extra <waf>` alongside ``PlaywrightAcicForm``.
   ``PlaywrightAcicForm`` will detect and solve embedded challenges automatically — whether WAF
-  token or Puzzle — all without additional configuration.
-
-  .. code-block:: yaml
-
-      auth_forms_classes:
-        - amazonorders.contrib.browser.playwright.PlaywrightAcicForm
-        - amazonorders.contrib.waf.capsolver.CapSolverWafForm
-
-  ``PlaywrightJSAuthForm`` is omitted here because ``CapSolverWafForm`` handles the JS bot-detection
-  page on its own in this configuration.
+  token or Puzzle — all without additional configuration. ``PlaywrightJSAuthForm`` isn't needed here, since
+  the WAF solver handles the JS bot-detection page on its own.
 
 If a supported extra isn't working for you, please
 `open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_

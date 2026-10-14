@@ -124,6 +124,11 @@ class AmazonOrders:
                                             f"{order_id} was not found.",
                                             meta={**(meta or {}), "redirect_url": response_url})
 
+        if util.select_one(order_details_response.parsed, self.config.selectors.ORDER_DETAILS_ERROR_SELECTOR):
+            raise AmazonOrdersNotFoundError(f"Amazon could not load Order {order_id}, which likely means it was not "
+                                            f"found.",
+                                            meta=meta)
+
         order = self._parse_order_details(order_details_response.parsed, self.config, order_number=order_id,
                                           clone=clone)
 
@@ -180,6 +185,10 @@ class AmazonOrders:
                                             f"{shipment_id} of Order {order_id} was not found.",
                                             meta={"redirect_url": response_url})
 
+        if util.select_one(tracking_response.parsed, self.config.selectors.TRACKING_ERROR_SELECTOR):
+            raise AmazonOrdersNotFoundError(f"Amazon could not load tracking for Shipment {shipment_id} of Order "
+                                            f"{order_id}, which likely means it was not found.")
+
         tracking = self._parse_tracking(tracking_response.parsed, self.config)
         if not tracking:
             raise AmazonOrdersError(f"Could not parse package tracking for Shipment {shipment_id} of Order "
@@ -206,6 +215,10 @@ class AmazonOrders:
         if not response_url.startswith(self.config.constants.ORDER_INVOICE_URL):
             raise AmazonOrdersNotFoundError(f"Amazon redirected to {response_url}, which likely means Order "
                                             f"{order_id} was not found.", meta={"redirect_url": response_url})
+
+        if util.select_one(invoice_response.parsed, self.config.selectors.ORDER_DETAILS_ERROR_SELECTOR):
+            raise AmazonOrdersNotFoundError(f"Amazon could not load Order {order_id}, which likely means it was not "
+                                            f"found.")
 
         return invoice_response
 

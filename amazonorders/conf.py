@@ -20,6 +20,8 @@ config_file_lock = threading.Lock()
 cookies_file_lock = threading.Lock()
 debug_output_file_lock = threading.Lock()
 
+ENVIRONMENT_VARIABLE_PREFIX = "AMAZON_"
+
 _LANGUAGE_PACKAGE_CLASSES = {
     "constants_class": "Constants",
     "selectors_class": "Selectors",
@@ -36,8 +38,26 @@ class AmazonOrdersConfig:
     An object containing ``amazon-orders``'s configuration. The state of this object is populated from the config file,
     if present, when it is instantiated, and it is also persisted back to the config file when :func:`~save` is called.
 
+    The config file is ``~/.config/amazonorders/config.yml``, unless another ``config_path`` is given (or
+    ``--config-path`` on the CLI). For instance:
+
+    .. code-block:: yaml
+
+        domain: amazon.co.uk
+        auth_forms_classes:
+          - amazonorders.contrib.browser.playwright.PlaywrightAcicForm
+          - amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm
+
+    A value can also be persisted from the command line with ``amazon-orders update-config <key> <value>``.
+
     If overrides are passed in ``data`` parameter when this object is instantiated, they will be used to populate the
     new object, but not persisted to the config file until :func:`~save` is called.
+
+    Every config value can also be set with an ``AMAZON_<KEY>`` environment variable, for instance
+    ``AMAZON_MAX_AUTH_ATTEMPTS=20`` for ``max_auth_attempts``. An environment variable takes precedence over every
+    other source, then values passed in code (including CLI options), then the config file, then the defaults. The
+    value of a key with a default is read as YAML, as it would be in the config file, and any other value is used
+    as-is. Environment variables are never persisted to the config file.
 
     Default values provisioned with the config can be found
     `here <https://amazon-orders.readthedocs.io/_modules/amazonorders/conf.html#AmazonOrdersConfig>`_.
@@ -50,6 +70,7 @@ class AmazonOrdersConfig:
         self.config_path: str = os.path.join(DEFAULT_CONFIG_DIR, "config.yml") if config_path is None else config_path
 
         self._data: Dict[str, Any] = self._default_data()
+        self._environment: Dict[str, Any] = self.read_environment()
         self._resolved_classes: Dict[str, Any] = {}
         self._assigned_classes: Dict[str, Any] = {}
 
@@ -72,6 +93,49 @@ class AmazonOrdersConfig:
         self.constants: Any
 
         self._load_classes()
+
+    @classmethod
+    def read_environment(cls) -> Dict[str, Any]:
+        """
+        Read the config values set with ``AMAZON_<KEY>`` environment variables. An empty variable is ignored.
+
+        :return: The config values set in the environment, by config key.
+        :raises AmazonOrdersError: If the value of a key with a default is not valid YAML.
+        """
+        default_data = cls._default_data()
+        environment = {}
+        for name, value in os.environ.items():
+            if not name.startswith(ENVIRONMENT_VARIABLE_PREFIX) or not value:
+                continue
+
+            key = name[len(ENVIRONMENT_VARIABLE_PREFIX):].lower()
+            if key not in default_data:
+                environment[key] = value
+                continue
+
+            try:
+                environment[key] = yaml.safe_load(value)
+            except yaml.YAMLError as e:
+                raise AmazonOrdersError(f"Environment variable {name} is not valid YAML: {e}") from e
+
+        return environment
+
+    def environment_value(self,
+                          key: str) -> Any:
+        """
+        Get the value set for the given config key with its ``AMAZON_<KEY>`` environment variable.
+
+        :param key: The config key.
+        :return: The value, or ``None`` if the environment variable isn't set.
+        """
+        return self._environment.get(key)
+
+    def _get(self,
+             key: str) -> Any:
+        if key in self._environment:
+            return self._environment[key]
+
+        return self._data.get(key)
 
     @staticmethod
     def _default_data() -> Dict[str, Any]:
@@ -136,12 +200,12 @@ class AmazonOrdersConfig:
         """
         for key in ("order_class", "shipment_class", "item_class", "transaction_class", "output_class",
                     "transactions_page_class"):
-            value = self._data.get(key)
+            value = self._get(key)
             if (not isinstance(value, str) or "." not in value
                     or not all(part.isidentifier() for part in value.split("."))):
                 raise AmazonOrdersError(f"Config value for \"{key}\" is not a dotted class path: {value!r}")
 
-        language_package = self._data.get("language_package")
+        language_package = self._get("language_package")
         if language_package is not None and (not isinstance(language_package, str) or
                                              not all(part.isidentifier() for part in language_package.split("."))):
             raise AmazonOrdersError(f"Config value for \"language_package\" is not a dotted module path: "
@@ -182,8 +246,8 @@ class AmazonOrdersConfig:
         :return: The class path.
         :raises AmazonOrdersError: If the ``language_package`` cannot be imported.
         """
-        class_path = self._data[key]
-        language_package = self._data.get("language_package")
+        class_path = self._get(key)
+        language_package = self._get("language_package")
         if (key not in _LANGUAGE_PACKAGE_CLASSES or not language_package or
                 class_path != self._default_data()[key]):
             return class_path
@@ -222,15 +286,17 @@ class AmazonOrdersConfig:
         self._assigned_classes[key] = value
 
     def _validate_bs4_parser(self) -> None:
+        bs4_parser = self._get("bs4_parser")
         try:
-            BeautifulSoup("", str(self._data["bs4_parser"]))
+            BeautifulSoup("", str(bs4_parser))
         except FeatureNotFound:
             logger.warning(
-                f"Configured bs4_parser '{self._data['bs4_parser']}' is unavailable; "
+                f"Configured bs4_parser '{bs4_parser}' is unavailable; "
                 f"using the default 'html.parser'. To use it, install the parser "
                 f"(e.g. `pip install amazon-orders[lxml]`)."
             )
-            self._data["bs4_parser"] = "html.parser"
+            source = self._environment if "bs4_parser" in self._environment else self._data
+            source["bs4_parser"] = "html.parser"
 
     def _instantiate_constants(self) -> Any:
         constants_class_split = self._class_path("constants_class").split(".")
@@ -315,18 +381,20 @@ class AmazonOrdersConfig:
 
     def __getattr__(self,
                     key: str) -> Any:
-        return self._data.get(key, None)
+        return self._get(key)
 
     def __contains__(self,
                      key: str) -> bool:
-        return key in self._data
+        return key in self._environment or key in self._data
 
     def __getstate__(self) -> Dict[str, Any]:
-        return {"config_path": self.config_path, "_data": self._data, "_assigned_classes": self._assigned_classes}
+        return {"config_path": self.config_path, "_data": self._data, "_environment": self._environment,
+                "_assigned_classes": self._assigned_classes}
 
     def __setstate__(self,
                      state: Dict[str, Any]) -> None:
         self.__dict__.update(state)
+        self.__dict__.setdefault("_environment", {})
         self._resolved_classes = {}
         self._load_classes()
 

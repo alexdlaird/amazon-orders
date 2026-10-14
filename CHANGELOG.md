@@ -4,7 +4,32 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.8.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.8.1...HEAD)
+
+### Added
+
+- English pages on any Amazon site that offers them, with `domain` and no language package (e.g. `amazon.de`, `amazon.fr`, `amazon.co.jp`).
+- Sign-in and currency symbols for more non-`.com` Amazon sites (e.g. `amazon.fr`, `amazon.co.za`).
+- Browser sign-in with any browser Playwright supports, using the installed Chrome by default, with `browser` and `browser_executable_path`.
+- `AMAZON_<KEY>` environment variables for every config value (e.g. `AMAZON_MAX_AUTH_ATTEMPTS`).
+
+### Changed
+
+- To read another language on a site that offers English, set `REQUEST_COOKIES` or `Accept-Language` to it in your language package or `constants_class`. See [the docs](https://amazon-orders.readthedocs.io/language-packages.html#building-a-language-package).
+
+### Deprecated
+
+- `AMAZON_BASE_URL`, use `AMAZON_DOMAIN`.
+
+### Removed
+
+- `AMAZON_CURRENCY_SYMBOL`.
+
+### Fixed
+
+- Bug fixes and stability improvements.
+
+## [4.8.1](https://github.com/alexdlaird/amazon-orders/compare/4.8.0...4.8.1) - 2026-10-13
 
 ### Added
 

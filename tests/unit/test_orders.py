@@ -118,6 +118,21 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
 
     @responses.activate
+    def test_get_invoice_well_formed_but_unknown_order_id_not_found(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "112-1234567-7654321"
+        resp = self.given_any_invoice_exists("invoice-not-found-snippet.html")
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+            self.amazon_orders.get_invoice(order_id)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertIn(order_id, str(cm.exception))
+
+    @responses.activate
     def test_get_order_history_session_expires(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
@@ -1082,6 +1097,28 @@ class TestOrders(UnitTestCase):
         self.assertEqual(cm.exception.meta["index"], index)
 
     @responses.activate
+    def test_get_order_well_formed_but_unknown_order_id_not_found(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "112-1234567-7654321"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-not-found-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+            self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertIn(order_id, str(cm.exception))
+
+    @responses.activate
     def test_get_order_whole_foods(self):
         # GIVEN ORDER_DETAILS_URL redirects to the dedicated FOPO details page, as Amazon does for
         # Whole Foods Market orders looked up directly (not via order history)
@@ -1609,6 +1646,22 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertIsNone(tracking.carrier)
         self.assertIsNone(tracking.tracking_number)
+
+    @responses.activate
+    def test_get_tracking_well_formed_but_unknown_shipment_not_found(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "tracking", "tracking-not-found-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(responses.GET, self.test_config.constants.TRACKING_URL, body=f.read(), status=200)
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+            self.amazon_orders.get_tracking("112-0000000-0000000", "AbCdEfGhI")
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("AbCdEfGhI", str(cm.exception))
 
     @responses.activate
     def test_get_tracking_not_found(self):

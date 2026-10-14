@@ -14,8 +14,14 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-# This import must happen after adding to sys.path so docs build is consistent across environments
+# These imports must happen after adding to sys.path so docs build is consistent across environments
+from docutils import nodes
+from docutils.statemachine import StringList
+from sphinx.util.docutils import SphinxDirective
+
 from amazonorders import __version__
+from amazonorders.constants import _region_currency_symbol
+from amazonorders.region_data import REGION_SITES
 
 # -- Project information -----------------------------------------------------
 
@@ -234,3 +240,29 @@ intersphinx_mapping = {
     "beautifulsoup4": ("https://www.crummy.com/software/BeautifulSoup/bs4/doc/", None),
     "python": ("https://docs.python.org/3", None)
 }
+
+
+# -- Generated content -------------------------------------------------------
+
+class SupportedSitesDirective(SphinxDirective):
+    """
+    Render the Amazon sites ``amazon-orders`` requests English pages from, built from its region data, so the docs
+    always match the code.
+    """
+
+    def run(self):
+        rows = [".. list-table::", "   :header-rows: 1", "", "   * - Site", "     - English", "     - Currency"]
+        for tld, site in sorted(REGION_SITES.items()):
+            if tld == "com" or not site.english_locale:
+                continue
+            rows += [f"   * - amazon.{tld}",
+                     f"     - {site.english_locale.replace('_', '-')}",
+                     f"     - {_region_currency_symbol(tld) or '—'}"]
+
+        container = nodes.container()
+        self.state.nested_parse(StringList(rows), self.content_offset, container)
+        return container.children
+
+
+def setup(app):
+    app.add_directive("supported-sites", SupportedSitesDirective)

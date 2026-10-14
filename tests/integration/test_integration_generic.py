@@ -4,6 +4,8 @@ __license__ = "MIT"
 import datetime
 import os
 
+from parameterized import parameterized
+
 from amazonorders.exception import AmazonOrdersNotFoundError
 from tests.integrationtestcase import IntegrationTestCase
 
@@ -52,13 +54,42 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assert_populated_generic(order, True)
         self.assertIsNone(order.index)
 
-    def test_get_order_does_not_exist(self):
-        # GIVEN
-        order_id = "1234-fake-id"
-
+    @parameterized.expand([
+        ("malformed", "1234-fake-id"),
+        ("well_formed", "112-0000000-0000000"),
+        ("well_formed_digital", "D01-0000000-0000000"),
+    ])
+    def test_get_order_does_not_exist(self, _, order_id):
         # WHEN
-        with self.assertRaises(AmazonOrdersNotFoundError):
+        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
             self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assertIn(order_id, str(cm.exception))
+
+    @parameterized.expand([
+        ("malformed", "1234-fake-id", "fake-id"),
+        ("well_formed", "112-0000000-0000000", "AbCdEfGhI"),
+    ])
+    def test_get_tracking_does_not_exist(self, _, order_id, shipment_id):
+        # WHEN
+        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+            self.amazon_orders.get_tracking(order_id, shipment_id)
+
+        # THEN
+        self.assertIn(shipment_id, str(cm.exception))
+
+    @parameterized.expand([
+        ("malformed", "1234-fake-id"),
+        ("well_formed", "112-0000000-0000000"),
+    ])
+    def test_get_invoice_does_not_exist(self, _, order_id):
+        # WHEN
+        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+            self.amazon_orders.get_invoice(order_id)
+
+        # THEN
+        self.assertIn(order_id, str(cm.exception))
 
     def test_get_order_history(self):
         # WHEN
