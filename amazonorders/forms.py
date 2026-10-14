@@ -226,8 +226,7 @@ class SignInForm(AuthForm):
             )  # pragma: no cover
 
         additional_attrs.update({self.solution_attr_key: self.amazon_session.username,
-                                 "password": self.amazon_session.password,
-                                 "rememberMe": "true"})
+                                 "password": self.amazon_session.password})
         self.data.update(additional_attrs)
 
 
@@ -260,8 +259,7 @@ class ClaimForm(AuthForm):
             )  # pragma: no cover
 
         additional_attrs.update({self.solution_attr_key: self.amazon_session.username,
-                                 "password": self.amazon_session.password,
-                                 "rememberMe": "true"})
+                                 "password": self.amazon_session.password})
         self.data.update(additional_attrs)
 
 

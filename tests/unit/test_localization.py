@@ -34,9 +34,9 @@ _PLUMBING_LITERALS = {
     "min_date", "months-3", "name", "nav-item-signout", "next_page_data", "next_page_url", "not solved", "orderData",
     "orderDetailsUrl", "orderDisplayString", "order_filter", "order_id", "otpCode", "otpDeviceContext",
     "otp_secret_key", "pageProps", "params", "parsed", "password", "paymentMethodDisplayStringData",
-    "paymentMethodName", "paymentMethodNumber", "ppw-widgetState", "props", "r", "rememberDevice", "rememberMe",
+    "paymentMethodName", "paymentMethodNumber", "ppw-widgetState", "props", "r", "rememberDevice",
     "request", "simple_parse", "src", "start_index", "state", "statementDescriptor", "time_filter", "timeout",
-    "token", "transactionList", "transactionResponseState", "transactionsList", "true", "type", "username", "utf-8",
+    "token", "transactionList", "transactionResponseState", "transactionsList", "type", "username", "utf-8",
     "value", "visibleTransactionResponse", "w", "widgetName", "x-amzn-upx-token", "year-", "{page_name}_{index}.html",
     "{url}/{path}", "{url}?{query_param}={filter_value}{optional_order_filter}{optional_page}", "{}",
 }

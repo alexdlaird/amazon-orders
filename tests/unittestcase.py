@@ -75,8 +75,7 @@ class UnitTestCase(TestCase):
                              "x-TsboMC7T6ogs0xV-6aDyPDzlkCaOp-ZgDSwgrsy-1vxs_Ec0LTdMFSmL2E7zw.ZH7JT2vSuhaN7AGth"
                              "FkRXg",
             "email": "some-username@gmail.com",
-            "password": "some-password",
-            "rememberMe": "true"
+            "password": "some-password"
         }
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             self.authenticated_response = responses.add(
@@ -105,8 +104,7 @@ class UnitTestCase(TestCase):
             "signalUnknownCredentialUnifiedAuthWeblabActive": "false",
             "anti-csrftoken-a2z": "hIQUpYKT9xnC6tPiep3YBWI+1WkSrEVHZnPVCyUYiHwyAAAAAGireQ0AAAAB",
             "email": "some-username@gmail.com",
-            "password": "some-password",
-            "rememberMe": "true"
+            "password": "some-password"
         }
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim-password.html"), "r", encoding="utf-8") as f:
             self.signin_response = responses.add(
@@ -139,8 +137,7 @@ class UnitTestCase(TestCase):
                              "E_y3SIMljizg_EChZiYSCa7n_8lEOWWpolNNj2bt3mAjhMNeCi_RG7Yt1NHcHKVRVfsBJkd7ltpeYPkS9hxrN-l"
                              "2w1K1jvvXDmskia7Dxkrx9IvpGXNG2jnACR7AtiEQ0S.51N-D0mkAliz3-kI3Um1Rg",
             "email": "some-username@gmail.com",
-            "password": "some-password",
-            "rememberMe": "true"
+            "password": "some-password"
         }
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
             self.authenticated_response = responses.add(
