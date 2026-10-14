@@ -6,6 +6,7 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
+import requests
 import responses
 from bs4 import BeautifulSoup
 from responses.matchers import query_string_matcher, urlencoded_params_matcher
@@ -950,6 +951,51 @@ class TestSession(UnitTestCase):
 
             # THEN
             self.assertEqual(5, mock_request.call_args.kwargs["timeout"])
+
+    @responses.activate
+    def test_request_connection_dropped(self):
+        # GIVEN
+        url = "https://www.amazon.com/"
+        responses.add(responses.GET, url,
+                      body=requests.ConnectionError("Remote end closed connection without response"))
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_session.get(url)
+
+        # THEN
+        self.assertEqual("The page https://www.amazon.com/ returned no response: Remote end closed connection "
+                         "without response. Amazon had an issue on their end, or may be temporarily blocking your "
+                         "requests. Wait a bit before trying again.", str(cm.exception))
+        self.assertIsInstance(cm.exception.__cause__, requests.ConnectionError)
+
+    @responses.activate
+    def test_request_timed_out(self):
+        # GIVEN
+        url = "https://www.amazon.com/"
+        responses.add(responses.GET, url, body=requests.ReadTimeout("Read timed out"))
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_session.get(url)
+
+        # THEN
+        self.assertIn("returned no response: Read timed out. Amazon had an issue on their end", str(cm.exception))
+        self.assertIsInstance(cm.exception.__cause__, requests.ReadTimeout)
+
+    @responses.activate
+    def test_request_too_many_redirects(self):
+        # GIVEN
+        url = "https://www.amazon.com/"
+        responses.add(responses.GET, url, body=requests.TooManyRedirects("Exceeded 30 redirects"))
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_session.get(url)
+
+        # THEN
+        self.assertEqual("The page https://www.amazon.com/ returned no response: Exceeded 30 redirects.",
+                         str(cm.exception))
 
     def test_credentials_environment_variables_win_over_arguments_and_config(self):
         # GIVEN

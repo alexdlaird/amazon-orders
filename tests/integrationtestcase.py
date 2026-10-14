@@ -22,9 +22,14 @@ class IntegrationTestCase(TestCase):
     - AMAZON_USERNAME
     - AMAZON_PASSWORD
     - AMAZON_OTP_SECRET_KEY (optional, if 2FA is enabled for the account)
+
+    To run locally without signing in, set AMAZON_INTEGRATION_TEST_REUSE_SESSION=True to reuse the session saved by
+    ``amazon-orders login --browser``. No sign-in form is submitted, so it can't be combined with
+    AMAZON_INTEGRATION_TEST_AUTH=True.
     """
 
     amazon_session = None
+    reuse_session = os.environ.get("AMAZON_INTEGRATION_TEST_REUSE_SESSION", "False") == "True"
 
     @classmethod
     def setUpClass(cls):
@@ -33,6 +38,8 @@ class IntegrationTestCase(TestCase):
         cls.debug = os.environ.get("DEBUG", "False") == "True"
         cls.amazon_session = AmazonSession(debug=cls.debug,
                                            config=cls.test_config)
+        if cls.reuse_session:
+            cls.amazon_session.auth_forms = []
         cls.amazon_session.login()
 
         cls.amazon_orders = AmazonOrders(cls.amazon_session)
@@ -46,12 +53,28 @@ class IntegrationTestCase(TestCase):
 
     @classmethod
     def set_up_class_conf(cls):
+        cls.teardown_sleep_time = os.environ.get("AMAZON_INTEGRATION_TEST_TEARDOWN_SLEEP", 40)
+
+        if cls.reuse_session:
+            if os.environ.get("AMAZON_INTEGRATION_TEST_AUTH", "False") == "True":
+                print("AMAZON_INTEGRATION_TEST_REUSE_SESSION can't be used with AMAZON_INTEGRATION_TEST_AUTH, "
+                      "since auth tests sign in and out.")
+
+                sys.exit(1)
+
+            cls.test_config = AmazonOrdersConfig()
+            if not AmazonSession(config=cls.test_config).auth_cookies_stored():
+                print("AMAZON_INTEGRATION_TEST_REUSE_SESSION is set, but there's no saved session. Run "
+                      "`amazon-orders login --browser` first.")
+
+                sys.exit(1)
+
+            return
+
         if not (os.environ.get("AMAZON_USERNAME") and os.environ.get("AMAZON_PASSWORD")):
             print("AMAZON_USERNAME and AMAZON_PASSWORD environment variables must be set to run integration tests")
 
             sys.exit(1)
-
-        cls.teardown_sleep_time = os.environ.get("AMAZON_INTEGRATION_TEST_TEARDOWN_SLEEP", 40)
 
         conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".integration-config")
         test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")

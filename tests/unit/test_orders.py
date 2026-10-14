@@ -4,10 +4,12 @@ __license__ = "MIT"
 import datetime
 import json
 import os
+import re
 import unittest
 from datetime import date
 from unittest.mock import patch
 
+import requests
 import responses
 
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError, AmazonOrdersAuthRedirectError, \
@@ -752,6 +754,31 @@ class TestOrders(UnitTestCase):
         self.assert_orders_list_index(orders)
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(10, resp2.call_count)
+
+    @responses.activate
+    def test_get_order_history_full_details_connection_dropped(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2020
+        start_index = 40
+        self.given_order_history_exists(year, start_index)
+        responses.add(
+            responses.GET,
+            re.compile(rf"^{re.escape(self.test_config.constants.ORDER_DETAILS_URL)}\?.*"),
+            body=requests.ConnectionError("Remote end closed connection without response"),
+        )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_order_history(year=year,
+                                                 start_index=start_index,
+                                                 keep_paging=False,
+                                                 full_details=True)
+
+        # THEN
+        self.assertIn("returned no response: Remote end closed connection without response. Amazon had an issue on "
+                      "their end, or may be temporarily blocking your requests.", str(cm.exception))
+        self.assertIsInstance(cm.exception.__cause__, requests.ConnectionError)
 
     @responses.activate
     def test_get_order_history_start_index_within_page(self):

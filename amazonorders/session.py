@@ -201,7 +201,14 @@ class AmazonSession:
 
         self._set_request_cookies()
 
-        response = self.session.request(method, url, **kwargs)
+        try:
+            response = self.session.request(method, url, **kwargs)
+        except (requests.ConnectionError, requests.Timeout) as e:
+            raise AmazonOrdersError(f"The page {url} returned no response: {e}. Amazon had an issue on their end, "
+                                    "or may be temporarily blocking your requests. Wait a bit before trying "
+                                    "again.") from e
+        except requests.RequestException as e:
+            raise AmazonOrdersError(f"The page {url} returned no response: {e}.") from e
         amazon_session_response = AmazonSessionResponse(response,
                                                         self.config.bs4_parser)
 
