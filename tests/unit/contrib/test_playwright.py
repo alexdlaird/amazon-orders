@@ -15,7 +15,11 @@ from amazonorders.contrib.browser.playwright import (
     PlaywrightManualWafForm,
 )
 from amazonorders.contrib.waf.base import AwsWafForm
-from amazonorders.exception import AmazonOrdersBrowserNotInstalledError, AmazonOrdersError
+from amazonorders.exception import (
+    AmazonOrdersBrowserNotInstalledError,
+    AmazonOrdersError,
+    AmazonOrdersWafSolverError,
+)
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
 
@@ -100,10 +104,11 @@ class TestLaunchBrowser(UnitTestCase):
         self.assertEqual(mock_browser, browser)
         pw.chromium.launch.assert_called_once_with(headless=True, channel="chrome")
 
-    def test_falls_back_to_playwright_chromium_without_chrome(self):
+    def test_falls_back_to_playwright_chromium_without_chrome_or_edge(self):
         # GIVEN
         pw, fake_module, mock_browser = self.given_playwright()
         pw.chromium.launch.side_effect = [_FakePlaywrightError("Chromium distribution 'chrome' is not found"),
+                                          _FakePlaywrightError("Chromium distribution 'msedge' is not found"),
                                           mock_browser]
 
         # WHEN
@@ -112,10 +117,11 @@ class TestLaunchBrowser(UnitTestCase):
 
         # THEN
         self.assertEqual(mock_browser, browser)
-        self.assertEqual([call(headless=True, channel="chrome"), call(headless=True)],
+        self.assertEqual([call(headless=True, channel="chrome"), call(headless=True, channel="msedge"),
+                          call(headless=True)],
                          pw.chromium.launch.call_args_list)
 
-    def test_default_without_chrome_or_chromium_offers_every_browser_type(self):
+    def test_default_without_chrome_edge_or_chromium_offers_every_browser_type(self):
         # GIVEN
         pw, fake_module, _ = self.given_playwright()
         pw.chromium.launch.side_effect = _FakePlaywrightError("Chromium distribution 'chrome' is not found")
@@ -127,10 +133,11 @@ class TestLaunchBrowser(UnitTestCase):
                 PlaywrightBrowserLauncher(AmazonOrdersConfig(data={})).launch(pw, headless=True)
 
         # THEN
-        self.assertEqual("Chrome isn't installed, and neither is Playwright's Chromium. Install Chrome, or run: "
+        self.assertEqual("No default browser was found. Set `browser` to one that's installed, or run: "
                          "`playwright install chromium`", str(cm.exception))
         self.assertEqual(["chromium", "firefox", "webkit"], cm.exception.meta["browser_types"])
-        pw.chromium.launch.assert_called_once_with(headless=True, channel="chrome")
+        self.assertEqual([call(headless=True, channel="chrome"), call(headless=True, channel="msedge")],
+                         pw.chromium.launch.call_args_list)
 
     def test_explicit_browser_type_not_installed_offers_only_it(self):
         # GIVEN
@@ -677,6 +684,68 @@ class TestPlaywrightAcicForm(UnitTestCase):
         fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
 
         # WHEN — no WAF CAPTCHA on page, should not raise
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            result = form.submit(last_response)
+
+        # THEN
+        mock_page.reload.assert_not_called()
+        self.assertEqual("refetched", result)
+
+    def test_embedded_waf_solver_failure_raises(self):
+        # GIVEN
+        form = PlaywrightAcicForm(self.test_config)
+        parsed = BeautifulSoup(self.acic_html, self.test_config.bs4_parser)
+        form.select_form(self.amazon_session, parsed)
+
+        last_response = MagicMock()
+        last_response.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        self.amazon_session.get = MagicMock(return_value="refetched")
+
+        mock_waf = MagicMock(spec=AwsWafForm)
+        mock_waf.PROVIDER_NAME = "TestSolver"
+        mock_waf._solve_token.side_effect = AmazonOrdersWafSolverError(
+            "TestSolver failed to solve AWS WAF challenge: ERROR_ZERO_BALANCE",
+            meta={"provider": "TestSolver", "provider_error": "ERROR_ZERO_BALANCE"})
+        self.amazon_session.auth_forms.append(mock_waf)
+
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        mock_sync_playwright, mock_page, _, _ = _make_mock_playwright()
+        mock_page.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        mock_page.evaluate.side_effect = [goku, "https://challenge.awswaf.com/challenge.js"]
+        fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            with self.assertRaises(AmazonOrdersWafSolverError) as cm:
+                form.submit(last_response)
+
+        # THEN
+        self.assertEqual("ERROR_ZERO_BALANCE", cm.exception.meta["provider_error"])
+        mock_page.reload.assert_not_called()
+        self.amazon_session.get.assert_not_called()
+
+    def test_embedded_waf_other_solve_error_is_skipped(self):
+        # GIVEN
+        form = PlaywrightAcicForm(self.test_config)
+        parsed = BeautifulSoup(self.acic_html, self.test_config.bs4_parser)
+        form.select_form(self.amazon_session, parsed)
+
+        last_response = MagicMock()
+        last_response.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        self.amazon_session.get = MagicMock(return_value="refetched")
+
+        mock_waf = MagicMock(spec=AwsWafForm)
+        mock_waf.PROVIDER_NAME = "TestSolver"
+        mock_waf._solve_token.side_effect = AmazonOrdersError("TestSolverWafForm requires the [testsolver] extra.")
+        self.amazon_session.auth_forms.append(mock_waf)
+
+        goku = {"key": "k", "iv": "i", "context": "c"}
+        mock_sync_playwright, mock_page, _, _ = _make_mock_playwright()
+        mock_page.url = "https://www.amazon.com/ax/aaut/verify/ap/challenge?aamationToken=test"
+        mock_page.evaluate.side_effect = [goku, "https://challenge.awswaf.com/challenge.js"]
+        fake_module = _playwright_module(mock_sync_playwright, timeout_error_cls=_FakeTimeoutError)
+
+        # WHEN
         with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
             result = form.submit(last_response)
 

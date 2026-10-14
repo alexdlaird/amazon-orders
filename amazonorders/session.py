@@ -135,6 +135,7 @@ class AmazonSession:
         self.session: Session = self._create_session()
         #: If :func:`login` has been executed and successfully logged in the session.
         self.is_authenticated: bool = False
+        self._sign_in_required: bool = False
 
         with cookies_file_lock:
             os.makedirs(os.path.dirname(self.config.cookie_jar_path), exist_ok=True)
@@ -284,9 +285,12 @@ class AmazonSession:
 
         If successful, ``is_authenticated`` will be set to ``True``.
 
-        If existing session data is already persisted, calling this function will still attempt to reauthenticate to
-        refresh it.
+        A persisted session is reused, unless Amazon redirected one of this session's requests to login, in which
+        case it's logged out first, so the login starts fresh.
         """
+        if self._sign_in_required:
+            self.logout()
+
         self._provision_cookies()
 
         last_response = self.get(self.config.constants.SIGN_IN_URL,
@@ -350,6 +354,7 @@ class AmazonSession:
             self._write_cookie_jar(cookies)
 
         self.is_authenticated = False
+        self._sign_in_required = False
 
     def _write_cookie_jar(self,
                           cookies: Dict[str, str]) -> None:
@@ -380,6 +385,10 @@ class AmazonSession:
         We detect if authentication has expired by checking for redirects to the login page. Raise an error if the
         response is not going to contain the requested data for parsing.
 
+        A redirect to the login page doesn't log the session out, since Amazon asks some pages to confirm a sign-in
+        that isn't recent enough while the session's other pages keep working. Calling :func:`login` after one logs
+        out first, so it signs in again.
+
         :param amazon_session_response: The response to check.
         :param meta: Metadata to be added to any errors raised.
         """
@@ -388,10 +397,14 @@ class AmazonSession:
         if (amazon_session_response.response.url.startswith(self.config.constants.SIGN_IN_URL) or
                 (amazon_session_response.parsed and
                  amazon_session_response.parsed.select_one(self.config.selectors.SIGN_IN_FORM_SELECTOR) is not None)):
-            logger.debug("Amazon redirect to login, so persisted AmazonSession will be logged out.")
-            self.logout()
-            raise AmazonOrdersAuthRedirectError("Amazon redirected to login. Call AmazonSession.login() to "
-                                                "reauthenticate first.", meta=meta)
+            redirect_url = amazon_session_response.response.url
+            logger.debug(f"Amazon redirected to login at {redirect_url}, so the persisted session needs to sign in "
+                         f"again.")
+            self._sign_in_required = True
+            raise AmazonOrdersAuthRedirectError("Amazon redirected to login. Amazon wants the sign-in confirmed "
+                                                "before showing this page, so call AmazonSession.login() to sign in "
+                                                "again.",
+                                                meta={**(meta or {}), "redirect_url": redirect_url})
 
     def _get_page_from_url(self,
                            output_dir: str,

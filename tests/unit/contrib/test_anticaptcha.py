@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.contrib.waf.anticaptcha import AntiCaptchaWafForm
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersWafSolverError
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
 
@@ -141,7 +141,7 @@ class TestAntiCaptchaWafForm(UnitTestCase):
         self.assertIn("ERROR_NO_SLOT_AVAILABLE", str(cm.exception))
 
     @patch.dict(os.environ, {"ANTICAPTCHA_API_KEY": "test-api-key"})
-    def test_solve_token_sdk_exception_wraps_as_amazon_orders_error(self):
+    def test_solve_token_sdk_exception_raises_waf_solver_error(self):
         # GIVEN
         fake_solver_instance = MagicMock()
         fake_solver_instance.solve_and_return_solution.side_effect = RuntimeError(
@@ -159,10 +159,12 @@ class TestAntiCaptchaWafForm(UnitTestCase):
             "anticaptchaofficial": MagicMock(),
             "anticaptchaofficial.amazonproxyless": fake_module,
         }):
-            with self.assertRaises(AmazonOrdersError) as cm:
+            with self.assertRaises(AmazonOrdersWafSolverError) as cm:
                 form._solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("Anti-Captcha", str(cm.exception))
         self.assertIn("Network unreachable", str(cm.exception))
+        self.assertEqual("Anti-Captcha", cm.exception.meta["provider"])
+        self.assertIn(cm.exception.meta["provider_error"], str(cm.exception))
 
     @patch.dict(os.environ, {"ANTICAPTCHA_API_KEY": "test-api-key"})
     def test_solve_token_missing_anticaptcha_package_raises(self):

@@ -217,6 +217,14 @@ Languages and Regions
   lets ``amazon-orders`` read the site's pages; its own CLI and messages stay in English. See
   :doc:`language-packages`.
 
+AI Assistants
+-------------
+
+To ask an AI assistant about your Amazon orders, use
+`amazon-orders-mcp <https://github.com/alexdlaird/amazon-orders-mcp#readme>`_, an MCP server built on ``amazon-orders``. It
+reuses the session ``amazon-orders login --browser`` saves, so it never sees your credentials. See its README for setup
+with Claude and other MCP clients.
+
 .. _known-limitations:
 
 Known Limitations

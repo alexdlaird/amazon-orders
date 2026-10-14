@@ -4,7 +4,7 @@ __license__ = "MIT"
 from typing import Any, Dict, List, Optional
 
 from amazonorders.contrib.waf.base import AwsWafForm
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersWafSolverError
 
 
 class CapSolverWafForm(AwsWafForm):
@@ -31,8 +31,8 @@ class CapSolverWafForm(AwsWafForm):
         :param goku: The parsed ``window.gokuProps`` payload.
         :param challenge_script: The ``src`` of the AWS WAF ``challenge.js`` script tag.
         :return: The ``aws-waf-token`` cookie value.
-        :raises AmazonOrdersError: if the ``capsolver`` package is not installed,
-            or if CapSolver's response does not contain the expected
+        :raises AmazonOrdersError: if the ``capsolver`` package is not installed.
+        :raises AmazonOrdersWafSolverError: if CapSolver fails, or its response does not contain the expected
             ``cookie`` field.
         """
         try:
@@ -55,15 +55,17 @@ class CapSolverWafForm(AwsWafForm):
                 "awsChallengeJS": challenge_script,
             })
         except Exception as e:
-            raise AmazonOrdersError(
-                f"CapSolver failed to solve AWS WAF challenge: {e}"
+            raise AmazonOrdersWafSolverError(
+                f"CapSolver failed to solve AWS WAF challenge: {e}",
+                meta={"provider": self.PROVIDER_NAME, "provider_error": str(e)}
             ) from e
 
         try:
             return solution["cookie"]
         except (KeyError, TypeError) as e:
-            raise AmazonOrdersError(
-                f"Unexpected CapSolver response (missing 'cookie'): {solution!r}"
+            raise AmazonOrdersWafSolverError(
+                f"Unexpected CapSolver response (missing 'cookie'): {solution!r}",
+                meta={"provider": self.PROVIDER_NAME, "provider_error": repr(solution)}
             ) from e
 
     def _solve_visual_captcha(self,
@@ -78,8 +80,9 @@ class CapSolverWafForm(AwsWafForm):
         :param image_data: List of base64-encoded data URLs, one per grid tile.
         :param question: The object to identify (e.g. ``"the buckets"``).
         :return: A list of zero-based grid cell indices to select.
-        :raises AmazonOrdersError: if the ``capsolver`` package is not installed,
-            or if CapSolver's response does not contain the expected fields.
+        :raises AmazonOrdersError: if the ``capsolver`` package is not installed.
+        :raises AmazonOrdersWafSolverError: if CapSolver fails, or its response does not contain the expected
+            fields.
         """
         try:
             import capsolver
@@ -105,13 +108,15 @@ class CapSolverWafForm(AwsWafForm):
                 "question": question_id,
             })
         except Exception as e:
-            raise AmazonOrdersError(
-                f"CapSolver failed to solve Puzzle: {e}"
+            raise AmazonOrdersWafSolverError(
+                f"CapSolver failed to solve Puzzle: {e}",
+                meta={"provider": self.PROVIDER_NAME, "provider_error": str(e)}
             ) from e
 
         try:
             return solution["objects"]
         except (KeyError, TypeError) as e:
-            raise AmazonOrdersError(
-                f"Unexpected CapSolver Puzzle response (missing 'objects'): {solution!r}"
+            raise AmazonOrdersWafSolverError(
+                f"Unexpected CapSolver Puzzle response (missing 'objects'): {solution!r}",
+                meta={"provider": self.PROVIDER_NAME, "provider_error": repr(solution)}
             ) from e

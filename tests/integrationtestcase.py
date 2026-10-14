@@ -53,7 +53,7 @@ class IntegrationTestCase(TestCase):
 
     @classmethod
     def set_up_class_conf(cls):
-        cls.teardown_sleep_time = os.environ.get("AMAZON_INTEGRATION_TEST_TEARDOWN_SLEEP", 40)
+        cls.teardown_sleep_time = int(os.environ.get("AMAZON_INTEGRATION_TEST_TEARDOWN_SLEEP", 40))
 
         if cls.reuse_session:
             if os.environ.get("AMAZON_INTEGRATION_TEST_AUTH", "False") == "True":

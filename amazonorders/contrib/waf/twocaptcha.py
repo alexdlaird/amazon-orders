@@ -5,7 +5,7 @@ import json
 from typing import Any, Dict
 
 from amazonorders.contrib.waf.base import AwsWafForm
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersWafSolverError
 
 
 class TwoCaptchaWafForm(AwsWafForm):
@@ -35,7 +35,8 @@ class TwoCaptchaWafForm(AwsWafForm):
         :param challenge_script: The ``src`` of the AWS WAF ``challenge.js`` script tag.
         :return: The ``aws-waf-token`` cookie value.
         :raises AmazonOrdersError: if the ``2captcha-python`` package is not
-            installed, or if 2Captcha's response is malformed or missing the
+            installed.
+        :raises AmazonOrdersWafSolverError: if 2Captcha fails, or its response is malformed or missing the
             expected ``existing_token`` field.
         """
         try:
@@ -56,13 +57,15 @@ class TwoCaptchaWafForm(AwsWafForm):
                 challenge_script=challenge_script,
             )
         except Exception as e:
-            raise AmazonOrdersError(
-                f"2Captcha failed to solve AWS WAF challenge: {e}"
+            raise AmazonOrdersWafSolverError(
+                f"2Captcha failed to solve AWS WAF challenge: {e}",
+                meta={"provider": self.PROVIDER_NAME, "provider_error": str(e)}
             ) from e
 
         try:
             return json.loads(result["code"])["existing_token"]
         except (KeyError, TypeError, json.JSONDecodeError) as e:
-            raise AmazonOrdersError(
-                f"Unexpected 2Captcha response (missing 'existing_token'): {result!r}"
+            raise AmazonOrdersWafSolverError(
+                f"Unexpected 2Captcha response (missing 'existing_token'): {result!r}",
+                meta={"provider": self.PROVIDER_NAME, "provider_error": repr(result)}
             ) from e

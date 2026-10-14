@@ -235,8 +235,7 @@ class TestCli(UnitTestCase):
         self.assertIn("Order #112-2545298-6805068", response.output)
         self.assertIn("Order #113-4970960-6452217", response.output)
         self.assertIn("Order #112-9733602-9062669", response.output)
-        self.assertIn("Info: 10 Orders found so far ...", response.stderr)
-        self.assertNotIn("found so far", response.stdout)
+        self.assertNotIn("found so far", response.output)
 
     @responses.activate
     def test_history_command_with_order_filter(self):
@@ -769,7 +768,7 @@ class TestCli(UnitTestCase):
         self.assertIn("Error from Amazon: There was a problem. Your password is incorrect.", response.output)
 
     @responses.activate
-    def test_persisted_session_stale_logout(self):
+    def test_persisted_session_stale_keeps_session(self):
         # GIVEN
         self.given_persisted_session_exists()
         self.given_unauthenticated_home_page()
@@ -786,10 +785,11 @@ class TestCli(UnitTestCase):
 
         self.assertEqual(0, response.exit_code)
         self.assertEqual(1, auth_redirect_response.call_count)
-        self.assertEqual(1, signout_response.call_count)
-        self.assert_no_auth_cookies_persisted()
+        self.assertEqual(0, signout_response.call_count)
+        with open(self.test_config.cookie_jar_path, "r") as f:
+            self.assertIn("x-main", json.loads(f.read()))
         self.assertIn("Amazon redirected to login", response.output)
-        self.assertIn("logged out, so call the `login` command again, or `login --browser`", response.output)
+        self.assertIn("Call the `login` command to sign in again, or `login --browser`", response.output)
 
     def test_update_config(self):
         # GIVEN

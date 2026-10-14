@@ -4,7 +4,7 @@ __license__ = "MIT"
 from typing import Any, Dict
 
 from amazonorders.contrib.waf.base import AwsWafForm
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersWafSolverError
 
 
 class AntiCaptchaWafForm(AwsWafForm):
@@ -33,7 +33,8 @@ class AntiCaptchaWafForm(AwsWafForm):
         :param challenge_script: The ``src`` of the AWS WAF ``challenge.js`` script tag.
         :return: The ``aws-waf-token`` cookie value.
         :raises AmazonOrdersError: if the ``anticaptchaofficial`` package is
-            not installed, or if Anti-Captcha returns no token.
+            not installed.
+        :raises AmazonOrdersWafSolverError: if Anti-Captcha fails, or returns no token.
         """
         try:
             from anticaptchaofficial.amazonproxyless import amazonProxyless
@@ -54,13 +55,15 @@ class AntiCaptchaWafForm(AwsWafForm):
         try:
             token = solver.solve_and_return_solution()
         except Exception as e:
-            raise AmazonOrdersError(
-                f"Anti-Captcha failed to solve AWS WAF challenge: {e}"
+            raise AmazonOrdersWafSolverError(
+                f"Anti-Captcha failed to solve AWS WAF challenge: {e}",
+                meta={"provider": self.PROVIDER_NAME, "provider_error": str(e)}
             ) from e
 
         if not token:
-            raise AmazonOrdersError(
-                f"Anti-Captcha could not solve the AWS WAF challenge: "
-                f"{getattr(solver, 'error_code', 'unknown error')}"
+            error_code = getattr(solver, "error_code", None) or "unknown error"
+            raise AmazonOrdersWafSolverError(
+                f"Anti-Captcha could not solve the AWS WAF challenge: {error_code}",
+                meta={"provider": self.PROVIDER_NAME, "provider_error": error_code}
             )
         return token

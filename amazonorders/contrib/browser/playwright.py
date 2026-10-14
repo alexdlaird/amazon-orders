@@ -22,6 +22,7 @@ from amazonorders.exception import (
     AmazonOrdersAuthRedirectError,
     AmazonOrdersBrowserNotInstalledError,
     AmazonOrdersError,
+    AmazonOrdersWafSolverError,
 )
 from amazonorders.forms import AuthForm
 from amazonorders.util import AmazonSessionResponse
@@ -42,12 +43,14 @@ class PlaywrightBrowserLauncher:
     Launches the browser the config selects, from whatever Playwright supports. ``browser`` is either a browser that's
     already installed, as a Playwright channel like ``chrome`` or ``msedge``, or a browser type Playwright installs,
     like ``chromium`` or ``firefox``. ``browser_executable_path`` launches any other browser of that type. With neither
-    set, the installed Chrome is used, or Playwright's Chromium if Chrome isn't installed.
+    set, the installed Chrome is used, then the installed Edge, then Playwright's Chromium.
     """
 
     #: The installed browser launched when ``browser`` isn't set.
     DEFAULT_BROWSER_CHANNEL = "chrome"
-    #: The Playwright browser type launched when ``browser`` isn't set and the default channel isn't installed.
+    #: The installed browser launched when ``browser`` isn't set and the default channel isn't installed.
+    FALLBACK_BROWSER_CHANNEL = "msedge"
+    #: The Playwright browser type launched when ``browser`` isn't set and neither channel is installed.
     FALLBACK_BROWSER_TYPE = "chromium"
 
     def __init__(self,
@@ -127,11 +130,11 @@ class PlaywrightBrowserLauncher:
                         headless: bool) -> Any:
         from playwright.sync_api import Error as PlaywrightError  # type: ignore[import-not-found]
 
-        try:
-            return pw.chromium.launch(headless=headless, channel=self.DEFAULT_BROWSER_CHANNEL)
-        except PlaywrightError as chrome_error:
-            logger.debug(f"Could not launch {self.DEFAULT_BROWSER_CHANNEL}, so using Playwright's Chromium: "
-                         f"{self._first_line(chrome_error)}")
+        for channel in (self.DEFAULT_BROWSER_CHANNEL, self.FALLBACK_BROWSER_CHANNEL):
+            try:
+                return pw.chromium.launch(headless=headless, channel=channel)
+            except PlaywrightError as channel_error:
+                logger.debug(f"Could not launch {channel}: {self._first_line(channel_error)}")
 
         browser_types = self._browser_types(pw)
         fallback = browser_types[self.FALLBACK_BROWSER_TYPE]
@@ -139,7 +142,7 @@ class PlaywrightBrowserLauncher:
             installable = [self.FALLBACK_BROWSER_TYPE] + sorted(name for name in browser_types
                                                                 if name != self.FALLBACK_BROWSER_TYPE)
             raise AmazonOrdersBrowserNotInstalledError(
-                "Chrome isn't installed, and neither is Playwright's Chromium. Install Chrome, or run: "
+                "No default browser was found. Set `browser` to one that's installed, or run: "
                 "`playwright install chromium`",
                 meta={"browser_types": installable}
             )
@@ -190,8 +193,8 @@ class PlaywrightAuthForm(AuthForm):
     between :mod:`requests` and the Playwright browser context, and re-fetching the final
     URL once the challenge resolves.
 
-    Requires the ``[browser]`` extra: ``pip install amazon-orders[browser]``. Defaults to Chrome, or
-    Playwright's Chromium (``playwright install chromium``) if Chrome isn't installed.
+    Requires the ``[browser]`` extra: ``pip install amazon-orders[browser]``. Defaults to Chrome, then
+    Edge, then Playwright's Chromium (``playwright install chromium``), whichever is installed first.
     """
 
     def __init__(self,
@@ -447,6 +450,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
         :param context: The Playwright ``BrowserContext``.
         :param output_dir: Directory for debug snapshots, or ``None``.
         :return: ``True`` if a WAF token was obtained and injected, ``False`` otherwise.
+        :raises AmazonOrdersWafSolverError: If the WAF solver fails.
         """
         try:
             from playwright.sync_api import TimeoutError as PlaywrightTimeoutError  # type: ignore[import-not-found]
@@ -485,6 +489,8 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
 
         try:
             token = waf_form._solve_token(page.url, goku, challenge_script)
+        except AmazonOrdersWafSolverError:
+            raise
         except Exception:
             logger.info("WAF solver failed to solve embedded WAF challenge.", exc_info=True)
             return False
@@ -515,6 +521,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
         :param context: The Playwright ``BrowserContext``.
         :param output_dir: Directory for debug snapshots, or ``None``.
         :return: ``True`` if the Puzzle was solved and submitted, ``False`` otherwise.
+        :raises AmazonOrdersWafSolverError: If the WAF solver fails.
         """
         try:
             from playwright.sync_api import TimeoutError as PlaywrightTimeoutError  # type: ignore[import-not-found]
@@ -569,6 +576,8 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
 
         try:
             answer = waf_form._solve_visual_captcha(page.url, challenge_images, question)
+        except AmazonOrdersWafSolverError:
+            raise
         except Exception:
             logger.info("WAF solver failed to solve Puzzle.", exc_info=True)
             return False
@@ -577,7 +586,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
             logger.info(f"{waf_form.PROVIDER_NAME} does not support Puzzle solving.")
             return False
 
-        message = f"Info: Puzzle solved via {waf_form.PROVIDER_NAME}."
+        message = f"Info: Puzzle answered via {waf_form.PROVIDER_NAME}."
         logger.info(message)
         self.amazon_session.io.echo(message)
 
@@ -768,8 +777,8 @@ class PlaywrightBrowserLogin:
     Because it opens a browser window it requires a display and a user at the keyboard, making it suitable for
     local/interactive use but not for headless environments.
 
-    Requires the ``[browser]`` extra: ``pip install amazon-orders[browser]``. Defaults to Chrome, or
-    Playwright's Chromium (``playwright install chromium``) if Chrome isn't installed.
+    Requires the ``[browser]`` extra: ``pip install amazon-orders[browser]``. Defaults to Chrome, then
+    Edge, then Playwright's Chromium (``playwright install chromium``), whichever is installed first.
     """
 
     def __init__(self,
@@ -813,7 +822,7 @@ class PlaywrightBrowserLogin:
             browser = PlaywrightBrowserLauncher(self.config).launch(pw, self.headless)
 
             try:
-                context = browser.new_context()
+                context = browser.new_context(user_agent=constants.BASE_HEADERS.get("User-Agent"))
                 page = context.new_page()
                 page.goto(sign_in_url)
 
@@ -879,6 +888,8 @@ class PlaywrightBrowserLogin:
             response = self.amazon_session.get(self.config.constants.ORDER_HISTORY_URL, persist_cookies=True)
             self.amazon_session.check_response(response)
         except AmazonOrdersAuthRedirectError as e:
+            self.amazon_session.logout()
+
             raise AmazonOrdersAuthError("Amazon did not accept the browser's session when it was used outside the "
                                         "browser. Try signing in again.") from e
 
