@@ -19,10 +19,9 @@ class UnitTestCase(TestCase):
         os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources"))
 
     def setUp(self):
-        # Temporarily clear these if they are set in the environment, so they don't interfere with unit tests
-        self.username = os.environ.pop('AMAZON_USERNAME', None)
-        self.password = os.environ.pop('AMAZON_PASSWORD', None)
-        self.otp_secret_key = os.environ.pop('AMAZON_OTP_SECRET_KEY', None)
+        # Temporarily clear any config set in the environment, so it doesn't interfere with unit tests
+        self.cleared_environment = {name: os.environ.pop(name) for name in list(os.environ)
+                                    if name.startswith(conf.ENVIRONMENT_VARIABLE_PREFIX)}
 
         conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".config")
         self.test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")
@@ -42,12 +41,7 @@ class UnitTestCase(TestCase):
             shutil.rmtree(conf.DEFAULT_CONFIG_DIR)
 
         # Reset environment variables that were temporarily cleared
-        if self.username:
-            os.environ["AMAZON_USERNAME"] = self.username
-        if self.password:
-            os.environ["AMAZON_PASSWORD"] = self.password
-        if self.otp_secret_key:
-            os.environ["AMAZON_OTP_SECRET_KEY"] = self.otp_secret_key
+        os.environ.update(self.cleared_environment)
 
     def given_unauthenticated_home_page(self,
                                         auth_file="unauth-index.html"):

@@ -5,13 +5,12 @@ import logging
 import os
 import re
 from datetime import date
-from typing import Dict, Optional, TYPE_CHECKING, Union
+from typing import Dict, Optional, Union
 from urllib.parse import urlencode, urlparse
 
 from amazonorders import util
-
-if TYPE_CHECKING:
-    from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.region_data import REGION_SITES
 
 logger = logging.getLogger(__name__)
 
@@ -29,59 +28,24 @@ _BROWSER_PRESETS: Dict[str, Dict[str, Optional[str]]] = {
         "Sec-Ch-Ua-Platform": None,
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) Gecko/20100101 Firefox/146.0",
     },
+    "webkit": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate",
+        "Priority": "u=0, i",
+        "Sec-Ch-Ua": None,
+        "Sec-Ch-Ua-Mobile": None,
+        "Sec-Ch-Ua-Platform": None,
+        "Sec-Fetch-User": None,
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Safari/605.1.15",  # noqa: E501
+    },
 }
 
-#: ``Accept-Language`` values for English-locale Amazon sites, keyed by the TLD suffix that
-#: follows ``amazon.``. Looked up dynamically from the user-supplied domain; unknown TLDs keep
-#: the base ``en-US`` value. This map only governs the ``Accept-Language`` header — it is not
-#: a list of supported sites and does not affect any other authentication behavior.
-_REGION_LANGUAGES = {
-    "ca": "en-CA,en;q=0.9,en-US;q=0.8",
-    "co.uk": "en-GB,en;q=0.9,en-US;q=0.8",
-    "com.au": "en-AU,en;q=0.9,en-US;q=0.8",
-    "in": "en-IN,en;q=0.9,en-US;q=0.8",
-    "sg": "en-SG,en;q=0.9,en-US;q=0.8",
-}
-
-#: ``CURRENCY_SYMBOL`` values for Amazon sites whose prices use a symbol other than ``$``, each verified
-#: against the site's own pages. amazon.ca, amazon.com.au, and amazon.com.mx render prices as plain ``$``,
-#: so they keep the default and are intentionally omitted here. Skipped when ``AMAZON_CURRENCY_SYMBOL`` is
-#: set, or when a ``constants_class`` override sets ``CURRENCY_SYMBOL``.
-_REGION_CURRENCIES = {
-    "ae": "AED",
-    "co.jp": "¥",
-    "co.uk": "£",
-    "com.be": "€",
-    "com.br": "R$",
-    "com.tr": "TL",
-    "de": "€",
-    "eg": "EGP",
-    "es": "€",
-    "ie": "€",
-    "in": "₹",
-    "it": "€",
-    "nl": "€",
-    "pl": "zł",
-    "sa": "SAR",
-    "se": "kr",
-    "sg": "S$",
-}
+#: ``CURRENCY_SYMBOL`` values for Amazon sites that their own pages don't give, or give wrong, keyed by the TLD
+#: suffix that follows ``amazon.``. These take precedence over the generated region data.
+_REGION_CURRENCY_OVERRIDES: Dict[str, str] = {}
 
 #: Currency symbols whose amounts are rendered without decimals (yen has no minor unit).
 _ZERO_DECIMAL_CURRENCY_SYMBOLS = ["¥", "￥"]
-
-#: ``openid.assoc_handle`` values for Amazon sign-in, keyed by the TLD suffix that follows
-#: ``amazon.``. Amazon rejects the sign-in request (HTTP 404) when the handle does not match
-#: the storefront's region. Applied only when ``SIGN_IN_QUERY_PARAMS`` still has the default
-#: ``usflex``, so a ``constants_class`` override wins. Unknown TLDs keep the default.
-_REGION_ASSOC_HANDLES = {
-    "ca": "caflex",
-    "co.jp": "jpflex",
-    "co.uk": "gbflex",
-    "com.au": "auflex",
-    "de": "deflex",
-    "in": "inflex",
-}
 
 #: The cookie that marks an authenticated session on regional Amazon sites, keyed by the TLD
 #: suffix that follows ``amazon.``. Applied only when ``COOKIES_SET_WHEN_AUTHENTICATED`` still
@@ -93,7 +57,20 @@ _REGION_AUTH_COOKIES = {
     "com.au": "x-acbau",
     "de": "x-acbde",
     "in": "x-acbin",
+    "it": "x-acbit",
 }
+
+
+def _region_currency_symbol(tld: str) -> Optional[str]:
+    """
+    The currency symbol an Amazon site's prices are shown with: its ``_REGION_CURRENCY_OVERRIDES`` entry, if it has
+    one, otherwise its region data.
+
+    :param tld: The TLD suffix that follows ``amazon.`` (e.g. ``co.uk``).
+    :return: The currency symbol, or ``None`` if the site's isn't known.
+    """
+    site = REGION_SITES.get(tld)
+    return _REGION_CURRENCY_OVERRIDES.get(tld) or (site.currency_symbol if site else None)
 
 
 class Constants:
@@ -107,18 +84,17 @@ class Constants:
         config = AmazonOrdersConfig(data={"constants_class": "my_module.MyConstants"})
 
     URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are derived from the active
-    Amazon domain. ``Accept-Language``, ``CURRENCY_SYMBOL``, the sign-in ``openid.assoc_handle``, and
-    ``COOKIES_SET_WHEN_AUTHENTICATED`` are adjusted for a small set of known TLDs (``CURRENCY_SYMBOL``
-    only when ``AMAZON_CURRENCY_SYMBOL`` is unset; ``CURRENCY_SYMBOL``, ``openid.assoc_handle``, and
-    ``COOKIES_SET_WHEN_AUTHENTICATED`` only when a subclass has not overridden them). The domain is
-    resolved in this precedence order:
+    Amazon domain. ``REQUEST_COOKIES``, ``Accept-Language``, ``CURRENCY_SYMBOL``, the sign-in
+    ``openid.assoc_handle``, and ``COOKIES_SET_WHEN_AUTHENTICATED`` are adjusted for known Amazon sites
+    (each only when a subclass has not overridden it). The domain is resolved in this precedence order:
 
     1. The ``domain`` key on :class:`~amazonorders.conf.AmazonOrdersConfig`.
-    2. The ``AMAZON_BASE_URL`` environment variable.
+    2. The ``AMAZON_BASE_URL`` environment variable (deprecated).
     3. The default, ``amazon.com``.
 
-    ``amazon-orders`` core supports the English ``.com`` site; subclass and set ``constants_class`` to override any
-    value another site requires.
+    ``amazon-orders`` reads Amazon's pages in English, and requests them from any site known to offer English. To
+    read a site in another language, use a language package; subclass and set ``constants_class`` to override any
+    value a site requires.
     """
 
     ##########################################################################
@@ -196,8 +172,9 @@ class Constants:
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",  # noqa: E501
     }
     #: Cookies sent with every request to the active Amazon domain, replacing any cookie of the same name Amazon
-    #: set, for a site that picks something like its language from a cookie (e.g. ``{"lc-acbde": "en_GB"}`` on
-    #: amazon.de) rather than from ``Accept-Language``.
+    #: set, for a site that picks something like its language from a cookie (e.g. ``{"lc-acbde": "de_DE"}`` for
+    #: German pages on amazon.de). Left at its default, it's set to the English language cookie of the active site,
+    #: if it's known to offer English, unless ``Accept-Language`` in ``BASE_HEADERS`` is overridden.
     REQUEST_COOKIES: Dict[str, str] = {}
 
     ##########################################################################
@@ -216,10 +193,8 @@ class Constants:
 
     DECIMAL_SEPARATOR = "."
     THOUSANDS_SEPARATOR = ","
-    #: The symbol :func:`format_currency` renders, adjusted for a small set of known TLDs. For an Amazon
-    #: site without a known symbol, the ``AMAZON_CURRENCY_SYMBOL`` environment variable sets it without a
-    #: ``constants_class`` subclass (e.g. for the CLI).
-    CURRENCY_SYMBOL = os.environ.get("AMAZON_CURRENCY_SYMBOL", "$")
+    #: The symbol :func:`format_currency` renders. Each known Amazon site sets its own; this is the fallback.
+    CURRENCY_SYMBOL = "$"
     CURRENCY_FORMAT = "{symbol}{amount}"
     CURRENCY_FREE_TEXT = "free"
     #: Order numbers by shape: ``111-…`` and digital ``D01-…`` IDs, older ``4000-…`` IDs (still listed on
@@ -227,19 +202,26 @@ class Constants:
     ORDER_NUMBER_REGEX = r"(?<![A-Z0-9-])(?:[A-Z0-9]{3}-\d{7}-\d{7}|\d{4}-\d{6}-\d{7}|\d{19})(?![A-Z0-9-])"
 
     def __init__(self,
-                 config: Optional["AmazonOrdersConfig"] = None) -> None:
-        domain = None
-        browser = None
+                 config: Optional[AmazonOrdersConfig] = None) -> None:
         if config is not None:
-            domain = config._data.get("domain")
-            browser = config._data.get("browser")
+            domain, browser = config.domain, config.browser
+        else:
+            environment = AmazonOrdersConfig.read_environment()
+            domain, browser = environment.get("domain"), environment.get("browser")
         if not domain:
-            domain = os.environ.get("AMAZON_BASE_URL")
-        if not browser:
-            browser = os.environ.get("AMAZON_BROWSER")
+            domain = self._deprecated_base_url()
         self._apply_browser(browser or "chromium")
         if domain:
             self._apply_domain(domain)
+        self._apply_language_cookie(self._tld(self.BASE_URL))
+
+    @staticmethod
+    def _deprecated_base_url() -> Optional[str]:
+        base_url = os.environ.get("AMAZON_BASE_URL")
+        if base_url:
+            logger.warning("AMAZON_BASE_URL is deprecated and will be removed in the next major release. Use "
+                           "AMAZON_DOMAIN instead.")
+        return base_url
 
     def _apply_browser(self,
                        browser: str) -> None:
@@ -247,15 +229,11 @@ class Constants:
         Apply browser-specific header overrides for the given browser engine. A header a subclass changed from
         the default keeps its value.
 
-        :param browser: Browser engine name — ``"firefox"`` or ``"chromium"``. Unknown values
-            log a warning and leave ``BASE_HEADERS`` unchanged.
+        :param browser: The browser that signs in, e.g. ``"chrome"``, ``"msedge"``, ``"firefox"``. A browser without
+            headers here, like Chrome or Edge, is Chromium-based, so ``BASE_HEADERS`` is left unchanged.
         """
         preset = _BROWSER_PRESETS.get(browser)
         if preset is None:
-            logger.warning(
-                f"Unknown browser value {browser!r}; "
-                f"valid values are: {', '.join(_BROWSER_PRESETS)}. Using default headers."
-            )
             return
         headers = dict(type(self).BASE_HEADERS)
         for key, value in preset.items():
@@ -270,24 +248,25 @@ class Constants:
     def _apply_domain(self,
                       domain: str) -> None:
         """
-        Override the URL-derived attributes for the given Amazon domain.
+        Override the URL-derived attributes for the given Amazon domain, and the values that depend on which Amazon
+        site it is, from its region data: the sign-in ``openid.assoc_handle`` (Amazon rejects a sign-in, with HTTP 404,
+        whose handle doesn't match the site), ``Accept-Language``, ``CURRENCY_SYMBOL``, and
+        ``COOKIES_SET_WHEN_AUTHENTICATED``. Each is applied only when a subclass hasn't overridden it, and a site that
+        isn't known keeps the defaults.
 
         :param domain: The Amazon domain (e.g. ``amazon.com.au``) or full URL (e.g. ``https://www.amazon.com.au``).
         """
         base_url = self._normalize_base_url(domain)
-
-        host = urlparse(base_url).netloc.lower().split(":")[0]
-        if host.startswith("www."):
-            host = host[len("www."):]
-        tld = host[len("amazon."):] if host.startswith("amazon.") else ""
+        tld = self._tld(base_url)
+        site = REGION_SITES.get(tld)
 
         # Build from the instance-level BASE_HEADERS if _apply_browser has already set it;
         # otherwise fall back to the class-level definition.
         sign_in_query_params = dict(type(self).SIGN_IN_QUERY_PARAMS)
         sign_in_query_params["openid.return_to"] = f"{base_url}/?ref_=nav_custrec_signin"
-        if (tld in _REGION_ASSOC_HANDLES and
+        if (site and site.assoc_handle and
                 sign_in_query_params["openid.assoc_handle"] == Constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"]):
-            sign_in_query_params["openid.assoc_handle"] = _REGION_ASSOC_HANDLES[tld]
+            sign_in_query_params["openid.assoc_handle"] = site.assoc_handle
 
         sign_in_url = f"{base_url}/ap/signin"
 
@@ -308,18 +287,50 @@ class Constants:
         headers["Origin"] = base_url
         headers["Host"] = urlparse(base_url).netloc
         headers["Referer"] = f"{sign_in_url}?{urlencode(sign_in_query_params)}"
-        if (tld in _REGION_LANGUAGES and
-                type(self).BASE_HEADERS.get("Accept-Language") == Constants.BASE_HEADERS.get("Accept-Language")):
-            headers["Accept-Language"] = _REGION_LANGUAGES[tld]
+        if site and site.english_locale and self._requests_default_language():
+            headers["Accept-Language"] = self._english_accept_language(site.english_locale, headers["Accept-Language"])
         self.BASE_HEADERS = headers
 
-        if (not os.environ.get("AMAZON_CURRENCY_SYMBOL") and tld in _REGION_CURRENCIES and
-                type(self).CURRENCY_SYMBOL == Constants.CURRENCY_SYMBOL):
-            self.CURRENCY_SYMBOL = _REGION_CURRENCIES[tld]
+        currency_symbol = _region_currency_symbol(tld)
+        if currency_symbol and type(self).CURRENCY_SYMBOL == Constants.CURRENCY_SYMBOL:
+            self.CURRENCY_SYMBOL = currency_symbol
 
         if (tld in _REGION_AUTH_COOKIES and
                 type(self).COOKIES_SET_WHEN_AUTHENTICATED == Constants.COOKIES_SET_WHEN_AUTHENTICATED):
             self.COOKIES_SET_WHEN_AUTHENTICATED = [_REGION_AUTH_COOKIES[tld]]
+
+    def _apply_language_cookie(self,
+                               tld: str) -> None:
+        """
+        Request English pages from an Amazon site that offers them, by setting its language cookie in
+        ``REQUEST_COOKIES``. It's sent with every request, so pages stay English whatever language the account is set
+        to. Skipped when a subclass overrides ``REQUEST_COOKIES`` or ``Accept-Language``, so a language package's own
+        language wins.
+
+        :param tld: The TLD suffix that follows ``amazon.`` (e.g. ``co.uk``).
+        """
+        site = REGION_SITES.get(tld)
+        if site and site.english_locale and site.language_cookie and self._requests_default_language():
+            self.REQUEST_COOKIES = {site.language_cookie: site.english_locale}
+
+    def _requests_default_language(self) -> bool:
+        return (type(self).REQUEST_COOKIES is Constants.REQUEST_COOKIES and
+                type(self).BASE_HEADERS.get("Accept-Language") == Constants.BASE_HEADERS.get("Accept-Language"))
+
+    @staticmethod
+    def _english_accept_language(locale: str,
+                                 default: str) -> str:
+        language_tag = locale.replace("_", "-")
+        if language_tag == "en-US":
+            return default
+        return f"{language_tag},en;q=0.9,en-US;q=0.8"
+
+    @staticmethod
+    def _tld(base_url: str) -> str:
+        host = urlparse(base_url).netloc.lower().split(":")[0]
+        if host.startswith("www."):
+            host = host[len("www."):]
+        return host[len("amazon."):] if host.startswith("amazon.") else ""
 
     @staticmethod
     def _normalize_base_url(value: str) -> str:

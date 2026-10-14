@@ -15,6 +15,7 @@ from click.testing import CliRunner
 
 from amazonorders.cli import amazon_orders_cli
 from amazonorders.entity.parsable import Parsable
+from amazonorders.exception import AmazonOrdersBrowserNotInstalledError
 from amazonorders.output import OutputFormatter
 from tests.unittestcase import UnitTestCase
 
@@ -72,6 +73,104 @@ class TestCli(UnitTestCase):
         self.assert_login_responses_success()
         self.assertIn("Successfully logged in to Amazon", response.output)
 
+    def given_browser_not_installed(self, mock_browser_login, browser_types):
+        mock_browser_login.return_value.login.side_effect = [
+            AmazonOrdersBrowserNotInstalledError("Not installed.", meta={"browser_types": browser_types}),
+            None
+        ]
+
+    def invoke_login_with_browser(self, input=None):
+        return self.runner.invoke(amazon_orders_cli,
+                                  ["--config-path", self.test_config.config_path, "login", "--browser"],
+                                  input=input)
+
+    @patch("amazonorders.cli.sys")
+    @patch("amazonorders.cli.PlaywrightBrowserLauncher")
+    @patch("amazonorders.cli.PlaywrightBrowserLogin")
+    def test_login_with_browser_downloads_chosen_browser_and_retries(self, mock_browser_login, mock_launcher,
+                                                                     mock_sys):
+        # GIVEN
+        mock_sys.stdin.isatty.return_value = True
+        self.given_browser_not_installed(mock_browser_login, ["chromium", "firefox", "webkit"])
+        mock_launcher.return_value.install.return_value = True
+
+        # WHEN
+        response = self.invoke_login_with_browser(input="x2")
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertIn("1: chromium\n2: firefox\n3: webkit\n--> Choose a browser to download [1]: 2\n",
+                      response.output)
+        mock_launcher.return_value.install.assert_called_once_with("firefox")
+        self.assertIn("Config \"browser\" updated to \"firefox\"", response.output)
+        self.assertEqual(2, mock_browser_login.return_value.login.call_count)
+
+    @patch("amazonorders.cli.sys")
+    @patch("amazonorders.cli.PlaywrightBrowserLauncher")
+    @patch("amazonorders.cli.PlaywrightBrowserLogin")
+    def test_login_with_browser_enter_downloads_default_browser(self, mock_browser_login, mock_launcher, mock_sys):
+        # GIVEN
+        mock_sys.stdin.isatty.return_value = True
+        self.given_browser_not_installed(mock_browser_login, ["chromium", "firefox", "webkit"])
+        mock_launcher.return_value.install.return_value = False
+
+        # WHEN
+        response = self.invoke_login_with_browser(input="\r")
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertIn("--> Choose a browser to download [1]: 1\n", response.output)
+        mock_launcher.return_value.install.assert_called_once_with("chromium")
+
+    @patch("amazonorders.cli.sys")
+    @patch("amazonorders.cli.PlaywrightBrowserLauncher")
+    @patch("amazonorders.cli.PlaywrightBrowserLogin")
+    def test_login_with_browser_confirms_single_browser_type(self, mock_browser_login, mock_launcher, mock_sys):
+        # GIVEN
+        mock_sys.stdin.isatty.return_value = True
+        self.given_browser_not_installed(mock_browser_login, ["firefox"])
+        mock_launcher.return_value.install.return_value = False
+
+        # WHEN
+        response = self.invoke_login_with_browser(input="\n")
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertIn("Download firefox now? [Y/n]", response.output)
+        mock_launcher.return_value.install.assert_called_once_with("firefox")
+        self.assertNotIn("Config \"browser\" updated", response.output)
+
+    @patch("amazonorders.cli.sys")
+    @patch("amazonorders.cli.PlaywrightBrowserLauncher")
+    @patch("amazonorders.cli.PlaywrightBrowserLogin")
+    def test_login_with_browser_declined_download_fails(self, mock_browser_login, mock_launcher, mock_sys):
+        # GIVEN
+        mock_sys.stdin.isatty.return_value = True
+        self.given_browser_not_installed(mock_browser_login, ["firefox"])
+
+        # WHEN
+        response = self.invoke_login_with_browser(input="n\n")
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertIn("Not installed.", response.output)
+        mock_launcher.return_value.install.assert_not_called()
+
+    @patch("amazonorders.cli.PlaywrightBrowserLauncher")
+    @patch("amazonorders.cli.PlaywrightBrowserLogin")
+    def test_login_with_browser_without_terminal_does_not_prompt(self, mock_browser_login, mock_launcher):
+        # GIVEN
+        self.given_browser_not_installed(mock_browser_login, ["chromium", "firefox", "webkit"])
+
+        # WHEN
+        response = self.invoke_login_with_browser()
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertIn("Not installed.", response.output)
+        self.assertNotIn("Choose a browser", response.output)
+        mock_launcher.return_value.install.assert_not_called()
+
     @responses.activate
     def test_logout_command(self):
         # GIVEN
@@ -114,12 +213,13 @@ class TestCli(UnitTestCase):
         resp = self.given_order_history_exists(year, start_index)
 
         # WHEN
-        response = self.runner.invoke(amazon_orders_cli,
-                                      [
-                                          "--config-path", self.test_config.config_path,
-                                          "--username", "some-username@gmail.com",
-                                          "--password", "some-password",
-                                          "history", "--year", year, "--start-index", start_index, "--single-page"])
+        response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
+                                                                 [
+                                                                     "--config-path", self.test_config.config_path,
+                                                                     "--username", "some-username@gmail.com",
+                                                                     "--password", "some-password",
+                                                                     "history", "--year", year, "--start-index",
+                                                                     start_index, "--single-page"])
 
         # THEN
         self.assertEqual(0, response.exit_code)
@@ -135,6 +235,8 @@ class TestCli(UnitTestCase):
         self.assertIn("Order #112-2545298-6805068", response.output)
         self.assertIn("Order #113-4970960-6452217", response.output)
         self.assertIn("Order #112-9733602-9062669", response.output)
+        self.assertIn("Info: 10 Orders found so far ...", response.stderr)
+        self.assertNotIn("found so far", response.stdout)
 
     @responses.activate
     def test_history_command_with_order_filter(self):

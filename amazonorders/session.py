@@ -107,13 +107,13 @@ class AmazonSession:
                 auth_forms.insert(insert_pos + offset, form_instance)
 
         #: An Amazon username. Environment variable ``AMAZON_USERNAME`` will override passed in or config value.
-        self.username: Optional[str] = os.environ.get("AMAZON_USERNAME") or username or config.username
+        self.username: Optional[str] = config.environment_value("username") or username or config.username
         #: An Amazon password. Environment variable ``AMAZON_PASSWORD`` will override passed in or config value.
-        self.password: Optional[str] = os.environ.get("AMAZON_PASSWORD") or password or config.password
+        self.password: Optional[str] = config.environment_value("password") or password or config.password
         #: The secret key Amazon provides when manually adding a 2FA authenticator app. Setting this will allow
         #: one-time password challenges to be auto-solved. Environment variable ``AMAZON_OTP_SECRET_KEY`` will override
         #: passed in or config value.
-        self.otp_secret_key: Optional[str] = (os.environ.get("AMAZON_OTP_SECRET_KEY") or otp_secret_key or
+        self.otp_secret_key: Optional[str] = (config.environment_value("otp_secret_key") or otp_secret_key or
                                               config.otp_secret_key)
 
         #: Setting logger to ``DEBUG`` will send output to ``stderr`` and write an HTML file for all requests made

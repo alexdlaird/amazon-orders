@@ -2,8 +2,10 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import os
+import pickle
 import shutil
 from unittest import TestCase
+from unittest.mock import patch
 
 import yaml
 
@@ -25,6 +27,10 @@ class CustomOrder(Order):
 
 class TestConf(TestCase):
     def setUp(self):
+        # Temporarily clear any config set in the environment, so it doesn't interfere with unit tests
+        self.cleared_environment = {name: os.environ.pop(name) for name in list(os.environ)
+                                    if name.startswith(conf.ENVIRONMENT_VARIABLE_PREFIX)}
+
         conf.DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".config")
         self.test_output_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "output")
         self.test_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.json")
@@ -32,6 +38,8 @@ class TestConf(TestCase):
     def tearDown(self):
         if os.path.exists(conf.DEFAULT_CONFIG_DIR):
             shutil.rmtree(conf.DEFAULT_CONFIG_DIR)
+
+        os.environ.update(self.cleared_environment)
 
     def test_provision_config(self):
         # WHEN
@@ -292,3 +300,118 @@ some_custom_config: {custom_config}
         self.assertEqual(3, len(cm.output))
         self.assertIn("defines Selectors, but it isn't a subclass of amazonorders.selectors.Selectors",
                       "".join(cm.output))
+
+    def given_config_file(self, contents):
+        config_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "config.yml")
+        os.makedirs(conf.DEFAULT_CONFIG_DIR, exist_ok=True)
+        with open(config_path, "w") as f:
+            f.write(contents)
+        return config_path
+
+    def test_environment_variable_sets_config_value_as_yaml(self):
+        # GIVEN / WHEN
+        with patch.dict(os.environ, {"AMAZON_MAX_AUTH_ATTEMPTS": "20", "AMAZON_AUTH_FORMS_CLASSES": "[a.b.C]",
+                                     "AMAZON_WARN_ON_MISSING_REQUIRED_FIELD": "true"}):
+            config = AmazonOrdersConfig()
+
+        # THEN
+        self.assertEqual(20, config.max_auth_attempts)
+        self.assertEqual(["a.b.C"], config.auth_forms_classes)
+        self.assertIs(True, config.warn_on_missing_required_field)
+
+    def test_environment_variable_without_default_is_used_verbatim(self):
+        # GIVEN / WHEN
+        with patch.dict(os.environ, {"AMAZON_PASSWORD": "0123", "AMAZON_BROWSER": "yes"}):
+            config = AmazonOrdersConfig()
+
+        # THEN
+        self.assertEqual("0123", config.password)
+        self.assertEqual("yes", config.browser)
+
+    def test_environment_variable_wins_over_data_and_config_file(self):
+        # GIVEN
+        config_path = self.given_config_file("max_auth_attempts: 11\noutput_dir: /from/file\n")
+
+        # WHEN
+        with patch.dict(os.environ, {"AMAZON_MAX_AUTH_ATTEMPTS": "20"}):
+            config = AmazonOrdersConfig(config_path=config_path, data={"max_auth_attempts": 15})
+
+        # THEN
+        self.assertEqual(20, config.max_auth_attempts)
+        self.assertEqual("/from/file", config.output_dir)
+        self.assertIn("max_auth_attempts", config)
+
+    def test_environment_variable_wins_over_update_config(self):
+        # GIVEN
+        with patch.dict(os.environ, {"AMAZON_MAX_AUTH_ATTEMPTS": "20"}):
+            config = AmazonOrdersConfig()
+
+        # WHEN
+        config.update_config("max_auth_attempts", 7, save=False)
+
+        # THEN
+        self.assertEqual(20, config.max_auth_attempts)
+
+    def test_empty_environment_variable_is_ignored(self):
+        # GIVEN / WHEN
+        with patch.dict(os.environ, {"AMAZON_MAX_AUTH_ATTEMPTS": ""}):
+            config = AmazonOrdersConfig()
+
+        # THEN
+        self.assertEqual(10, config.max_auth_attempts)
+
+    def test_invalid_yaml_environment_variable_raises(self):
+        # WHEN
+        with patch.dict(os.environ, {"AMAZON_AUTH_FORMS_CLASSES": "[unclosed"}):
+            with self.assertRaises(AmazonOrdersError) as cm:
+                AmazonOrdersConfig()
+
+        # THEN
+        self.assertIn("Environment variable AMAZON_AUTH_FORMS_CLASSES is not valid YAML", str(cm.exception))
+
+    def test_environment_variables_are_never_persisted(self):
+        # GIVEN
+        with patch.dict(os.environ, {"AMAZON_PASSWORD": "secret", "AMAZON_MAX_AUTH_ATTEMPTS": "20"}):
+            config = AmazonOrdersConfig(data={"output_dir": self.test_output_dir})
+
+        # WHEN
+        config.update_config("max_auth_attempts", 7)
+
+        # THEN
+        with open(config.config_path, "r") as f:
+            persisted_config = yaml.safe_load(f)
+        self.assertNotIn("password", persisted_config)
+        self.assertEqual(7, persisted_config["max_auth_attempts"])
+
+    def test_environment_values_survive_pickling(self):
+        # GIVEN
+        with patch.dict(os.environ, {"AMAZON_MAX_AUTH_ATTEMPTS": "20"}):
+            config = AmazonOrdersConfig()
+
+        # WHEN
+        unpickled_config = pickle.loads(pickle.dumps(config))
+
+        # THEN
+        self.assertEqual(20, unpickled_config.max_auth_attempts)
+        self.assertEqual(20, unpickled_config.environment_value("max_auth_attempts"))
+
+    def test_environment_variable_sets_domain(self):
+        # GIVEN / WHEN
+        with patch.dict(os.environ, {"AMAZON_DOMAIN": "amazon.co.uk"}):
+            config = AmazonOrdersConfig()
+
+        # THEN
+        self.assertEqual("https://www.amazon.co.uk", config.constants.BASE_URL)
+
+    def test_deprecated_base_url_environment_variable_still_applies_below_config(self):
+        # GIVEN
+        with patch.dict(os.environ, {"AMAZON_BASE_URL": "amazon.co.uk"}):
+            # WHEN
+            with self.assertLogs("amazonorders.constants", level="WARNING") as cm:
+                config = AmazonOrdersConfig()
+            config_with_domain = AmazonOrdersConfig(data={"domain": "amazon.ca"})
+
+        # THEN
+        self.assertEqual("https://www.amazon.co.uk", config.constants.BASE_URL)
+        self.assertIn("AMAZON_BASE_URL is deprecated", "".join(cm.output))
+        self.assertEqual("https://www.amazon.ca", config_with_domain.constants.BASE_URL)

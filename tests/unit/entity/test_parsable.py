@@ -106,6 +106,60 @@ class TestItem(UnitTestCase):
         self.assertIsInstance(serialized["items"][0], dict)
         self.assertIsInstance(serialized["shipments"][0]["items"][0]["title"], str)
 
+    def test_to_dict_exclude_none_drops_only_none(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
+                  encoding="utf-8") as f:
+            order = AmazonOrders.parse_order_history(f.read(), self.test_config)[3]
+        order.subscription_discount = None
+        order.free_shipping = 0.0
+        order.full_details = False
+        order.shipments[0].items[0].price = None
+
+        # WHEN
+        serialized = order.to_dict(exclude_none=True)
+
+        # THEN
+        self.assertNotIn("subscription_discount", serialized)
+        self.assertEqual(0.0, serialized["free_shipping"])
+        self.assertFalse(serialized["full_details"])
+        self.assertNotIn("price", serialized["shipments"][0]["items"][0])
+        self.assertEqual(order.to_dict()["order_number"], serialized["order_number"])
+        self.assert_no_none_values(serialized)
+
+    def test_to_dict_keeps_none_by_default(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
+                  encoding="utf-8") as f:
+            order = AmazonOrders.parse_order_history(f.read(), self.test_config)[3]
+        order.subscription_discount = None
+
+        # WHEN
+        serialized = order.to_dict()
+
+        # THEN
+        self.assertIn("subscription_discount", serialized)
+        self.assertIsNone(serialized["subscription_discount"])
+
+    def test_to_dict_exclude_none_keeps_empty_lists(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
+                  encoding="utf-8") as f:
+            order = AmazonOrders.parse_order_history(f.read(), self.test_config)[3]
+        order.items = []
+
+        # WHEN
+        serialized = order.to_dict(exclude_none=True)
+
+        # THEN
+        self.assertEqual([], serialized["items"])
+
+    def assert_no_none_values(self, value):
+        self.assertIsNotNone(value)
+        children = value.values() if isinstance(value, dict) else value if isinstance(value, list) else []
+        for child in children:
+            self.assert_no_none_values(child)
+
     def test_to_dict_on_transaction(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "transactions", "get-transactions-snippet.html"), "r",

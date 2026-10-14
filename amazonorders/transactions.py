@@ -4,7 +4,7 @@ __license__ = "MIT"
 import datetime
 import json
 import logging
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Callable, Dict, List, Optional, Tuple, Any
 
 from bs4 import BeautifulSoup, Tag
 
@@ -12,6 +12,7 @@ from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.transaction import Transaction
 from amazonorders.exception import AmazonOrdersEntityError, AmazonOrdersError
+from amazonorders.paging import PagedResults
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
@@ -277,7 +278,8 @@ class AmazonTransactions:
                          days: int = 365,
                          next_page_data: Optional[Dict[str, Any]] = None,
                          keep_paging: bool = True,
-                         order_id: Optional[str] = None) -> List[Transaction]:
+                         order_id: Optional[str] = None,
+                         progress: Optional[Callable[[int], None]] = None) -> List[Transaction]:
         """
         Get Amazon Transaction history for a given number of days, or for a single Order.
 
@@ -287,33 +289,94 @@ class AmazonTransactions:
         :param keep_paging: ``False`` if only one page should be fetched.
         :param order_id: If given, only Transactions for this Amazon Order ID are returned, scoped
             server-side via Amazon's ``transactionTag`` filter (the ``days`` window does not apply).
+        :param progress: Called after each page of history is fetched, with the number of Transactions found so far.
         :return: A list of the requested Transactions.
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
+        min_date = None if order_id else datetime.date.today() - datetime.timedelta(days=days)
+        transactions, _ = self._collect_transactions(order_id, min_date, next_page_data, keep_paging, None, progress)
+
+        return transactions
+
+    def get_transactions_page(self,
+                              days: int = 365,
+                              order_id: Optional[str] = None,
+                              limit: Optional[int] = None,
+                              cursor: Optional[Dict[str, Any]] = None,
+                              progress: Optional[Callable[[int], None]] = None) -> PagedResults[Transaction]:
+        """
+        Get a batch of Amazon Transaction history for a given number of days, or for a single Order, with a cursor
+        to fetch the next batch.
+
+        :param days: The number of days worth of Transactions to get. Ignored when ``order_id`` or ``cursor`` is
+            given.
+        :param order_id: If given, only Transactions for this Amazon Order ID are returned, as in
+            :func:`get_transactions`. Ignored when ``cursor`` is given.
+        :param limit: Stop fetching Transaction pages once at least this many Transactions are collected. Whole pages
+            are fetched, so the batch can hold up to a page more than ``limit``. ``None`` fetches every page.
+        :param cursor: The :attr:`~amazonorders.paging.PagedResults.cursor` of the previous batch, to fetch the
+            next one. The ``days`` window or ``order_id`` it was fetched with carries over.
+        :param progress: Called after each page of history is fetched, with the number of Transactions found so far
+            in this batch.
+        :return: The batch of Transactions, and the cursor for the next one.
+        """
+        if not self.amazon_session.is_authenticated:
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
+
+        next_page_data = None
+        if cursor:
+            order_id = cursor["order_id"]
+            min_date = datetime.date.fromisoformat(cursor["min_date"]) if cursor["min_date"] else None
+            next_page_data = cursor["next_page_data"]
+        else:
+            min_date = None if order_id else datetime.date.today() - datetime.timedelta(days=days)
+
+        transactions, next_page_data = self._collect_transactions(order_id, min_date, next_page_data, True, limit,
+                                                                  progress)
+        next_cursor = {
+            "next_page_data": next_page_data,
+            "min_date": min_date.isoformat() if min_date else None,
+            "order_id": order_id,
+        } if next_page_data else None
+
+        return PagedResults(transactions, next_cursor)
+
+    def _collect_transactions(self,
+                              order_id: Optional[str],
+                              min_date: Optional[datetime.date],
+                              next_page_data: Optional[Dict[str, Any]],
+                              keep_paging: bool,
+                              limit: Optional[int],
+                              progress: Optional[Callable[[int], None]]
+                              ) -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
+        """
+        Fetch Transaction pages until the history ends, a Transaction is older than ``min_date``, ``keep_paging``
+        is ``False`` after the first page, or at least ``limit`` Transactions are collected.
+
+        :return: The Transactions, and the data to request the next page with (``None`` if there is none).
+        """
         url = self.config.constants.TRANSACTION_HISTORY_URL
         if order_id:
             url = f"{url}?transactionTag={order_id}"
-        else:
-            min_date = datetime.date.today() - datetime.timedelta(days=days)
 
         transactions_page = self.config.transactions_page_cls(self.config)
         transactions: List[Transaction] = []
         first_page = True
-        while first_page or keep_paging:
+        while first_page or (keep_paging and next_page_data and (limit is None or len(transactions) < limit)):
             first_page = False
 
             loaded_transactions, next_page_data = transactions_page.get_page(self.amazon_session, url, next_page_data)
 
             for transaction in loaded_transactions:
-                if order_id or transaction.completed_date >= min_date:
+                if min_date is None or transaction.completed_date >= min_date:
                     transactions.append(transaction)
                 else:
                     next_page_data = None
                     break
 
-            if not next_page_data:
-                keep_paging = False
+            if progress:
+                progress(len(transactions))
 
-        return transactions
+        return transactions, next_page_data

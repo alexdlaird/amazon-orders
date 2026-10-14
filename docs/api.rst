@@ -25,6 +25,12 @@ Main Interface
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.paging
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 Session Management
 ------------------
 

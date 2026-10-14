@@ -52,7 +52,7 @@ jobs:
       AMAZON_OTP_SECRET_KEY: ${{ secrets.AMAZON_OTP_SECRET_KEY }}
       CAPSOLVER_API_KEY: ${{ (inputs.use_waf_solver || github.event_name == 'schedule') && secrets.CAPSOLVER_API_KEY || '' }}
       # The following variables are not required, defaults will be used if they are not defined
-      AMAZON_BASE_URL: ${{ vars.AMAZON_BASE_URL }}
+      AMAZON_DOMAIN: ${{ vars.AMAZON_BASE_URL }}
       AMAZON_INTEGRATION_TEST_JSON: ${{ vars.AMAZON_INTEGRATION_TEST_JSON }}
       AMAZON_INTEGRATION_TEST_AUTH: ${{ vars.AMAZON_INTEGRATION_TEST_AUTH }}
       AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD: ${{ vars.AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD }}
@@ -84,7 +84,9 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
         run: |
           mkdir -p tests/.integration-config
-          echo "auth_forms_classes:" > tests/.integration-config/config.yml
+          # Pin Playwright's Chromium, so the run doesn't drive the runner's preinstalled Chrome.
+          echo "browser: chromium" > tests/.integration-config/config.yml
+          echo "auth_forms_classes:" >> tests/.integration-config/config.yml
           # PlaywrightAcicForm handles the ACIC challenge silently via headless browser.
           echo "  - amazonorders.contrib.browser.playwright.PlaywrightAcicForm" >> tests/.integration-config/config.yml
           if [[ "$USE_WAF_SOLVER" != "true" && "$EVENT_NAME" != "schedule" ]]; then

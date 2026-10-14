@@ -144,7 +144,7 @@ class TestSession(UnitTestCase):
             self.assertIn("session-id=some-session-id", cookie_header)
 
     @responses.activate
-    def test_no_request_cookies_by_default(self):
+    def test_only_language_cookie_by_default(self):
         # GIVEN
         url = f"{self.test_config.constants.BASE_URL}/some/page"
         responses.add(responses.GET, url, body="<html></html>", status=200)
@@ -153,7 +153,7 @@ class TestSession(UnitTestCase):
         self.amazon_session.get(url)
 
         # THEN
-        self.assertNotIn("Cookie", responses.calls[0].request.headers)
+        self.assertEqual("lc-main=en_US", responses.calls[0].request.headers["Cookie"])
 
     @responses.activate
     def test_login_claim_invalid_username(self):
@@ -950,6 +950,23 @@ class TestSession(UnitTestCase):
 
             # THEN
             self.assertEqual(5, mock_request.call_args.kwargs["timeout"])
+
+    def test_credentials_environment_variables_win_over_arguments_and_config(self):
+        # GIVEN
+        with patch.dict(os.environ, {"AMAZON_USERNAME": "env-username", "AMAZON_OTP_SECRET_KEY": "env-otp"}):
+            config = AmazonOrdersConfig(data={"output_dir": self.test_output_dir,
+                                              "cookie_jar_path": self.test_cookie_jar_path,
+                                              "username": "config-username",
+                                              "password": "config-password"})
+
+        # WHEN
+        amazon_session = AmazonSession("argument-username", "argument-password", config=config,
+                                       otp_secret_key="argument-otp")
+
+        # THEN
+        self.assertEqual("env-username", amazon_session.username)
+        self.assertEqual("argument-password", amazon_session.password)
+        self.assertEqual("env-otp", amazon_session.otp_secret_key)
 
 
 class RecordingIO(IODefault):

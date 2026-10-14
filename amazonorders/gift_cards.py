@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import datetime
 import logging
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from bs4 import BeautifulSoup, Tag
 
@@ -80,7 +80,8 @@ class AmazonGiftCards:
     def get_gift_card_activity(self,
                                days: int = 365,
                                next_page_url: Optional[str] = None,
-                               keep_paging: bool = True) -> List[GiftCardActivity]:
+                               keep_paging: bool = True,
+                               progress: Optional[Callable[[int], None]] = None) -> List[GiftCardActivity]:
         """
         Get Amazon Gift Card activity for a given number of days.
 
@@ -89,6 +90,8 @@ class AmazonGiftCards:
             :attr:`~amazonorders.exception.AmazonOrdersError.meta` value for ``next_page_url`` will continue
             paging where it left off.
         :param keep_paging: ``False`` if only one page should be fetched.
+        :param progress: Called after each page of activity is fetched, with the number of GiftCardActivity
+            entries found so far.
         :return: A list of the requested GiftCardActivity, newest first.
         """
         if not self.amazon_session.is_authenticated:
@@ -110,6 +113,9 @@ class AmazonGiftCards:
                 else:
                     next_page_url = None
                     break
+
+            if progress:
+                progress(len(activity))
 
             url = next_page_url if keep_paging else None
 
