@@ -266,8 +266,11 @@ class UnitTestCase(TestCase):
         self.assertEqual(1, self.signin_response.call_count)
         self.assertEqual(1, self.authenticated_response.call_count)
 
-    def assert_no_auth_cookies_persisted(self):
+    def read_persisted_cookie_names(self):
         with open(self.test_config.cookie_jar_path, "r") as f:
-            cookies = json.loads(f.read())
-            for cookie in self.test_config.constants.COOKIES_SET_WHEN_AUTHENTICATED:
-                self.assertTrue(cookie not in cookies)
+            return {cookie["name"] for cookie in json.loads(f.read())}
+
+    def assert_no_auth_cookies_persisted(self):
+        cookie_names = self.read_persisted_cookie_names()
+        for cookie in self.test_config.constants.COOKIES_SET_WHEN_AUTHENTICATED:
+            self.assertTrue(cookie not in cookie_names)

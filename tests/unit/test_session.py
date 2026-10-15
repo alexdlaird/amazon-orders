@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import json
 import os
 import sys
 import unittest
@@ -155,6 +156,160 @@ class TestSession(UnitTestCase):
 
         # THEN
         self.assertEqual("lc-main=en_US", responses.calls[0].request.headers["Cookie"])
+
+    def test_legacy_cookie_jar_loads_with_site_domain(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+
+        # WHEN
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
+
+        # THEN
+        cookies = {cookie.name: cookie.domain for cookie in amazon_session.session.cookies}
+        self.assertEqual(".amazon.com", cookies["x-main"])
+        self.assertEqual(".amazon.com", cookies["session-id"])
+
+    @responses.activate
+    def test_reissued_cookie_replaces_persisted_cookie(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
+        self.given_response_reissues_cookie("x-main", "reissued-main")
+
+        # WHEN
+        amazon_session.get(f"{self.test_config.constants.BASE_URL}/some/page")
+
+        # THEN
+        self.assertEqual(1, len([cookie for cookie in amazon_session.session.cookies if cookie.name == "x-main"]))
+        persisted = self.read_persisted_cookies()
+        self.assertEqual(["reissued-main"], [cookie["value"] for cookie in persisted if cookie["name"] == "x-main"])
+        self.assertEqual(".amazon.com", [cookie["domain"] for cookie in persisted if cookie["name"] == "x-main"][0])
+
+    @responses.activate
+    def test_unchanged_cookies_are_not_persisted(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
+        with open(self.test_config.cookie_jar_path, "r", encoding="utf-8") as f:
+            persisted_before = f.read()
+        url = f"{self.test_config.constants.BASE_URL}/some/page"
+        responses.add(responses.GET, url, body="<html></html>", status=200)
+
+        # WHEN
+        amazon_session.get(url)
+
+        # THEN
+        with open(self.test_config.cookie_jar_path, "r", encoding="utf-8") as f:
+            self.assertEqual(persisted_before, f.read())
+
+    @responses.activate
+    def test_reissued_cookie_is_not_persisted_over_a_newer_save_by_another_process(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
+        newer_sign_in = [{"name": "x-main", "value": "newer-sign-in", "domain": ".amazon.com", "path": "/"}]
+        with open(self.test_config.cookie_jar_path, "w", encoding="utf-8") as f:
+            f.write(json.dumps(newer_sign_in))
+        saved_at = os.path.getmtime(self.test_config.cookie_jar_path) + 10
+        os.utime(self.test_config.cookie_jar_path, (saved_at, saved_at))
+        self.given_response_reissues_cookie("x-main", "stale-reissue")
+
+        # WHEN
+        amazon_session.get(f"{self.test_config.constants.BASE_URL}/some/page")
+
+        # THEN
+        self.assertEqual(newer_sign_in, self.read_persisted_cookies())
+
+    @responses.activate
+    def test_reissued_cookie_is_persisted_again_after_this_session_saved(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
+        self.given_response_reissues_cookie("x-main", "first-reissue")
+        amazon_session.get(f"{self.test_config.constants.BASE_URL}/some/page")
+        self.given_response_reissues_cookie("x-main", "second-reissue")
+
+        # WHEN
+        amazon_session.get(f"{self.test_config.constants.BASE_URL}/some/page")
+
+        # THEN
+        self.assertEqual(["second-reissue"],
+                         [cookie["value"] for cookie in self.read_persisted_cookies() if cookie["name"] == "x-main"])
+
+    @responses.activate
+    def test_reissued_cookie_is_not_persisted_when_persist_cookies_is_false(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
+        with open(self.test_config.cookie_jar_path, "r", encoding="utf-8") as f:
+            persisted_before = f.read()
+        self.given_response_reissues_cookie("x-main", "reissued-main")
+
+        # WHEN
+        amazon_session.get(f"{self.test_config.constants.BASE_URL}/some/page", persist_cookies=False)
+
+        # THEN
+        with open(self.test_config.cookie_jar_path, "r", encoding="utf-8") as f:
+            self.assertEqual(persisted_before, f.read())
+
+    @responses.activate
+    def test_reissued_cookie_is_persisted_when_no_jar_existed_at_load(self):
+        # GIVEN
+        self.assertFalse(os.path.exists(self.test_config.cookie_jar_path))
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
+        self.given_response_reissues_cookie("x-main", "reissued-main")
+
+        # WHEN
+        amazon_session.get(f"{self.test_config.constants.BASE_URL}/some/page")
+
+        # THEN
+        self.assertEqual(["reissued-main"],
+                         [cookie["value"] for cookie in self.read_persisted_cookies() if cookie["name"] == "x-main"])
+        self.assertEqual(os.path.getmtime(self.test_config.cookie_jar_path), amazon_session.cookie_jar_mtime)
+        self.assertEqual(0o600, os.stat(self.test_config.cookie_jar_path).st_mode & 0o777)
+        self.assertEqual([], [name for name in os.listdir(os.path.dirname(self.test_config.cookie_jar_path))
+                              if name.endswith(".tmp")])
+
+    def test_js_challenge_message_when_browser_extra_installed(self):
+        # GIVEN
+        blocker = JSAuthBlocker(self.test_config, "not a robot")
+        parsed = BeautifulSoup("<html><body>Verify that you're not a robot</body></html>", "html.parser")
+
+        # WHEN
+        with patch("amazonorders.forms.importlib.util.find_spec", return_value=MagicMock()):
+            with self.assertRaises(AmazonOrdersAuthError) as cm:
+                blocker.select_form(self.amazon_session, parsed)
+
+        # THEN
+        self.assertIn("Add amazonorders.contrib.browser.playwright.PlaywrightAcicForm, then "
+                      "amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm, to auth_forms_classes",
+                      str(cm.exception))
+        self.assertNotIn("pip install", str(cm.exception))
+
+    def test_js_challenge_message_when_browser_extra_not_installed(self):
+        # GIVEN
+        blocker = JSAuthBlocker(self.test_config, "not a robot")
+        parsed = BeautifulSoup("<html><body>Verify that you're not a robot</body></html>", "html.parser")
+
+        # WHEN
+        with patch("amazonorders.forms.importlib.util.find_spec", return_value=None):
+            with self.assertRaises(AmazonOrdersAuthError) as cm:
+                blocker.select_form(self.amazon_session, parsed)
+
+        # THEN
+        self.assertIn("`pip install amazon-orders[browser]`", str(cm.exception))
+        self.assertNotIn("auth_forms_classes", str(cm.exception))
+
+    def given_response_reissues_cookie(self, name, value):
+        responses.upsert(responses.GET,
+                         f"{self.test_config.constants.BASE_URL}/some/page",
+                         body="<html></html>",
+                         status=200,
+                         headers={"Set-Cookie": f"{name}={value}; Domain=.amazon.com; Path=/; Secure"})
+
+    def read_persisted_cookies(self):
+        with open(self.test_config.cookie_jar_path, "r", encoding="utf-8") as f:
+            return json.loads(f.read())
 
     @responses.activate
     def test_login_claim_invalid_username(self):

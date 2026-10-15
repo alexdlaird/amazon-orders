@@ -17,6 +17,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - Sign-in on Amazon sites other than `.com`, `.ca`, `.co.jp`, `.co.uk`, `.com.au`, `.de`, `.in`, and `.it` now checks for that site's own auth cookie.
+- Bug fixes and stability improvements.
 
 ## [4.9.1](https://github.com/alexdlaird/amazon-orders/compare/4.9.0...4.9.1) - 2026-10-14
 

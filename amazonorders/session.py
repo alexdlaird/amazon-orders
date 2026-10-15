@@ -4,8 +4,9 @@ __license__ = "MIT"
 import json
 import logging
 import os
+import tempfile
 import time
-from typing import Any, List, Optional, Dict
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode, urlparse
 
 import requests
@@ -136,15 +137,23 @@ class AmazonSession:
         #: If :func:`login` has been executed and successfully logged in the session.
         self.is_authenticated: bool = False
         self._sign_in_required: bool = False
+        self._cookie_jar_mtime: Optional[float] = None
 
         with cookies_file_lock:
             os.makedirs(os.path.dirname(self.config.cookie_jar_path), exist_ok=True)
 
             if os.path.exists(self.config.cookie_jar_path):
                 with open(self.config.cookie_jar_path, "r", encoding="utf-8") as f:
-                    data = json.loads(f.read())
-                    cookies = requests.utils.cookiejar_from_dict(data)
-                    self.session.cookies.update(cookies)
+                    self._cookie_jar_mtime = os.fstat(f.fileno()).st_mtime
+                    self._load_cookie_jar_data(json.loads(f.read()))
+
+    @property
+    def cookie_jar_mtime(self) -> Optional[float]:
+        """
+        The modification time of the persisted cookie jar when this session last loaded or saved it, or ``None`` if
+        there was no jar then. If the file's modification time no longer matches, another process has saved it since.
+        """
+        return self._cookie_jar_mtime
 
     @staticmethod
     def default_auth_forms(config: AmazonOrdersConfig) -> List[AuthForm]:
@@ -176,14 +185,16 @@ class AmazonSession:
     def request(self,
                 method: str,
                 url: str,
-                persist_cookies: bool = False,
+                persist_cookies: Optional[bool] = None,
                 **kwargs: Any) -> AmazonSessionResponse:
         """
         Execute the request against Amazon with base headers, parsing and storing the response.
 
         :param method: The request method to execute.
         :param url: The URL to execute ``method`` on.
-        :param persist_cookies: If ``True``, cookies from the response will be persisted to a file.
+        :param persist_cookies: If ``True``, cookies from the response will be persisted to a file, and if ``False``,
+            they won't be. By default, they're persisted when the response changed them, unless another process has
+            saved the file since this session did, so a stale session can't overwrite a newer sign-in.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`requests.request`.
         :return: The response from the executed request.
         """
@@ -201,6 +212,7 @@ class AmazonSession:
             kwargs.setdefault("timeout", self.config.request_timeout)
 
         self._set_request_cookies()
+        cookie_jar_data = self._cookie_jar_data()
 
         try:
             response = self.session.request(method, url, **kwargs)
@@ -213,10 +225,11 @@ class AmazonSession:
         amazon_session_response = AmazonSessionResponse(response,
                                                         self.config.bs4_parser)
 
+        if persist_cookies is None:
+            persist_cookies = self._cookie_jar_data() != cookie_jar_data and self._cookie_jar_unchanged_on_disk()
         if persist_cookies:
-            cookies = dict_from_cookiejar(self.session.cookies)
             with cookies_file_lock:
-                self._write_cookie_jar(cookies)
+                self._write_cookie_jar()
 
         if self.debug:
             url_str = ""
@@ -346,22 +359,48 @@ class AmazonSession:
         self.session.close()
         self.session = self._create_session()
 
-        # Ensure authentication cookies are unset, since we can get inconsistent persistence behavior otherwise
         with cookies_file_lock:
-            cookies = dict_from_cookiejar(self.session.cookies)
-            for cookie in self.config.constants.COOKIES_SET_WHEN_AUTHENTICATED:
-                cookies.pop(cookie, None)
-            self._write_cookie_jar(cookies)
+            self._write_cookie_jar()
 
         self.is_authenticated = False
         self._sign_in_required = False
 
-    def _write_cookie_jar(self,
-                          cookies: Dict[str, str]) -> None:
-        file_descriptor = os.open(self.config.cookie_jar_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(file_descriptor, "w", encoding="utf-8") as f:
-            f.write(json.dumps(cookies))
-        os.chmod(self.config.cookie_jar_path, 0o600)
+    def _cookie_jar_data(self) -> List[Dict[str, Any]]:
+        return [{"name": cookie.name, "value": cookie.value, "domain": cookie.domain, "path": cookie.path,
+                 "secure": cookie.secure, "expires": cookie.expires} for cookie in self.session.cookies]
+
+    def _load_cookie_jar_data(self,
+                              data: Union[Dict[str, str], List[Dict[str, Any]]]) -> None:
+        if isinstance(data, dict):
+            domain = "." + (urlparse(self.config.constants.BASE_URL).hostname or "").removeprefix("www.")
+            data = [{"name": name, "value": value, "domain": domain} for name, value in data.items()]
+
+        for cookie in data:
+            self.session.cookies.set(cookie["name"], cookie["value"], domain=cookie.get("domain", ""),
+                                     path=cookie.get("path", "/"), secure=cookie.get("secure", False),
+                                     expires=cookie.get("expires"))
+
+    def _write_cookie_jar(self) -> None:
+        file_descriptor, temp_path = tempfile.mkstemp(dir=os.path.dirname(self.config.cookie_jar_path),
+                                                      prefix=".cookies-", suffix=".tmp")
+        try:
+            with os.fdopen(file_descriptor, "w", encoding="utf-8") as f:
+                f.write(json.dumps(self._cookie_jar_data()))
+            os.chmod(temp_path, 0o600)
+            os.replace(temp_path, self.config.cookie_jar_path)
+        except BaseException:
+            os.remove(temp_path)
+            raise
+        self._cookie_jar_mtime = self._read_cookie_jar_mtime()
+
+    def _read_cookie_jar_mtime(self) -> Optional[float]:
+        try:
+            return os.path.getmtime(self.config.cookie_jar_path)
+        except OSError:
+            return None
+
+    def _cookie_jar_unchanged_on_disk(self) -> bool:
+        return self._read_cookie_jar_mtime() == self._cookie_jar_mtime
 
     def build_response_error(self,
                              response: Response) -> str:
