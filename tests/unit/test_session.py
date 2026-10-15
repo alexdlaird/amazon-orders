@@ -266,9 +266,21 @@ class TestSession(UnitTestCase):
         self.assertEqual(["reissued-main"],
                          [cookie["value"] for cookie in self.read_persisted_cookies() if cookie["name"] == "x-main"])
         self.assertEqual(os.path.getmtime(self.test_config.cookie_jar_path), amazon_session.cookie_jar_mtime)
-        self.assertEqual(0o600, os.stat(self.test_config.cookie_jar_path).st_mode & 0o777)
         self.assertEqual([], [name for name in os.listdir(os.path.dirname(self.test_config.cookie_jar_path))
                               if name.endswith(".tmp")])
+
+    @unittest.skipIf(sys.platform == "win32", reason="Windows does not support POSIX file permissions")
+    @responses.activate
+    def test_persisted_cookie_jar_is_owner_only(self):
+        # GIVEN
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
+        self.given_response_reissues_cookie("x-main", "reissued-main")
+
+        # WHEN
+        amazon_session.get(f"{self.test_config.constants.BASE_URL}/some/page")
+
+        # THEN
+        self.assertEqual(0o600, os.stat(self.test_config.cookie_jar_path).st_mode & 0o777)
 
     def test_js_challenge_message_when_browser_extra_installed(self):
         # GIVEN
