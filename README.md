@@ -156,6 +156,9 @@ as shown above. Any MCP client gets the same as tools through
 [`amazon-orders-mcp`](https://github.com/alexdlaird/amazon-orders-mcp#readme), a server built on `amazon-orders` — see
 its README for setup.
 
+The server signs you in with a browser, so it needs a display. Without one, use the CLI or library with
+[Automating Authentication](#automating-authentication).
+
 ## Documentation
 
 For more advanced usage, `amazon-orders`'s official documentation is available
