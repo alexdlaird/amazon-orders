@@ -177,6 +177,9 @@ environment variables ``amazon-orders`` looks for are:
 
 Any other config value can be set the same way, as ``AMAZON_<KEY>`` (see :class:`~amazonorders.conf.AmazonOrdersConfig`).
 
+A configured username also applies to ``amazon-orders login --browser``: it's filled in and submitted for you, so the
+browser opens on Amazon's password or passkey step. The browser never fills in your password.
+
 Handling Challenges
 -------------------
 

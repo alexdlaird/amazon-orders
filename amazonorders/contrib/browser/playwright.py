@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 BODY_TEXT_LENGTH_JS = "() => (document.body && document.body.innerText || '').length"
 SIGN_IN_POLL_INTERVAL_MS = 2000
 SIGN_IN_SETTLE_MS = 2000
+SIGN_IN_PREFILL_TIMEOUT_MS = 5000
 
 
 class PlaywrightBrowserLauncher:
@@ -825,6 +826,7 @@ class PlaywrightBrowserLogin:
                 context = browser.new_context(user_agent=constants.BASE_HEADERS.get("User-Agent"))
                 page = context.new_page()
                 page.goto(sign_in_url)
+                self._prefill_username(page)
 
                 message = ("Info: A browser window has opened. Sign in to Amazon there, and this will continue "
                            "once you're signed in.")
@@ -840,6 +842,28 @@ class PlaywrightBrowserLogin:
                 browser.close()
 
         self._verify_session()
+
+    def _prefill_username(self,
+                          page: Any) -> None:
+        """
+        Best effort: if a username is configured, fill it into Amazon's email field and submit it, so the browser
+        opens on the password or passkey step. Skipped silently when there's no username, the field is missing or
+        already filled, or anything about it fails, since the sign-in then continues by hand as usual.
+        """
+        username = self.amazon_session.username
+        if not username:
+            return
+
+        try:
+            email_input = page.locator(self.config.selectors.SIGN_IN_EMAIL_INPUT_SELECTOR).first
+            email_input.wait_for(state="visible", timeout=SIGN_IN_PREFILL_TIMEOUT_MS)
+            if email_input.input_value():
+                return
+
+            email_input.fill(username)
+            email_input.press("Enter")
+        except Exception as e:
+            logger.debug(f"Skipped pre-filling the username in the browser: {e}")
 
     def _require_display(self) -> None:
         if (not self.headless and sys.platform.startswith("linux") and
