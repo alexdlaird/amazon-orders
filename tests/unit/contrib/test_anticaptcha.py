@@ -104,7 +104,7 @@ class TestAntiCaptchaWafForm(UnitTestCase):
             "anticaptchaofficial": MagicMock(),
             "anticaptchaofficial.amazonproxyless": fake_module,
         }):
-            token = form._solve_token("https://www.amazon.com/login", goku, challenge_script)
+            token = form.solve_token("https://www.amazon.com/login", goku, challenge_script)
 
         # THEN
         self.assertEqual("waf-token-value", token)
@@ -136,7 +136,7 @@ class TestAntiCaptchaWafForm(UnitTestCase):
             "anticaptchaofficial.amazonproxyless": fake_module,
         }):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
+                form.solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("Anti-Captcha", str(cm.exception))
         self.assertIn("ERROR_NO_SLOT_AVAILABLE", str(cm.exception))
 
@@ -160,7 +160,7 @@ class TestAntiCaptchaWafForm(UnitTestCase):
             "anticaptchaofficial.amazonproxyless": fake_module,
         }):
             with self.assertRaises(AmazonOrdersWafSolverError) as cm:
-                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
+                form.solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("Anti-Captcha", str(cm.exception))
         self.assertIn("Network unreachable", str(cm.exception))
         self.assertEqual("Anti-Captcha", cm.exception.meta["provider"])
@@ -176,5 +176,5 @@ class TestAntiCaptchaWafForm(UnitTestCase):
         # WHEN / THEN: simulate import failure
         with patch.dict(sys.modules, {"anticaptchaofficial.amazonproxyless": None}):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
+                form.solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("pip install amazon-orders[anticaptcha]", str(cm.exception))

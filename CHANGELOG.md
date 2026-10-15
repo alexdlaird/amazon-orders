@@ -6,6 +6,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.9.1...HEAD)
 
+### Added
+
+- `Constants.BROWSER_HEADERS`, `REGION_CURRENCY_OVERRIDES`, `ZERO_DECIMAL_CURRENCY_SYMBOLS`, `region_auth_cookie()`, and `region_currency_symbol()`, so a `constants_class` can override a browser's headers, or a site's auth cookie or currency symbol.
+
+### Deprecated
+
+- `AwsWafForm`'s `_solve_token()` and `_solve_visual_captcha()`, renamed to `solve_token()` and `solve_visual_captcha()`.
+
+### Fixed
+
+- Sign-in on Amazon sites other than `.com`, `.ca`, `.co.jp`, `.co.uk`, `.com.au`, `.de`, `.in`, and `.it` now checks for that site's own auth cookie.
+
 ## [4.9.1](https://github.com/alexdlaird/amazon-orders/compare/4.9.0...4.9.1) - 2026-10-14
 
 ### Added

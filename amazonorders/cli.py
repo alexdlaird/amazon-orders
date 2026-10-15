@@ -331,10 +331,10 @@ def history(ctx: Context,
         # Determine time filter
         time_filter = None
         if last_30_days:
-            time_filter = "last30"
+            time_filter = amazon_session.config.constants.LAST_30_DAYS_TIME_FILTER
             filter_description = "last 30 days"
         elif last_3_months:
-            time_filter = "months-3"
+            time_filter = amazon_session.config.constants.LAST_3_MONTHS_TIME_FILTER
             filter_description = "past 3 months"
         else:
             if year is None:

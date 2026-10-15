@@ -20,7 +20,7 @@ from docutils.statemachine import StringList
 from sphinx.util.docutils import SphinxDirective
 
 from amazonorders import __version__
-from amazonorders.constants import _region_currency_symbol
+from amazonorders.constants import Constants
 from amazonorders.region_data import REGION_SITES
 
 # -- Project information -----------------------------------------------------
@@ -257,7 +257,7 @@ class SupportedSitesDirective(SphinxDirective):
                 continue
             rows += [f"   * - amazon.{tld}",
                      f"     - {site.english_locale.replace('_', '-')}",
-                     f"     - {_region_currency_symbol(tld) or '—'}"]
+                     f"     - {Constants.region_currency_symbol(tld) or '—'}"]
 
         container = nodes.container()
         self.state.nested_parse(StringList(rows), self.content_offset, container)

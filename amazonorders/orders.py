@@ -112,7 +112,7 @@ class AmazonOrders:
         meta = {"index": clone.index} if clone else None
 
         order_details_response = self.amazon_session.get(
-            f"{self.config.constants.ORDER_DETAILS_URL}?orderID={order_id}")
+            f"{self.config.constants.ORDER_DETAILS_URL}?{self.config.constants.ORDER_ID_QUERY_PARAM}={order_id}")
         self.amazon_session.check_response(order_details_response, meta=meta)
 
         response_url = order_details_response.response.url
@@ -233,7 +233,7 @@ class AmazonOrders:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         invoice_response = self.amazon_session.get(
-            f"{self.config.constants.ORDER_INVOICE_URL}?orderID={order_id}")
+            f"{self.config.constants.ORDER_INVOICE_URL}?{self.config.constants.ORDER_ID_QUERY_PARAM}={order_id}")
         self.amazon_session.check_response(invoice_response)
 
         response_url = invoice_response.response.url
@@ -353,8 +353,8 @@ class AmazonOrders:
 
         return PagedResults(orders, next_cursor)
 
-    @staticmethod
-    def _history_filter_value(year: Optional[int],
+    def _history_filter_value(self,
+                              year: Optional[int],
                               time_filter: Optional[str]) -> str:
         if time_filter and year:
             raise AmazonOrdersError("Only one of 'year' or 'time_filter' may be used at a time.")
@@ -362,18 +362,20 @@ class AmazonOrders:
         # Determine the filter value to use
         if time_filter:
             # Validate time_filter value
-            valid_filters = ["last30", "months-3"]
-            is_year_filter = time_filter.startswith("year-") and time_filter[5:].isdigit()
+            constants = self.config.constants
+            valid_filters = [constants.LAST_30_DAYS_TIME_FILTER, constants.LAST_3_MONTHS_TIME_FILTER]
+            year_prefix = constants.YEAR_TIME_FILTER_PREFIX
+            is_year_filter = time_filter.startswith(year_prefix) and time_filter[len(year_prefix):].isdigit()
             if time_filter not in valid_filters and not is_year_filter:
                 raise AmazonOrdersError(
                     f"Invalid time_filter '{time_filter}'. "
-                    f"Valid values are 'last30', 'months-3', or 'year-YYYY'."
+                    f"Valid values are '{valid_filters[0]}', '{valid_filters[1]}', or '{year_prefix}YYYY'."
                 )
             filter_value = time_filter
         else:
             if year is None:
                 year = datetime.date.today().year
-            filter_value = f"year-{year}"
+            filter_value = f"{self.config.constants.YEAR_TIME_FILTER_PREFIX}{year}"
 
         return filter_value
 

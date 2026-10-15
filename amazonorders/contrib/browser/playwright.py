@@ -488,7 +488,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
             return False
 
         try:
-            token = waf_form._solve_token(page.url, goku, challenge_script)
+            token = waf_form.solve_token(page.url, goku, challenge_script)
         except AmazonOrdersWafSolverError:
             raise
         except Exception:
@@ -501,7 +501,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
 
         domain = urlparse(page.url).netloc
         context.add_cookies([{
-            "name": "aws-waf-token",
+            "name": self.config.constants.WAF_TOKEN_COOKIE,
             "value": token,
             "domain": f".{domain}",
             "path": "/",
@@ -575,7 +575,7 @@ class PlaywrightAcicForm(PlaywrightAuthForm):
             return False
 
         try:
-            answer = waf_form._solve_visual_captcha(page.url, challenge_images, question)
+            answer = waf_form.solve_visual_captcha(page.url, challenge_images, question)
         except AmazonOrdersWafSolverError:
             raise
         except Exception:

@@ -114,7 +114,7 @@ class TestCapSolverWafForm(UnitTestCase):
 
         # WHEN
         with patch.dict(sys.modules, {"capsolver": fake_capsolver}):
-            token = form._solve_token("https://www.amazon.com/login", goku, challenge_script)
+            token = form.solve_token("https://www.amazon.com/login", goku, challenge_script)
 
         # THEN
         self.assertEqual("waf-token-value", token)
@@ -141,7 +141,7 @@ class TestCapSolverWafForm(UnitTestCase):
         # WHEN / THEN
         with patch.dict(sys.modules, {"capsolver": fake_capsolver}):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
+                form.solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("cookie", str(cm.exception))
 
     @patch.dict(os.environ, {"CAPSOLVER_API_KEY": "test-api-key"})
@@ -217,7 +217,7 @@ class TestCapSolverWafForm(UnitTestCase):
         # WHEN / THEN
         with patch.dict(sys.modules, {"capsolver": fake_capsolver}):
             with self.assertRaises(AmazonOrdersWafSolverError) as cm:
-                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
+                form.solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("CapSolver", str(cm.exception))
         self.assertIn("ERROR_NO_FUNDS", str(cm.exception))
         self.assertEqual("CapSolver", cm.exception.meta["provider"])
@@ -233,5 +233,5 @@ class TestCapSolverWafForm(UnitTestCase):
         # WHEN / THEN: simulate import failure by injecting None
         with patch.dict(sys.modules, {"capsolver": None}):
             with self.assertRaises(AmazonOrdersError) as cm:
-                form._solve_token("https://www.amazon.com/login", goku, challenge_script)
+                form.solve_token("https://www.amazon.com/login", goku, challenge_script)
         self.assertIn("capsolver", str(cm.exception).lower())

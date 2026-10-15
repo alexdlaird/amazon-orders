@@ -36,6 +36,7 @@ to interact with account data. [`get_order_history`](https://amazon-orders.readt
 and [`get_order`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order) are good places to start.
 
 ```python
+from amazonorders.constants import Constants
 from amazonorders.session import AmazonSession
 from amazonorders.orders import AmazonOrders
 
@@ -49,8 +50,8 @@ amazon_orders = AmazonOrders(amazon_session)
 orders = amazon_orders.get_order_history(year=2023)
 
 # Or use time filters for recent orders
-orders = amazon_orders.get_order_history(time_filter="last30")  # Last 30 days
-orders = amazon_orders.get_order_history(time_filter="months-3")  # Past 3 months
+orders = amazon_orders.get_order_history(time_filter=Constants.LAST_30_DAYS_TIME_FILTER)
+orders = amazon_orders.get_order_history(time_filter=Constants.LAST_3_MONTHS_TIME_FILTER)
 
 for order in orders:
     print(f"{order.order_number} - {order.grand_total}")

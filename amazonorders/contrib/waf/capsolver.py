@@ -19,10 +19,10 @@ class CapSolverWafForm(AwsWafForm):
     API_KEY_ENV_VAR = "CAPSOLVER_API_KEY"
     PROVIDER_NAME = "CapSolver"
 
-    def _solve_token(self,
-                     url: str,
-                     goku: Dict[str, Any],
-                     challenge_script: str) -> str:
+    def solve_token(self,
+                    url: str,
+                    goku: Dict[str, Any],
+                    challenge_script: str) -> str:
         """
         Solve the AWS WAF challenge via CapSolver's ``AntiAwsWafTaskProxyLess``
         task type and return the ``aws-waf-token`` cookie value.
@@ -68,10 +68,10 @@ class CapSolverWafForm(AwsWafForm):
                 meta={"provider": self.PROVIDER_NAME, "provider_error": repr(solution)}
             ) from e
 
-    def _solve_visual_captcha(self,
-                              url: str,
-                              image_data: List[str],
-                              question: str) -> Optional[List[int]]:
+    def solve_visual_captcha(self,
+                             url: str,
+                             image_data: List[str],
+                             question: str) -> Optional[List[int]]:
         """
         Solve a visual grid Puzzle via CapSolver's ``AwsWafClassification`` task
         type and return the indices of the correct grid cells.

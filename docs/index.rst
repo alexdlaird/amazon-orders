@@ -74,6 +74,7 @@ You'll use :class:`~amazonorders.session.AmazonSession` to authenticate your Ama
 
 .. code:: python
 
+    from amazonorders.constants import Constants
     from amazonorders.session import AmazonSession
     from amazonorders.orders import AmazonOrders
 
@@ -87,8 +88,8 @@ You'll use :class:`~amazonorders.session.AmazonSession` to authenticate your Ama
     orders = amazon_orders.get_order_history(year=2023)
 
     # Or use time filters for recent orders
-    orders = amazon_orders.get_order_history(time_filter="last30")  # Last 30 days
-    orders = amazon_orders.get_order_history(time_filter="months-3")  # Past 3 months
+    orders = amazon_orders.get_order_history(time_filter=Constants.LAST_30_DAYS_TIME_FILTER)
+    orders = amazon_orders.get_order_history(time_filter=Constants.LAST_3_MONTHS_TIME_FILTER)
 
     for order in orders:
         print(f"{order.order_number} - {order.grand_total}")
