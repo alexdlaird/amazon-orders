@@ -36,6 +36,7 @@ to interact with account data. [`get_order_history`](https://amazon-orders.readt
 and [`get_order`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_order) are good places to start.
 
 ```python
+from amazonorders.constants import Constants
 from amazonorders.session import AmazonSession
 from amazonorders.orders import AmazonOrders
 
@@ -49,8 +50,8 @@ amazon_orders = AmazonOrders(amazon_session)
 orders = amazon_orders.get_order_history(year=2023)
 
 # Or use time filters for recent orders
-orders = amazon_orders.get_order_history(time_filter="last30")  # Last 30 days
-orders = amazon_orders.get_order_history(time_filter="months-3")  # Past 3 months
+orders = amazon_orders.get_order_history(time_filter=Constants.LAST_30_DAYS_TIME_FILTER)
+orders = amazon_orders.get_order_history(time_filter=Constants.LAST_3_MONTHS_TIME_FILTER)
 
 for order in orders:
     print(f"{order.order_number} - {order.grand_total}")
@@ -134,6 +135,9 @@ environment variables `amazon-orders` looks for are:
 
 Any other config value can be set the same way, as `AMAZON_<KEY>` (see [`AmazonOrdersConfig`](https://amazon-orders.readthedocs.io/api.html#amazonorders.conf.AmazonOrdersConfig)).
 
+A configured username also applies to `amazon-orders login --browser`: it's filled in and submitted for you, so the
+browser opens on Amazon's password or passkey step. The browser never fills in your password.
+
 ### Languages and Regions
 
 `amazon-orders` reads Amazon's pages in English. The `.com` site is validated nightly.
@@ -147,10 +151,10 @@ Any other config value can be set the same way, as `AMAZON_<KEY>` (see [`AmazonO
 
 ### AI Assistants
 
-To ask an AI assistant about your Amazon orders, use
-[`amazon-orders-mcp`](https://github.com/alexdlaird/amazon-orders-mcp#readme), an MCP server built on `amazon-orders`. It
-reuses the session `amazon-orders login --browser` saves, so it never sees your credentials. See its README for setup
-with Claude and other MCP clients.
+An AI assistant has two ways to use `amazon-orders`. One that runs commands uses the CLI or the library directly, just
+as shown above. Any MCP client gets the same as tools through
+[`amazon-orders-mcp`](https://github.com/alexdlaird/amazon-orders-mcp#readme), a server built on `amazon-orders` — see
+its README for setup.
 
 ## Documentation
 

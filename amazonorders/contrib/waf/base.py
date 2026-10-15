@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import re
+import warnings
 from typing import Any, ClassVar, Dict, Optional, TYPE_CHECKING
 from urllib.parse import urlparse
 
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 class AwsWafForm(AuthForm):
     """
     Shared base for AWS WAF JavaScript challenge solvers. Subclasses implement
-    :func:`_solve_token` to call a third-party solver and return the
+    :func:`solve_token` to call a third-party solver and return the
     ``aws-waf-token`` cookie value.
 
     This base class handles detection (the ``window.gokuProps`` blob plus the
@@ -101,7 +102,7 @@ class AwsWafForm(AuthForm):
     def submit(self,
                last_response: Response) -> AmazonSessionResponse:
         """
-        Hand the WAF challenge off to :func:`_solve_token`, set the resulting
+        Hand the WAF challenge off to :func:`solve_token`, set the resulting
         ``aws-waf-token`` cookie on the session, and re-fetch the challenged URL.
 
         :param last_response: The response that returned the WAF challenge page.
@@ -114,7 +115,7 @@ class AwsWafForm(AuthForm):
                 "Call AwsWafForm.select_form() first."
             )  # pragma: no cover
 
-        token = self._solve_token(last_response.url, self._goku, self._challenge_script)
+        token = self.solve_token(last_response.url, self._goku, self._challenge_script)
 
         # Always surface that a paid third-party service was used, regardless of debug mode.
         message = (
@@ -124,14 +125,14 @@ class AwsWafForm(AuthForm):
         self.amazon_session.io.echo(message)
 
         domain = urlparse(self.config.constants.BASE_URL).netloc
-        self.amazon_session.session.cookies.set("aws-waf-token", token, domain=domain)
+        self.amazon_session.session.cookies.set(self.config.constants.WAF_TOKEN_COOKIE, token, domain=domain)
 
         return self.amazon_session.get(last_response.url)
 
-    def _solve_token(self,
-                     url: str,
-                     goku: Dict[str, Any],
-                     challenge_script: str) -> str:
+    def solve_token(self,
+                    url: str,
+                    goku: Dict[str, Any],
+                    challenge_script: str) -> str:
         """
         Subclass hook. Call the third-party solver with the supplied challenge
         parameters and return the resulting ``aws-waf-token`` cookie value to be
@@ -145,12 +146,18 @@ class AwsWafForm(AuthForm):
         :return: The ``aws-waf-token`` cookie value.
         :raises NotImplementedError: if a subclass does not override this method.
         """
+        if type(self)._solve_token is not AwsWafForm._solve_token:
+            warnings.warn(f"{type(self).__name__} overrides _solve_token(), which is deprecated and "
+                          f"will be removed in the next major release. Override solve_token() instead.",
+                          DeprecationWarning, stacklevel=2)
+            return self._solve_token(url, goku, challenge_script)
+
         raise NotImplementedError
 
-    def _solve_visual_captcha(self,
-                              url: str,
-                              image_data: list,
-                              question: str) -> Optional[list]:
+    def solve_visual_captcha(self,
+                             url: str,
+                             image_data: list,
+                             question: str) -> Optional[list]:
         """
         Subclass hook. Solve a visual grid Puzzle (e.g. "Choose all the buckets")
         and return the indices of the correct grid cells.
@@ -161,4 +168,32 @@ class AwsWafForm(AuthForm):
         :return: A list of zero-based grid cell indices to select, or ``None`` if
             this solver does not support Puzzle classification.
         """
+        if type(self)._solve_visual_captcha is not AwsWafForm._solve_visual_captcha:
+            warnings.warn(f"{type(self).__name__} overrides _solve_visual_captcha(), which is deprecated and "
+                          f"will be removed in the next major release. Override solve_visual_captcha() instead.",
+                          DeprecationWarning, stacklevel=2)
+            return self._solve_visual_captcha(url, image_data, question)
+
         return None
+
+    def _solve_token(self,
+                     url: str,
+                     goku: Dict[str, Any],
+                     challenge_script: str) -> str:
+        """
+        Deprecated, and will be removed in the next major release. Use :func:`solve_token` instead.
+        """
+        warnings.warn("AwsWafForm._solve_token() is deprecated and will be removed in the next major release. Use "
+                      "solve_token() instead.", DeprecationWarning, stacklevel=2)
+        return self.solve_token(url, goku, challenge_script)
+
+    def _solve_visual_captcha(self,
+                              url: str,
+                              image_data: list,
+                              question: str) -> Optional[list]:
+        """
+        Deprecated, and will be removed in the next major release. Use :func:`solve_visual_captcha` instead.
+        """
+        warnings.warn("AwsWafForm._solve_visual_captcha() is deprecated and will be removed in the next major "
+                      "release. Use solve_visual_captcha() instead.", DeprecationWarning, stacklevel=2)
+        return self.solve_visual_captcha(url, image_data, question)

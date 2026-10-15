@@ -152,7 +152,8 @@ class Transaction(Parsable):
         if not self.order_number:
             return None
 
-        return f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
+        constants = self.config.constants
+        return f"{constants.ORDER_DETAILS_URL}?{constants.ORDER_ID_QUERY_PARAM}={self.order_number}"
 
     def _parse_payment_method_last_4(self) -> Optional[str]:
         if not self.payment_method:

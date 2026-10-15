@@ -193,7 +193,8 @@ class Order(Parsable):
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_DETAILS_LINK_SELECTOR, attr_name="href")
 
         if not value and self.order_number:
-            value = f"{self.config.constants.ORDER_DETAILS_URL}?orderID={self.order_number}"
+            constants = self.config.constants
+            value = f"{constants.ORDER_DETAILS_URL}?{constants.ORDER_ID_QUERY_PARAM}={self.order_number}"
 
         return value
 

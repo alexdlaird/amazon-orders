@@ -18,7 +18,7 @@ ROOT_DIR = os.path.normpath(
 sys.path.insert(0, ROOT_DIR)
 
 from amazonorders.conf import AmazonOrdersConfig  # noqa: E402
-from amazonorders.constants import _REGION_CURRENCY_OVERRIDES  # noqa: E402
+from amazonorders.constants import Constants  # noqa: E402
 
 REGION_DATA_PATH = os.path.join(ROOT_DIR, "amazonorders", "region_data.py")
 REPORT_PATH = os.path.join(ROOT_DIR, "build", "region-data-report.md")
@@ -245,16 +245,16 @@ def _describe_site(site):
 def _describe_follow_ups(region_sites):
     follow_ups = []
     for tld, site in sorted(region_sites.items()):
-        override = _REGION_CURRENCY_OVERRIDES.get(tld)
+        override = Constants.REGION_CURRENCY_OVERRIDES.get(tld)
         if site.english_locale and not site.currency_symbol and not override:
             follow_ups.append(f"- [ ] amazon.{tld}: verify the currency symbol its pages show, for "
-                              f"`_REGION_CURRENCY_OVERRIDES`")
+                              f"`Constants.REGION_CURRENCY_OVERRIDES`")
         elif override and override == site.currency_symbol:
-            follow_ups.append(f"- [ ] amazon.{tld}: its `_REGION_CURRENCY_OVERRIDES` entry now matches Amazon's "
-                              f"pages, so it can be removed")
+            follow_ups.append(f"- [ ] amazon.{tld}: its `Constants.REGION_CURRENCY_OVERRIDES` entry now matches "
+                              f"Amazon's pages, so it can be removed")
         elif override and site.currency_symbol:
-            follow_ups.append(f"- [ ] amazon.{tld}: its `_REGION_CURRENCY_OVERRIDES` entry {override!r} differs "
-                              f"from its pages' {site.currency_symbol!r}; check which is right")
+            follow_ups.append(f"- [ ] amazon.{tld}: its `Constants.REGION_CURRENCY_OVERRIDES` entry {override!r} "
+                              f"differs from its pages' {site.currency_symbol!r}; check which is right")
     return follow_ups
 
 

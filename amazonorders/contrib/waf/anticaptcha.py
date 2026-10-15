@@ -20,10 +20,10 @@ class AntiCaptchaWafForm(AwsWafForm):
     API_KEY_ENV_VAR = "ANTICAPTCHA_API_KEY"
     PROVIDER_NAME = "Anti-Captcha"
 
-    def _solve_token(self,
-                     url: str,
-                     goku: Dict[str, Any],
-                     challenge_script: str) -> str:
+    def solve_token(self,
+                    url: str,
+                    goku: Dict[str, Any],
+                    challenge_script: str) -> str:
         """
         Solve the AWS WAF challenge via Anti-Captcha's ``AmazonTaskProxyless``
         task type and return the ``aws-waf-token`` cookie value.

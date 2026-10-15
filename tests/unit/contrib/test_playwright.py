@@ -448,7 +448,7 @@ class TestPlaywrightAcicForm(UnitTestCase):
         self.amazon_session.auth_forms.append(PlaywrightManualWafForm(self.test_config))
         mock_waf = MagicMock(spec=AwsWafForm)
         mock_waf.PROVIDER_NAME = "TestSolver"
-        mock_waf._solve_token.return_value = "waf-token-value"
+        mock_waf.solve_token.return_value = "waf-token-value"
         self.amazon_session.auth_forms.append(mock_waf)
         parsed = BeautifulSoup(self.acic_html, self.test_config.bs4_parser)
         form.select_form(self.amazon_session, parsed)
@@ -470,7 +470,7 @@ class TestPlaywrightAcicForm(UnitTestCase):
         # THEN
         launch_kwargs = mock_sync_playwright.return_value.__enter__.return_value.chromium.launch.call_args
         self.assertEqual(True, launch_kwargs.kwargs.get("headless"))
-        mock_waf._solve_token.assert_called_once()
+        mock_waf.solve_token.assert_called_once()
 
     def test_submit_launches_firefox_when_configured(self):
         # GIVEN
@@ -616,7 +616,7 @@ class TestPlaywrightAcicForm(UnitTestCase):
 
         mock_waf = MagicMock(spec=AwsWafForm)
         mock_waf.PROVIDER_NAME = "TestSolver"
-        mock_waf._solve_token.return_value = "waf-token-value"
+        mock_waf.solve_token.return_value = "waf-token-value"
         self.amazon_session.auth_forms.append(mock_waf)
 
         goku = {"key": "k", "iv": "i", "context": "c"}
@@ -630,7 +630,7 @@ class TestPlaywrightAcicForm(UnitTestCase):
             result = form.submit(last_response)
 
         # THEN
-        mock_waf._solve_token.assert_called_once_with(
+        mock_waf.solve_token.assert_called_once_with(
             mock_page.url, goku, "https://challenge.awswaf.com/challenge.js"
         )
         injected_calls = mock_context.add_cookies.call_args_list
@@ -703,7 +703,7 @@ class TestPlaywrightAcicForm(UnitTestCase):
 
         mock_waf = MagicMock(spec=AwsWafForm)
         mock_waf.PROVIDER_NAME = "TestSolver"
-        mock_waf._solve_token.side_effect = AmazonOrdersWafSolverError(
+        mock_waf.solve_token.side_effect = AmazonOrdersWafSolverError(
             "TestSolver failed to solve AWS WAF challenge: ERROR_ZERO_BALANCE",
             meta={"provider": "TestSolver", "provider_error": "ERROR_ZERO_BALANCE"})
         self.amazon_session.auth_forms.append(mock_waf)
@@ -736,7 +736,7 @@ class TestPlaywrightAcicForm(UnitTestCase):
 
         mock_waf = MagicMock(spec=AwsWafForm)
         mock_waf.PROVIDER_NAME = "TestSolver"
-        mock_waf._solve_token.side_effect = AmazonOrdersError("TestSolverWafForm requires the [testsolver] extra.")
+        mock_waf.solve_token.side_effect = AmazonOrdersError("TestSolverWafForm requires the [testsolver] extra.")
         self.amazon_session.auth_forms.append(mock_waf)
 
         goku = {"key": "k", "iv": "i", "context": "c"}
@@ -770,7 +770,7 @@ class TestPlaywrightAcicForm(UnitTestCase):
 
         mock_waf = MagicMock(spec=AwsWafForm)
         mock_waf.PROVIDER_NAME = "CapSolver"
-        mock_waf._solve_token.return_value = "waf-token-value"
+        mock_waf.solve_token.return_value = "waf-token-value"
         self.amazon_session.auth_forms.append(mock_waf)
 
         goku_1 = {"key": "k1", "iv": "i1", "context": "c1"}
@@ -803,11 +803,11 @@ class TestPlaywrightAcicForm(UnitTestCase):
             result = form.submit(last_response)
 
         # THEN
-        self.assertEqual(2, mock_waf._solve_token.call_count)
+        self.assertEqual(2, mock_waf.solve_token.call_count)
         self.assertEqual(
-            mock_waf._solve_token.call_args_list[0][0][1], goku_1)
+            mock_waf.solve_token.call_args_list[0][0][1], goku_1)
         self.assertEqual(
-            mock_waf._solve_token.call_args_list[1][0][1], goku_2)
+            mock_waf.solve_token.call_args_list[1][0][1], goku_2)
         self.assertEqual(2, mock_page.reload.call_count)
         self.assertEqual("refetched", result)
 

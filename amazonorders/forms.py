@@ -1,10 +1,11 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import importlib.util
 import re
 from abc import ABC
 from io import BytesIO
-from typing import Any, Dict, Optional, TYPE_CHECKING, Union
+from typing import Any, Dict, NoReturn, Optional, TYPE_CHECKING, Union
 from urllib.parse import urlparse
 
 import pyotp
@@ -226,8 +227,7 @@ class SignInForm(AuthForm):
             )  # pragma: no cover
 
         additional_attrs.update({self.solution_attr_key: self.amazon_session.username,
-                                 "password": self.amazon_session.password,
-                                 "rememberMe": "true"})
+                                 "password": self.amazon_session.password})
         self.data.update(additional_attrs)
 
 
@@ -260,8 +260,7 @@ class ClaimForm(AuthForm):
             )  # pragma: no cover
 
         additional_attrs.update({self.solution_attr_key: self.amazon_session.username,
-                                 "password": self.amazon_session.password,
-                                 "rememberMe": "true"})
+                                 "password": self.amazon_session.password})
         self.data.update(additional_attrs)
 
 
@@ -464,6 +463,21 @@ class CaptchaForm(AuthForm):
         self.data.update(additional_attrs)
 
 
+def _raise_js_challenge_error() -> NoReturn:
+    if importlib.util.find_spec("playwright"):
+        raise AmazonOrdersAuthError(
+            "Amazon returned a JavaScript-based authentication challenge. Add "
+            "amazonorders.contrib.browser.playwright.PlaywrightAcicForm, then "
+            "amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm, to auth_forms_classes to handle this "
+            "automatically, or sign in with `amazon-orders login --browser`. "
+            "See https://amazon-orders.readthedocs.io/browser.html for details.")
+
+    raise AmazonOrdersAuthError(
+        "Amazon returned a JavaScript-based authentication challenge. Install the [browser] extra to "
+        "handle this automatically: `pip install amazon-orders[browser]`. "
+        "See https://amazon-orders.readthedocs.io/browser.html for details.")
+
+
 class AcicAuthBlocker(AuthForm):
     def __init__(self,
                  config: AmazonOrdersConfig) -> None:
@@ -473,10 +487,7 @@ class AcicAuthBlocker(AuthForm):
                     amazon_session: "AmazonSession",
                     parsed: Tag) -> bool:
         if parsed.find(id="aa-challenge-page-captcha-container"):
-            raise AmazonOrdersAuthError(
-                "Amazon returned a JavaScript-based authentication challenge. Install the [browser] extra to "
-                "handle this automatically: `pip install amazon-orders[browser]`. "
-                "See https://amazon-orders.readthedocs.io/browser.html for details.")
+            _raise_js_challenge_error()
 
         return False
 
@@ -496,9 +507,6 @@ class JSAuthBlocker(AuthForm):
             raise AmazonOrdersError("Must set a regex first.")  # pragma: no cover
 
         if re.search(self.regex, parsed.text):
-            raise AmazonOrdersAuthError(
-                "Amazon returned a JavaScript-based authentication challenge. Install the [browser] extra to "
-                "handle this automatically: `pip install amazon-orders[browser]`. "
-                "See https://amazon-orders.readthedocs.io/browser.html for details.")
+            _raise_js_challenge_error()
 
         return False

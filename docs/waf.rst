@@ -94,7 +94,7 @@ Writing Your Own
 The ``auth_forms_classes`` config option accepts any
 :class:`~amazonorders.forms.AuthForm` subclass, so you can integrate any provider you like. Subclass
 :class:`~amazonorders.contrib.waf.base.AwsWafForm` and implement
-``_solve_token(url, goku, challenge_script) -> str`` to call the service of your choice and return the
+``solve_token(url, goku, challenge_script) -> str`` to call the service of your choice and return the
 resulting ``aws-waf-token`` cookie value:
 
 .. code-block:: python
@@ -105,15 +105,15 @@ resulting ``aws-waf-token`` cookie value:
     class MyCustomWafForm(AwsWafForm):
         API_KEY_ENV_VAR = "MY_PROVIDER_API_KEY"
 
-        def _solve_token(self, url, goku, challenge_script):
+        def solve_token(self, url, goku, challenge_script):
             ...
 
-To also support visual grid Puzzles, override ``_solve_visual_captcha(url, image_data, question)``
+To also support visual grid Puzzles, override ``solve_visual_captcha(url, image_data, question)``
 and return a list of zero-based grid cell indices that match the target object:
 
 .. code-block:: python
 
-        def _solve_visual_captcha(self, url, image_data, question):
+        def solve_visual_captcha(self, url, image_data, question):
             # image_data is a list of 9 base64-encoded PNG tile images
             # question is the target object (e.g. "the buckets")
             ...

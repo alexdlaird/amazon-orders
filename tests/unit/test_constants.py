@@ -5,13 +5,13 @@ import os
 from unittest.mock import patch
 
 from amazonorders.conf import AmazonOrdersConfig
-from amazonorders.constants import Constants, _BROWSER_PRESETS, _REGION_CURRENCY_OVERRIDES
+from amazonorders.constants import Constants
 from amazonorders.region_data import REGION_SITES
 from tests.unittestcase import UnitTestCase
 
 
 class TestConstants(UnitTestCase):
-    _FIREFOX_UA = _BROWSER_PRESETS["firefox"]["User-Agent"]
+    _FIREFOX_UA = Constants.BROWSER_HEADERS["firefox"]["User-Agent"]
     _CHROMIUM_UA = Constants.BASE_HEADERS["User-Agent"]
 
     def test_default_browser_is_chromium(self):
@@ -45,7 +45,8 @@ class TestConstants(UnitTestCase):
         config = AmazonOrdersConfig(data={"browser": "webkit"})
 
         # THEN
-        self.assertEqual(_BROWSER_PRESETS["webkit"]["User-Agent"], config.constants.BASE_HEADERS["User-Agent"])
+        self.assertEqual(Constants.BROWSER_HEADERS["webkit"]["User-Agent"],
+                         config.constants.BASE_HEADERS["User-Agent"])
         self.assertIn("Safari/", config.constants.BASE_HEADERS["User-Agent"])
         self.assertNotIn("Chrome/", config.constants.BASE_HEADERS["User-Agent"])
         self.assertNotIn("Sec-Ch-Ua", config.constants.BASE_HEADERS)
@@ -273,7 +274,7 @@ class TestConstants(UnitTestCase):
 
     def test_domain_sets_region_currency_symbol(self):
         for tld, site in REGION_SITES.items():
-            expected_symbol = _REGION_CURRENCY_OVERRIDES.get(tld) or site.currency_symbol
+            expected_symbol = Constants.REGION_CURRENCY_OVERRIDES.get(tld) or site.currency_symbol
             if not expected_symbol:
                 continue
             with self.subTest(tld=tld):

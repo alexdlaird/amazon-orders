@@ -21,10 +21,10 @@ class TwoCaptchaWafForm(AwsWafForm):
     API_KEY_ENV_VAR = "TWOCAPTCHA_API_KEY"
     PROVIDER_NAME = "2Captcha"
 
-    def _solve_token(self,
-                     url: str,
-                     goku: Dict[str, Any],
-                     challenge_script: str) -> str:
+    def solve_token(self,
+                    url: str,
+                    goku: Dict[str, Any],
+                    challenge_script: str) -> str:
         """
         Solve the AWS WAF challenge via 2Captcha's ``amazon_waf`` method and
         return the ``aws-waf-token`` cookie value (extracted from the

@@ -74,6 +74,7 @@ You'll use :class:`~amazonorders.session.AmazonSession` to authenticate your Ama
 
 .. code:: python
 
+    from amazonorders.constants import Constants
     from amazonorders.session import AmazonSession
     from amazonorders.orders import AmazonOrders
 
@@ -87,8 +88,8 @@ You'll use :class:`~amazonorders.session.AmazonSession` to authenticate your Ama
     orders = amazon_orders.get_order_history(year=2023)
 
     # Or use time filters for recent orders
-    orders = amazon_orders.get_order_history(time_filter="last30")  # Last 30 days
-    orders = amazon_orders.get_order_history(time_filter="months-3")  # Past 3 months
+    orders = amazon_orders.get_order_history(time_filter=Constants.LAST_30_DAYS_TIME_FILTER)
+    orders = amazon_orders.get_order_history(time_filter=Constants.LAST_3_MONTHS_TIME_FILTER)
 
     for order in orders:
         print(f"{order.order_number} - {order.grand_total}")
@@ -176,6 +177,9 @@ environment variables ``amazon-orders`` looks for are:
 
 Any other config value can be set the same way, as ``AMAZON_<KEY>`` (see :class:`~amazonorders.conf.AmazonOrdersConfig`).
 
+A configured username also applies to ``amazon-orders login --browser``: it's filled in and submitted for you, so the
+browser opens on Amazon's password or passkey step. The browser never fills in your password.
+
 Handling Challenges
 -------------------
 
@@ -220,10 +224,10 @@ Languages and Regions
 AI Assistants
 -------------
 
-To ask an AI assistant about your Amazon orders, use
-`amazon-orders-mcp <https://github.com/alexdlaird/amazon-orders-mcp#readme>`_, an MCP server built on ``amazon-orders``. It
-reuses the session ``amazon-orders login --browser`` saves, so it never sees your credentials. See its README for setup
-with Claude and other MCP clients.
+An AI assistant has two ways to use ``amazon-orders``. One that runs commands uses the CLI or the library directly, just
+as shown above. Any MCP client gets the same as tools through
+`amazon-orders-mcp <https://github.com/alexdlaird/amazon-orders-mcp#readme>`_, a server built on ``amazon-orders``  —
+see its README for setup.
 
 .. _known-limitations:
 
