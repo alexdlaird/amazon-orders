@@ -1,7 +1,6 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
-import json
 import os
 import time
 import unittest
@@ -13,6 +12,12 @@ from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, Ama
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.integrationtestcase import IntegrationTestCase
+
+
+skip_unless_lockout_risk_allowed = unittest.skipIf(
+    not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH_LOCKOUT_RISK", "False") == "True",
+    "These tests sign in extra times or submit bad credentials, which raises the risk of Captcha challenges or "
+    "locking the account, so they stay off CI. Set AMAZON_INTEGRATION_TEST_AUTH_LOCKOUT_RISK=True explicitly to run.")
 
 
 @unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH", "False") == "True",
@@ -41,7 +46,16 @@ class TestIntegrationAuth(IntegrationTestCase):
             "cookie_jar_path": self.test_config.cookie_jar_path
         })
 
-    @unittest.skip("The manual process to make stale isn't working here, needs investigation")
+    def given_stale_auth_cookies(self, amazon_session):
+        stale_cookie_names = set()
+        for auth_cookie in self.test_config.constants.COOKIES_SET_WHEN_AUTHENTICATED:
+            suffix = auth_cookie.removeprefix("x-")
+            stale_cookie_names.update({auth_cookie, f"at-{suffix}", f"sess-at-{suffix}"})
+        for cookie in amazon_session.session.cookies:
+            if cookie.name in stale_cookie_names:
+                cookie.value = "invalid-and-stale"
+
+    @skip_unless_lockout_risk_allowed
     def test_login_then_expire_persisted_session(self):
         # GIVEN
         amazon_session = AmazonSession(debug=self.debug,
@@ -60,27 +74,24 @@ class TestIntegrationAuth(IntegrationTestCase):
             amazon_orders.get_order(order_id="1234-fake-id")
 
         # WHEN
-        time.sleep(1)
-        with open(self.test_config.cookie_jar_path, "r") as f:
-            cookies = json.loads(f.read())
-        for cookie in self.test_config.constants.COOKIES_SET_WHEN_AUTHENTICATED:
-            cookies[cookie] = "invalid-and-stale"
-        with open(self.test_config.cookie_jar_path, "w") as f:
-            f.write(json.dumps(cookies))
-        amazon_session.session.cookies.update(cookies)
+        self.given_stale_auth_cookies(amazon_session)
 
         # THEN
-        # Trying to interact with a privileged resource will redirect us to login
-        self.assertTrue(amazon_session.is_authenticated)
-        with self.assertRaises(AmazonOrdersAuthRedirectError):
+        with self.assertRaises(AmazonOrdersAuthRedirectError) as cm:
             amazon_orders.get_order(order_id="1234-fake-id")
+        self.assertIn("redirect_url", cm.exception.meta)
+        self.assertTrue(amazon_session.is_authenticated,
+                        "A sign-in redirect should keep the session, so other pages keep working")
+
+        # WHEN
         time.sleep(1)
-        # And then we will find our session invalidated
-        self.assertFalse(amazon_session.is_authenticated)
-        self.assertFalse(amazon_session.auth_cookies_stored())
-        with self.assertRaises(AmazonOrdersError) as cm:
+        amazon_session.login()
+
+        # THEN
+        self.assertTrue(amazon_session.is_authenticated)
+        self.assertTrue(amazon_session.auth_cookies_stored())
+        with self.assertRaises(AmazonOrdersNotFoundError):
             amazon_orders.get_order(order_id="1234-fake-id")
-        self.assertIn("AmazonSession.login() to authenticate first", str(cm.exception))
 
     def test_logout(self):
         # GIVEN
@@ -112,10 +123,7 @@ class TestIntegrationAuth(IntegrationTestCase):
             self.assertFalse(amazon_session.is_authenticated)
             self.assertIn("Looks like you're new to Amazon", str(cm.exception))
 
-    @unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD", "False") == "True",
-                     "Running this test too too frequently will trigger the Captcha flow instead (causing"
-                     "the test to fail), and also may lock the Amazon account. Set "
-                     "AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD=True explicitly to run.")
+    @skip_unless_lockout_risk_allowed
     def test_login_wrong_password(self):
         with mock.patch.dict(os.environ, {"AMAZON_PASSWORD": "invalid-password"}):
             # GIVEN

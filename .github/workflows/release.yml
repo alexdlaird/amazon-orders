@@ -42,7 +42,7 @@ jobs:
 
   integration:
     needs: prereq
-    if: ${{ vars.AMAZON_INTEGRATION_SKIP_ON_RELEASE != 'true' && inputs.run_integration_tests }}
+    if: ${{ inputs.run_integration_tests }}
     uses: ./.github/workflows/integration.yml
     with:
       use_waf_solver: true
