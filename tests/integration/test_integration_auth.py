@@ -7,6 +7,7 @@ import time
 import unittest
 from unittest import mock
 
+from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersNotFoundError, \
     AmazonOrdersAuthRedirectError
 from amazonorders.orders import AmazonOrders
@@ -33,6 +34,12 @@ class TestIntegrationAuth(IntegrationTestCase):
     def tearDown(self):
         print(f"... sleeping {self.teardown_sleep_time} seconds to slow down between auth tests ...")
         time.sleep(self.teardown_sleep_time)
+
+    def given_config_reading_environment(self):
+        return AmazonOrdersConfig(data={
+            "output_dir": self.test_config.output_dir,
+            "cookie_jar_path": self.test_config.cookie_jar_path
+        })
 
     @unittest.skip("The manual process to make stale isn't working here, needs investigation")
     def test_login_then_expire_persisted_session(self):
@@ -95,7 +102,7 @@ class TestIntegrationAuth(IntegrationTestCase):
         with mock.patch.dict(os.environ, {"AMAZON_USERNAME": "08511698-9ff5-fake@gmail.com"}):
             # GIVEN
             amazon_session = AmazonSession(debug=self.debug,
-                                           config=self.test_config)
+                                           config=self.given_config_reading_environment())
 
             # WHEN
             with self.assertRaises(AmazonOrdersAuthError) as cm:
@@ -113,7 +120,7 @@ class TestIntegrationAuth(IntegrationTestCase):
         with mock.patch.dict(os.environ, {"AMAZON_PASSWORD": "invalid-password"}):
             # GIVEN
             amazon_session = AmazonSession(debug=self.debug,
-                                           config=self.test_config)
+                                           config=self.given_config_reading_environment())
 
             # WHEN
             with self.assertRaises(AmazonOrdersError) as cm:
