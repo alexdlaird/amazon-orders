@@ -5,6 +5,7 @@ PYTHON_BIN ?= python
 PROJECT_VENV ?= venv
 INTEGRATION_TEST_RERUN ?= 2
 INTEGRATION_TEST_RERUN_DELAY ?= 300
+INTEGRATION_TEST_FAIL_FAST ?= false
 PYTEST_EXTRA_ARGS ?=
 
 WAF_EXTRAS := capsolver,anticaptcha,2captcha
@@ -52,7 +53,7 @@ test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev,integration]"; \
-		pytest -v --ignore=tests/unit --ignore=tests/integration/test_integration_sites.py -o junit_suite_name=integration --reruns ${INTEGRATION_TEST_RERUN} --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY} ${PYTEST_EXTRA_ARGS}; \
+		pytest -v --ignore=tests/unit --ignore=tests/integration/test_integration_sites.py -o junit_suite_name=integration --reruns ${INTEGRATION_TEST_RERUN} --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY} $(if $(filter true,${INTEGRATION_TEST_FAIL_FAST}),-x) ${PYTEST_EXTRA_ARGS}; \
 	)
 
 test-integration-sites: install

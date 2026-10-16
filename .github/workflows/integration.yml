@@ -11,10 +11,15 @@ on:
         type: boolean
         default: false
       retry_failures:
-        description: 'Retry failed tests (uncheck to fail fast)'
+        description: 'Retry failed tests'
         required: false
         type: boolean
         default: true
+      fail_fast:
+        description: 'Stop at the first failed test'
+        required: false
+        type: boolean
+        default: false
       use_vpn:
         description: 'Route traffic through a VPN (also on when the USE_VPN repo variable is true)'
         required: false
@@ -28,10 +33,15 @@ on:
         type: boolean
         default: false
       retry_failures:
-        description: 'Retry failed tests (uncheck to fail fast)'
+        description: 'Retry failed tests'
         required: false
         type: boolean
         default: true
+      fail_fast:
+        description: 'Stop at the first failed test'
+        required: false
+        type: boolean
+        default: false
       use_vpn:
         description: 'Route traffic through a VPN (also on when the USE_VPN repo variable is true)'
         required: false
@@ -121,8 +131,8 @@ jobs:
       - name: Integration test
         env:
           INTEGRATION_TEST_RERUN: ${{ github.event_name != 'schedule' && inputs.retry_failures == false && '0' || '2' }}
-          INTEGRATION_TEST_FAIL_FAST: ${{ github.event_name != 'schedule' && inputs.retry_failures == false && '-x' || '' }}
-        run: make test-integration PYTEST_EXTRA_ARGS="${INTEGRATION_TEST_FAIL_FAST}"
+          INTEGRATION_TEST_FAIL_FAST: ${{ github.event_name != 'schedule' && inputs.fail_fast && 'true' || 'false' }}
+        run: make test-integration
       - name: Upload test output
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
