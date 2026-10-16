@@ -4,6 +4,12 @@ run-name: Site Checks ${{ github.ref_name }}
 
 on:
   workflow_dispatch:
+    inputs:
+      use_vpn:
+        description: 'Route traffic through a VPN (also on when the USE_VPN repo variable is true)'
+        required: false
+        type: boolean
+        default: false
   schedule:
     - cron: "0 8 * * *"
 
@@ -32,6 +38,11 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+      - name: Connect VPN
+        if: ${{ inputs.use_vpn || vars.USE_VPN == 'true' }}
+        env:
+          WIREGUARD_CONFIG: ${{ secrets.VPN_WIREGUARD_CONFIG }}
+        run: .github/scripts/connect-vpn.sh
       - name: Signed-out site checks
         run: make test-integration-sites
       - name: Upload test results
@@ -58,6 +69,11 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+      - name: Connect VPN
+        if: ${{ inputs.use_vpn || vars.USE_VPN == 'true' }}
+        env:
+          WIREGUARD_CONFIG: ${{ secrets.VPN_WIREGUARD_CONFIG }}
+        run: .github/scripts/connect-vpn.sh
       - name: Generate region data
         run: make generate-region-data
       - name: Generate GitHub App token

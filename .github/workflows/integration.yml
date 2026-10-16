@@ -15,6 +15,11 @@ on:
         required: false
         type: boolean
         default: true
+      use_vpn:
+        description: 'Route traffic through a VPN (also on when the USE_VPN repo variable is true)'
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       use_waf_solver:
@@ -27,6 +32,11 @@ on:
         required: false
         type: boolean
         default: true
+      use_vpn:
+        description: 'Route traffic through a VPN (also on when the USE_VPN repo variable is true)'
+        required: false
+        type: boolean
+        default: false
   schedule:
     - cron: "0 7 * * *"
 
@@ -102,6 +112,11 @@ jobs:
         run: make install install-waf
       - name: Install browser extras
         run: make install install-browser
+      - name: Connect VPN
+        if: ${{ inputs.use_vpn || vars.USE_VPN == 'true' }}
+        env:
+          WIREGUARD_CONFIG: ${{ secrets.VPN_WIREGUARD_CONFIG }}
+        run: .github/scripts/connect-vpn.sh
       - name: Integration test
         env:
           INTEGRATION_TEST_RERUN: ${{ github.event_name != 'schedule' && inputs.retry_failures == false && '0' || '2' }}
