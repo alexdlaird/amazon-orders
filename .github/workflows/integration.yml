@@ -132,7 +132,7 @@ jobs:
         env:
           INTEGRATION_TEST_RERUN: ${{ github.event_name != 'schedule' && inputs.retry_failures == false && '0' || '2' }}
           INTEGRATION_TEST_FAIL_FAST: ${{ github.event_name != 'schedule' && inputs.fail_fast && 'true' || 'false' }}
-        run: make test-integration
+        run: .github/scripts/vpn-exec.sh make test-integration
       - name: Upload test output
         if: ${{ always() }}
         uses: actions/upload-artifact@v7

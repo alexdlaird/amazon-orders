@@ -45,7 +45,7 @@ jobs:
           WIREGUARD_CONFIG: ${{ secrets.VPN_WIREGUARD_CONFIG }}
         run: .github/scripts/connect-vpn.sh
       - name: Signed-out site checks
-        run: make test-integration-sites
+        run: .github/scripts/vpn-exec.sh make test-integration-sites
       - name: Upload test results
         if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v6
@@ -77,7 +77,7 @@ jobs:
           WIREGUARD_CONFIG: ${{ secrets.VPN_WIREGUARD_CONFIG }}
         run: .github/scripts/connect-vpn.sh
       - name: Generate region data
-        run: make generate-region-data
+        run: .github/scripts/vpn-exec.sh make generate-region-data
       - name: Generate GitHub App token
         id: app-token
         uses: actions/create-github-app-token@v3
