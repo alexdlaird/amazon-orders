@@ -114,6 +114,7 @@ jobs:
         run: make install install-browser
       - name: Connect VPN
         if: ${{ inputs.use_vpn || vars.USE_VPN == 'true' }}
+        timeout-minutes: 5
         env:
           WIREGUARD_CONFIG: ${{ secrets.VPN_WIREGUARD_CONFIG }}
         run: .github/scripts/connect-vpn.sh

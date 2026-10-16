@@ -21,6 +21,25 @@ sudo apt-get install -y -qq wireguard-tools
 
 DIRECT_IP=$(curl -fsS --max-time 10 https://api.ipify.org)
 
+# The runner agent holds long-lived connections to GitHub, which break if their return path suddenly changes to the
+# VPN's IP, leaving the step hanging after it finishes. Routes in the main table with a prefix length above 0 stay
+# ahead of the tunnel's default route (wg-quick suppresses only the main table's default), so those connections are
+# pinned to the original gateway. Everything opened after this goes through the tunnel.
+read -r GATEWAY DEVICE < <(ip -4 route show default | awk '{for (i = 1; i < NF; i++) {if ($i == "via") g = $(i + 1); if ($i == "dev") d = $(i + 1)} print g, d; exit}')
+if [ -z "${GATEWAY:-}" ] || [ -z "${DEVICE:-}" ]; then
+    echo "::error::Couldn't find the runner's default route, so its existing connections can't be kept off the tunnel."
+    exit 1
+fi
+AGENT_PEERS=$(ss -H -tn state established | awk '$4 !~ /^\[/ {sub(/:[0-9]+$/, "", $4); print $4}' | grep -v -E '^(127\.|0\.)' | sort -u)
+if [ -z "${AGENT_PEERS}" ]; then
+    echo "::error::Found no established connections to keep off the tunnel, so the runner agent would lose contact with GitHub."
+    exit 1
+fi
+for peer in ${AGENT_PEERS}; do
+    sudo ip route replace "${peer}/32" via "${GATEWAY}" dev "${DEVICE}"
+done
+echo "Kept $(printf '%s\n' "${AGENT_PEERS}" | wc -l | tr -d ' ') existing connection(s) off the tunnel."
+
 # wg-quick hands a DNS line to resolvconf, which the runner doesn't have, so DNS is set with resolvectl instead
 printf '%s\n' "${WIREGUARD_CONFIG}" | grep -v -E '^[[:space:]]*DNS[[:space:]]*=' | sudo tee /etc/wireguard/wg0.conf > /dev/null
 sudo chmod 600 /etc/wireguard/wg0.conf
