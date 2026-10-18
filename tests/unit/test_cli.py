@@ -263,6 +263,52 @@ class TestCli(UnitTestCase):
         self.assertIn("orderFilter=digital-orders", request_url)
 
     @responses.activate
+    def test_history_command_with_family_member_id(self):
+        # GIVEN
+        year = 2018
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        resp = self.given_any_order_history_exists("order-history-2018-0.html")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "history", "--year", year, "--family-member-id", "A1EXAMPLETEEN1",
+                                          "--single-page"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assert_login_responses_success()
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("familyMemberId=A1EXAMPLETEEN1", resp.calls[0].request.url)
+
+    @responses.activate
+    def test_family_members_command(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        resp = self.given_family_members_page_exists("order-history-family-members-snippet.html")
+
+        # WHEN
+        response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
+                                                                 [
+                                                                     "--config-path", self.test_config.config_path,
+                                                                     "--username", "some-username@gmail.com",
+                                                                     "--password", "some-password",
+                                                                     "family-members", "--output", "json"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assert_login_responses_success()
+        self.assertEqual(1, resp.call_count)
+        members = json.loads(response.stdout)
+        self.assertEqual([{"id": "A1EXAMPLETEEN1", "name": "Jane Doe"}, {"id": "A2EXAMPLETEEN2", "name": "John Doe"}],
+                         members)
+
+    @responses.activate
     def test_history_command_last_30_days(self):
         # GIVEN
         self.given_unauthenticated_home_page()

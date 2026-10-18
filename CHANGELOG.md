@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.9.3...HEAD)
 
+### Added
+
+- `AmazonOrders.get_family_members()`, `AmazonOrders.parse_family_members()`, and the `FamilyMember` entity, listing the Amazon Household members (such as linked Teen accounts) whose Orders the account can view, and the `family-members` CLI command.
+- `family_member_id` to `get_order_history()` and `get_order_history_page()`, and `--family-member-id` to the `history` CLI command, to get a household member's Orders.
+
 ## [4.9.3](https://github.com/alexdlaird/amazon-orders/compare/4.9.2...4.9.3) - 2026-10-18
 
 ### Fixed

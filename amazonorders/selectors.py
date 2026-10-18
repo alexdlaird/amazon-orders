@@ -119,6 +119,16 @@ class Selectors:
     NEXT_PAGE_LINK_SELECTOR = "ul.a-pagination li.a-last a"
 
     ##########################################################################
+    # CSS selectors for Amazon Household family members
+    ##########################################################################
+
+    # The Order history's "My Orders" / "<name>'s Orders" dropdown; the account's own entry has an empty value
+    FAMILY_MEMBER_ENTITY_SELECTOR = ["select#family-member-filter option[value]:not([value=''])",
+                                     "select[name='familyMemberId'] option[value]:not([value=''])"]
+    FAMILY_MEMBER_ID_ATTR = "value"
+    FIELD_FAMILY_MEMBER_NAME_SUFFIX = "'s Orders"
+
+    ##########################################################################
     # CSS selectors for Entities and Fields
     #
     # A ``FIELD_`` selector can be either a ``str`` or a ``list``. If a

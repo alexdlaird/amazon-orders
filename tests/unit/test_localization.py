@@ -23,12 +23,13 @@ _PARSING_MODULES = (sorted(glob.glob(os.path.join(_PACKAGE_DIR, "entity", "*.py"
 _MESSAGE_CALLS = {"debug", "info", "warning", "error", "exception", "critical", "echo", "prompt", "input"}
 _DISPLAY_METHODS = {"__repr__", "__str__"}
 _PLUMBING_LITERALS = {
-    "", "\n", " ", " ****", " - (redirected) ", "&", "']", ".", "/",
+    "", "\n", "\x00", " ", " ****", " - (redirected) ", "&", "']", ".", "/",
     "/(?:dp|gp/product|product)/([A-Z0-9]{10})(?:[/?]|$)", ": ", "://", "=", "?", "?transactionTag=",
     ".cookies-", ".tmp", "Accept", "GET", "GetTransactions", "POST",
     "Referer", "\\*+(\\d+)$", "\\*\\s*(\\d+)", "^\\s*{count}\\s*$", "_parse_", "aa-challenge-page-captcha-container",
     "action", "alt", "application/json", "choices", "config", "cvf_captcha_input", "data", "data-a-popover",
-    "deviceId", "displayResponse", "domain", "email", "exclusiveStartKey", "expires", "field-keywords",
+    "deviceId", "displayResponse", "domain", "email", "exclusiveStartKey", "expires", "family_member_id",
+    "field-keywords",
     "formattedAmount", "formattedDate", "hasMore", "headers", "href", "http", "https://", "ie", "img", "index",
     "inlineContent", "input",
     "input[name='", "lastDigits", "lastEvaluatedKey", "lastEvaluatedPageKey", "locale", "method",
@@ -218,6 +219,19 @@ class TestLocalization(UnitTestCase):
         self.assertEqual([o.is_whole_foods for o in expected_whole_foods],
                          [o.is_whole_foods for o in whole_foods_orders])
         self.assertTrue(any(o.is_whole_foods for o in whole_foods_orders))
+
+    def test_example_language_package_parses_translated_family_members(self):
+        # GIVEN
+        html = self.given_resource("orders", "order-history-family-members-snippet.html")
+        lorem_html = html.replace("&#x27;s Orders", " Voluptas")
+
+        # WHEN
+        members = AmazonOrders.parse_family_members(lorem_html, self.example_config)
+
+        # THEN
+        expected = AmazonOrders.parse_family_members(html, self.test_config)
+        self.assertEqual([m.to_dict() for m in expected], [m.to_dict() for m in members])
+        self.assertEqual(["Jane Doe", "John Doe"], [m.name for m in members])
 
     def test_example_language_package_overrides_currency_free_text(self):
         # WHEN / THEN

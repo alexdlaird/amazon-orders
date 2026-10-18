@@ -114,9 +114,9 @@ You can also run any command available to the main Python interface from the com
 Output Formats
 --------------
 
-The ``history``, ``order``, ``transactions``, ``order-transactions``, and ``gift-card-activity`` commands accept
-``--output``, which renders Orders, Transactions, and Gift Card activity as ``text`` (the default), ``json``,
-``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout`` captures only the data.
+The ``history``, ``order``, ``transactions``, ``order-transactions``, ``gift-card-activity``, and ``family-members``
+commands accept ``--output``, which renders Orders, Transactions, Gift Card activity, and Amazon Household members as
+``text`` (the default), ``json``, ``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout`` captures only the data.
 
 .. code:: sh
 
@@ -140,6 +140,26 @@ which converts it and its nested entities to a ``dict`` of primitives.
 
 See :class:`~amazonorders.output.OutputFormatter` for each format's contract, and to override how
 entities are rendered.
+
+Amazon Household
+----------------
+
+If the account belongs to an Amazon Household, such as a parent with linked Teen accounts, it can view those members' Orders too.
+:func:`~amazonorders.orders.AmazonOrders.get_family_members` lists the members whose Orders the account can see (the
+same ones in the "Your Orders" filter), and passing a member's ``id`` as ``family_member_id`` gets their Order history:
+
+.. code:: python
+
+    for member in amazon_orders.get_family_members():
+        orders = amazon_orders.get_order_history(year=2023, family_member_id=member.id)
+        print(f"{member.name}: {len(orders)} Orders")
+
+Or from the command line:
+
+.. code:: sh
+
+    amazon-orders family-members
+    amazon-orders history --year 2023 --family-member-id <ID>
 
 .. _secure-sign-in:
 
