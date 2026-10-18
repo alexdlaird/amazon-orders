@@ -275,7 +275,8 @@ class AmazonOrders:
         :param time_filter: The time filter to use. Supported values are ``"last30"`` (last 30 days),
             ``"months-3"`` (past 3 months), or ``"year-YYYY"`` (specific year). If provided, this takes
             precedence over the ``year`` parameter.
-        :param order_filter: The order type filter to use. If provided, appended alongside the time filter.
+        :param order_filter: The order type filter to use, e.g. ``"digital-orders"`` for Kindle and other digital
+            purchases, which the default history doesn't include. If provided, appended alongside the time filter.
         :param progress: Called after each page of history is fetched, with the number of Orders found so far
             (before their full details are fetched, if ``full_details`` is ``True``).
         :param progress_with_total: Like ``progress``, but also called with the number of Orders expected in total,
@@ -318,7 +319,8 @@ class AmazonOrders:
             request per Order.
         :param time_filter: The time filter to use, as in :func:`get_order_history`. Ignored if ``cursor`` is
             provided.
-        :param order_filter: The order type filter to use. Ignored if ``cursor`` is provided.
+        :param order_filter: The order type filter to use, as in :func:`get_order_history`. Ignored if ``cursor`` is
+            provided.
         :param limit: Stop fetching history pages once at least this many Orders are collected. Whole pages are
             fetched, so the batch can hold up to a page more than ``limit``. ``None`` fetches every page.
         :param cursor: The :attr:`~amazonorders.paging.PagedResults.cursor` of the previous batch, to fetch the

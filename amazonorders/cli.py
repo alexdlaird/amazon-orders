@@ -302,7 +302,8 @@ def amazon_orders_cli(ctx: Context,
               help="Get the full details for each Order in the history. "
                    "This will execute an additional request per Order.")
 @click.option("--order-filter", "order_filter", default=None,
-              help="The order type filter to use.")
+              help="The order type filter to use, e.g. digital-orders for Kindle and other digital purchases, "
+                   "which the default history doesn't include.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
 def history(ctx: Context,

@@ -164,6 +164,8 @@ The session is persisted, so neither the CLI nor the Python API needs credential
 
 This requires a display and the ``browser`` extra (see :ref:`Browser Automation <browser-installation>` to install it).
 
+.. _automating-authentication:
+
 Automating Authentication
 -------------------------
 
@@ -228,6 +230,9 @@ An AI assistant has two ways to use ``amazon-orders``. One that runs commands us
 as shown above. Any MCP client gets the same as tools through
 `amazon-orders-mcp <https://github.com/alexdlaird/amazon-orders-mcp#readme>`_, a server built on ``amazon-orders``  —
 see its README for setup.
+
+The server signs you in with a browser, so it needs a display. Without one, use the CLI or library with
+:ref:`Automating Authentication <automating-authentication>`.
 
 .. _known-limitations:
 

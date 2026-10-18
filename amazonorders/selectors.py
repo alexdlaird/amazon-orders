@@ -95,6 +95,7 @@ class Selectors:
     AWS_WAF_CHALLENGE_SCRIPT_SELECTOR = 'script[src*="awswaf.com"]'
 
     SIGN_IN_FORM_SELECTOR = "form[name='signIn']"
+    NAV_GREETING_SELECTOR = "#nav-link-accountList-nav-line-1"
     SIGN_IN_EMAIL_INPUT_SELECTOR = "input[name='email']"
     CLAIM_FORM_SELECTOR = "form[name='signIn'].auth-validate-form"
     INTENT_FORM_SELECTOR = "form#intent-confirmation-form"

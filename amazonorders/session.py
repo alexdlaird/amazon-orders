@@ -18,7 +18,7 @@ from amazonorders.conf import AmazonOrdersConfig, cookies_file_lock, debug_outpu
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersAuthRedirectError
 from amazonorders.forms import (AuthForm, AcicAuthBlocker, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm,
                                 SignInForm, ClaimForm, IntentForm)
-from amazonorders.util import AmazonSessionResponse, load_class
+from amazonorders.util import AmazonSessionResponse, load_class, select_one
 
 logger = logging.getLogger(__name__)
 
@@ -313,11 +313,9 @@ class AmazonSession:
         form_found = False
         attempts = 0
         while not self.is_authenticated and attempts < self.config.max_auth_attempts:
-            # TODO: BeautifulSoup doesn't let us query for #nav-item-signout, maybe because it's dynamic on the page,
-            #  but we should find a better way to do this
+            greeting = select_one(last_response.parsed, self.config.selectors.NAV_GREETING_SELECTOR)
             if self.auth_cookies_stored() or \
-                    (self.config.constants.SIGNED_OUT_TEXT not in last_response.response.text and
-                     "nav-item-signout" in last_response.response.text):
+                    (greeting is not None and self.config.constants.SIGNED_OUT_TEXT not in greeting.get_text()):
                 self.is_authenticated = True
                 break
 

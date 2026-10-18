@@ -11,10 +11,20 @@ on:
         type: boolean
         default: false
       retry_failures:
-        description: 'Retry failed tests (uncheck to fail fast)'
+        description: 'Retry failed tests'
         required: false
         type: boolean
         default: true
+      fail_fast:
+        description: 'Stop at the first failed test'
+        required: false
+        type: boolean
+        default: false
+      use_vpn:
+        description: 'Route traffic through a VPN (also on when the USE_VPN repo variable is true)'
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       use_waf_solver:
@@ -23,10 +33,20 @@ on:
         type: boolean
         default: false
       retry_failures:
-        description: 'Retry failed tests (uncheck to fail fast)'
+        description: 'Retry failed tests'
         required: false
         type: boolean
         default: true
+      fail_fast:
+        description: 'Stop at the first failed test'
+        required: false
+        type: boolean
+        default: false
+      use_vpn:
+        description: 'Route traffic through a VPN (also on when the USE_VPN repo variable is true)'
+        required: false
+        type: boolean
+        default: false
   schedule:
     - cron: "0 7 * * *"
 
@@ -55,7 +75,7 @@ jobs:
       AMAZON_DOMAIN: ${{ vars.AMAZON_BASE_URL }}
       AMAZON_INTEGRATION_TEST_JSON: ${{ vars.AMAZON_INTEGRATION_TEST_JSON }}
       AMAZON_INTEGRATION_TEST_AUTH: ${{ vars.AMAZON_INTEGRATION_TEST_AUTH }}
-      AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD: ${{ vars.AMAZON_INTEGRATION_TEST_AUTH_WRONG_PASSWORD }}
+      AMAZON_INTEGRATION_TEST_AUTH_LOCKOUT_RISK: ${{ vars.AMAZON_INTEGRATION_TEST_AUTH_LOCKOUT_RISK }}
       AMAZON_INTEGRATION_TEST_YEAR: ${{ vars.AMAZON_INTEGRATION_TEST_YEAR }}
       AMAZON_START_INDEX: ${{ vars.AMAZON_START_INDEX }}
       AMAZON_TRANSACTIONS_DAYS: ${{ vars.AMAZON_TRANSACTIONS_DAYS }}
@@ -102,11 +122,17 @@ jobs:
         run: make install install-waf
       - name: Install browser extras
         run: make install install-browser
+      - name: Connect VPN
+        if: ${{ inputs.use_vpn || vars.USE_VPN == 'true' }}
+        timeout-minutes: 5
+        env:
+          WIREGUARD_CONFIG: ${{ secrets.VPN_WIREGUARD_CONFIG }}
+        run: .github/scripts/connect-vpn.sh
       - name: Integration test
         env:
           INTEGRATION_TEST_RERUN: ${{ github.event_name != 'schedule' && inputs.retry_failures == false && '0' || '2' }}
-          INTEGRATION_TEST_FAIL_FAST: ${{ github.event_name != 'schedule' && inputs.retry_failures == false && '-x' || '' }}
-        run: make test-integration PYTEST_EXTRA_ARGS="${INTEGRATION_TEST_FAIL_FAST}"
+          INTEGRATION_TEST_FAIL_FAST: ${{ github.event_name != 'schedule' && inputs.fail_fast && 'true' || 'false' }}
+        run: .github/scripts/vpn-exec.sh make test-integration
       - name: Upload test output
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
