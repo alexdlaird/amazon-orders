@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.9.3...HEAD)
 
+### Fixed
+
+- `OutputFormatter.order_text()` and `transaction_text()` now print a Grand Total of $0.00, as on an Order paid entirely with points or Gift Card balance, instead of omitting the line. The breakdown lines (Subtotal through Refund Total) still hide zero values.
+
 ## [4.9.3](https://github.com/alexdlaird/amazon-orders/compare/4.9.2...4.9.3) - 2026-10-18
 
 ### Fixed
