@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `FamilyMember` entity, `AmazonOrders.get_family_members()` and `parse_family_members()`, `family_member_id` on `get_order_history()` and `get_order_history_page()`, and the `family-members` CLI command and `history --family-member-id`, for the Orders of Amazon Household members (e.g. linked Teen accounts).
+- Support for Amazon's new passkey auth flow, continuing with the password.
 
 ### Fixed
 

@@ -17,7 +17,7 @@ from requests.utils import dict_from_cookiejar
 from amazonorders.conf import AmazonOrdersConfig, cookies_file_lock, debug_output_file_lock
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersAuthRedirectError
 from amazonorders.forms import (AuthForm, AcicAuthBlocker, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm,
-                                SignInForm, ClaimForm, IntentForm)
+                                SignInForm, ClaimForm, IntentForm, PasskeyForm)
 from amazonorders.util import AmazonSessionResponse, load_class, select_one
 
 logger = logging.getLogger(__name__)
@@ -169,6 +169,7 @@ class AmazonSession:
         return [ClaimForm(config),
                 IntentForm(config),
                 SignInForm(config),
+                PasskeyForm(config),
                 MfaDeviceSelectForm(config),
                 MfaForm(config),
                 CaptchaForm(config),
