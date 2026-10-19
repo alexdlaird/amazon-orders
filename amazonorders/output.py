@@ -105,7 +105,7 @@ Order #{order_number}
 
         order_str += f"\n  Shipments: {order.shipments}"
         order_str += f"\n  Order Details Link: {order.order_details_link}"
-        if order.grand_total:
+        if order.grand_total is not None:
             order_str += f"\n  Grand Total: {self.config.constants.format_currency(order.grand_total)}"
         order_str += f"\n  Order Placed Date: {order.order_placed_date}"
         if order.recipient:
@@ -147,7 +147,7 @@ Order #{order_number}
         """
         transaction_str = f"Transaction: {transaction.completed_date}"
         transaction_str += f"\n  Order #{transaction.order_number}"
-        if transaction.grand_total:
+        if transaction.grand_total is not None:
             transaction_str += f"\n  Grand Total: {self.config.constants.format_currency(transaction.grand_total)}"
         transaction_str += f"\n  Order Details Link: {transaction.order_details_link}"
 

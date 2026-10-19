@@ -63,6 +63,68 @@ class TestSession(UnitTestCase):
         self.assert_login_responses_success()
 
     @responses.activate
+    def test_login_email_only_claim(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_email_only_claim_responses_success()
+
+        # WHEN
+        self.amazon_session.login()
+
+        # THEN
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assert_login_responses_success()
+
+    @responses.activate
+    @patch("builtins.input", return_value="123456")
+    def test_login_passkey_claim_chooses_password(self, input_mock):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_passkey_claim_responses_success()
+
+        # WHEN
+        self.amazon_session.login()
+
+        # THEN
+        self.assertTrue(self.amazon_session.is_authenticated)
+        self.assert_login_responses_success()
+        self.assertEqual(1, self.password_challenge_response.call_count)
+        self.assertEqual(1, self.password_response.call_count)
+        self.assertEqual(1, input_mock.call_count)
+
+    @responses.activate
+    def test_login_email_only_claim_invalid_password(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim-username-email-only-claim.html"), "r",
+                  encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-claim-invalid-password.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_CLAIM_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
+            self.amazon_session.login()
+
+        # THEN
+        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertEqual("Error from Amazon: There was a problem. Your email or password was incorrect. Please try "
+                         "again.", str(cm.exception))
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+
+    @responses.activate
     def test_login_bad_index_retries(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "auth", "unauth-bad-index.html"), "r", encoding="utf-8") as f:

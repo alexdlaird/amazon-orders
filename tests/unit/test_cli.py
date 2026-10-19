@@ -14,7 +14,9 @@ from bs4 import BeautifulSoup
 from click.testing import CliRunner
 
 from amazonorders.cli import amazon_orders_cli
+from amazonorders.entity.order import Order
 from amazonorders.entity.parsable import Parsable
+from amazonorders.entity.transaction import Transaction
 from amazonorders.exception import AmazonOrdersBrowserNotInstalledError
 from amazonorders.output import OutputFormatter
 from tests.unittestcase import UnitTestCase
@@ -261,6 +263,107 @@ class TestCli(UnitTestCase):
         request_url = resp.calls[0].request.url
         self.assertIn(f"timeFilter=year-{year}", request_url)
         self.assertIn("orderFilter=digital-orders", request_url)
+
+    @responses.activate
+    def test_history_command_with_family_member_id(self):
+        # GIVEN
+        year = 2018
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        resp = self.given_any_order_history_exists("order-history-2018-0.html")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "history", "--year", year, "--family-member-id", "A1EXAMPLETEEN1",
+                                          "--single-page"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assert_login_responses_success()
+        self.assertEqual(1, resp.call_count)
+        self.assertIn("familyMemberId=A1EXAMPLETEEN1", resp.calls[0].request.url)
+
+    @responses.activate
+    def test_family_members_command(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        resp = self.given_family_members_page_exists("order-history-family-members-snippet.html")
+
+        # WHEN
+        response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
+                                                                 [
+                                                                     "--config-path", self.test_config.config_path,
+                                                                     "--username", "some-username@gmail.com",
+                                                                     "--password", "some-password",
+                                                                     "family-members", "--output", "json"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assert_login_responses_success()
+        self.assertEqual(1, resp.call_count)
+        members = json.loads(response.stdout)
+        self.assertEqual([{"id": "A1EXAMPLETEEN1", "name": "Jane Doe"}, {"id": "A2EXAMPLETEEN2", "name": "John Doe"}],
+                         members)
+
+    @responses.activate
+    def test_family_members_command_error(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            resp1 = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-invalid-password.html"), "r",
+                  encoding="utf-8") as f:
+            resp2 = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "family-members"
+                                      ])
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertIn("Error from Amazon: There was a problem. Your password is incorrect.", response.output)
+
+    @responses.activate
+    def test_family_members_command_session_expired(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        auth_redirect_response = self.given_authenticated_url_redirects_to_login()
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "family-members"
+                                      ])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, auth_redirect_response.call_count)
+        self.assertIn("Amazon redirected to login", response.output)
 
     @responses.activate
     def test_history_command_last_30_days(self):
@@ -957,6 +1060,18 @@ class TestOutputFormatter(UnitTestCase):
         return [StubEntity(self.test_config, "First", ["a", "b"]),
                 StubEntity(self.test_config, "Second", [])]
 
+    def given_order(self):
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-currency-stripped-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+        return Order(parsed, self.test_config, full_details=True)
+
+    def given_transaction(self):
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transaction-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+        return Transaction(parsed, self.test_config, datetime.date(2024, 1, 1))
+
     def test_format_empty_contracts(self):
         # WHEN / THEN
         self.assertEqual("[]\n", self.given_formatter().format([], "json"))
@@ -1019,3 +1134,59 @@ class TestOutputFormatter(UnitTestCase):
         self.assertEqual(["a", "b"], list(rows[0].keys()))
         self.assertEqual("", rows[0]["b"])
         self.assertEqual("2", rows[1]["b"])
+
+    def test_order_text_shows_zero_grand_total(self):
+        # GIVEN
+        order = self.given_order()
+        order.grand_total = 0.0
+
+        # WHEN
+        text = self.given_formatter().order_text(order)
+
+        # THEN
+        self.assertIn("\n  Grand Total: $0.00\n", text)
+
+    def test_order_text_omits_missing_grand_total(self):
+        # GIVEN
+        order = self.given_order()
+        order.grand_total = None
+
+        # WHEN
+        text = self.given_formatter().order_text(order)
+
+        # THEN
+        self.assertNotIn("Grand Total", text)
+
+    def test_order_text_hides_zero_breakdown_totals(self):
+        # GIVEN
+        order = self.given_order()
+        order.shipping_total = 0.0
+
+        # WHEN
+        text = self.given_formatter().order_text(order)
+
+        # THEN
+        self.assertNotIn("Shipping Total", text)
+        self.assertIn("\n  Subtotal: $1,111.99", text)
+
+    def test_transaction_text_shows_zero_grand_total(self):
+        # GIVEN
+        transaction = self.given_transaction()
+        transaction.grand_total = 0.0
+
+        # WHEN
+        text = self.given_formatter().transaction_text(transaction)
+
+        # THEN
+        self.assertIn("\n  Grand Total: $0.00\n", text)
+
+    def test_transaction_text_omits_missing_grand_total(self):
+        # GIVEN
+        transaction = self.given_transaction()
+        transaction.grand_total = None
+
+        # WHEN
+        text = self.given_formatter().transaction_text(transaction)
+
+        # THEN
+        self.assertNotIn("Grand Total", text)

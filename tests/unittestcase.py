@@ -7,7 +7,7 @@ import re
 import shutil
 
 import responses
-from responses.matchers import urlencoded_params_matcher
+from responses.matchers import query_string_matcher, urlencoded_params_matcher
 
 from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig
@@ -103,8 +103,7 @@ class UnitTestCase(TestCase):
             "unifiedAuthTreatment": "T2",
             "signalUnknownCredentialUnifiedAuthWeblabActive": "false",
             "anti-csrftoken-a2z": "hIQUpYKT9xnC6tPiep3YBWI+1WkSrEVHZnPVCyUYiHwyAAAAAGireQ0AAAAB",
-            "email": "some-username@gmail.com",
-            "password": "some-password"
+            "email": "some-username@gmail.com"
         }
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim-password.html"), "r", encoding="utf-8") as f:
             self.signin_response = responses.add(
@@ -114,6 +113,98 @@ class UnitTestCase(TestCase):
                 status=200,
                 match=[urlencoded_params_matcher(request_data)]
             )
+        self.given_login_claim_password_responses_success()
+
+    def given_login_email_only_claim_responses_success(self):
+        self.given_email_only_claim_responses("signin-claim-password.html")
+        self.given_login_claim_password_responses_success()
+
+    def given_login_passkey_claim_responses_success(self):
+        self.given_email_only_claim_responses("signin-claim-auth-passkey.html")
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim-auth-password.html"), "r",
+                  encoding="utf-8") as f:
+            self.password_challenge_response = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.SIGN_IN_CLAIM_URL}/auth",
+                body=f.read(),
+                status=200,
+                match=[query_string_matcher("arb=00000000-0000-4000-8000-000000000002&selectedChallengeType=password")]
+            )
+        request_data = {
+            "anti-csrftoken-a2z": "hH97dzyG0jXDtaTbMJH/OG9EcjbV0JOdO9ahThV66XUYAAAAAGrWURQAAAAB",
+            "metadata1": "true",
+            "arb": "00000000-0000-4000-8000-000000000002",
+            "password": "some-password"
+        }
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim-auth-otp.html"), "r", encoding="utf-8") as f:
+            self.password_response = responses.add(
+                responses.POST,
+                f"{self.test_config.constants.SIGN_IN_CLAIM_URL}/auth",
+                body=f.read(),
+                status=200,
+                match=[urlencoded_params_matcher(request_data)],
+            )
+        request_data = {
+            "anti-csrftoken-a2z": "hIHn+3FEGcDOEHEVOWyUOQ18+Mh/xAFC3Ce3jDbOEJsBAAAAAGrWUqAAAAAB",
+            "metadata1": "true",
+            "arb": "00000000-0000-4000-8000-000000000002",
+            "authenticationMethod": "TOTPCode",
+            "authenticatorId": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "capabilities": "noJs",
+            "trustThisDevice": "1",
+            "otpCode": "123456"
+        }
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r", encoding="utf-8") as f:
+            self.authenticated_response = responses.add(
+                responses.POST,
+                f"{self.test_config.constants.SIGN_IN_CLAIM_URL}/auth",
+                body=f.read(),
+                status=200,
+                match=[urlencoded_params_matcher(request_data)],
+            )
+
+    def given_email_only_claim_responses(self, claim_response_html_file):
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin-claim-username-email-only-claim.html"), "r",
+                  encoding="utf-8") as f:
+            self.signin_response = responses.add(
+                responses.GET,
+                self.test_config.constants.SIGN_IN_URL,
+                body=f.read(),
+                status=200,
+            )
+        request_data = {
+            "appAction": "SIGNIN_CLAIM_COLLECT",
+            "subPageType": "FullPageUnifiedClaimCollect",
+            "claimCollectionWorkflow": "unified",
+            "metadata1": "true",
+            "isServerSideRouting": "true",
+            "emailOnlyClaim": "false",
+            "webAuthnGetArbForAutofill": "00000000-0000-4000-8000-000000000002",
+            "webAuthnGetParametersForAutofill": "eyJycElkIjoiYW1hem9uLmNvbSIsImNoYWxsZW5nZSI6IlR6akN2RkVHYjI3VEhPS21z"
+                                                "YkRibUVuZ3BaR3NGZ3BsIiwidGltZW91dCI6OTAwMDAwLCJtZWRpYXRpb24iOiJjb25k"
+                                                "aXRpb25hbCIsInVzZXJWZXJpZmljYXRpb24iOiJwcmVmZXJyZWQifQ==",
+            "webAuthnChallengeIdForAutofill": "TzjCvFEGb27THOKmsbDbmEngpZGsFgpl:NA",
+            "openid.ns": "http://specs.openid.net/auth/2.0",
+            "openid.mode": "checkid_setup",
+            "openid.return_to": "https://www.amazon.com/?ref_=nav_custrec_signin",
+            "openid.assoc_handle": "usflex",
+            "openid.pape.max_auth_age": "0",
+            "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
+            "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
+            "signalUnknownCredentialUnifiedAuthWeblabActive": "true",
+            "anti-csrftoken-a2z": "hNQTAkqRWDGiHXZuGnu9i+D2UMWi6sJjid1GiBbBRNRpAAAAAGrWLQkAAAAB",
+            "email": "some-username@gmail.com"
+        }
+        with open(os.path.join(self.RESOURCES_DIR, "auth", claim_response_html_file), "r", encoding="utf-8") as f:
+            self.signin_response = responses.add(
+                responses.POST,
+                self.test_config.constants.SIGN_IN_CLAIM_URL,
+                body=f.read(),
+                status=200,
+                match=[urlencoded_params_matcher(request_data)]
+            )
+
+    def given_login_claim_password_responses_success(self):
         request_data = {
             "appActionToken": "BhG3tDd8XVGMlLyGRHU5EqkhrLEhPbSfbQWXNlTqvvc=:2",
             "appAction": "SIGNIN_PWD_COLLECT",
@@ -209,6 +300,16 @@ class UnitTestCase(TestCase):
                 "{optional_paging}".format(url=self.test_config.constants.ORDER_HISTORY_URL,
                                            time_filter=time_filter,
                                            optional_paging=self.history_page_query(start_index)),
+                body=f.read(),
+                status=200,
+            )
+
+    def given_family_members_page_exists(self, order_history_html_file):
+        with open(os.path.join(self.RESOURCES_DIR, "orders", order_history_html_file), "r",
+                  encoding="utf-8") as f:
+            return responses.add(
+                responses.GET,
+                self.test_config.constants.ORDER_HISTORY_URL,
                 body=f.read(),
                 status=200,
             )

@@ -97,18 +97,20 @@ class Selectors:
     SIGN_IN_FORM_SELECTOR = "form[name='signIn']"
     NAV_GREETING_SELECTOR = "#nav-link-accountList-nav-line-1"
     SIGN_IN_EMAIL_INPUT_SELECTOR = "input[name='email']"
-    CLAIM_FORM_SELECTOR = "form[name='signIn'].auth-validate-form"
+    CLAIM_FORM_SELECTOR = ["form[name='signIn'].auth-validate-form", "form#unified-password-form"]
     INTENT_FORM_SELECTOR = "form#intent-confirmation-form"
     INTENT_MESSAGE_SELECTOR = "div#intent-confirmation-container"
     MFA_DEVICE_SELECT_FORM_SELECTOR = "form#auth-select-device-form"
+    PASSKEY_FORM_SELECTOR = "form#unified-passkey-form"
+    PASSKEY_PASSWORD_CHALLENGE_LINK_SELECTOR = "a[href*='selectedChallengeType=password']"
     MFA_DEVICE_SELECT_INPUT_SELECTOR = "input[name='otpDeviceContext']"
     MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE = "value"
     MFA_DEVICE_SELECT_LABEL_SELECTOR = "span.a-label.a-radio-label"
-    MFA_FORM_SELECTOR = "form#auth-mfa-form"
+    MFA_FORM_SELECTOR = ["form#auth-mfa-form", "form#unified-otp-form"]
     CAPTCHA_1_FORM_SELECTOR = "form.cvf-widget-form-captcha"
     CAPTCHA_2_FORM_SELECTOR = ["form:has(input[id^='captchacharacters'])", "form[action$='validateCaptcha']"]
     CAPTCHA_OTP_FORM_SELECTOR = "form#verification-code-form"
-    DEFAULT_ERROR_TAG_SELECTOR = "div#auth-error-message-box"
+    DEFAULT_ERROR_TAG_SELECTOR = "div#auth-error-message-box:not(.aok-hidden *)"
     CAPTCHA_1_ERROR_SELECTOR = "div.cvf-widget-alert"
     CAPTCHA_2_ERROR_SELECTOR = "div.a-alert-info"
 
@@ -117,6 +119,16 @@ class Selectors:
     ##########################################################################
 
     NEXT_PAGE_LINK_SELECTOR = "ul.a-pagination li.a-last a"
+
+    ##########################################################################
+    # CSS selectors for Amazon Household family members
+    ##########################################################################
+
+    #: The Order history's "My Orders" / "<name>'s Orders" dropdown; the account's own entry has an empty value
+    FAMILY_MEMBER_ENTITY_SELECTOR = ["select#family-member-filter option[value]:not([value=''])",
+                                     "select[name='familyMemberId'] option[value]:not([value=''])"]
+    FAMILY_MEMBER_ID_ATTR = "value"
+    FIELD_FAMILY_MEMBER_NAME_SUFFIX = "'s Orders"
 
     ##########################################################################
     # CSS selectors for Entities and Fields
@@ -250,10 +262,12 @@ class Selectors:
                                         "div:is(.a-span3, .a-span12)"]
     FIELD_ORDER_PLACED_DATE_SUFFIX = "Order #"
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = ["[data-testid='payment-instrument-name']",
-                                           "img.pmts-payment-credit-card-instrument-logo"]
+                                           "img.pmts-payment-credit-card-instrument-logo",
+                                           "[data-testid='payment-instrument-message']"]
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = ["[data-testid='payment-instrument-number']",
-                                                  "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"]
-    FIELD_ORDER_PAYMENT_METHOD_LAST_4_REGEX = r"(?:ending in\s+|^\s*)(\d+)"
+                                                  "span:has(img.pmts-payment-credit-card-instrument-logo):last-child",
+                                                  "[data-testid='payment-instrument-message']"]
+    FIELD_ORDER_PAYMENT_METHOD_LAST_4_REGEX = r"(?:ending in\s+|^\s*|•+\s*)(\d+)"
     FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["[data-component='orderSubtotals'] div.a-row",
                                                    "div#od-subtotals div.a-row",
                                                    "[data-component='chargeSummary'] div.od-line-item-row"]

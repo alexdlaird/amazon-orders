@@ -6,7 +6,7 @@ import re
 from abc import ABC
 from io import BytesIO
 from typing import Any, Dict, NoReturn, Optional, TYPE_CHECKING, Union
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import pyotp
 from PIL import Image
@@ -190,7 +190,8 @@ class AuthForm(ABC):
 
         error_tag = util.select_one(form_response.parsed, self.error_selector)
         if error_tag:
-            error_msg = f"Error from Amazon: {util.cleanup_html_text(error_tag.text)}"
+            error_text = util.cleanup_html_text(error_tag.get_text("\n"))
+            error_msg = f"Error from Amazon: {error_text}"
 
             if self.critical:
                 raise AmazonOrdersAuthError(error_msg)
@@ -226,9 +227,22 @@ class SignInForm(AuthForm):
                 "Check if Amazon changed their login flow."
             )  # pragma: no cover
 
-        additional_attrs.update({self.solution_attr_key: self.amazon_session.username,
-                                 "password": self.amazon_session.password})
+        additional_attrs[self.solution_attr_key] = self.amazon_session.username
+        if not self._collects_email_only():
+            additional_attrs["password"] = self.amazon_session.password
         self.data.update(additional_attrs)
+
+    def _collects_email_only(self) -> bool:
+        """
+        Whether the ``<form>`` is the email-first step of sign-in, which posts to the claim URL and asks for the
+        password on the page that follows. A browser sends only the email here, and Amazon's current sign-in rejects
+        a password sent along with it.
+        """
+        if not self.form:
+            return False
+
+        action_path = urlparse(str(self.form.get("action", ""))).path
+        return action_path == urlparse(self.config.constants.SIGN_IN_CLAIM_URL).path
 
 
 class ClaimForm(AuthForm):
@@ -259,9 +273,63 @@ class ClaimForm(AuthForm):
                 "Check if Amazon changed their login flow."
             )  # pragma: no cover
 
-        additional_attrs.update({self.solution_attr_key: self.amazon_session.username,
-                                 "password": self.amazon_session.password})
+        if self._asks_for_email():
+            additional_attrs[self.solution_attr_key] = self.amazon_session.username
+        additional_attrs["password"] = self.amazon_session.password
         self.data.update(additional_attrs)
+
+    def _asks_for_email(self) -> bool:
+        """
+        Whether the ``<form>`` has a field for the email. The older sign-in asks for it again with the password, while
+        the newer one already has it from the step before and asks for the password alone.
+        """
+        return bool(self.form and self.form.find("input", attrs={"name": self.solution_attr_key}))
+
+
+class PasskeyForm(AuthForm):
+    """
+    The page that offers a passkey before the password, when the account has one. A passkey needs the user's device,
+    so this declines it and follows the page's link to the password instead.
+    """
+
+    def __init__(self,
+                 config: AmazonOrdersConfig,
+                 selector: Optional[str] = None) -> None:
+        if not selector:
+            selector = config.selectors.PASSKEY_FORM_SELECTOR
+
+        super().__init__(config, selector, critical=True)
+
+        #: The link to the password instead of the passkey.
+        self.password_challenge_link: Optional[Tag] = None
+
+    def select_form(self,
+                    amazon_session: "AmazonSession",
+                    parsed: Tag) -> bool:
+        if not super().select_form(amazon_session, parsed):
+            return False
+
+        self.password_challenge_link = util.select_one(parsed,
+                                                       self.config.selectors.PASSKEY_PASSWORD_CHALLENGE_LINK_SELECTOR)
+        return self.password_challenge_link is not None
+
+    def submit(self, last_response: Response) -> AmazonSessionResponse:
+        if not self.amazon_session or not self.password_challenge_link:
+            raise AmazonOrdersError(
+                "Call AuthForm.select_form() first."
+            )  # pragma: no cover
+
+        url = urljoin(last_response.url, str(self.password_challenge_link["href"]))
+        password_response = self.amazon_session.get(url, persist_cookies=True)
+
+        self._handle_errors(password_response)
+        self.clear_form()
+
+        return password_response
+
+    def clear_form(self) -> None:
+        super().clear_form()
+        self.password_challenge_link = None
 
 
 class IntentForm(AuthForm):
@@ -392,12 +460,23 @@ class MfaForm(AuthForm):
             otp = self.amazon_session.io.prompt("Enter the one-time passcode from your preferred 2FA method")
             self.amazon_session.io.echo("")
 
-        additional_attrs.update({self.solution_attr_key: otp,
-                                 "rememberDevice": ""})
+        additional_attrs[self.solution_attr_key] = otp
+        if not self._posts_to_claim():
+            additional_attrs["rememberDevice"] = ""
+            if "deviceId" not in self.data:
+                additional_attrs["deviceId"] = ""
         self.data.update(additional_attrs)
 
-        if "deviceId" not in self.data:
-            self.data["deviceId"] = ""
+    def _posts_to_claim(self) -> bool:
+        """
+        Whether the ``<form>`` is part of the newer sign-in that posts under the claim URL, which takes the code alone,
+        without the older form's device fields.
+        """
+        if not self.form:
+            return False
+
+        action_path = urlparse(str(self.form.get("action", ""))).path
+        return action_path.startswith(urlparse(self.config.constants.SIGN_IN_CLAIM_URL).path)
 
 
 class CaptchaForm(AuthForm):

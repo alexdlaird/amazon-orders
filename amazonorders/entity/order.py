@@ -252,7 +252,18 @@ class Order(Parsable):
         tag = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR)
         if tag is None:
             return None
-        return tag.attrs.get("alt") or tag.text.strip()
+        return tag.attrs.get("alt") or self._without_masked_digits(tag.text).strip()
+
+    def _without_masked_digits(self,
+                               text: str) -> str:
+        """
+        The payment method's name, when Amazon shows it in one line with the masked digits that follow it.
+        """
+        match = re.search(self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_LAST_4_REGEX, text)
+        if match and match.start() > 0:
+            return text[:match.start()]
+
+        return text
 
     def _parse_masked_digits(self,
                              selector: Union[str, list],

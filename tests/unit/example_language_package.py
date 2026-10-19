@@ -36,6 +36,7 @@ class Selectors(selectors.Selectors):
     FIELD_ORDER_GIFT_WRAP_LABELS = ["pariatur"]
     FIELD_ORDER_ITEM_COUNT_REGEX = r"{count}\s+cupidatat\s+proident"
     FIELD_SELLER_NAME_PREFIX = "Ullamco:"
+    FIELD_FAMILY_MEMBER_NAME_SUFFIX = " Voluptas"
     FIELD_TRACKING_NUMBER_PREFIX = "Laboris:"
     FIELD_TRACKING_CARRIER_REGEX = r"^(?:nisi ut aliquip)\s+"
     TRANSACTION_HISTORY_EMPTY_TEXT = "laborum"

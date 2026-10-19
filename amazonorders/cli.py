@@ -304,6 +304,9 @@ def amazon_orders_cli(ctx: Context,
 @click.option("--order-filter", "order_filter", default=None,
               help="The order type filter to use, e.g. digital-orders for Kindle and other digital purchases, "
                    "which the default history doesn't include.")
+@click.option("--family-member-id", "family_member_id", default=None,
+              help="Get the Orders of this Amazon Household member, such as a linked Teen account, instead. "
+                   "See the family-members command for IDs.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
 def history(ctx: Context,
@@ -323,6 +326,7 @@ def history(ctx: Context,
         single_page = kwargs["single_page"]
         full_details = kwargs["full_details"]
         order_filter = kwargs["order_filter"]
+        family_member_id = kwargs["family_member_id"]
         output = kwargs["output"]
 
         exclusive_flags = [year, last_3_months, last_30_days]
@@ -366,6 +370,7 @@ Order History for {filter_description}{optional_start_index}{optional_full_detai
                                                      keep_paging=not single_page,
                                                      time_filter=time_filter,
                                                      order_filter=order_filter,
+                                                     family_member_id=family_member_id,
                                                      progress_with_total=progress)
         end_time = time.time()
 
@@ -519,6 +524,39 @@ Transaction History for {days} days
         click.echo(
             "... {total} Transactions parsed in {time} seconds.\n".format(total=len(transaction_list),
                                                                           time=int(end_time - start_time)), err=True)
+    except AmazonOrdersAuthRedirectError:
+        IOClick.echo_session_expired()
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+
+@amazon_orders_cli.command("family-members")
+@click.pass_context
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+              help="The output format. Defaults to text.")
+def family_members(ctx: Context, **kwargs: Any) -> None:
+    """
+    Get the Amazon Household members whose Orders this account can view, such as linked Teen accounts.
+    """
+    amazon_session = ctx.obj["amazon_session"]
+
+    try:
+        CliAuth(amazon_session).authenticate()
+
+        config = ctx.obj["conf"]
+        amazon_orders = AmazonOrders(amazon_session,
+                                     config=config)
+
+        start_time = time.time()
+        members = amazon_orders.get_family_members()
+        end_time = time.time()
+
+        click.echo(config.output_cls(config).format(members, kwargs["output"]))
+
+        click.echo(
+            "... {total} Amazon Household members parsed in {time} seconds.\n".format(
+                total=len(members), time=int(end_time - start_time)), err=True)
     except AmazonOrdersAuthRedirectError:
         IOClick.echo_session_expired()
     except AmazonOrdersError as e:
