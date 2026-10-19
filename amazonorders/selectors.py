@@ -261,7 +261,10 @@ class Selectors:
                                         "[data-component='briefOrderInfo'] div.a-column",
                                         "div:is(.a-span3, .a-span12)"]
     FIELD_ORDER_PLACED_DATE_SUFFIX = "Order #"
-    FIELD_ORDER_PAYMENT_METHOD_SELECTOR = ["[data-testid='payment-instrument-name']",
+    # When a Gift Card was used alongside a card, prefer the card (the instrument with a number), like its last 4 are
+    FIELD_ORDER_PAYMENT_METHOD_SELECTOR = ["[data-testid='payment-instrument']:has([data-testid='payment-instrument-"
+                                           "number']) [data-testid='payment-instrument-name']",
+                                           "[data-testid='payment-instrument-name']",
                                            "img.pmts-payment-credit-card-instrument-logo",
                                            "[data-testid='payment-instrument-message']"]
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = ["[data-testid='payment-instrument-number']",
