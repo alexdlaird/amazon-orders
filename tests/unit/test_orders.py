@@ -1214,6 +1214,28 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
+    def test_get_order_payment_instrument_message_layout(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        order_id = "112-5234348-8033063"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-payment-instrument-message.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_DETAILS_URL}?orderID={order_id}",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        order = self.amazon_orders.get_order(order_id)
+
+        # THEN
+        self.assertEqual("Blue Cash Everyday®", order.payment_method)
+        self.assertEqual("1234", order.payment_method_last_4)
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
     def test_get_order_chargesummary_totals(self):
         # GIVEN
         self.amazon_session.is_authenticated = True

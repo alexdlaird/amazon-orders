@@ -262,10 +262,12 @@ class Selectors:
                                         "div:is(.a-span3, .a-span12)"]
     FIELD_ORDER_PLACED_DATE_SUFFIX = "Order #"
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = ["[data-testid='payment-instrument-name']",
-                                           "img.pmts-payment-credit-card-instrument-logo"]
+                                           "img.pmts-payment-credit-card-instrument-logo",
+                                           "[data-testid='payment-instrument-message']"]
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = ["[data-testid='payment-instrument-number']",
-                                                  "span:has(img.pmts-payment-credit-card-instrument-logo):last-child"]
-    FIELD_ORDER_PAYMENT_METHOD_LAST_4_REGEX = r"(?:ending in\s+|^\s*)(\d+)"
+                                                  "span:has(img.pmts-payment-credit-card-instrument-logo):last-child",
+                                                  "[data-testid='payment-instrument-message']"]
+    FIELD_ORDER_PAYMENT_METHOD_LAST_4_REGEX = r"(?:ending in\s+|^\s*|•+\s*)(\d+)"
     FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR = ["[data-component='orderSubtotals'] div.a-row",
                                                    "div#od-subtotals div.a-row",
                                                    "[data-component='chargeSummary'] div.od-line-item-row"]
