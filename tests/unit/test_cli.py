@@ -959,6 +959,18 @@ class TestOutputFormatter(UnitTestCase):
         return [StubEntity(self.test_config, "First", ["a", "b"]),
                 StubEntity(self.test_config, "Second", [])]
 
+    def given_order(self):
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-currency-stripped-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+        return Order(parsed, self.test_config, full_details=True)
+
+    def given_transaction(self):
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transaction-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+        return Transaction(parsed, self.test_config, datetime.date(2024, 1, 1))
+
     def test_format_empty_contracts(self):
         # WHEN / THEN
         self.assertEqual("[]\n", self.given_formatter().format([], "json"))
@@ -1021,18 +1033,6 @@ class TestOutputFormatter(UnitTestCase):
         self.assertEqual(["a", "b"], list(rows[0].keys()))
         self.assertEqual("", rows[0]["b"])
         self.assertEqual("2", rows[1]["b"])
-
-    def given_order(self):
-        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-currency-stripped-snippet.html"), "r",
-                  encoding="utf-8") as f:
-            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
-        return Order(parsed, self.test_config, full_details=True)
-
-    def given_transaction(self):
-        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transaction-snippet.html"), "r",
-                  encoding="utf-8") as f:
-            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
-        return Transaction(parsed, self.test_config, datetime.date(2024, 1, 1))
 
     def test_order_text_shows_zero_grand_total(self):
         # GIVEN
