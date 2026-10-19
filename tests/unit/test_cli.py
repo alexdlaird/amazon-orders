@@ -526,6 +526,31 @@ class TestCli(UnitTestCase):
         self.assertIn("5 Invoice PDFs for 1 Orders", response.output)
 
     @responses.activate
+    def test_invoice_pdfs_command_text(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        self.given_invoice_pdf_list("invoice-pdfs-multiple.html")
+        link = (f"{self.test_config.constants.BASE_URL}/-/en/documents/download/"
+                f"00000000-0000-4000-8000-00000000000{{}}/invoice.pdf")
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "--username", "some-username@gmail.com",
+                                          "--password", "some-password",
+                                          "invoice-pdfs", "302-0000000-0000002"
+                                      ])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertIn(f"Invoice PDF: Invoice 1\n  Order #302-0000000-0000002\n  Link: {link.format(2)}\n",
+                      response.output)
+        self.assertIn(f"Invoice PDF: Credit note\n  Order #302-0000000-0000002\n  Credit Note: True\n"
+                      f"  Link: {link.format(6)}\n", response.output)
+
+    @responses.activate
     def test_invoice_pdfs_command_download(self):
         # GIVEN
         self.given_unauthenticated_home_page()
