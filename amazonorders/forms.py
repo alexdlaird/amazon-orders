@@ -190,7 +190,8 @@ class AuthForm(ABC):
 
         error_tag = util.select_one(form_response.parsed, self.error_selector)
         if error_tag:
-            error_msg = f"Error from Amazon: {util.cleanup_html_text(error_tag.text)}"
+            error_text = util.cleanup_html_text(error_tag.get_text("\n"))
+            error_msg = f"Error from Amazon: {error_text}"
 
             if self.critical:
                 raise AmazonOrdersAuthError(error_msg)
