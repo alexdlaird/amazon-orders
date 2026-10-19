@@ -14,7 +14,9 @@ from bs4 import BeautifulSoup
 from click.testing import CliRunner
 
 from amazonorders.cli import amazon_orders_cli
+from amazonorders.entity.order import Order
 from amazonorders.entity.parsable import Parsable
+from amazonorders.entity.transaction import Transaction
 from amazonorders.exception import AmazonOrdersBrowserNotInstalledError
 from amazonorders.output import OutputFormatter
 from tests.unittestcase import UnitTestCase
@@ -1019,3 +1021,71 @@ class TestOutputFormatter(UnitTestCase):
         self.assertEqual(["a", "b"], list(rows[0].keys()))
         self.assertEqual("", rows[0]["b"])
         self.assertEqual("2", rows[1]["b"])
+
+    def given_order(self):
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-currency-stripped-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+        return Order(parsed, self.test_config, full_details=True)
+
+    def given_transaction(self):
+        with open(os.path.join(self.RESOURCES_DIR, "transactions", "transaction-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+        return Transaction(parsed, self.test_config, datetime.date(2024, 1, 1))
+
+    def test_order_text_shows_zero_grand_total(self):
+        # GIVEN
+        order = self.given_order()
+        order.grand_total = 0.0
+
+        # WHEN
+        text = self.given_formatter().order_text(order)
+
+        # THEN
+        self.assertIn("\n  Grand Total: $0.00\n", text)
+
+    def test_order_text_omits_missing_grand_total(self):
+        # GIVEN
+        order = self.given_order()
+        order.grand_total = None
+
+        # WHEN
+        text = self.given_formatter().order_text(order)
+
+        # THEN
+        self.assertNotIn("Grand Total", text)
+
+    def test_order_text_hides_zero_breakdown_totals(self):
+        # GIVEN
+        order = self.given_order()
+        order.shipping_total = 0.0
+
+        # WHEN
+        text = self.given_formatter().order_text(order)
+
+        # THEN
+        self.assertNotIn("Shipping Total", text)
+        self.assertIn("\n  Subtotal: $1,111.99", text)
+
+    def test_transaction_text_shows_zero_grand_total(self):
+        # GIVEN
+        transaction = self.given_transaction()
+        transaction.grand_total = 0.0
+
+        # WHEN
+        text = self.given_formatter().transaction_text(transaction)
+
+        # THEN
+        self.assertIn("\n  Grand Total: $0.00\n", text)
+
+    def test_transaction_text_omits_missing_grand_total(self):
+        # GIVEN
+        transaction = self.given_transaction()
+        transaction.grand_total = None
+
+        # WHEN
+        text = self.given_formatter().transaction_text(transaction)
+
+        # THEN
+        self.assertNotIn("Grand Total", text)
