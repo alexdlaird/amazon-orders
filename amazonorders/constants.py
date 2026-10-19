@@ -96,6 +96,8 @@ class Constants:
     TRANSACTION_HISTORY_URL = f"{BASE_URL}{TRANSACTION_HISTORY_ROUTE}"
     TRANSACTION_DATA_ROUTE = "/payments-portal/data/iris/live/v1/data/manage/get-transactions"
     TRANSACTION_DATA_URL = f"{BASE_URL}{TRANSACTION_DATA_ROUTE}"
+    #: The widget further pages of Transactions are requested for, when the page doesn't name it (e.g. amazon.de).
+    TRANSACTION_DATA_WIDGET_NAME = "ViewTransactions"
 
     ##########################################################################
     # URLs for Gift Cards
