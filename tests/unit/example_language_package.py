@@ -44,6 +44,7 @@ class Selectors(selectors.Selectors):
     ORDER_PHYSICAL_STORE_TEXT = "Sint culpa"
     ORDER_WHOLE_FOODS_TEXT = "Anim id est"
     ORDER_CANCELLED_TEXT = "Velit"
+    FIELD_RECIPIENT_ADDRESS_INLINE_SEPARATOR_REGEX = r"(?:^|\s);\s*"
 
 
 class Constants(constants.Constants):

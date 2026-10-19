@@ -1211,6 +1211,8 @@ class TestOrders(UnitTestCase):
         self.assertEqual(54.78, order.grand_total)
         self.assertEqual(50.97, order.subtotal)
         self.assertEqual(3.81, order.estimated_tax)
+        self.assertEqual("Alex Laird", order.recipient.name)
+        self.assertEqual("555 My Road\nChicago, IL 60007\nUnited States", order.recipient.address)
         self.assertEqual(1, resp.call_count)
 
     @responses.activate

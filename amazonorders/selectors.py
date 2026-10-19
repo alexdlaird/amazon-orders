@@ -323,6 +323,11 @@ class Selectors:
     FIELD_RECIPIENT_ADDRESS2_SELECTOR = "li.displayAddressAddressLine2"
     FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR = "li.displayAddressCityStateOrRegionPostalCode"
     FIELD_RECIPIENT_ADDRESS_COUNTRY_SELECTOR = "li.displayAddressCountryName"
+    #: The address lines that follow the Recipient's name in an unclassed list.
+    FIELD_RECIPIENT_ADDRESS_LINES_SELECTOR = "ul > li:not(:first-child)"
+    #: Separates the parts of an address Amazon renders inline (e.g. ``", Musterstraße 1 , 10115"``), but not a
+    #: comma within a line (e.g. ``"Chicago, IL 60007"``).
+    FIELD_RECIPIENT_ADDRESS_INLINE_SEPARATOR_REGEX = r"(?:^|\s),\s*"
     FIELD_RECIPIENT_ADDRESS_FALLBACK_SELECTOR = ["div:nth-child(2)",
                                                  "li:nth-child(2)"]
 
