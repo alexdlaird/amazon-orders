@@ -40,7 +40,8 @@ _PLUMBING_LITERALS = {
     "request", "secure", "simple_parse", "src", "start_index", "state", "statementDescriptor", "time_filter",
     "timeout", "token", "transactionList", "transactionResponseState", "transactionsList", "type", "username", "utf-8",
     "value", "visibleTransactionResponse", "w", "widgetName", "www.", "x-amzn-upx-token", "{page_name}_{index}.html",
-    "{url}/{path}", "{url}?{query_param}={filter_value}{optional_order_filter}{optional_page}", "{}",
+    "{url}/{path}", "{url}?{query_param}={filter_value}{optional_order_filter}{optional_family_member}{optional_page}",
+    "{}",
 }
 
 _ENGLISH_TO_LOREM_MONTHS = {

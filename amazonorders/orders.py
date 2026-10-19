@@ -290,9 +290,9 @@ class AmazonOrders:
                           keep_paging: bool = True,
                           time_filter: Optional[str] = None,
                           order_filter: Optional[str] = None,
-                          family_member_id: Optional[str] = None,
                           progress: Optional[Callable[[int], None]] = None,
-                          progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None) -> List[Order]:
+                          progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
+                          family_member_id: Optional[str] = None) -> List[Order]:
         """
         Get the Amazon Order history for a given time period.
 
@@ -310,13 +310,13 @@ class AmazonOrders:
             precedence over the ``year`` parameter.
         :param order_filter: The order type filter to use, e.g. ``"digital-orders"`` for Kindle and other digital
             purchases, which the default history doesn't include. If provided, appended alongside the time filter.
-        :param family_member_id: The ID of a household member (the ``familyMemberId`` in the "Your Orders" URL when
-            filtering by member) whose orders to get, such as a linked Teen account.
         :param progress: Called after each page of history is fetched, with the number of Orders found so far
             (before their full details are fetched, if ``full_details`` is ``True``).
         :param progress_with_total: Like ``progress``, but also called with the number of Orders expected in total,
             from the count Amazon shows on the history page. The total is ``None`` if Amazon doesn't show one, or if
             ``order_filter`` is provided, since Amazon's count may not reflect it.
+        :param family_member_id: The ID of a household member (the ``familyMemberId`` in the "Your Orders" URL when
+            filtering by member) whose orders to get, such as a linked Teen account.
         :return: A list of the requested Orders.
         """
         if not self.amazon_session.is_authenticated:
@@ -337,11 +337,11 @@ class AmazonOrders:
                                full_details: bool = False,
                                time_filter: Optional[str] = None,
                                order_filter: Optional[str] = None,
-                               family_member_id: Optional[str] = None,
                                limit: Optional[int] = None,
                                cursor: Optional[Dict[str, Any]] = None,
                                progress: Optional[Callable[[int], None]] = None,
-                               progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None
+                               progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
+                               family_member_id: Optional[str] = None
                                ) -> PagedResults[Order]:
         """
         Get a batch of the Amazon Order history for a given time period, with a cursor to fetch the next batch.
@@ -357,8 +357,6 @@ class AmazonOrders:
             provided.
         :param order_filter: The order type filter to use, as in :func:`get_order_history`. Ignored if ``cursor`` is
             provided.
-        :param family_member_id: The household member whose orders to get, as in :func:`get_order_history`. Ignored
-            if ``cursor`` is provided.
         :param limit: Stop fetching history pages once at least this many Orders are collected. Whole pages are
             fetched, so the batch can hold up to a page more than ``limit``. ``None`` fetches every page.
         :param cursor: The :attr:`~amazonorders.paging.PagedResults.cursor` of the previous batch, to fetch the
@@ -367,6 +365,8 @@ class AmazonOrders:
             this batch (before their full details are fetched, if ``full_details`` is ``True``).
         :param progress_with_total: Like ``progress``, but also called with the number of Orders expected in this
             batch, as in :func:`get_order_history`, and at most ``limit`` until the batch ends.
+        :param family_member_id: The household member whose orders to get, as in :func:`get_order_history`. Ignored
+            if ``cursor`` is provided.
         :return: The batch of Orders, and the cursor for the next one.
         """
         if not self.amazon_session.is_authenticated:
@@ -445,14 +445,15 @@ class AmazonOrders:
             if family_member_id else ""
         )
         return (
-            "{url}?{query_param}={filter_value}{optional_order_filter}{optional_page}"
+            "{url}?{query_param}={filter_value}{optional_order_filter}{optional_family_member}{optional_page}"
         ).format(
             url=constants.ORDER_HISTORY_URL,
             query_param=constants.HISTORY_FILTER_QUERY_PARAM,
             filter_value=filter_value,
             optional_order_filter=optional_order_filter,
+            optional_family_member=optional_family_member,
             optional_page=optional_page
-        ) + optional_family_member
+        )
 
     @staticmethod
     def _parse_family_members(parsed: Tag,

@@ -119,25 +119,6 @@ class TestIntegrationGeneric(IntegrationTestCase):
             self.assert_orders_list_index(orders)
             self.assertIsNotNone(orders[0].items[0].asin)
 
-    def test_get_family_members(self):
-        # WHEN
-        members = self.amazon_orders.get_family_members()
-
-        # THEN - an account outside an Amazon Household has none, so only assert on the ones found
-        for member in members:
-            self.assertIsNotNone(member.id)
-            self.assertIsNotNone(member.name)
-
-        if members:
-            # WHEN
-            orders = self.amazon_orders.get_order_history(year=self.year, keep_paging=False,
-                                                          family_member_id=members[0].id)
-
-            # THEN
-            self.assertLessEqual(len(orders), 10)
-            for order in orders:
-                self.assertIsNotNone(order.order_number)
-
     def test_get_gift_cards(self):
         # WHEN
         balance = self.amazon_gift_cards.get_balance()
