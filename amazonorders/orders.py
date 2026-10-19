@@ -315,8 +315,8 @@ class AmazonOrders:
         :param progress_with_total: Like ``progress``, but also called with the number of Orders expected in total,
             from the count Amazon shows on the history page. The total is ``None`` if Amazon doesn't show one, or if
             ``order_filter`` is provided, since Amazon's count may not reflect it.
-        :param family_member_id: The ID of a household member (the ``familyMemberId`` in the "Your Orders" URL when
-            filtering by member) whose orders to get, such as a linked Teen account.
+        :param family_member_id: The ID of an Amazon Household member whose Orders to get, such as a linked Teen
+            account, from :func:`get_family_members`.
         :return: A list of the requested Orders.
         """
         if not self.amazon_session.is_authenticated:
@@ -365,8 +365,8 @@ class AmazonOrders:
             this batch (before their full details are fetched, if ``full_details`` is ``True``).
         :param progress_with_total: Like ``progress``, but also called with the number of Orders expected in this
             batch, as in :func:`get_order_history`, and at most ``limit`` until the batch ends.
-        :param family_member_id: The household member whose orders to get, as in :func:`get_order_history`. Ignored
-            if ``cursor`` is provided.
+        :param family_member_id: The ID of an Amazon Household member whose Orders to get, as in
+            :func:`get_order_history`. Ignored if ``cursor`` is provided.
         :return: The batch of Orders, and the cursor for the next one.
         """
         if not self.amazon_session.is_authenticated:

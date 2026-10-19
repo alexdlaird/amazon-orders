@@ -306,7 +306,7 @@ def amazon_orders_cli(ctx: Context,
                    "which the default history doesn't include.")
 @click.option("--family-member-id", "family_member_id", default=None,
               help="Get the Orders of this Amazon Household member, such as a linked Teen account, instead. "
-                   "See the `family-members` command for IDs.")
+                   "See the family-members command for IDs.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
 def history(ctx: Context,
@@ -534,10 +534,10 @@ Transaction History for {days} days
 @amazon_orders_cli.command("family-members")
 @click.pass_context
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
-              help="The format to render the Amazon Household members in.")
+              help="The output format. Defaults to text.")
 def family_members(ctx: Context, **kwargs: Any) -> None:
     """
-    List the Amazon Household members whose Orders this account can view, such as linked Teen accounts.
+    Get the Amazon Household members whose Orders this account can view, such as linked Teen accounts.
     """
     amazon_session = ctx.obj["amazon_session"]
 
@@ -548,10 +548,15 @@ def family_members(ctx: Context, **kwargs: Any) -> None:
         amazon_orders = AmazonOrders(amazon_session,
                                      config=config)
 
+        start_time = time.time()
         members = amazon_orders.get_family_members()
+        end_time = time.time()
 
         click.echo(config.output_cls(config).format(members, kwargs["output"]))
-        click.echo(f"... {len(members)} Amazon Household members found.\n", err=True)
+
+        click.echo(
+            "... {total} Amazon Household members parsed in {time} seconds.\n".format(
+                total=len(members), time=int(end_time - start_time)), err=True)
     except AmazonOrdersAuthRedirectError:
         IOClick.echo_session_expired()
     except AmazonOrdersError as e:
