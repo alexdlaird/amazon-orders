@@ -11,6 +11,7 @@ import yaml
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.gift_card_activity import GiftCardActivity
+from amazonorders.entity.invoice_pdf import InvoicePdf
 from amazonorders.entity.order import Order
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.transaction import Transaction
@@ -87,6 +88,8 @@ class OutputFormatter:
             return self.transaction_text(entity)
         elif isinstance(entity, GiftCardActivity):
             return self.gift_card_activity_text(entity)
+        elif isinstance(entity, InvoicePdf):
+            return self.invoice_pdf_text(entity)
 
         return str(entity)
 
@@ -171,6 +174,22 @@ Order #{order_number}
             activity_str += f"\n  Order #{activity.order_number}"
 
         return activity_str
+
+    def invoice_pdf_text(self,
+                         invoice_pdf: InvoicePdf) -> str:
+        """
+        Render an InvoicePdf as human-readable text.
+
+        :param invoice_pdf: The InvoicePdf to render.
+        :return: The InvoicePdf as text.
+        """
+        invoice_pdf_str = f"Invoice PDF: {invoice_pdf.name}"
+        invoice_pdf_str += f"\n  Order #{invoice_pdf.order_number}"
+        if invoice_pdf.is_credit_note:
+            invoice_pdf_str += "\n  Credit Note: True"
+        invoice_pdf_str += f"\n  Link: {invoice_pdf.link}"
+
+        return invoice_pdf_str
 
     def _csv(self,
              entities: List[Dict[str, Any]]) -> str:

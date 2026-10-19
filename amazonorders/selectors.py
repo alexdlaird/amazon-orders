@@ -351,6 +351,17 @@ class Selectors:
     FIELD_TRACKING_CARRIER_REGEX = r"^(?:shipped with|delivered by|delivery (?:facilitated )?by|carrier:?)\s+"
 
     #####################################
+    # CSS selectors for InvoicePdf fields
+    #####################################
+
+    #: The links to an Order's invoice PDFs on its invoice list, leaving out the printable order summary,
+    #: the link to request an invoice, and a seller's proof of purchase ("Warranty/Pslip"), which isn't an invoice.
+    INVOICE_PDF_ENTITY_SELECTOR = ["ul.invoice-list a[href*='/documents/download/']",
+                                   "a[href*='/documents/download/']"]
+    #: Matched case-insensitively in a document's name, e.g. "Credit note 1", to tell a credit note from an invoice.
+    FIELD_INVOICE_PDF_CREDIT_NOTE_TEXT = "Credit note"
+
+    #####################################
     # CSS selectors for Transaction fields
     #####################################
 
