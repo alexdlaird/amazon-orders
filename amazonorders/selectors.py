@@ -164,6 +164,7 @@ class Selectors:
     ORDER_PHYSICAL_STORE_TEXT = "Purchased at Amazon"
     ORDER_WHOLE_FOODS_TEXT = "Whole Foods Market"
     ORDER_CANCELLED_TEXT = "Cancelled"
+    ORDER_SERVICE_CANCELLED_TEXT = "Service cancelled"
     # Selectors defined here mean we don't have a reliable way to parse all details in an Order, so Items and
     # Shipments will be skipped
     ORDER_SKIP_ITEMS = SelectorsFromText(lambda physical_store_text: [
@@ -183,12 +184,14 @@ class Selectors:
         "img.ufpo-itemListWidget-image"
     ], "ORDER_WHOLE_FOODS_TEXT")
     # Selectors defined here mean the Order will not have parsable totals
-    ORDER_SKIP_TOTALS = SelectorsFromText(lambda cancelled_text: [
+    ORDER_SKIP_TOTALS = SelectorsFromText(lambda cancelled_text, service_cancelled_text: [
         # Identifies a cancelled order on the history page
         Selector("div.yohtmlc-shipment-status-primaryText", cancelled_text),
+        # Identifies a cancelled service order (e.g. an installation) on the history page
+        Selector("div.yohtmlc-shipment-status-primaryText", service_cancelled_text),
         # Identifies a cancelled order on the details page
         Selector("h4.a-alert-heading", text_contains=cancelled_text)
-    ], "ORDER_CANCELLED_TEXT")
+    ], "ORDER_CANCELLED_TEXT", "ORDER_SERVICE_CANCELLED_TEXT")
     ORDER_SHIPMENT_STATUS_SELECTOR = "h4.od-status-message"
     ORDER_SHIPMENT_CANCELLED_SELECTOR = SelectorsFromText(
         lambda shipment_status_selector, cancelled_text: Selector(shipment_status_selector,
