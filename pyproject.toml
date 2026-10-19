@@ -95,6 +95,9 @@ Sponsor = "https://github.com/sponsors/alexdlaird"
 [tool.setuptools]
 package-dir = { amazonorders = "amazonorders" }
 
+[tool.setuptools.package-data]
+amazonorders = ["py.typed"]
+
 [tool.setuptools.dynamic]
 version = { attr = "amazonorders.__version__" }
 
