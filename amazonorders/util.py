@@ -6,7 +6,7 @@ import logging
 import re
 import unicodedata
 from datetime import date, datetime
-from typing import List, Union, Optional, Callable, Any
+from typing import Iterable, List, Union, Optional, Callable, Any
 
 from bs4 import Tag, BeautifulSoup
 from dateutil import parser
@@ -253,3 +253,17 @@ def cleanup_html_text(text: str) -> str:
     if not text.endswith("."):
         text += "."
     return text
+
+
+def attribute_text(value: Union[str, Iterable[str]]) -> str:
+    """
+    Get a ``<tag>`` attribute's value as text. BeautifulSoup gives multi-valued attributes, like ``class``, as a
+    list, which is joined with spaces, as they're written in the HTML.
+
+    :param value: The attribute's value.
+    :return: The attribute's value as text.
+    """
+    if isinstance(value, str):
+        return value
+
+    return " ".join(value)

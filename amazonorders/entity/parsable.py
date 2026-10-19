@@ -132,7 +132,7 @@ class Parsable:
             for tag in self.parsed.select(s):
                 if tag:
                     if attr_name:
-                        value = tag.attrs[attr_name]
+                        value = util.attribute_text(tag.attrs[attr_name])
 
                         if attr_name == "href" or attr_name == "src":
                             value = self.with_base_url(value)
