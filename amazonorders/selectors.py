@@ -281,14 +281,15 @@ class Selectors:
     FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR = "div.a-span-last"
     FIELD_ORDER_GRAND_TOTAL_LABELS = ["grand total", "total for this order"]
     FIELD_ORDER_SUBTOTAL_LABELS = ["subtotal"]
-    FIELD_ORDER_SHIPPING_TOTAL_LABELS = ["shipping"]
+    # British English sites (e.g. amazon.de in English) label it "Postage & Packing"
+    FIELD_ORDER_SHIPPING_TOTAL_LABELS = ["shipping", "postage"]
     FIELD_ORDER_FREE_SHIPPING_LABELS = ["free shipping"]
     FIELD_ORDER_PROMOTION_APPLIED_LABELS = ["promotion"]
     FIELD_ORDER_COUPON_SAVINGS_LABELS = ["coupon"]
     FIELD_ORDER_REWARD_POINTS_LABELS = ["reward"]
     FIELD_ORDER_SUBSCRIPTION_DISCOUNT_LABELS = ["subscribe", "subscription"]
     FIELD_ORDER_TOTAL_BEFORE_TAX_LABELS = ["before tax"]
-    FIELD_ORDER_ESTIMATED_TAX_LABELS = ["estimated tax", "tax collected"]
+    FIELD_ORDER_ESTIMATED_TAX_LABELS = ["estimated tax", "tax collected", "estimated vat"]
     FIELD_ORDER_REFUND_TOTAL_LABELS = ["refund total"]
     FIELD_ORDER_MULTIBUY_DISCOUNT_LABELS = ["multibuy discount"]
     FIELD_ORDER_AMAZON_DISCOUNT_LABELS = ["amazon discount"]
