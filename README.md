@@ -104,27 +104,6 @@ print(json.dumps([order.to_dict() for order in orders], indent=2))
 See [`OutputFormatter`](https://amazon-orders.readthedocs.io/api.html#amazonorders.output.OutputFormatter) for each format's contract, and to override how
 entities are rendered.
 
-### Amazon Household
-
-If the account belongs to an Amazon Household, such as a parent with linked Teen accounts, it can view those members'
-Orders too.
-[`get_family_members`](https://amazon-orders.readthedocs.io/api.html#amazonorders.orders.AmazonOrders.get_family_members)
-lists the members whose Orders the account can see (the same ones in the "Your Orders" filter), and passing a member's
-`id` as `family_member_id` gets their Order history:
-
-```python
-for member in amazon_orders.get_family_members():
-    orders = amazon_orders.get_order_history(year=2023, family_member_id=member.id)
-    print(f"{member.name}: {len(orders)} Orders")
-```
-
-Or from the command line:
-
-```sh
-amazon-orders family-members
-amazon-orders history --year 2023 --family-member-id <ID>
-```
-
 ### Secure Sign-In
 
 The most secure way to use `amazon-orders` is to sign in on Amazon's own page, in a browser window, so `amazon-orders`
