@@ -114,6 +114,12 @@ Entities
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.entity.family_member
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: amazonorders.entity.item
     :members:
     :private-members:

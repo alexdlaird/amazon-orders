@@ -1729,6 +1729,81 @@ class TestOrders(UnitTestCase):
         self.assertEqual(10, len(orders))
 
     @responses.activate
+    def test_get_order_history_with_family_member_id(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2018
+        resp = self.given_any_order_history_exists("order-history-2018-0.html")
+
+        # WHEN
+        orders = self.amazon_orders.get_order_history(year=year, family_member_id="A1EXAMPLETEEN1", keep_paging=False)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        request_url = resp.calls[0].request.url
+        self.assertIn(f"timeFilter=year-{year}", request_url)
+        self.assertIn("familyMemberId=A1EXAMPLETEEN1", request_url)
+        self.assertEqual(10, len(orders))
+
+    @responses.activate
+    def test_get_order_history_page_cursor_keeps_family_member_id(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        year = 2010
+        self.given_order_history_exists(year, start_index=0)
+        resp = self.given_any_order_history_exists("order-history-2018-0.html")
+
+        # WHEN
+        page = self.amazon_orders.get_order_history_page(year=year, family_member_id="A1EXAMPLETEEN1", limit=5)
+        self.amazon_orders.get_order_history_page(cursor=page.cursor, limit=5)
+
+        # THEN
+        self.assertEqual("A1EXAMPLETEEN1", page.cursor["family_member_id"])
+        self.assertTrue(all("familyMemberId=A1EXAMPLETEEN1" in call.request.url for call in resp.calls))
+
+    @responses.activate
+    def test_get_family_members(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_family_members_page_exists("order-history-family-members-snippet.html")
+
+        # WHEN
+        members = self.amazon_orders.get_family_members()
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertEqual([("A1EXAMPLETEEN1", "Jane Doe"), ("A2EXAMPLETEEN2", "John Doe")],
+                         [(member.id, member.name) for member in members])
+
+    def test_parse_family_members_strips_nul_byte(self):
+        # GIVEN - Amazon renders a NUL byte between the name and "'s Orders"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-family-members-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read().replace("&#x27;s Orders", "\x00&#x27;s Orders")
+
+        # WHEN
+        members = AmazonOrders.parse_family_members(html, self.test_config)
+
+        # THEN
+        self.assertEqual(["Jane Doe", "John Doe"], [member.name for member in members])
+
+    @responses.activate
+    def test_get_family_members_none(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        self.given_family_members_page_exists("order-history-2018-0.html")
+
+        # WHEN
+        members = self.amazon_orders.get_family_members()
+
+        # THEN
+        self.assertEqual([], members)
+
+    def test_get_family_members_unauthenticated(self):
+        with self.assertRaises(AmazonOrdersError):
+            self.amazon_orders.get_family_members()
+
+    @responses.activate
     def test_get_order_history_digital_empty_window(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
