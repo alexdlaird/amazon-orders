@@ -18,10 +18,6 @@ from tests.unittestcase import UnitTestCase
 
 
 class TestAmazonDe(UnitTestCase):
-    """
-    Parse the amazon.de pages in ``tests/resources/*/de``, requested in English, which uses British English labels.
-    """
-
     def setUp(self):
         super().setUp()
 
@@ -88,9 +84,7 @@ class TestAmazonDe(UnitTestCase):
         self.assertEqual(datetime.date(2026, 8, 31), order.order_placed_date)
         self.assertEqual(22.52, order.grand_total)
         self.assertEqual(19.23, order.subtotal)
-        # Rendered as "Postage & Packing"
         self.assertEqual(0.0, order.shipping_total)
-        # Rendered as "Estimated VAT"
         self.assertEqual(3.65, order.estimated_tax)
         self.assertEqual("Amazon Visa", order.payment_method)
         self.assertEqual("1234", order.payment_method_last_4)
@@ -118,7 +112,6 @@ class TestAmazonDe(UnitTestCase):
         self.assertEqual(14.37, order.grand_total)
         self.assertEqual(-13.52, order.gift_card)
         self.assertEqual(2, len(order.shipments))
-        # Paid with a Gift Card and a card, the card is the payment method, like its last digits are
         self.assertEqual("Amazon Visa", order.payment_method)
         self.assertEqual("1234", order.payment_method_last_4)
 
@@ -161,14 +154,12 @@ class TestAmazonDe(UnitTestCase):
         self.assertTrue(order.cancelled)
         self.assertIsNone(order.grand_total)
         self.assertEqual("Service cancelled", order.shipments[0].delivery_status)
-        # Rendered inline and separated by commas
         self.assertEqual("Musterstraße 1\n10115\nGermany", order.recipient.address)
 
     def test_transactions(self):
         # WHEN
         with self.assertLogs("amazonorders", level="WARNING") as cm:
             transactions = AmazonTransactions.parse_transactions(self.given_transactions_html(), self.de_config)
-            # assertNoLogs() needs Python 3.10, so log a marker that has to be the only warning
             logging.getLogger("amazonorders").warning("marker")
 
         # THEN
@@ -200,7 +191,6 @@ class TestAmazonDe(UnitTestCase):
         transactions = amazon_transactions.get_transactions(days=70)
 
         # THEN
-        # The 20 on the page, and those of the second page within the 70 day window
         self.assertEqual(datetime.date(2026, 7, 18), min(t.completed_date for t in transactions))
         self.assertEqual(datetime.date(2026, 8, 4), transactions[20].completed_date)
         self.assertEqual(1, page_2.call_count)
@@ -209,7 +199,6 @@ class TestAmazonDe(UnitTestCase):
         body = json.loads(request.body)
         self.assertEqual("GetTransactions", body["type"])
         self.assertEqual("en_GB", body["locale"])
-        # amazon.de's page doesn't name its widget, so the default is sent
         self.assertEqual("ViewTransactions", body["widgetName"])
         self.assertEqual("REDACTED", body["exclusiveStartKey"])
 

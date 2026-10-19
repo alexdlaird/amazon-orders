@@ -14,9 +14,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - `Recipient.address` keeps every line of the address, including the country, where it ran the first two together.
-- `Order.payment_method` is the card when a Gift Card was used alongside it, matching `payment_method_last_4`.
-- An Order of a cancelled service (e.g. an installation) on the history page no longer fails for a missing `grand_total`.
-- Further pages of Transactions load when the page doesn't name its widget (e.g. amazon.de).
+- Bug fixes and stability improvements.
 
 ## [4.9.4](https://github.com/alexdlaird/amazon-orders/compare/4.9.3...4.9.4) - 2026-10-19
 
