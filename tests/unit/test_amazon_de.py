@@ -163,7 +163,7 @@ class TestAmazonDe(UnitTestCase):
             logging.getLogger("amazonorders").warning("marker")
 
         # THEN
-        self.assertEqual(["WARNING:amazonorders:marker"], cm.output)
+        self.assertEqual(["WARNING:amazonorders:marker"], cm.output, "parsing logged a warning")
         self.assertEqual(20, len(transactions))
         transaction = transactions[0]
         self.assertEqual(datetime.date(2026, 9, 7), transaction.completed_date)
