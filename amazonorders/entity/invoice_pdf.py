@@ -33,7 +33,7 @@ class InvoicePdf(Parsable):
         #: Order's invoices again instead.
         self.link: Optional[str] = self.safe_parse(self._parse_link)
         #: ``True`` if the document is a credit note (a refund) rather than an invoice.
-        self.credit_note: bool = self.safe_parse(self._parse_credit_note) or False
+        self.is_credit_note: bool = self.safe_parse(self._parse_is_credit_note) or False
 
     def __repr__(self) -> str:
         return f"<InvoicePdf #{self.order_number}: \"{self.name}\">"
@@ -51,7 +51,7 @@ class InvoicePdf(Parsable):
 
         return self.with_base_url(str(href))
 
-    def _parse_credit_note(self) -> bool:
+    def _parse_is_credit_note(self) -> bool:
         if not self.name:
             return False
 

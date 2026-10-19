@@ -2002,7 +2002,7 @@ class TestOrders(UnitTestCase):
                          resp.calls[0].request.url)
         self.assertEqual(5, len(invoices))
         self.assertEqual({"302-0000000-0000002"}, {invoice.order_number for invoice in invoices})
-        self.assertTrue(invoices[-1].credit_note)
+        self.assertTrue(invoices[-1].is_credit_note)
 
     @responses.activate
     def test_get_invoice_pdfs_not_found(self):

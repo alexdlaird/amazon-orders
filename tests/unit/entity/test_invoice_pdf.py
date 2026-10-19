@@ -27,7 +27,7 @@ class TestInvoicePdf(UnitTestCase):
         self.assertEqual("Invoice", invoice.name)
         self.assertEqual(f"{self.test_config.constants.BASE_URL}/-/en/documents/download/"
                          f"00000000-0000-4000-8000-000000000001/invoice.pdf", invoice.link)
-        self.assertFalse(invoice.credit_note)
+        self.assertFalse(invoice.is_credit_note)
 
     def test_parse_invoice_pdfs_multiple_with_credit_note(self):
         # WHEN
@@ -37,7 +37,7 @@ class TestInvoicePdf(UnitTestCase):
         # THEN
         self.assertEqual(["Invoice 1", "Invoice 2", "Invoice 3", "Invoice 4", "Credit note"],
                          [invoice.name for invoice in invoices])
-        self.assertEqual([False, False, False, False, True], [invoice.credit_note for invoice in invoices])
+        self.assertEqual([False, False, False, False, True], [invoice.is_credit_note for invoice in invoices])
         for invoice in invoices:
             self.assertTrue(invoice.link.endswith("/invoice.pdf"))
 
@@ -64,7 +64,7 @@ class TestInvoicePdf(UnitTestCase):
         # THEN
         self.assertIsNone(invoice.name)
         self.assertIsNone(invoice.link)
-        self.assertFalse(invoice.credit_note)
+        self.assertFalse(invoice.is_credit_note)
 
     def test_invoice_pdf_to_dict(self):
         # GIVEN
@@ -80,5 +80,5 @@ class TestInvoicePdf(UnitTestCase):
             "name": "Invoice",
             "link": f"{self.test_config.constants.BASE_URL}/-/en/documents/download/"
                     f"00000000-0000-4000-8000-000000000001/invoice.pdf",
-            "credit_note": False,
+            "is_credit_note": False,
         }, serialized)
