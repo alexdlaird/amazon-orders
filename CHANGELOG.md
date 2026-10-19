@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Order history builds share one thread pool per batch, so `thread_pool_size` limits their concurrency.
 - Bug fixes and stability improvements.
 
 ## [4.9.3](https://github.com/alexdlaird/amazon-orders/compare/4.9.2...4.9.3) - 2026-10-18
