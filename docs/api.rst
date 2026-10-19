@@ -126,7 +126,7 @@ Entities
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: amazonorders.entity.invoice
+.. automodule:: amazonorders.entity.invoice_pdf
     :members:
     :private-members:
     :undoc-members:

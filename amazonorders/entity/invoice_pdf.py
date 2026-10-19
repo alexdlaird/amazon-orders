@@ -12,11 +12,11 @@ from amazonorders.entity.parsable import Parsable
 logger = logging.getLogger(__name__)
 
 
-class Invoice(Parsable):
+class InvoicePdf(Parsable):
     """
-    An invoice document (a PDF) of an Amazon :class:`~amazonorders.entity.order.Order`, such as an invoice or a credit
-    note, parsed from the Order's invoice list. See :func:`~amazonorders.orders.AmazonOrders.get_invoices`, and
-    :func:`~amazonorders.orders.AmazonOrders.download_invoice` for the document itself.
+    An invoice PDF of an Amazon :class:`~amazonorders.entity.order.Order`, such as an invoice or a credit
+    note, parsed from the Order's invoice list. See :func:`~amazonorders.orders.AmazonOrders.get_invoice_pdfs`, and
+    :func:`~amazonorders.orders.AmazonOrders.download_invoice_pdf` for the document itself.
     """
 
     def __init__(self,
@@ -36,10 +36,10 @@ class Invoice(Parsable):
         self.credit_note: bool = self.safe_parse(self._parse_credit_note) or False
 
     def __repr__(self) -> str:
-        return f"<Invoice #{self.order_number}: \"{self.name}\">"
+        return f"<InvoicePdf #{self.order_number}: \"{self.name}\">"
 
     def __str__(self) -> str:  # pragma: no cover
-        return f"Invoice #{self.order_number}: {self.name}\n  Link: {self.link}"
+        return f"InvoicePdf #{self.order_number}: {self.name}\n  Link: {self.link}"
 
     def _parse_name(self) -> Optional[str]:
         return " ".join(self.parsed.text.split()) or None
@@ -55,4 +55,4 @@ class Invoice(Parsable):
         if not self.name:
             return False
 
-        return self.config.selectors.FIELD_INVOICE_CREDIT_NOTE_TEXT.lower() in self.name.lower()
+        return self.config.selectors.FIELD_INVOICE_PDF_CREDIT_NOTE_TEXT.lower() in self.name.lower()

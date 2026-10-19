@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.9.4...HEAD)
 
+### Added
+
+- `InvoicePdf` entity, `AmazonOrders.get_invoice_pdfs()`, `parse_invoice_pdfs()`, and `download_invoice_pdf()`, and the `invoice-pdfs` CLI command (with `--download`), for an Order's invoice PDFs, including credit notes.
+
 ## [4.9.4](https://github.com/alexdlaird/amazon-orders/compare/4.9.3...4.9.4) - 2026-10-19
 
 ### Added
@@ -81,7 +85,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `Constants.REQUEST_COOKIES`, to send cookies with every request.
-- `Invoice` entity, `AmazonOrders.get_invoices()`, `parse_invoices()`, and `download_invoice()`, and the `invoices` CLI command (with `--download`), for an Order's invoice documents (PDFs), including credit notes.
 
 ### Fixed
 

@@ -14,8 +14,8 @@ import yaml
 from bs4 import BeautifulSoup
 from click.testing import CliRunner
 
-from amazonorders.cli import _invoice_path, amazon_orders_cli
-from amazonorders.entity.invoice import Invoice
+from amazonorders.cli import _invoice_pdf_path, amazon_orders_cli
+from amazonorders.entity.invoice_pdf import InvoicePdf
 from amazonorders.entity.order import Order
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.transaction import Transaction
@@ -503,11 +503,11 @@ class TestCli(UnitTestCase):
         self.assertIn("Order Details", response.output)
 
     @responses.activate
-    def test_invoices_command(self):
+    def test_invoice_pdfs_command(self):
         # GIVEN
         self.given_unauthenticated_home_page()
         self.given_login_responses_success()
-        resp = self.given_invoice_list("invoices-multiple.html")
+        resp = self.given_invoice_pdf_list("invoice-pdfs-multiple.html")
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
@@ -515,7 +515,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "invoices", "302-0000000-0000002", "-o", "json"
+                                          "invoice-pdfs", "302-0000000-0000002", "-o", "json"
                                       ])
 
         # THEN
@@ -523,14 +523,14 @@ class TestCli(UnitTestCase):
         self.assert_login_responses_success()
         self.assertEqual(1, resp.call_count)
         self.assertIn('"name": "Credit note"', response.output)
-        self.assertIn("5 Invoices for 1 Orders", response.output)
+        self.assertIn("5 Invoice PDFs for 1 Orders", response.output)
 
     @responses.activate
-    def test_invoices_command_download(self):
+    def test_invoice_pdfs_command_download(self):
         # GIVEN
         self.given_unauthenticated_home_page()
         self.given_login_responses_success()
-        self.given_invoice_list("invoices-multiple.html")
+        self.given_invoice_pdf_list("invoice-pdfs-multiple.html")
         download_resp = responses.add(responses.GET,
                                       re.compile(f"{self.test_config.constants.BASE_URL}/-/en/documents/download/.*"),
                                       body=b"%PDF-1.4 some-pdf", status=200, content_type="application/pdf")
@@ -542,7 +542,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "invoices", "302-0000000-0000002", "--download", download_dir
+                                          "invoice-pdfs", "302-0000000-0000002", "--download", download_dir
                                       ])
 
         # THEN
@@ -555,11 +555,11 @@ class TestCli(UnitTestCase):
             self.assertEqual(b"%PDF-1.4 some-pdf", f.read())
 
     @responses.activate
-    def test_invoices_command_order_without_invoices(self):
+    def test_invoice_pdfs_command_order_without_invoices(self):
         # GIVEN
         self.given_unauthenticated_home_page()
         self.given_login_responses_success()
-        self.given_invoice_list("invoices-none.html")
+        self.given_invoice_pdf_list("invoice-pdfs-none.html")
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
@@ -567,20 +567,20 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "invoices", "302-0000000-0000003"
+                                          "invoice-pdfs", "302-0000000-0000003"
                                       ])
 
         # THEN
         self.assertEqual(0, response.exit_code)
-        self.assertIn("No invoice documents for Order 302-0000000-0000003.", response.output)
-        self.assertIn("0 Invoices for 1 Orders", response.output)
+        self.assertIn("No invoice PDFs for Order 302-0000000-0000003.", response.output)
+        self.assertIn("0 Invoice PDFs for 1 Orders", response.output)
 
     @responses.activate
-    def test_invoices_command_download_not_a_document(self):
+    def test_invoice_pdfs_command_download_not_a_document(self):
         # GIVEN
         self.given_unauthenticated_home_page()
         self.given_login_responses_success()
-        self.given_invoice_list("invoices-single.html")
+        self.given_invoice_pdf_list("invoice-pdfs-single.html")
         responses.add(responses.GET, re.compile(f"{self.test_config.constants.BASE_URL}/-/en/documents/download/.*"),
                       body="<html></html>", status=200, content_type="text/html")
 
@@ -590,16 +590,16 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "invoices", "302-0000000-0000001", "--download",
+                                          "invoice-pdfs", "302-0000000-0000001", "--download",
                                           os.path.join(self.test_output_dir, "invoices")
                                       ])
 
         # THEN
         self.assertEqual(2, response.exit_code)
-        self.assertIn("returned Content-Type \"text/html\", not a document", response.output)
+        self.assertIn("returned Content-Type \"text/html\", not a PDF", response.output)
 
     @responses.activate
-    def test_invoices_command_session_expires(self):
+    def test_invoice_pdfs_command_session_expires(self):
         # GIVEN
         self.given_persisted_session_exists()
         self.given_unauthenticated_home_page()
@@ -611,7 +611,7 @@ class TestCli(UnitTestCase):
         response = self.runner.invoke(amazon_orders_cli,
                                       [
                                           "--config-path", self.test_config.config_path,
-                                          "invoices", "302-0000000-0000001"
+                                          "invoice-pdfs", "302-0000000-0000001"
                                       ])
 
         # THEN
@@ -619,23 +619,25 @@ class TestCli(UnitTestCase):
         self.assertEqual(1, auth_redirect_response.call_count)
         self.assertIn("Amazon redirected to login", response.output)
 
-    def test_invoice_path_counts_repeated_names(self):
+    def test_invoice_pdf_path_counts_repeated_names(self):
         # GIVEN
-        invoice = Invoice(BeautifulSoup('<a href="/documents/download/x/invoice.pdf">Invoice</a>', "html.parser").a,
-                          self.test_config, order_number="302-0000000-0000001")
+        invoice_pdf = InvoicePdf(BeautifulSoup('<a href="/documents/download/x/invoice.pdf">Invoice</a>',
+                                               "html.parser").a,
+                                 self.test_config, order_number="302-0000000-0000001")
         saved_paths = set()
 
         # WHEN
-        paths = [_invoice_path("invoices", invoice, saved_paths) for _ in range(3)]
+        paths = [_invoice_pdf_path("invoices", invoice_pdf, saved_paths) for _ in range(3)]
 
         # THEN
         self.assertEqual([os.path.join("invoices", "302-0000000-0000001_invoice.pdf"),
                           os.path.join("invoices", "302-0000000-0000001_invoice-2.pdf"),
                           os.path.join("invoices", "302-0000000-0000001_invoice-3.pdf")], paths)
 
-    def given_invoice_list(self, filename):
+    def given_invoice_pdf_list(self, filename):
         with open(os.path.join(self.RESOURCES_DIR, "invoices", filename), "r", encoding="utf-8") as f:
-            return responses.add(responses.GET, self.test_config.constants.INVOICES_URL, body=f.read(), status=200)
+            return responses.add(responses.GET, self.test_config.constants.INVOICE_PDFS_URL, body=f.read(),
+                                 status=200)
 
     @responses.activate
     def test_order_command(self):

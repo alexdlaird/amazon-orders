@@ -114,9 +114,9 @@ You can also run any command available to the main Python interface from the com
 Output Formats
 --------------
 
-The ``history``, ``order``, ``invoices``, ``transactions``, ``order-transactions``, ``gift-card-activity``, and
-``family-members`` commands accept ``--output``, which renders Orders, Invoices, Transactions, Gift Card activity, and
-Amazon Household members as ``text`` (the default), ``json``, ``yaml``, or ``csv``. Progress messages are written to
+The ``history``, ``order``, ``invoice-pdfs``, ``transactions``, ``order-transactions``, ``gift-card-activity``, and
+``family-members`` commands accept ``--output``, which renders Orders, Invoice PDFs, Transactions, Gift Card activity,
+and Amazon Household members as ``text`` (the default), ``json``, ``yaml``, or ``csv``. Progress messages are written to
 ``stderr``, so redirecting ``stdout`` captures only the data.
 
 .. code:: sh
@@ -142,29 +142,29 @@ which converts it and its nested entities to a ``dict`` of primitives.
 See :class:`~amazonorders.output.OutputFormatter` for each format's contract, and to override how
 entities are rendered.
 
-Invoices
---------
+Invoice PDFs
+------------
 
-Amazon lists an Order's invoice documents (PDFs), invoices and credit notes alike, under its "Invoice" link, one or
-more per Order. :func:`~amazonorders.orders.AmazonOrders.get_invoices` returns them as
-:class:`~amazonorders.entity.invoice.Invoice` entities, and
-:func:`~amazonorders.orders.AmazonOrders.download_invoice` gets a document's content. A seller's proof of purchase
+Amazon lists an Order's invoice PDFs, invoices and credit notes alike, under its "Invoice" link, one or
+more per Order. :func:`~amazonorders.orders.AmazonOrders.get_invoice_pdfs` returns them as
+:class:`~amazonorders.entity.invoice_pdf.InvoicePdf` entities, and
+:func:`~amazonorders.orders.AmazonOrders.download_invoice_pdf` gets a PDF's content. A seller's proof of purchase
 ("Warranty/Pslip"), which Amazon lists there for some marketplace Orders, isn't an invoice and is left out. A single
-document may hold several invoices, e.g. from different sellers, as Amazon sometimes combines them. Download links
+PDF may hold several invoices, e.g. from different sellers, as Amazon sometimes combines them. Download links
 change on each request, so get them again rather than storing them.
 
 .. code:: python
 
-    for invoice in amazon_orders.get_invoices("112-9685975-5907428"):
-        with open(f"{invoice.order_number}_{invoice.name}.pdf", "wb") as f:
-            f.write(amazon_orders.download_invoice(invoice))
+    for invoice_pdf in amazon_orders.get_invoice_pdfs("112-9685975-5907428"):
+        with open(f"{invoice_pdf.order_number}_{invoice_pdf.name}.pdf", "wb") as f:
+            f.write(amazon_orders.download_invoice_pdf(invoice_pdf))
 
-From the command line, ``invoices`` lists the documents of one or more Orders, and ``--download`` saves them as
+From the command line, ``invoice-pdfs`` lists the PDFs of one or more Orders, and ``--download`` saves them as
 ``<order number>_<name>.pdf`` (e.g. ``112-9685975-5907428_invoice-2.pdf``):
 
 .. code:: sh
 
-    amazon-orders invoices 112-9685975-5907428 --download invoices/
+    amazon-orders invoice-pdfs 112-9685975-5907428 --download invoices/
 
 The ``invoice`` command, by contrast, prints the HTML of the printable order summary.
 

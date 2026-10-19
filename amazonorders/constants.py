@@ -83,10 +83,10 @@ class Constants:
     TRACKING_ORDER_ID_QUERY_PARAM = "orderId"
     SHIPMENT_ID_QUERY_PARAM = "shipmentId"
     TRACKING_PACKAGE_INDEX_QUERY_PARAM = "packageIndex"
-    INVOICES_ROUTE = "/your-orders/invoice/popover"
-    INVOICES_URL = f"{BASE_URL}{INVOICES_ROUTE}"
-    INVOICES_ORDER_ID_QUERY_PARAM = "orderId"
-    INVOICE_CONTENT_TYPE = "application/pdf"
+    INVOICE_PDFS_ROUTE = "/your-orders/invoice/popover"
+    INVOICE_PDFS_URL = f"{BASE_URL}{INVOICE_PDFS_ROUTE}"
+    INVOICE_PDFS_ORDER_ID_QUERY_PARAM = "orderId"
+    INVOICE_PDF_CONTENT_TYPE = "application/pdf"
 
     ##########################################################################
     # URLs for Transactions
@@ -375,7 +375,7 @@ class Constants:
         self.ORDER_DETAILS_URL = f"{base_url}/gp/your-account/order-details"
         self.ORDER_INVOICE_URL = f"{base_url}/gp/css/summary/print.html"
         self.TRACKING_URL = f"{base_url}{self.TRACKING_ROUTE}"
-        self.INVOICES_URL = f"{base_url}{self.INVOICES_ROUTE}"
+        self.INVOICE_PDFS_URL = f"{base_url}{self.INVOICE_PDFS_ROUTE}"
         self.TRANSACTION_HISTORY_URL = f"{base_url}{self.TRANSACTION_HISTORY_ROUTE}"
         self.TRANSACTION_DATA_URL = f"{base_url}{self.TRANSACTION_DATA_ROUTE}"
         self.GIFT_CARD_BALANCE_URL = f"{base_url}{self.GIFT_CARD_BALANCE_ROUTE}"

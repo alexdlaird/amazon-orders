@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup, Tag
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.family_member import FamilyMember
-from amazonorders.entity.invoice import Invoice
+from amazonorders.entity.invoice_pdf import InvoicePdf
 from amazonorders.entity.order import Order
 from amazonorders.entity.tracking import Tracking
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError, AmazonOrdersUnavailableError
@@ -285,68 +285,69 @@ class AmazonOrders:
         return self._parse_family_members(page_response.parsed, self.config)
 
     @classmethod
-    def parse_invoices(cls,
-                       html: str,
-                       config: AmazonOrdersConfig,
-                       order_number: Optional[str] = None) -> List[Invoice]:
+    def parse_invoice_pdfs(cls,
+                           html: str,
+                           config: AmazonOrdersConfig,
+                           order_number: Optional[str] = None) -> List[InvoicePdf]:
         """
-        Parse an already-fetched Amazon invoice list into its Invoices, without a session driving the fetch. Useful
+        Parse an already-fetched Amazon invoice list into its InvoicePdfs, without a session driving the fetch. Useful
         for parsing HTML obtained elsewhere and for network-free testing.
 
         :param html: The invoice list HTML to parse.
         :param config: The config providing the selectors used for parsing.
         :param order_number: The Order number the invoice list belongs to.
-        :return: The parsed Invoices, empty if the Order has none.
+        :return: The parsed InvoicePdfs, empty if the Order has none.
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
-        return cls._parse_invoices(parsed, config, order_number)
+        return cls._parse_invoice_pdfs(parsed, config, order_number)
 
-    def get_invoices(self,
-                     order_id: str) -> List[Invoice]:
+    def get_invoice_pdfs(self,
+                         order_id: str) -> List[InvoicePdf]:
         """
-        Get the invoice documents (invoices and credit notes) of a given Amazon Order ID from its invoice list. This
-        executes one request per call. Use :func:`download_invoice` to get a document itself.
+        Get the invoice PDFs (invoices and credit notes) of a given Amazon Order ID from its invoice list. This
+        executes one request per call. Use :func:`download_invoice_pdf` to get a document itself.
 
         :param order_id: The Amazon Order ID to lookup.
-        :return: The Order's Invoices, empty if Amazon lists none.
+        :return: The Order's InvoicePdfs, empty if Amazon lists none.
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         constants = self.config.constants
-        query = urlencode({constants.INVOICES_ORDER_ID_QUERY_PARAM: order_id})
-        invoices_response = self.amazon_session.get(f"{constants.INVOICES_URL}?{query}")
+        query = urlencode({constants.INVOICE_PDFS_ORDER_ID_QUERY_PARAM: order_id})
+        invoices_response = self.amazon_session.get(f"{constants.INVOICE_PDFS_URL}?{query}")
         self.amazon_session.check_response(invoices_response)
 
         response_url = invoices_response.response.url
-        if not response_url.startswith(constants.INVOICES_URL):
+        if not response_url.startswith(constants.INVOICE_PDFS_URL):
             raise AmazonOrdersNotFoundError(f"Amazon redirected to {response_url}, which likely means Order "
                                             f"{order_id} was not found.", meta={"redirect_url": response_url})
 
-        return self._parse_invoices(invoices_response.parsed, self.config, order_id)
+        return self._parse_invoice_pdfs(invoices_response.parsed, self.config, order_id)
 
-    def download_invoice(self,
-                         invoice: Invoice) -> bytes:
+    def download_invoice_pdf(self,
+                             invoice_pdf: InvoicePdf) -> bytes:
         """
-        Download an invoice document. This executes one request per call.
+        Download an invoice PDF. This executes one request per call.
 
-        :param invoice: The Invoice to download, from :func:`get_invoices`.
+        :param invoice_pdf: The InvoicePdf to download, from :func:`get_invoice_pdfs`.
         :return: The document's content (a PDF).
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
-        if not invoice.link:
-            raise AmazonOrdersError(f"Invoice \"{invoice.name}\" of Order {invoice.order_number} has no link.")
+        if not invoice_pdf.link:
+            raise AmazonOrdersError(f"Invoice PDF \"{invoice_pdf.name}\" of Order {invoice_pdf.order_number} "
+                                    f"has no link.")
 
-        invoice_response = self.amazon_session.get(invoice.link)
-        self.amazon_session.check_response(invoice_response)
+        pdf_response = self.amazon_session.get(invoice_pdf.link)
+        self.amazon_session.check_response(pdf_response)
 
-        content_type = invoice_response.response.headers.get("Content-Type", "")
-        if self.config.constants.INVOICE_CONTENT_TYPE not in content_type:
-            raise AmazonOrdersError(f"Invoice \"{invoice.name}\" of Order {invoice.order_number} returned "
-                                    f"Content-Type \"{content_type}\", not a document.")
+        content_type = pdf_response.response.headers.get("Content-Type", "")
+        if self.config.constants.INVOICE_PDF_CONTENT_TYPE not in content_type:
+            raise AmazonOrdersError(f"Invoice PDF \"{invoice_pdf.name}\" of Order {invoice_pdf.order_number} "
+                                    f"returned Content-Type \"{content_type}\", not a PDF.")
 
-        return invoice_response.response.content
+        return pdf_response.response.content
 
     def get_order_history(self,
                           year: Optional[int] = None,
@@ -630,19 +631,19 @@ class AmazonOrders:
         return Tracking(tracking_tag, config)
 
     @staticmethod
-    def _parse_invoices(parsed: Tag,
-                        config: AmazonOrdersConfig,
-                        order_number: Optional[str] = None) -> List[Invoice]:
+    def _parse_invoice_pdfs(parsed: Tag,
+                            config: AmazonOrdersConfig,
+                            order_number: Optional[str] = None) -> List[InvoicePdf]:
         """
-        Build the Invoices from an invoice list.
+        Build the InvoicePdfs from an invoice list.
 
         :param parsed: The parsed invoice list.
         :param config: The config providing the selectors.
         :param order_number: The Order number the invoice list belongs to.
-        :return: The parsed Invoices.
+        :return: The parsed InvoicePdfs.
         """
-        return [Invoice(invoice_tag, config, order_number=order_number)
-                for invoice_tag in util.select(parsed, config.selectors.INVOICE_ENTITY_SELECTOR)]
+        return [InvoicePdf(invoice_tag, config, order_number=order_number)
+                for invoice_tag in util.select(parsed, config.selectors.INVOICE_PDF_ENTITY_SELECTOR)]
 
     async def _build_orders_async(self,
                                   next_page: Optional[str],

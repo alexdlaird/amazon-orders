@@ -5,20 +5,20 @@ import os
 
 from bs4 import BeautifulSoup
 
-from amazonorders.entity.invoice import Invoice
+from amazonorders.entity.invoice_pdf import InvoicePdf
 from amazonorders.orders import AmazonOrders
 from tests.unittestcase import UnitTestCase
 
 
-class TestInvoice(UnitTestCase):
-    def given_invoice_list(self, filename):
+class TestInvoicePdf(UnitTestCase):
+    def given_invoice_pdf_list(self, filename):
         with open(os.path.join(self.RESOURCES_DIR, "invoices", filename), "r", encoding="utf-8") as f:
             return f.read()
 
-    def test_parse_invoices_single(self):
+    def test_parse_invoice_pdfs_single(self):
         # WHEN
-        invoices = AmazonOrders.parse_invoices(self.given_invoice_list("invoices-single.html"), self.test_config,
-                                               order_number="302-0000000-0000001")
+        html = self.given_invoice_pdf_list("invoice-pdfs-single.html")
+        invoices = AmazonOrders.parse_invoice_pdfs(html, self.test_config, order_number="302-0000000-0000001")
 
         # THEN
         self.assertEqual(1, len(invoices))
@@ -29,10 +29,10 @@ class TestInvoice(UnitTestCase):
                          f"00000000-0000-4000-8000-000000000001/invoice.pdf", invoice.link)
         self.assertFalse(invoice.credit_note)
 
-    def test_parse_invoices_multiple_with_credit_note(self):
+    def test_parse_invoice_pdfs_multiple_with_credit_note(self):
         # WHEN
-        invoices = AmazonOrders.parse_invoices(self.given_invoice_list("invoices-multiple.html"), self.test_config,
-                                               order_number="302-0000000-0000002")
+        html = self.given_invoice_pdf_list("invoice-pdfs-multiple.html")
+        invoices = AmazonOrders.parse_invoice_pdfs(html, self.test_config, order_number="302-0000000-0000002")
 
         # THEN
         self.assertEqual(["Invoice 1", "Invoice 2", "Invoice 3", "Invoice 4", "Credit note"],
@@ -41,34 +41,35 @@ class TestInvoice(UnitTestCase):
         for invoice in invoices:
             self.assertTrue(invoice.link.endswith("/invoice.pdf"))
 
-    def test_parse_invoices_leaves_out_order_summary_and_request_link(self):
+    def test_parse_invoice_pdfs_leaves_out_order_summary_and_request_link(self):
         # WHEN
-        invoices = AmazonOrders.parse_invoices(self.given_invoice_list("invoices-none.html"), self.test_config)
+        html = self.given_invoice_pdf_list("invoice-pdfs-none.html")
+        invoices = AmazonOrders.parse_invoice_pdfs(html, self.test_config)
 
         # THEN
         self.assertEqual([], invoices)
 
-    def test_parse_invoices_leaves_out_seller_receipt(self):
+    def test_parse_invoice_pdfs_leaves_out_seller_receipt(self):
         # WHEN
-        invoices = AmazonOrders.parse_invoices(self.given_invoice_list("invoices-receipt-only.html"),
-                                               self.test_config)
+        html = self.given_invoice_pdf_list("invoice-pdfs-receipt-only.html")
+        invoices = AmazonOrders.parse_invoice_pdfs(html, self.test_config)
 
         # THEN
         self.assertEqual([], invoices)
 
-    def test_invoice_without_name_or_link(self):
+    def test_invoice_pdf_without_name_or_link(self):
         # WHEN
-        invoice = Invoice(BeautifulSoup("<a> </a>", "html.parser").a, self.test_config)
+        invoice = InvoicePdf(BeautifulSoup("<a> </a>", "html.parser").a, self.test_config)
 
         # THEN
         self.assertIsNone(invoice.name)
         self.assertIsNone(invoice.link)
         self.assertFalse(invoice.credit_note)
 
-    def test_invoice_to_dict(self):
+    def test_invoice_pdf_to_dict(self):
         # GIVEN
-        invoice = AmazonOrders.parse_invoices(self.given_invoice_list("invoices-single.html"), self.test_config,
-                                              order_number="302-0000000-0000001")[0]
+        html = self.given_invoice_pdf_list("invoice-pdfs-single.html")
+        invoice = AmazonOrders.parse_invoice_pdfs(html, self.test_config, order_number="302-0000000-0000001")[0]
 
         # WHEN
         serialized = invoice.to_dict()
