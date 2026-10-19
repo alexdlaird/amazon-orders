@@ -111,7 +111,7 @@ class AuthForm(ABC):
 
         method = str(self.form.get("method", "GET")).upper()
         url = self._get_form_action(last_response)
-        request_data = {"params" if method == "GET" else "data": self.data}
+        request_data: Dict[str, Any] = {"params" if method == "GET" else "data": self.data}
         form_response = self.amazon_session.request(method,
                                                     url,
                                                     persist_cookies=True,

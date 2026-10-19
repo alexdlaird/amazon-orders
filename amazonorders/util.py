@@ -30,11 +30,11 @@ class AmazonSessionResponse:
     A wrapper for the :class:`requests.Response` object, which also contains the parsed HTML.
     """
 
-    def __init__(self, response: Response, bs4_parser: str) -> None:
+    def __init__(self, response: Response, bs4_parser: str, binary: bool = False) -> None:
         #: The request's response object.
         self.response: Response = response
-        #: The parsed HTML from the response.
-        self.parsed: Tag = BeautifulSoup(self.response.text, bs4_parser)
+        #: The parsed HTML from the response, which is empty if the response is ``binary``.
+        self.parsed: Tag = BeautifulSoup("" if binary else self.response.text, bs4_parser)
 
 
 def _selector_text_matches(tag: Tag, selector: Selector) -> bool:

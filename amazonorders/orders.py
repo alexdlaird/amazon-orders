@@ -339,11 +339,13 @@ class AmazonOrders:
             raise AmazonOrdersError(f"Invoice PDF \"{invoice_pdf.name}\" of Order {invoice_pdf.order_number} "
                                     f"has no link.")
 
-        pdf_response = self.amazon_session.get(invoice_pdf.link)
+        pdf_response = self.amazon_session.get(invoice_pdf.link, binary=True)
         self.amazon_session.check_response(pdf_response)
 
         content_type = pdf_response.response.headers.get("Content-Type", "")
         if self.config.constants.INVOICE_PDF_CONTENT_TYPE not in content_type:
+            self.amazon_session.check_response(
+                util.AmazonSessionResponse(pdf_response.response, self.config.bs4_parser))
             raise AmazonOrdersError(f"Invoice PDF \"{invoice_pdf.name}\" of Order {invoice_pdf.order_number} "
                                     f"returned Content-Type \"{content_type}\", not a PDF.")
 

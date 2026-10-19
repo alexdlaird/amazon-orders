@@ -451,7 +451,7 @@ def invoice(ctx: Context,
 @click.pass_context
 @click.argument("order_ids", nargs=-1, required=True)
 @click.option("--download", "download_dir", type=click.Path(file_okay=False),
-              help="Save the documents (PDFs) to this directory.")
+              help="Save the documents (PDFs) to this directory, replacing any of the same name from an earlier run.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
 def invoice_pdfs(ctx: Context,

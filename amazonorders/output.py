@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Sequence
 import yaml
 
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.entity.family_member import FamilyMember
 from amazonorders.entity.gift_card_activity import GiftCardActivity
 from amazonorders.entity.invoice_pdf import InvoicePdf
 from amazonorders.entity.order import Order
@@ -90,6 +91,8 @@ class OutputFormatter:
             return self.gift_card_activity_text(entity)
         elif isinstance(entity, InvoicePdf):
             return self.invoice_pdf_text(entity)
+        elif isinstance(entity, FamilyMember):
+            return self.family_member_text(entity)
 
         return str(entity)
 
@@ -190,6 +193,19 @@ Order #{order_number}
         invoice_pdf_str += f"\n  Link: {invoice_pdf.link}"
 
         return invoice_pdf_str
+
+    def family_member_text(self,
+                           family_member: FamilyMember) -> str:
+        """
+        Render a FamilyMember as human-readable text.
+
+        :param family_member: The FamilyMember to render.
+        :return: The FamilyMember as text.
+        """
+        family_member_str = f"Family Member: {family_member.name}"
+        family_member_str += f"\n  ID: {family_member.id}"
+
+        return family_member_str
 
     def _csv(self,
              entities: List[Dict[str, Any]]) -> str:

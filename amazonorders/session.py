@@ -187,6 +187,7 @@ class AmazonSession:
                 method: str,
                 url: str,
                 persist_cookies: Optional[bool] = None,
+                binary: bool = False,
                 **kwargs: Any) -> AmazonSessionResponse:
         """
         Execute the request against Amazon with base headers, parsing and storing the response.
@@ -196,6 +197,8 @@ class AmazonSession:
         :param persist_cookies: If ``True``, cookies from the response will be persisted to a file, and if ``False``,
             they won't be. By default, they're persisted when the response changed them, unless another process has
             saved the file since this session did, so a stale session can't overwrite a newer sign-in.
+        :param binary: ``True`` if the response is a file, like a PDF, rather than a page. It is not parsed as HTML,
+            and ``debug`` mode doesn't write it to a page file.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`requests.request`.
         :return: The response from the executed request.
         """
@@ -224,7 +227,8 @@ class AmazonSession:
         except requests.RequestException as e:
             raise AmazonOrdersError(f"The page {url} returned no response: {e}.") from e
         amazon_session_response = AmazonSessionResponse(response,
-                                                        self.config.bs4_parser)
+                                                        self.config.bs4_parser,
+                                                        binary=binary)
 
         if persist_cookies is None:
             persist_cookies = self._cookie_jar_data() != cookie_jar_data and self._cookie_jar_unchanged_on_disk()
@@ -238,13 +242,14 @@ class AmazonSession:
                 url_str = f" - (redirected) {amazon_session_response.response.url}"
             logger.debug(f"Response: {amazon_session_response.response.status_code}{url_str}")
 
-            os.makedirs(self.config.output_dir, exist_ok=True)
-            page_name = self._get_page_from_url(self.config.output_dir, amazon_session_response.response.url)
-            with open(os.path.join(self.config.output_dir, page_name), "w",
-                      encoding="utf-8") as html_file:
-                logger.debug(
-                    f"Response written to file: {html_file.name}")
-                html_file.write(amazon_session_response.response.text)
+            if not binary:
+                os.makedirs(self.config.output_dir, exist_ok=True)
+                page_name = self._get_page_from_url(self.config.output_dir, amazon_session_response.response.url)
+                with open(os.path.join(self.config.output_dir, page_name), "w",
+                          encoding="utf-8") as html_file:
+                    logger.debug(
+                        f"Response written to file: {html_file.name}")
+                    html_file.write(amazon_session_response.response.text)
 
         return amazon_session_response
 
