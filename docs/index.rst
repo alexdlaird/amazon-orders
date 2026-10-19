@@ -116,7 +116,8 @@ Output Formats
 
 The ``history``, ``order``, ``transactions``, ``order-transactions``, ``gift-card-activity``, and ``family-members``
 commands accept ``--output``, which renders Orders, Transactions, Gift Card activity, and Amazon Household members as
-``text`` (the default), ``json``, ``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout`` captures only the data.
+``text`` (the default), ``json``, ``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting
+``stdout`` captures only the data.
 
 .. code:: sh
 
@@ -144,9 +145,10 @@ entities are rendered.
 Amazon Household
 ----------------
 
-If the account belongs to an Amazon Household, such as a parent with linked Teen accounts, it can view those members' Orders too.
-:func:`~amazonorders.orders.AmazonOrders.get_family_members` lists the members whose Orders the account can see (the
-same ones in the "Your Orders" filter), and passing a member's ``id`` as ``family_member_id`` gets their Order history:
+If the account belongs to an Amazon Household, such as a parent with linked Teen accounts, it can view those members'
+Orders too. :func:`~amazonorders.orders.AmazonOrders.get_family_members` lists the members whose Orders the account can
+see (the same ones in the "Your Orders" filter), and passing a member's ``id`` as ``family_member_id`` gets their Order
+history:
 
 .. code:: python
 

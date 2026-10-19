@@ -1776,7 +1776,7 @@ class TestOrders(UnitTestCase):
                          [(member.id, member.name) for member in members])
 
     def test_parse_family_members_strips_nul_byte(self):
-        # GIVEN - Amazon renders a NUL byte between the name and "'s Orders"
+        # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-family-members-snippet.html"), "r",
                   encoding="utf-8") as f:
             html = f.read().replace("&#x27;s Orders", "\x00&#x27;s Orders")

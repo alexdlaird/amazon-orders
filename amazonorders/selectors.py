@@ -122,7 +122,7 @@ class Selectors:
     # CSS selectors for Amazon Household family members
     ##########################################################################
 
-    # The Order history's "My Orders" / "<name>'s Orders" dropdown; the account's own entry has an empty value
+    #: The Order history's "My Orders" / "<name>'s Orders" dropdown; the account's own entry has an empty value
     FAMILY_MEMBER_ENTITY_SELECTOR = ["select#family-member-filter option[value]:not([value=''])",
                                      "select[name='familyMemberId'] option[value]:not([value=''])"]
     FAMILY_MEMBER_ID_ATTR = "value"
