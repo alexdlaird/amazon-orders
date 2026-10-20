@@ -141,13 +141,21 @@ jobs:
             echo "::warning::Could not redact the cookie jar, so it's removed from the test output instead."
             rm -f tests/.integration-config/cookies.json
           fi
+      - name: Encrypt test output
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q age
+          curl -fsSL "https://github.com/${{ github.repository_owner }}.keys" > "$RUNNER_TEMP/owner-keys.txt"
+          tar czf - -C tests/.integration-config . | age -R "$RUNNER_TEMP/owner-keys.txt" -o integration-test-output.tar.gz.age
       - name: Upload test output
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
           name: integration-test-output
-          include-hidden-files: true
-          path: tests/.integration-config/
+          path: integration-test-output.tar.gz.age
+          if-no-files-found: error
           retention-days: 7
       - name: Upload test results
         if: ${{ !cancelled() }}
