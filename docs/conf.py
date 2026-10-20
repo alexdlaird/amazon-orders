@@ -79,6 +79,7 @@ add_function_parentheses = False
 
 html_baseurl = "https://amazon-orders.readthedocs.io/"
 sitemap_url_scheme = "{link}"
+sitemap_excludes = ["search.html", "404.html"]
 
 ogp_site_url = html_baseurl
 ogp_image = f"{html_baseurl}_images/logo.png"
