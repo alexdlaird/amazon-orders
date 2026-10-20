@@ -32,16 +32,16 @@ class TestPrimePayment(UnitTestCase):
 
         # THEN
         self.assertEqual(date(2025, 11, 17), payment.payment_date)
-        self.assertEqual(148.38, payment.total)
+        self.assertEqual(148.38, payment.grand_total)
         self.assertEqual("D01-1000008-2000008", payment.order_number)
         self.assertEqual("https://www.amazon.com/gp/your-account/order-details?orderID=D01-1000008-2000008",
                          payment.order_details_link)
         self.assertEqual("https://www.amazon.com/gp/digital/your-account/order-summary.html/ref=primecentral"
                          "?ie=UTF8&orderID=D01-1000008-2000008&print=1",
                          payment.receipt_link)
-        self.assertEqual("<PrimePayment 2025-11-17: \"Order #D01-1000008-2000008, Total: 148.38\">",
+        self.assertEqual("<PrimePayment 2025-11-17: \"Order #D01-1000008-2000008, Grand Total: 148.38\">",
                          repr(payment))
-        self.assertEqual("PrimePayment 2025-11-17: Order #D01-1000008-2000008, Total: 148.38", str(payment))
+        self.assertEqual("PrimePayment 2025-11-17: Order #D01-1000008-2000008, Grand Total: 148.38", str(payment))
 
     def test_parse_labeled_rows_in_any_order(self):
         # GIVEN
@@ -61,7 +61,7 @@ class TestPrimePayment(UnitTestCase):
 
         # THEN
         self.assertEqual(date(2026, 3, 3), payment.payment_date)
-        self.assertEqual(15.94, payment.total)
+        self.assertEqual(15.94, payment.grand_total)
         self.assertEqual("D01-1234567-7654321", payment.order_number)
         self.assertIsNone(payment.receipt_link)
 
@@ -92,10 +92,10 @@ class TestPrimePayment(UnitTestCase):
         # THEN
         self.assertIsNone(payment.order_number)
         self.assertIsNone(payment.order_details_link)
-        self.assertEqual(148.38, payment.total)
+        self.assertEqual(148.38, payment.grand_total)
         self.assertIn("PrimePayment.order_number could not be parsed", cm.output[0])
 
-    def test_parse_total_required(self):
+    def test_parse_grand_total_required(self):
         # GIVEN
         card_tag = self.given_first_card()
         card_tag.select_one("p:-soup-contains('$148.38')").string = ""
@@ -105,9 +105,9 @@ class TestPrimePayment(UnitTestCase):
             PrimePayment(card_tag, self.test_config)
 
         # THEN
-        self.assertIn("PrimePayment.total could not be parsed, but it's required.", str(cm.exception))
+        self.assertIn("PrimePayment.grand_total could not be parsed, but it's required.", str(cm.exception))
 
-    def test_parse_total_required_warn(self):
+    def test_parse_grand_total_required_warn(self):
         # GIVEN
         config = AmazonOrdersConfig(data={"output_dir": self.test_output_dir,
                                           "cookie_jar_path": self.test_cookie_jar_path,
@@ -120,6 +120,6 @@ class TestPrimePayment(UnitTestCase):
             payment = PrimePayment(card_tag, config)
 
         # THEN
-        self.assertIsNone(payment.total)
+        self.assertIsNone(payment.grand_total)
         self.assertEqual("D01-1000008-2000008", payment.order_number)
-        self.assertIn("PrimePayment.total could not be parsed", cm.output[0])
+        self.assertIn("PrimePayment.grand_total could not be parsed", cm.output[0])

@@ -75,7 +75,7 @@ class TestPrime(UnitTestCase):
         self.assertEqual([datetime.date(year, 11, 17) for year in range(2025, 2017, -1)],
                          [payment.payment_date for payment in payments])
         self.assertEqual([148.38, 148.38, 148.38, 148.38, 127.03, 128.82, 129.56, 127.78],
-                         [payment.total for payment in payments])
+                         [payment.grand_total for payment in payments])
         self.assertEqual([f"D01-{1000000 + i}-{2000000 + i}" for i in range(8, 0, -1)],
                          [payment.order_number for payment in payments])
         self.assertEqual("https://www.amazon.com/gp/your-account/order-details?orderID=D01-1000008-2000008",
@@ -110,7 +110,7 @@ class TestPrime(UnitTestCase):
         # THEN
         self.assertEqual(8, len(payments))
         self.assertEqual(datetime.date(2018, 11, 17), payments[-1].payment_date)
-        self.assertEqual(127.78, payments[-1].total)
+        self.assertEqual(127.78, payments[-1].grand_total)
         self.assertEqual("D01-1000001-2000001", payments[-1].order_number)
 
     def test_parse_prime_payments_no_payments(self):

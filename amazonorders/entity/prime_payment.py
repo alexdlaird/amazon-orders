@@ -37,7 +37,7 @@ class PrimePayment(Parsable):
             selector=self.config.selectors.FIELD_PRIME_PAYMENT_DATE_SELECTOR,
             parse_date=True)
         #: The amount charged, tax included.
-        self.total: Optional[float] = self.safe_parse(self._parse_total)
+        self.grand_total: Optional[float] = self.safe_parse(self._parse_grand_total)
         #: The digital Order number (``D01-…``) of the charge.
         self.order_number: Optional[str] = self.safe_parse(self._parse_order_number)
         #: The Order details link. ``None`` when :attr:`order_number` is ``None``.
@@ -46,10 +46,10 @@ class PrimePayment(Parsable):
         self.receipt_link: Optional[str] = self.safe_parse(self._parse_receipt_link)
 
     def __repr__(self) -> str:
-        return f"<PrimePayment {self.payment_date}: \"Order #{self.order_number}, Total: {self.total}\">"
+        return f"<PrimePayment {self.payment_date}: \"Order #{self.order_number}, Grand Total: {self.grand_total}\">"
 
     def __str__(self) -> str:
-        return f"PrimePayment {self.payment_date}: Order #{self.order_number}, Total: {self.total}"
+        return f"PrimePayment {self.payment_date}: Order #{self.order_number}, Grand Total: {self.grand_total}"
 
     def _parse_labeled_row(self,
                            label_selector: Selector) -> Optional[Tag]:
@@ -65,12 +65,12 @@ class PrimePayment(Parsable):
 
         return value_tag.text.strip() if value_tag else None
 
-    def _parse_total(self) -> Union[float, int, None]:
+    def _parse_grand_total(self) -> Union[float, int, None]:
         text = self._parse_labeled_value(self.config.selectors.FIELD_PRIME_PAYMENT_TOTAL_LABEL_SELECTOR)
         value = self.to_currency(text) if text else None
 
         if value is None:
-            err_msg = ("PrimePayment.total could not be parsed, but it's required. "
+            err_msg = ("PrimePayment.grand_total could not be parsed, but it's required. "
                        "Check if Amazon changed the HTML")
             if not self.config.warn_on_missing_required_field:
                 raise AmazonOrdersError(f"{err_msg} or set warn_on_missing_required_field=True in config.")

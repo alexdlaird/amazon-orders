@@ -221,8 +221,8 @@ Order #{order_number}
         payment_str = f"Prime Payment: {payment.payment_date}"
         if payment.order_number:
             payment_str += f"\n  Order #{payment.order_number}"
-        if payment.total is not None:
-            payment_str += f"\n  Total: {self.config.constants.format_currency(payment.total)}"
+        if payment.grand_total is not None:
+            payment_str += f"\n  Grand Total: {self.config.constants.format_currency(payment.grand_total)}"
         if payment.order_details_link:
             payment_str += f"\n  Order Details Link: {payment.order_details_link}"
         if payment.receipt_link:

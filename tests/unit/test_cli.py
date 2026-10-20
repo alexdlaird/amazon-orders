@@ -723,7 +723,7 @@ class TestCli(UnitTestCase):
         self.assertEqual(0, response.exit_code)
         self.assertEqual(1, resp.call_count)
         self.assert_login_responses_success()
-        self.assertIn("Prime Payment: 2025-11-17\n  Order #D01-1000008-2000008\n  Total: $148.38\n"
+        self.assertIn("Prime Payment: 2025-11-17\n  Order #D01-1000008-2000008\n  Grand Total: $148.38\n"
                       "  Order Details Link: https://www.amazon.com/gp/your-account/order-details"
                       "?orderID=D01-1000008-2000008\n"
                       "  Receipt Link: https://www.amazon.com/gp/digital/your-account/order-summary.html"
@@ -760,7 +760,7 @@ class TestCli(UnitTestCase):
         payments = json.loads(response.stdout)
         self.assertEqual(8, len(payments))
         self.assertEqual({"payment_date": "2025-11-17",
-                          "total": 148.38,
+                          "grand_total": 148.38,
                           "order_number": "D01-1000008-2000008",
                           "order_details_link": "https://www.amazon.com/gp/your-account/order-details"
                                                 "?orderID=D01-1000008-2000008",
@@ -1391,13 +1391,13 @@ class TestOutputFormatter(UnitTestCase):
         # THEN
         self.assertEqual("StubEntity: First\n\nStubEntity: Second\n", text)
 
-    def test_format_text_prime_payment_omits_missing_total(self):
+    def test_format_text_prime_payment_omits_missing_grand_total(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "prime", "prime-payments.html"), "r", encoding="utf-8") as f:
             parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
         payment = PrimePayment(parsed.select_one(self.test_config.selectors.PRIME_PAYMENT_SELECTOR),
                                self.test_config)
-        payment.total = None
+        payment.grand_total = None
 
         # WHEN
         text = self.given_formatter().format([payment], "text")
