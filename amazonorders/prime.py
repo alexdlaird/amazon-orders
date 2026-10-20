@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup, Tag
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.prime_payment import PrimePayment
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersError, AmazonOrdersUnavailableError
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,8 @@ class AmazonPrime:
 
         This is best-effort: Membership Central has served this library an error page in place of the payments,
         on a session that had just read the Order history, while a browser on the same account got them. If
-        that happens, the page fetched in a browser can be parsed with :func:`parse_prime_payments`.
+        that happens, :class:`~amazonorders.exception.AmazonOrdersUnavailableError` is raised, and the page
+        fetched in a browser can be parsed with :func:`parse_prime_payments`.
 
         :return: A list of the PrimePayments, newest first.
         """
@@ -75,6 +76,15 @@ class AmazonPrime:
 
         page_response = self.amazon_session.get(self.config.constants.PRIME_PAYMENTS_URL)
         self.amazon_session.check_response(page_response)
+
+        error_tag = util.select_one(page_response.parsed, self.config.selectors.PRIME_PAYMENTS_ERROR_SELECTOR)
+        if error_tag:
+            amazon_message = " ".join(error_tag.get_text(" ").split())
+            raise AmazonOrdersUnavailableError(f"Amazon could not load the Prime payment history. Wait a bit before "
+                                               f"trying again, or parse the page fetched in a browser with "
+                                               f"AmazonPrime.parse_prime_payments(). Amazon's page said: "
+                                               f"\"{amazon_message}\"",
+                                               meta={"amazon_message": amazon_message})
 
         return self._parse_prime_payments(page_response.parsed, self.config)
 

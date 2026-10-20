@@ -7,7 +7,7 @@ import os
 import responses
 from bs4 import BeautifulSoup
 
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersAuthRedirectError
+from amazonorders.exception import AmazonOrdersAuthRedirectError, AmazonOrdersError, AmazonOrdersUnavailableError
 from amazonorders.prime import AmazonPrime
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
@@ -91,12 +91,16 @@ class TestPrime(UnitTestCase):
         resp = self.given_prime_payments_page_exists(self.read_resource("prime", "prime-payments-error.html"))
 
         # WHEN
-        with self.assertRaises(AmazonOrdersError) as cm:
+        with self.assertRaises(AmazonOrdersUnavailableError) as cm:
             self.amazon_prime.get_prime_payments()
 
         # THEN
         self.assertEqual(1, resp.call_count)
-        self.assertEqual("Could not parse Prime payments. Check if Amazon changed the HTML.", str(cm.exception))
+        self.assertEqual("Oops. We’re sorry but there’s a problem with this page. We’re working to fix this, please "
+                         "refresh the page in a few minutes. Manage your Amazon account View order history Contact "
+                         "customer service Your Prime Your top picks Exclusive deals Help",
+                         cm.exception.meta["amazon_message"])
+        self.assertIn(f"Amazon's page said: \"{cm.exception.meta['amazon_message']}\"", str(cm.exception))
 
     def test_parse_prime_payments(self):
         # WHEN

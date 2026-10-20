@@ -795,7 +795,9 @@ class TestCli(UnitTestCase):
 
         # THEN
         self.assertEqual(2, response.exit_code)
-        self.assertIn("Could not parse Prime payments. Check if Amazon changed the HTML.", response.output)
+        self.assertIn("Amazon could not load the Prime payment history", response.output)
+        self.assertIn("Amazon's page said: \"Oops. We’re sorry but there’s a problem with this page.", response.output)
+        self.assertNotIn("Check if Amazon changed the HTML", response.output)
 
     @responses.activate
     def test_prime_payments_command_session_expired(self):

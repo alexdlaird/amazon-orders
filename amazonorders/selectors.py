@@ -381,6 +381,8 @@ class Selectors:
 
     PRIME_PAYMENTS_WIDGET_SELECTOR = "div[cel_widget_id^='prime-payment-history_']"
     PRIME_PAYMENT_SELECTOR = "div.a-cardui"
+    #: Membership Central's "Oops." error page, served in place of the payments
+    PRIME_PAYMENTS_ERROR_SELECTOR = "div.mc-container-small"
 
     FIELD_PRIME_PAYMENT_DATE_SELECTOR = "div.a-cardui-header h3"
     # Each card body row is a label span followed by its value, so the row is found by its label and the value
