@@ -98,8 +98,10 @@ class Selectors:
     NAV_GREETING_SELECTOR = "#nav-link-accountList-nav-line-1"
     SIGN_IN_EMAIL_INPUT_SELECTOR = "input[name='email']"
     CLAIM_FORM_SELECTOR = ["form[name='signIn'].auth-validate-form", "form#unified-password-form"]
-    INTENT_FORM_SELECTOR = "form#intent-confirmation-form"
-    INTENT_MESSAGE_SELECTOR = "div#intent-confirmation-container"
+    INTENT_FORM_SELECTOR = ["form#intent-confirmation-form",
+                            "form:has(input[name='OTPChallengeOptions'])"]
+    INTENT_MESSAGE_SELECTOR = ["div#intent-confirmation-container",
+                               "form:has(input[name='OTPChallengeOptions']) > h2"]
     MFA_DEVICE_SELECT_FORM_SELECTOR = "form#auth-select-device-form"
     PASSKEY_FORM_SELECTOR = "form#unified-passkey-form"
     PASSKEY_PASSWORD_CHALLENGE_LINK_SELECTOR = "a[href*='selectedChallengeType=password']"
