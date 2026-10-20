@@ -1,4 +1,4 @@
-.PHONY: all install nopyc clean test test-integration test-integration-sites generate-region-data build-test-resources docs check local validate-release upload install-waf install-browser
+.PHONY: all install nopyc clean test test-integration test-integration-sites generate-region-data docs check local validate-release upload install-waf install-browser
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -67,13 +67,6 @@ generate-region-data: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python scripts/generate-region-data.py; \
-	)
-
-build-test-resources: install
-	@( \
-		source $(PROJECT_VENV)/bin/activate; \
-		make local; \
-		python scripts/build-test-resources.py; \
 	)
 
 docs: install

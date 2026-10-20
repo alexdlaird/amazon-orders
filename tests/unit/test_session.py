@@ -161,6 +161,40 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, signout_response.call_count)
 
     @responses.activate
+    def test_login_password_form_using_get_fails(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
+            signin_html = f.read().replace('<form name="signIn" method="post"', '<form name="signIn" method="get"')
+        responses.add(responses.GET, self.test_config.constants.SIGN_IN_URL, body=signin_html, status=200)
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
+            self.amazon_session.login()
+
+        # THEN
+        self.assertIn("your password was not sent", str(cm.exception))
+        self.assertFalse(any("some-password" in call.request.url for call in responses.calls))
+
+    @responses.activate
+    def test_debug_logs_request_url_without_params(self):
+        # GIVEN
+        amazon_session = AmazonSession("some-username@gmail.com",
+                                       "some-password",
+                                       debug=True,
+                                       config=self.test_config)
+        url = f"{self.test_config.constants.BASE_URL}/some/page"
+        responses.add(responses.GET, url, body="<html></html>", status=200)
+
+        # WHEN
+        with self.assertLogs("amazonorders.session", level="DEBUG") as logs:
+            amazon_session.get(url, params={"startIndex": "10"})
+
+        # THEN
+        self.assertIn(f"DEBUG:amazonorders.session:GET request: {url}", logs.output)
+        self.assertIn(f"DEBUG:amazonorders.session:Response: 200 - {url}?startIndex=10", logs.output)
+
+    @responses.activate
     def test_debug_write_provisions_output_dir(self):
         # GIVEN a debug session whose output dir does not exist (the config no longer creates it)
         self.assertFalse(os.path.exists(self.test_output_dir))

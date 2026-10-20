@@ -7,7 +7,7 @@ import os
 import tempfile
 import time
 from typing import Any, Dict, List, Optional, Union
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlparse
 
 import requests
 import requests.adapters
@@ -204,13 +204,8 @@ class AmazonSession:
         """
         kwargs["headers"] = {**self.config.constants.BASE_HEADERS, **(kwargs.get("headers") or {})}
 
-        url_to_log = url
         if self.debug:
-            if "params" in kwargs:
-                encoded_params = urlencode(kwargs["params"])
-                if encoded_params not in url:
-                    url_to_log += "?" + encoded_params
-            logger.debug(f"{method} request: {url_to_log}")
+            logger.debug(f"{method} request: {url}")
 
         if self.config.request_timeout is not None:
             kwargs.setdefault("timeout", self.config.request_timeout)
@@ -237,9 +232,12 @@ class AmazonSession:
                 self._write_cookie_jar()
 
         if self.debug:
+            final_url = amazon_session_response.response.url
             url_str = ""
-            if url_to_log != amazon_session_response.response.url:
-                url_str = f" - (redirected) {amazon_session_response.response.url}"
+            if amazon_session_response.response.history:
+                url_str = f" - (redirected) {final_url}"
+            elif final_url != url:
+                url_str = f" - {final_url}"
             logger.debug(f"Response: {amazon_session_response.response.status_code}{url_str}")
 
             if not binary:

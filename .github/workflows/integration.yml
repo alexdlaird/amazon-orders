@@ -133,6 +133,14 @@ jobs:
           INTEGRATION_TEST_RERUN: ${{ github.event_name != 'schedule' && inputs.retry_failures == false && '0' || '2' }}
           INTEGRATION_TEST_FAIL_FAST: ${{ github.event_name != 'schedule' && inputs.fail_fast && 'true' || 'false' }}
         run: .github/scripts/vpn-exec.sh make test-integration
+      - name: Redact session cookies from test output
+        if: ${{ always() }}
+        run: |
+          rm -f tests/.integration-config/.cookies-*.tmp
+          if ! python scripts/redact-cookie-jar.py tests/.integration-config/cookies.json; then
+            echo "::warning::Could not redact the cookie jar, so it's removed from the test output instead."
+            rm -f tests/.integration-config/cookies.json
+          fi
       - name: Upload test output
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
