@@ -23,9 +23,9 @@ _PARSING_MODULES = (sorted(glob.glob(os.path.join(_PACKAGE_DIR, "entity", "*.py"
 _MESSAGE_CALLS = {"debug", "info", "warning", "error", "exception", "critical", "echo", "prompt", "input"}
 _DISPLAY_METHODS = {"__repr__", "__str__"}
 _PLUMBING_LITERALS = {
-    "", "\n", "\x00", " ", " ****", " - (redirected) ", "&", "']", ".", "/",
+    "", "\n", "\x00", " ", " ****", " - ", " - (redirected) ", "&", "']", ".", "/",
     "/(?:dp|gp/product|product)/([A-Z0-9]{10})(?:[/?]|$)", ": ", "://", "=", "?", "?transactionTag=",
-    ".cookies-", ".tmp", "Accept", "GET", "GetTransactions", "POST",
+    ".cookies-", ".tmp", "Accept", "Content-Type", "GET", "GetTransactions", "POST",
     "Referer", "\\*+(\\d+)$", "\\*\\s*(\\d+)", "^\\s*{count}\\s*$", "_parse_", "aa-challenge-page-captcha-container",
     "action", "alt", "application/json", "choices", "config", "cvf_captcha_input", "data", "data-a-popover",
     "deviceId", "displayResponse", "domain", "email", "exclusiveStartKey", "expires", "family_member_id",

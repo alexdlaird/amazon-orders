@@ -110,8 +110,15 @@ class AuthForm(ABC):
             )  # pragma: no cover
 
         method = str(self.form.get("method", "GET")).upper()
+        if method == "GET" and "password" in self.data:
+            raise AmazonOrdersAuthError("Sign-in was stopped, and your password was not sent: the sign-in form tried "
+                                        "to send it in plain text in the URL, which should never happen. This is "
+                                        "either a bug in amazon-orders or something altering the page, so check your "
+                                        "network and environment, and report it at "
+                                        "https://github.com/alexdlaird/amazon-orders/issues.")
+
         url = self._get_form_action(last_response)
-        request_data = {"params" if method == "GET" else "data": self.data}
+        request_data: Dict[str, Any] = {"params" if method == "GET" else "data": self.data}
         form_response = self.amazon_session.request(method,
                                                     url,
                                                     persist_cookies=True,

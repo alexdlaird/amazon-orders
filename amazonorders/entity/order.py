@@ -252,7 +252,8 @@ class Order(Parsable):
         tag = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR)
         if tag is None:
             return None
-        return tag.attrs.get("alt") or self._without_masked_digits(tag.text).strip()
+        alt = tag.attrs.get("alt")
+        return util.attribute_text(alt) if alt else self._without_masked_digits(tag.text).strip()
 
     def _without_masked_digits(self,
                                text: str) -> str:

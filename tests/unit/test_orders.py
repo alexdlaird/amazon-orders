@@ -1211,6 +1211,8 @@ class TestOrders(UnitTestCase):
         self.assertEqual(54.78, order.grand_total)
         self.assertEqual(50.97, order.subtotal)
         self.assertEqual(3.81, order.estimated_tax)
+        self.assertEqual("Alex Laird", order.recipient.name)
+        self.assertEqual("555 My Road\nChicago, IL 60007\nUnited States", order.recipient.address)
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
@@ -1976,3 +1978,119 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertIn("Amazon redirected to login.", str(cm.exception))
         self.assertTrue(self.amazon_session.is_authenticated)
+
+    def test_get_invoice_pdfs_unauthenticated(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.get_invoice_pdfs("302-0000000-0000002")
+
+        self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
+
+    @responses.activate
+    def test_get_invoice_pdfs(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "invoices", "invoice-pdfs-multiple.html"), "r",
+                  encoding="utf-8") as f:
+            resp = responses.add(responses.GET, self.test_config.constants.INVOICE_PDFS_URL, body=f.read(),
+                                 status=200)
+
+        # WHEN
+        invoices = self.amazon_orders.get_invoice_pdfs("302-0000000-0000002")
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertEqual(f"{self.test_config.constants.INVOICE_PDFS_URL}?orderId=302-0000000-0000002",
+                         resp.calls[0].request.url)
+        self.assertEqual(5, len(invoices))
+        self.assertEqual({"302-0000000-0000002"}, {invoice.order_number for invoice in invoices})
+        self.assertTrue(invoices[-1].is_credit_note)
+
+    @responses.activate
+    def test_get_invoice_pdfs_not_found(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        # A redirect away from the invoice list (not to login) simulates an Order that doesn't exist
+        responses.add(responses.GET, self.test_config.constants.INVOICE_PDFS_URL, status=302,
+                      headers={"Location": self.test_config.constants.ORDER_HISTORY_URL})
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
+                  encoding="utf-8") as f:
+            responses.add(responses.GET, self.test_config.constants.ORDER_HISTORY_URL, body=f.read(), status=200)
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersNotFoundError) as cm:
+            self.amazon_orders.get_invoice_pdfs("302-0000000-0000000")
+
+        # THEN
+        self.assertIn("Order 302-0000000-0000000 was not found", str(cm.exception))
+
+    @responses.activate
+    def test_get_invoice_pdfs_session_expires(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        self.given_authenticated_url_redirects_to_login()
+        self.given_login_responses_success()
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthRedirectError) as cm:
+            self.amazon_orders.get_invoice_pdfs("302-0000000-0000002")
+
+        # THEN
+        self.assertIn("Amazon redirected to login.", str(cm.exception))
+        self.assertTrue(self.amazon_session.is_authenticated)
+
+    @responses.activate
+    def test_download_invoice_pdf(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        invoice = self.given_invoice_pdf()
+        resp = responses.add(responses.GET, invoice.link, body=b"%PDF-1.4 some-pdf", status=200,
+                             content_type="application/pdf")
+
+        # WHEN
+        content = self.amazon_orders.download_invoice_pdf(invoice)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertEqual(b"%PDF-1.4 some-pdf", content)
+
+    @responses.activate
+    def test_download_invoice_pdf_not_a_document(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        invoice = self.given_invoice_pdf()
+        responses.add(responses.GET, invoice.link, body="<html></html>", status=200, content_type="text/html")
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.download_invoice_pdf(invoice)
+
+        # THEN
+        self.assertIn("Invoice PDF \"Invoice\" of Order 302-0000000-0000001 returned Content-Type \"text/html\"",
+                      str(cm.exception))
+
+    def test_download_invoice_pdf_unauthenticated(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.download_invoice_pdf(self.given_invoice_pdf())
+
+        self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
+
+    def test_download_invoice_pdf_without_link(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        invoice = self.given_invoice_pdf()
+        invoice.link = None
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_orders.download_invoice_pdf(invoice)
+
+        # THEN
+        self.assertEqual("Invoice PDF \"Invoice\" of Order 302-0000000-0000001 has no link.", str(cm.exception))
+
+    def given_invoice_pdf(self):
+        with open(os.path.join(self.RESOURCES_DIR, "invoices", "invoice-pdfs-single.html"), "r",
+                  encoding="utf-8") as f:
+            return AmazonOrders.parse_invoice_pdfs(f.read(), self.test_config,
+                                                   order_number="302-0000000-0000001")[0]

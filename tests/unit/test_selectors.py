@@ -13,7 +13,8 @@ class TestSelectors(UnitTestCase):
             ORDER_SHIPMENT_STATUS_SELECTOR = "h4.lorem-status"
 
         # THEN
-        self.assertEqual(["Lorem", None], [selector.text for selector in LoremSelectors.ORDER_SKIP_TOTALS])
+        self.assertEqual(["Lorem", "Service cancelled", None],
+                         [selector.text for selector in LoremSelectors.ORDER_SKIP_TOTALS])
         self.assertEqual("Lorem", LoremSelectors.ORDER_SHIPMENT_CANCELLED_SELECTOR.text_contains)
         self.assertEqual("h4.lorem-status", LoremSelectors.ORDER_SHIPMENT_CANCELLED_SELECTOR.css_selector)
         self.assertIs(Selectors.ORDER_SKIP_ITEMS, LoremSelectors.ORDER_SKIP_ITEMS)

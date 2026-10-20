@@ -53,7 +53,6 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx_sitemap",
     "sphinxext.opengraph",
-    "sphinxcontrib.googleanalytics",
 ]
 autodoc_member_order = "bysource"
 
@@ -79,6 +78,7 @@ add_function_parentheses = False
 
 html_baseurl = "https://amazon-orders.readthedocs.io/"
 sitemap_url_scheme = "{link}"
+sitemap_excludes = ["search.html", "404.html"]
 
 ogp_site_url = html_baseurl
 ogp_image = f"{html_baseurl}_images/logo.png"
@@ -92,7 +92,7 @@ ogp_custom_meta_tags = [
     '<meta name="twitter:card" content="summary_large_image">',
 ]
 
-googleanalytics_id = "G-7DKJ33P8D3"
+google_analytics_id = "G-7DKJ33P8D3"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -129,6 +129,13 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_js_files = [
+    (f"https://www.googletagmanager.com/gtag/js?id={google_analytics_id}", {"async": "async"}),
+    (None, {"body": "window.dataLayer = window.dataLayer || [];"
+                    "function gtag(){dataLayer.push(arguments);}"
+                    "gtag('js', new Date());"
+                    f"gtag('config', '{google_analytics_id}');"}),
+]
 html_extra_path = ["_html"]
 
 html_css_files = [

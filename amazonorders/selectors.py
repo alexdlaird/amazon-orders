@@ -164,6 +164,7 @@ class Selectors:
     ORDER_PHYSICAL_STORE_TEXT = "Purchased at Amazon"
     ORDER_WHOLE_FOODS_TEXT = "Whole Foods Market"
     ORDER_CANCELLED_TEXT = "Cancelled"
+    ORDER_SERVICE_CANCELLED_TEXT = "Service cancelled"
     # Selectors defined here mean we don't have a reliable way to parse all details in an Order, so Items and
     # Shipments will be skipped
     ORDER_SKIP_ITEMS = SelectorsFromText(lambda physical_store_text: [
@@ -183,12 +184,14 @@ class Selectors:
         "img.ufpo-itemListWidget-image"
     ], "ORDER_WHOLE_FOODS_TEXT")
     # Selectors defined here mean the Order will not have parsable totals
-    ORDER_SKIP_TOTALS = SelectorsFromText(lambda cancelled_text: [
+    ORDER_SKIP_TOTALS = SelectorsFromText(lambda cancelled_text, service_cancelled_text: [
         # Identifies a cancelled order on the history page
         Selector("div.yohtmlc-shipment-status-primaryText", cancelled_text),
+        # Identifies a cancelled service order (e.g. an installation) on the history page
+        Selector("div.yohtmlc-shipment-status-primaryText", service_cancelled_text),
         # Identifies a cancelled order on the details page
         Selector("h4.a-alert-heading", text_contains=cancelled_text)
-    ], "ORDER_CANCELLED_TEXT")
+    ], "ORDER_CANCELLED_TEXT", "ORDER_SERVICE_CANCELLED_TEXT")
     ORDER_SHIPMENT_STATUS_SELECTOR = "h4.od-status-message"
     ORDER_SHIPMENT_CANCELLED_SELECTOR = SelectorsFromText(
         lambda shipment_status_selector, cancelled_text: Selector(shipment_status_selector,
@@ -261,7 +264,10 @@ class Selectors:
                                         "[data-component='briefOrderInfo'] div.a-column",
                                         "div:is(.a-span3, .a-span12)"]
     FIELD_ORDER_PLACED_DATE_SUFFIX = "Order #"
-    FIELD_ORDER_PAYMENT_METHOD_SELECTOR = ["[data-testid='payment-instrument-name']",
+    # When a Gift Card was used alongside a card, prefer the card (the instrument with a number), like its last 4 are
+    FIELD_ORDER_PAYMENT_METHOD_SELECTOR = ["[data-testid='payment-instrument']:has([data-testid='payment-instrument-"
+                                           "number']) [data-testid='payment-instrument-name']",
+                                           "[data-testid='payment-instrument-name']",
                                            "img.pmts-payment-credit-card-instrument-logo",
                                            "[data-testid='payment-instrument-message']"]
     FIELD_ORDER_PAYMENT_METHOD_LAST_4_SELECTOR = ["[data-testid='payment-instrument-number']",
@@ -275,14 +281,15 @@ class Selectors:
     FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR = "div.a-span-last"
     FIELD_ORDER_GRAND_TOTAL_LABELS = ["grand total", "total for this order"]
     FIELD_ORDER_SUBTOTAL_LABELS = ["subtotal"]
-    FIELD_ORDER_SHIPPING_TOTAL_LABELS = ["shipping"]
+    # British English sites (e.g. amazon.de in English) label it "Postage & Packing"
+    FIELD_ORDER_SHIPPING_TOTAL_LABELS = ["shipping", "postage"]
     FIELD_ORDER_FREE_SHIPPING_LABELS = ["free shipping"]
     FIELD_ORDER_PROMOTION_APPLIED_LABELS = ["promotion"]
     FIELD_ORDER_COUPON_SAVINGS_LABELS = ["coupon"]
     FIELD_ORDER_REWARD_POINTS_LABELS = ["reward"]
     FIELD_ORDER_SUBSCRIPTION_DISCOUNT_LABELS = ["subscribe", "subscription"]
     FIELD_ORDER_TOTAL_BEFORE_TAX_LABELS = ["before tax"]
-    FIELD_ORDER_ESTIMATED_TAX_LABELS = ["estimated tax", "tax collected"]
+    FIELD_ORDER_ESTIMATED_TAX_LABELS = ["estimated tax", "tax collected", "estimated vat"]
     FIELD_ORDER_REFUND_TOTAL_LABELS = ["refund total"]
     FIELD_ORDER_MULTIBUY_DISCOUNT_LABELS = ["multibuy discount"]
     FIELD_ORDER_AMAZON_DISCOUNT_LABELS = ["amazon discount"]
@@ -323,6 +330,11 @@ class Selectors:
     FIELD_RECIPIENT_ADDRESS2_SELECTOR = "li.displayAddressAddressLine2"
     FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR = "li.displayAddressCityStateOrRegionPostalCode"
     FIELD_RECIPIENT_ADDRESS_COUNTRY_SELECTOR = "li.displayAddressCountryName"
+    #: The address lines that follow the Recipient's name in an unclassed list.
+    FIELD_RECIPIENT_ADDRESS_LINES_SELECTOR = "ul > li:not(:first-child)"
+    #: Separates the parts of an address Amazon renders inline (e.g. ``", Musterstraße 1 , 10115"``), but not a
+    #: comma within a line (e.g. ``"Chicago, IL 60007"``).
+    FIELD_RECIPIENT_ADDRESS_INLINE_SEPARATOR_REGEX = r"(?:^|\s),\s*"
     FIELD_RECIPIENT_ADDRESS_FALLBACK_SELECTOR = ["div:nth-child(2)",
                                                  "li:nth-child(2)"]
 
@@ -349,6 +361,17 @@ class Selectors:
     FIELD_TRACKING_CARRIER_SELECTOR = [".tracking-event-carrier-header"]
     #: Matched case-insensitively and removed from the carrier header, e.g. "Shipped with UPS" -> "UPS".
     FIELD_TRACKING_CARRIER_REGEX = r"^(?:shipped with|delivered by|delivery (?:facilitated )?by|carrier:?)\s+"
+
+    #####################################
+    # CSS selectors for InvoicePdf fields
+    #####################################
+
+    #: The links to an Order's invoice PDFs on its invoice list, leaving out the printable order summary,
+    #: the link to request an invoice, and a seller's proof of purchase ("Warranty/Pslip"), which isn't an invoice.
+    INVOICE_PDF_ENTITY_SELECTOR = ["ul.invoice-list a[href*='/documents/download/']",
+                                   "a[href*='/documents/download/']"]
+    #: Matched case-insensitively in a document's name, e.g. "Credit note 1", to tell a credit note from an invoice.
+    FIELD_INVOICE_PDF_CREDIT_NOTE_TEXT = "Credit note"
 
     #####################################
     # CSS selectors for Transaction fields

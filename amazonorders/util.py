@@ -6,7 +6,7 @@ import logging
 import re
 import unicodedata
 from datetime import date, datetime
-from typing import List, Union, Optional, Callable, Any
+from typing import Iterable, List, Union, Optional, Callable, Any
 
 from bs4 import Tag, BeautifulSoup
 from dateutil import parser
@@ -30,11 +30,11 @@ class AmazonSessionResponse:
     A wrapper for the :class:`requests.Response` object, which also contains the parsed HTML.
     """
 
-    def __init__(self, response: Response, bs4_parser: str) -> None:
+    def __init__(self, response: Response, bs4_parser: str, binary: bool = False) -> None:
         #: The request's response object.
         self.response: Response = response
-        #: The parsed HTML from the response.
-        self.parsed: Tag = BeautifulSoup(self.response.text, bs4_parser)
+        #: The parsed HTML from the response, which is empty if the response is ``binary``.
+        self.parsed: Tag = BeautifulSoup("" if binary else self.response.text, bs4_parser)
 
 
 def _selector_text_matches(tag: Tag, selector: Selector) -> bool:
@@ -253,3 +253,17 @@ def cleanup_html_text(text: str) -> str:
     if not text.endswith("."):
         text += "."
     return text
+
+
+def attribute_text(value: Union[str, Iterable[str]]) -> str:
+    """
+    Get a ``<tag>`` attribute's value as text. BeautifulSoup gives multi-valued attributes, like ``class``, as a
+    list, which is joined with spaces, as they're written in the HTML.
+
+    :param value: The attribute's value.
+    :return: The attribute's value as text.
+    """
+    if isinstance(value, str):
+        return value
+
+    return " ".join(value)

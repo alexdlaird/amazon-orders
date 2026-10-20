@@ -1,4 +1,4 @@
-.PHONY: all install nopyc clean test test-integration test-integration-sites generate-region-data build-test-resources docs check local validate-release upload install-waf install-browser
+.PHONY: all install nopyc clean test test-integration test-integration-sites download-integration-output generate-region-data docs check local validate-release upload install-waf install-browser
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -7,6 +7,9 @@ INTEGRATION_TEST_RERUN ?= 2
 INTEGRATION_TEST_RERUN_DELAY ?= 300
 INTEGRATION_TEST_FAIL_FAST ?= false
 PYTEST_EXTRA_ARGS ?=
+INTEGRATION_OUTPUT_DIR ?= build/integration-test-output
+INTEGRATION_RUN_ID ?= $(shell gh run list --workflow integration.yml --limit 1 --json databaseId --jq '.[0].databaseId')
+SSH_KEY ?= ~/.ssh/id_rsa
 
 WAF_EXTRAS := capsolver,anticaptcha,2captcha
 
@@ -63,17 +66,19 @@ test-integration-sites: install
 		pytest -v -rs tests/integration/test_integration_sites.py -o junit_suite_name=integration-sites ${PYTEST_EXTRA_ARGS}; \
 	)
 
+download-integration-output:
+	@( \
+		rm -rf $(INTEGRATION_OUTPUT_DIR) && \
+		gh run download $(INTEGRATION_RUN_ID) -n integration-test-output -D $(INTEGRATION_OUTPUT_DIR) && \
+		age -d -i $(SSH_KEY) $(INTEGRATION_OUTPUT_DIR)/integration-test-output.tar.gz.age | tar xzf - -C $(INTEGRATION_OUTPUT_DIR) && \
+		rm $(INTEGRATION_OUTPUT_DIR)/integration-test-output.tar.gz.age && \
+		echo "Integration test output from run $(INTEGRATION_RUN_ID) is in $(INTEGRATION_OUTPUT_DIR)"; \
+	)
+
 generate-region-data: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python scripts/generate-region-data.py; \
-	)
-
-build-test-resources: install
-	@( \
-		source $(PROJECT_VENV)/bin/activate; \
-		make local; \
-		python scripts/build-test-resources.py; \
 	)
 
 docs: install

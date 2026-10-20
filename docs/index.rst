@@ -114,10 +114,10 @@ You can also run any command available to the main Python interface from the com
 Output Formats
 --------------
 
-The ``history``, ``order``, ``transactions``, ``order-transactions``, ``gift-card-activity``, and ``family-members``
-commands accept ``--output``, which renders Orders, Transactions, Gift Card activity, and Amazon Household members as
-``text`` (the default), ``json``, ``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting
-``stdout`` captures only the data.
+The ``history``, ``order``, ``invoice-pdfs``, ``transactions``, ``order-transactions``, ``gift-card-activity``, and
+``family-members`` commands accept ``--output``, which renders Orders, Invoice PDFs, Transactions, Gift Card activity,
+and Amazon Household members as ``text`` (the default), ``json``, ``yaml``, or ``csv``. Progress messages are written to
+``stderr``, so redirecting ``stdout`` captures only the data.
 
 .. code:: sh
 

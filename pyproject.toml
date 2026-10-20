@@ -12,7 +12,7 @@ dependencies = [
     "click>=7.1",
     "requests>=2.23",
     "Pillow>=9.0.1",
-    "beautifulsoup4>=4.12",
+    "beautifulsoup4>=4.14",
     "PyYAML>=6.0.3",
     "python-dateutil>=2.9.0.post0",
     "pyotp>=2.9",
@@ -73,14 +73,12 @@ docs = [
     "sphinx_autodoc_typehints",
     "mypy",
     "types-requests",
-    "types-beautifulsoup4",
     "types-Pillow",
     "types-PyYAML",
     "types-python-dateutil",
     "sphinx-sitemap",
     "sphinxext-opengraph",
     "furo",
-    "sphinxcontrib-googleanalytics",
 ]
 
 [project.scripts]
@@ -94,6 +92,9 @@ Sponsor = "https://github.com/sponsors/alexdlaird"
 
 [tool.setuptools]
 package-dir = { amazonorders = "amazonorders" }
+
+[tool.setuptools.package-data]
+amazonorders = ["py.typed"]
 
 [tool.setuptools.dynamic]
 version = { attr = "amazonorders.__version__" }

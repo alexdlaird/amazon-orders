@@ -97,7 +97,8 @@ class TransactionsPage:
                     "exclusiveStartKey": state["lastEvaluatedPageKey"],
                     "token": page_props["token"],
                     "locale": page_props["request"]["locale"],
-                    "widgetName": page_props["request"]["widgetName"],
+                    "widgetName": page_props["request"].get("widgetName",
+                                                            self.config.constants.TRANSACTION_DATA_WIDGET_NAME),
                 }
         except (KeyError, TypeError, ValueError) as e:
             raise AmazonOrdersError("Could not parse Transaction history. Check if Amazon changed the HTML.") from e
