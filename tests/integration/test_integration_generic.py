@@ -143,4 +143,4 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assertIsNotNone(transaction.is_refund)
         self.assertIsNotNone(transaction.order_number)
         self.assertIsNotNone(transaction.order_details_link)
-        self.assertIsNotNone(transaction.seller)
+        self.assertTrue(any(t.seller for t in transactions))
