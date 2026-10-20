@@ -550,23 +550,23 @@ def prime_payments(ctx: Context, **kwargs: Any) -> None:
     amazon_session = ctx.obj["amazon_session"]
 
     try:
-        _authenticate(amazon_session)
-
-        output = kwargs["output"]
-
-        click.echo("Info: Fetching Prime payment history ...", err=True)
+        CliAuth(amazon_session).authenticate()
 
         config = ctx.obj["conf"]
         amazon_prime = AmazonPrime(amazon_session,
                                    config=config)
 
-        prime_payment_list = amazon_prime.get_prime_payments()
+        start_time = time.time()
+        prime_payments = amazon_prime.get_prime_payments()
+        end_time = time.time()
 
-        click.echo(config.output_cls(config).format(prime_payment_list, output))
+        click.echo(config.output_cls(config).format(prime_payments, kwargs["output"]))
 
-        click.echo("... {total} Prime payments parsed.\n".format(total=len(prime_payment_list)), err=True)
+        click.echo(
+            "... {total} Prime payments parsed in {time} seconds.\n".format(
+                total=len(prime_payments), time=int(end_time - start_time)), err=True)
     except AmazonOrdersAuthRedirectError:
-        _prompt_to_reauth_flow()
+        IOClick.echo_session_expired()
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
