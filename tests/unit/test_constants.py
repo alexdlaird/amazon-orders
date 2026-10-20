@@ -123,6 +123,13 @@ class TestConstants(UnitTestCase):
         self.assertEqual("https://www.amazon.co.jp", config.constants.BASE_URL)
         self.assertEqual("¥", config.constants.CURRENCY_SYMBOL)
 
+    def test_domain_sets_prime_payments_url(self):
+        # GIVEN / WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.co.uk"})
+
+        # THEN
+        self.assertEqual("https://www.amazon.co.uk/mc/payments", config.constants.PRIME_PAYMENTS_URL)
+
     def test_format_currency_yen_without_decimals(self):
         # GIVEN
         constants = AmazonOrdersConfig(data={"domain": "amazon.co.jp"}).constants
