@@ -15,8 +15,10 @@ from tests.unittestcase import UnitTestCase
 
 class TestUtil(UnitTestCase):
     def test_resolve_site_url_accepts_relative_and_www_variants(self):
+        # GIVEN
         base_url = "https://www.amazon.com"
 
+        # WHEN / THEN
         self.assertEqual("https://www.amazon.com/gc/balance?next=abc",
                          resolve_site_url("/gc/balance?next=abc", base_url))
         self.assertEqual("https://amazon.com/gc/balance?next=abc",
@@ -27,13 +29,16 @@ class TestUtil(UnitTestCase):
                          resolve_site_url("https://www.amazon.com/gc/balance", "https://amazon.com"))
 
     def test_resolve_site_url_rejects_external_hosts_and_ports(self):
+        # GIVEN
         base_url = "https://www.amazon.com"
 
+        # WHEN / THEN
         self.assertIsNone(resolve_site_url("https://evil.example/gc/balance", base_url))
         self.assertIsNone(resolve_site_url("https://amazon.com.evil.example/gc/balance", base_url))
         self.assertIsNone(resolve_site_url("https://amazon.com:444/gc/balance", base_url))
 
     def test_resolve_site_url_rejects_malformed_urls_and_credentials(self):
+        # GIVEN
         base_url = "https://www.amazon.com"
         invalid_urls = (
             "https://www.amazon.com:invalid/gc/balance",
@@ -44,6 +49,7 @@ class TestUtil(UnitTestCase):
             "https://www.amazon.com＠evil.example/gc/balance",
         )
 
+        # WHEN / THEN
         for url in invalid_urls:
             with self.subTest(url=url):
                 self.assertIsNone(resolve_site_url(url, base_url))

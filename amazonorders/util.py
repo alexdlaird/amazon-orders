@@ -20,61 +20,6 @@ from amazonorders.selectors import Selector
 logger = logging.getLogger(__name__)
 
 
-def _same_site_host(host: Optional[str], base_host: Optional[str]) -> bool:
-    if not host or not base_host:
-        return False
-    return host.lower().removeprefix("www.") == base_host.lower().removeprefix("www.")
-
-
-def _effective_url_port(parsed_url: SplitResult) -> Optional[int]:
-    if parsed_url.port is not None:
-        return parsed_url.port
-    return {"http": 80, "https": 443}.get(parsed_url.scheme)
-
-
-def _is_same_site_url(url: str, base_url: str) -> bool:
-    try:
-        resolved = urlsplit(url)
-        base = urlsplit(base_url)
-        same_host = _same_site_host(resolved.hostname, base.hostname)
-        same_port = _effective_url_port(resolved) == _effective_url_port(base)
-    except ValueError:
-        return False
-
-    if resolved.scheme != base.scheme:
-        return False
-    if resolved.username is not None or resolved.password is not None:
-        return False
-    if not same_host:
-        return False
-    if not same_port:
-        return False
-    return True
-
-
-def resolve_site_url(url: str, base_url: str) -> Optional[str]:
-    """Resolve a URL against ``base_url`` only when it remains on the same site.
-
-    Amazon's pagination links may be relative or absolute, with or without the ``www.`` prefix. Reject links to
-    other hosts so an untrusted page cannot make the authenticated session send cookies and headers elsewhere.
-
-    :param url: The relative or absolute URL to resolve.
-    :param base_url: The configured base URL for the Amazon site.
-    :return: The resolved URL, or ``None`` when it is malformed or points outside the site.
-    """
-    try:
-        resolved_url = urljoin(base_url, url)
-    except ValueError:
-        logger.warning("Ignoring malformed pagination URL: %s", url)
-        return None
-
-    if not _is_same_site_url(resolved_url, base_url):
-        logger.warning("Ignoring pagination URL outside the configured site: %s", url)
-        return None
-
-    return resolved_url
-
-
 #: Matches the Japanese ``年``/``月``/``日`` date notation used by amazon.co.jp (e.g.
 #: ``2024年8月23日``), which ``dateutil`` cannot parse.
 _JAPANESE_DATE_RE = re.compile(r"(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日")
@@ -302,6 +247,43 @@ def has_display() -> bool:
     :return: Whether there's a display.
     """
     return not sys.platform.startswith("linux") or bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+
+
+def _site_host(host: Optional[str]) -> str:
+    return (host or "").lower().removeprefix("www.")
+
+
+def _effective_port(url: SplitResult) -> Optional[int]:
+    return url.port or {"http": 80, "https": 443}.get(url.scheme)
+
+
+def _is_same_site_url(url: SplitResult, base_url: SplitResult) -> bool:
+    return (url.scheme == base_url.scheme and
+            url.username is None and url.password is None and
+            bool(url.hostname) and _site_host(url.hostname) == _site_host(base_url.hostname) and
+            _effective_port(url) == _effective_port(base_url))
+
+
+def resolve_site_url(url: str, base_url: str) -> Optional[str]:
+    """
+    Resolve a link found on a page against ``base_url``, but only if it stays on the same Amazon site (with or
+    without ``www.``), so the session's cookies are never sent to another host.
+
+    :param url: The link, relative or absolute.
+    :param base_url: The Amazon site's base URL.
+    :return: The resolved URL, or ``None`` if it's malformed or on another site.
+    """
+    try:
+        resolved_url = urljoin(base_url, url)
+        same_site = _is_same_site_url(urlsplit(resolved_url), urlsplit(base_url))
+    except ValueError:
+        same_site = False
+
+    if not same_site:
+        logger.warning(f"Ignoring a link to another site: {url}")
+        return None
+
+    return resolved_url
 
 
 def cleanup_html_text(text: str) -> str:
