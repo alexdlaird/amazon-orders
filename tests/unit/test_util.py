@@ -33,6 +33,21 @@ class TestUtil(UnitTestCase):
         self.assertIsNone(resolve_site_url("https://amazon.com.evil.example/gc/balance", base_url))
         self.assertIsNone(resolve_site_url("https://amazon.com:444/gc/balance", base_url))
 
+    def test_resolve_site_url_rejects_malformed_urls_and_credentials(self):
+        base_url = "https://www.amazon.com"
+        invalid_urls = (
+            "https://www.amazon.com:invalid/gc/balance",
+            "https://user@www.amazon.com/gc/balance",
+            "https://:password@www.amazon.com/gc/balance",
+            "https://user:password@www.amazon.com/gc/balance",
+            "mailto:orders@example.com",
+            "https://www.amazon.com＠evil.example/gc/balance",
+        )
+
+        for url in invalid_urls:
+            with self.subTest(url=url):
+                self.assertIsNone(resolve_site_url(url, base_url))
+
     def test_to_date_english(self):
         # WHEN / THEN
         self.assertEqual(to_date("August 23, 2024"), date(2024, 8, 23))

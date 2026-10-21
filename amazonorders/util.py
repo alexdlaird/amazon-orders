@@ -43,9 +43,7 @@ def _is_same_site_url(url: str, base_url: str) -> bool:
 
     if resolved.scheme != base.scheme:
         return False
-    if resolved.username is not None:
-        return False
-    if resolved.password is not None:
+    if resolved.username is not None or resolved.password is not None:
         return False
     if not same_host:
         return False
