@@ -66,7 +66,7 @@ class TestItem(UnitTestCase):
         def _parse_required():
             raise AmazonOrdersError("required field did not populate")
 
-        # WHEN/THEN
+        # WHEN / THEN
         with self.assertRaises(AmazonOrdersError):
             parsable.safe_parse(_parse_required)
 

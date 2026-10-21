@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- `amazonorders.util.has_display()`, the check `PlaywrightBrowserLogin` makes before it opens a browser window (on Linux, `DISPLAY` or `WAYLAND_DISPLAY`), so packages built on `amazon-orders`, like amazon-orders-mcp, can ask the same question first.
+- `amazonorders.util.has_display()`, the display check made before opening a browser window.
 
 ### Changed
 
@@ -17,7 +17,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - Akamai's interstitial JavaScript challenge is now detected, and `PlaywrightJSAuthForm` tries to resolve it in the browser.
-- `Parsable.safe_parse()` degrades a field on `TypeError` and `RecursionError` (embedded JSON of the wrong shape or depth) instead of failing the entity.
+- A field whose page data has an unexpected shape now parses as `None`, instead of failing the whole entity.
 
 ## [4.9.6](https://github.com/alexdlaird/amazon-orders/compare/4.9.5...4.9.6) - 2026-10-21
 

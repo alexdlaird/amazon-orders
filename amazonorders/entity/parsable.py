@@ -79,7 +79,6 @@ class Parsable:
         try:
             return parse_function(**kwargs)
         except (AttributeError, IndexError, ValueError, TypeError, RecursionError):
-            # TypeError and RecursionError are what embedded JSON of the wrong shape or depth raises
             function = "simple_parse"
             if parse_function.__name__ != function:
                 function = parse_function.__name__.split("_parse_")[1]
