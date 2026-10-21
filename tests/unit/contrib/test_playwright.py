@@ -11,6 +11,7 @@ from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.contrib.browser.playwright import (
     PlaywrightAcicForm,
     PlaywrightBrowserLauncher,
+    PlaywrightBrowserLogin,
     PlaywrightJSAuthForm,
     PlaywrightManualWafForm,
 )
@@ -1123,3 +1124,21 @@ class TestPlaywrightManualWafForm(UnitTestCase):
         # THEN
         self.assertEqual("refetched", result)
         self.amazon_session.get.assert_called_once_with(final_url, persist_cookies=True)
+
+
+class TestPlaywrightBrowserLogin(UnitTestCase):
+    @patch("amazonorders.contrib.browser.playwright.has_display", return_value=False)
+    def test_login_without_display_raises(self, mock_has_display):
+        # GIVEN
+        mock_sync_playwright, _, _, _ = _make_mock_playwright()
+        browser_login = PlaywrightBrowserLogin(AmazonSession(config=self.test_config))
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(),
+                                      "playwright.sync_api": _playwright_module(mock_sync_playwright)}), \
+                self.assertRaises(AmazonOrdersError) as cm:
+            browser_login.login()
+
+        # THEN
+        self.assertIn("requires a display", str(cm.exception))
+        mock_sync_playwright.assert_not_called()

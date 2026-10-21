@@ -6,9 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.9.6...HEAD)
 
+### Added
+
+- `amazonorders.util.has_display()`, the check `PlaywrightBrowserLogin` makes before it opens a browser window (on Linux, `DISPLAY` or `WAYLAND_DISPLAY`), so packages built on `amazon-orders`, like amazon-orders-mcp, can ask the same question first.
+
 ### Changed
 
-- Each Amazon site's session has its own cookie jar, so signing in to one site with `domain` (or `--domain`) no longer replaces another's. `amazon.com`'s session stays in `cookies.json`, and every other site's is kept beside it (e.g. `cookies.amazon.de.json`). A session saved for another site in `cookies.json` is still loaded until that site's own jar is saved. An explicit `cookie_jar_path` is still used as-is for every site.
+- Each Amazon site keeps its own session (e.g. `cookies.amazon.de.json`), so signing in to one with `domain` no longer signs out of another.
 
 ### Fixed
 
