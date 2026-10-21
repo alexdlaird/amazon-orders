@@ -399,16 +399,18 @@ class AmazonSession:
             data = json.loads(f.read())
 
         if isinstance(data, list):
-            site = self.config.site
-            data = [cookie for cookie in data
-                    if (cookie.get("domain") or "").lstrip(".") == site
-                    or (cookie.get("domain") or "").endswith(f".{site}")]
+            data = [cookie for cookie in data if self._is_site_cookie(cookie)]
             if not data:
                 return
 
         logger.debug(f"Loading the {self.config.site} session from {shared_cookie_jar_path}, which every site "
                      f"shared, until it is saved to {self.config.cookie_jar_path} ...")
         self._load_cookie_jar_data(data)
+
+    def _is_site_cookie(self,
+                        cookie: Dict[str, Any]) -> bool:
+        domain = (cookie.get("domain") or "").lstrip(".")
+        return domain == self.config.site or domain.endswith(f".{self.config.site}")
 
     def _write_cookie_jar(self) -> None:
         file_descriptor, temp_path = tempfile.mkstemp(dir=os.path.dirname(self.config.cookie_jar_path),
