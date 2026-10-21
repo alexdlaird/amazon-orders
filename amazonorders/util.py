@@ -9,7 +9,7 @@ import sys
 import unicodedata
 from datetime import date, datetime
 from typing import Iterable, List, Union, Optional, Callable, Any
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import SplitResult, urljoin, urlsplit
 
 from bs4 import Tag, BeautifulSoup
 from dateutil import parser
@@ -18,6 +18,40 @@ from requests import Response
 from amazonorders.selectors import Selector
 
 logger = logging.getLogger(__name__)
+
+
+def _same_site_host(host: Optional[str], base_host: Optional[str]) -> bool:
+    if not host or not base_host:
+        return False
+    return host.lower().removeprefix("www.") == base_host.lower().removeprefix("www.")
+
+
+def _effective_url_port(parsed_url: SplitResult) -> Optional[int]:
+    if parsed_url.port is not None:
+        return parsed_url.port
+    return {"http": 80, "https": 443}.get(parsed_url.scheme)
+
+
+def _is_same_site_url(url: str, base_url: str) -> bool:
+    try:
+        resolved = urlsplit(url)
+        base = urlsplit(base_url)
+        same_host = _same_site_host(resolved.hostname, base.hostname)
+        same_port = _effective_url_port(resolved) == _effective_url_port(base)
+    except ValueError:
+        return False
+
+    if resolved.scheme != base.scheme:
+        return False
+    if resolved.username is not None:
+        return False
+    if resolved.password is not None:
+        return False
+    if not same_host:
+        return False
+    if not same_port:
+        return False
+    return True
 
 
 def resolve_site_url(url: str, base_url: str) -> Optional[str]:
@@ -32,19 +66,11 @@ def resolve_site_url(url: str, base_url: str) -> Optional[str]:
     """
     try:
         resolved_url = urljoin(base_url, url)
-        resolved = urlsplit(resolved_url)
-        base = urlsplit(base_url)
-        resolved_host = (resolved.hostname or "").lower().removeprefix("www.")
-        base_host = (base.hostname or "").lower().removeprefix("www.")
-        default_ports = {"http": 80, "https": 443}
-        same_port = (resolved.port or default_ports.get(resolved.scheme)) == (
-            base.port or default_ports.get(base.scheme))
     except ValueError:
         logger.warning("Ignoring malformed pagination URL: %s", url)
         return None
 
-    if (resolved.scheme != base.scheme or resolved.username is not None or resolved.password is not None
-            or not resolved_host or resolved_host != base_host or not same_port):
+    if not _is_same_site_url(resolved_url, base_url):
         logger.warning("Ignoring pagination URL outside the configured site: %s", url)
         return None
 
