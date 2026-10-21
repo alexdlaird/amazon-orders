@@ -9,6 +9,7 @@ import sys
 import unicodedata
 from datetime import date, datetime
 from typing import Iterable, List, Union, Optional, Callable, Any
+from urllib.parse import SplitResult, urljoin, urlsplit
 
 from bs4 import Tag, BeautifulSoup
 from dateutil import parser
@@ -17,6 +18,7 @@ from requests import Response
 from amazonorders.selectors import Selector
 
 logger = logging.getLogger(__name__)
+
 
 #: Matches the Japanese ``年``/``月``/``日`` date notation used by amazon.co.jp (e.g.
 #: ``2024年8月23日``), which ``dateutil`` cannot parse.
@@ -245,6 +247,43 @@ def has_display() -> bool:
     :return: Whether there's a display.
     """
     return not sys.platform.startswith("linux") or bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+
+
+def _site_host(host: Optional[str]) -> str:
+    return (host or "").lower().removeprefix("www.")
+
+
+def _effective_port(url: SplitResult) -> Optional[int]:
+    return url.port or {"http": 80, "https": 443}.get(url.scheme)
+
+
+def _is_same_site_url(url: SplitResult, base_url: SplitResult) -> bool:
+    return (url.scheme == base_url.scheme and
+            url.username is None and url.password is None and
+            bool(url.hostname) and _site_host(url.hostname) == _site_host(base_url.hostname) and
+            _effective_port(url) == _effective_port(base_url))
+
+
+def resolve_site_url(url: str, base_url: str) -> Optional[str]:
+    """
+    Resolve a link found on a page against ``base_url``, but only if it stays on the same Amazon site (with or
+    without ``www.``), so the session's cookies are never sent to another host.
+
+    :param url: The link, relative or absolute.
+    :param base_url: The Amazon site's base URL.
+    :return: The resolved URL, or ``None`` if it's malformed or on another site.
+    """
+    try:
+        resolved_url = urljoin(base_url, url)
+        same_site = _is_same_site_url(urlsplit(resolved_url), urlsplit(base_url))
+    except ValueError:
+        same_site = False
+
+    if not same_site:
+        logger.warning(f"Ignoring a link to another site: {url}")
+        return None
+
+    return resolved_url
 
 
 def cleanup_html_text(text: str) -> str:
