@@ -683,9 +683,8 @@ class AmazonOrders:
                 next_page_tag = util.select_one(page_response.parsed,
                                                 self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
-                    next_page = str(next_page_tag["href"])
-                    if not next_page.startswith("http"):
-                        next_page = f"{self.config.constants.BASE_URL}{next_page}"
+                    next_page = util.resolve_site_url(str(next_page_tag["href"]),
+                                                      self.config.constants.BASE_URL)
                 else:
                     logger.debug("No next page")
             else:
