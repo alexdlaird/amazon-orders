@@ -302,12 +302,13 @@ class AmazonOrders:
     def search_orders(self,
                       query: str) -> List[OrderSearchResult]:
         """
-        Search the Order history, across every year, as the search box on Your Orders does. Amazon matches the
-        query against each Order's Items (e.g. a product title), Order number, address and recipient, and lists
-        each matching Item. Fetch an Order's details with :func:`get_order`, by the result's
+        Search every year of the Order history for Orders by product title, Order number, address, or recipient,
+        as the search box on Your Orders does, getting each matching Item with its Order's number and date. Fetch
+        an Order's details with :func:`get_order`, by the result's
         :attr:`~amazonorders.entity.order_search_result.OrderSearchResult.order_number`.
 
-        :param query: What to search for.
+        :param query: What to search for: words from a product title, an Order number, or a name or address an
+            Order was sent to.
         :return: The OrderSearchResults, one per matching Item, or an empty list if nothing matched.
         """
         if not self.amazon_session.is_authenticated:
