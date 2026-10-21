@@ -29,7 +29,8 @@ class Shipment(Parsable):
 
         #: The Shipment Items.
         self.items: List[Item] = self._parse_items()
-        #: The Shipment delivery status.
+        #: The Shipment delivery status, e.g. "Delivered 26 August" or "Cancelled". ``None`` when Amazon shows none,
+        #: as it stops showing it on the history and details pages some weeks after a Shipment is delivered.
         self.delivery_status: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_SHIPMENT_DELIVERY_STATUS_SELECTOR)
         #: The Shipment tracking link.
