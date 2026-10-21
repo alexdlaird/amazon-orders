@@ -29,6 +29,7 @@ from amazonorders.exception import (
 from amazonorders.gift_cards import AmazonGiftCards
 from amazonorders.orders import AmazonOrders
 from amazonorders.output import OutputFormatter
+from amazonorders.prime import AmazonPrime
 from amazonorders.session import AmazonSession, IODefault
 from amazonorders.transactions import AmazonTransactions
 
@@ -531,6 +532,39 @@ def order_transactions(ctx: Context,
         click.echo(
             "... {total} Transactions parsed in {time} seconds.\n".format(total=len(order_transaction_list),
                                                                           time=int(end_time - start_time)), err=True)
+    except AmazonOrdersAuthRedirectError:
+        IOClick.echo_session_expired()
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+
+@amazon_orders_cli.command("prime-payments")
+@click.pass_context
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+              help="The output format. Defaults to text.")
+def prime_payments(ctx: Context, **kwargs: Any) -> None:
+    """
+    Get the Prime membership payment history.
+    """
+    amazon_session = ctx.obj["amazon_session"]
+
+    try:
+        CliAuth(amazon_session).authenticate()
+
+        config = ctx.obj["conf"]
+        amazon_prime = AmazonPrime(amazon_session,
+                                   config=config)
+
+        start_time = time.time()
+        prime_payments = amazon_prime.get_prime_payments()
+        end_time = time.time()
+
+        click.echo(config.output_cls(config).format(prime_payments, kwargs["output"]))
+
+        click.echo(
+            "... {total} Prime payments parsed in {time} seconds.\n".format(
+                total=len(prime_payments), time=int(end_time - start_time)), err=True)
     except AmazonOrdersAuthRedirectError:
         IOClick.echo_session_expired()
     except AmazonOrdersError as e:

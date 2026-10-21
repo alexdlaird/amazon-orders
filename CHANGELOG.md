@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - `InvoicePdf` entity, `AmazonOrders.get_invoice_pdfs()`, `parse_invoice_pdfs()`, and `download_invoice_pdf()`, and the `invoice-pdfs` CLI command (with `--download`), for an Order's invoice PDFs, including credit notes.
 - Parsing of amazon.de in English, with British English labels ("Postage & Packing", "Estimated VAT"), and its pages as test resources.
+- `AmazonPrime`, the `PrimePayment` entity, and the `prime-payments` CLI command, for the Prime membership payment history, whose fees are digital Orders not listed anywhere else.
 
 ### Fixed
 

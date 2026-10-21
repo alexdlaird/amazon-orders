@@ -67,8 +67,9 @@ Basic Usage
 ===========
 
 You'll use :class:`~amazonorders.session.AmazonSession` to authenticate your Amazon account, then
-:class:`~amazonorders.orders.AmazonOrders`, :class:`~amazonorders.transactions.AmazonTransactions`, and
-:class:`~amazonorders.gift_cards.AmazonGiftCards` to interact with account data.
+:class:`~amazonorders.orders.AmazonOrders`, :class:`~amazonorders.transactions.AmazonTransactions`,
+:class:`~amazonorders.gift_cards.AmazonGiftCards`, and :class:`~amazonorders.prime.AmazonPrime` to interact with
+account data.
 :func:`~amazonorders.orders.AmazonOrders.get_order_history` and
 :func:`~amazonorders.orders.AmazonOrders.get_order` are good places to start.
 
@@ -114,10 +115,10 @@ You can also run any command available to the main Python interface from the com
 Output Formats
 --------------
 
-The ``history``, ``order``, ``invoice-pdfs``, ``transactions``, ``order-transactions``, ``gift-card-activity``, and
-``family-members`` commands accept ``--output``, which renders Orders, Invoice PDFs, Transactions, Gift Card activity,
-and Amazon Household members as ``text`` (the default), ``json``, ``yaml``, or ``csv``. Progress messages are written to
-``stderr``, so redirecting ``stdout`` captures only the data.
+The ``history``, ``order``, ``invoice-pdfs``, ``transactions``, ``order-transactions``, ``gift-card-activity``,
+``family-members``, and ``prime-payments`` commands accept ``--output``, which renders Orders, Invoice PDFs,
+Transactions, Gift Card activity, Amazon Household members, and Prime payments as ``text`` (the default), ``json``,
+``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout`` captures only the data.
 
 .. code:: sh
 
