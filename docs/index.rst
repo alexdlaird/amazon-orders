@@ -225,6 +225,11 @@ Languages and Regions
   lets ``amazon-orders`` read the site's pages; its own CLI and messages stay in English. See
   :doc:`language-packages`.
 
+Each site has its own sign-in, so each keeps its own session: ``amazon.com``'s in ``cookies.json`` in the config
+directory, and every other site's beside it, named for the site (e.g. ``cookies.amazon.de.json``). Signing in with
+``--domain amazon.de`` leaves the ``amazon.com`` session as it is. An explicit ``cookie_jar_path`` is used for every
+site.
+
 AI Assistants
 -------------
 

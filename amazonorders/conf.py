@@ -7,6 +7,7 @@ import logging
 import os
 import threading
 from typing import Any, Dict, Optional, Union
+from urllib.parse import urlparse
 
 import yaml
 from bs4 import BeautifulSoup
@@ -24,6 +25,9 @@ cookies_file_lock = threading.Lock()
 debug_output_file_lock = threading.Lock()
 
 ENVIRONMENT_VARIABLE_PREFIX = "AMAZON_"
+
+#: The Amazon site whose session is kept in the default ``cookie_jar_path`` itself, rather than in a jar of its own.
+DEFAULT_COOKIE_JAR_SITE = "amazon.com"
 
 _LANGUAGE_PACKAGE_CLASSES = {
     "constants_class": "Constants",
@@ -159,7 +163,8 @@ class AmazonOrdersConfig:
             "auth_reattempt_wait": 5,
             # Where output files (for instance, HTML pages, when ``debug`` mode is enabled) will be written
             "output_dir": os.path.join(os.getcwd(), "output"),
-            "cookie_jar_path": os.path.join(DEFAULT_CONFIG_DIR, "cookies.json"),
+            # The session for ``amazon.com``; every other site's is kept beside it (see :attr:`cookie_jar_path`)
+            "cookie_jar_path": AmazonOrdersConfig._default_cookie_jar_path(),
             "constants_class": "amazonorders.constants.Constants",
             "selectors_class": "amazonorders.selectors.Selectors",
             "order_class": "amazonorders.entity.order.Order",
@@ -182,6 +187,10 @@ class AmazonOrdersConfig:
             # Set ``True`` to log a warning message instead of raising an exception when a required field is missing.
             "warn_on_missing_required_field": False
         }
+
+    @staticmethod
+    def _default_cookie_jar_path() -> str:
+        return os.path.join(DEFAULT_CONFIG_DIR, "cookies.json")
 
     def _load_classes(self) -> None:
         """
@@ -381,6 +390,43 @@ class AmazonOrdersConfig:
         """
         self._data["domain"] = domain
         self.constants = self._instantiate_constants()
+
+    @property
+    def site(self) -> str:
+        """The active Amazon site, the host of the ``domain`` without ``www.`` (e.g. ``amazon.de``)."""
+        return (urlparse(self.constants.BASE_URL).hostname or "").removeprefix("www.")
+
+    @property
+    def cookie_jar_path(self) -> str:
+        """
+        The path the session for the active ``domain`` is persisted to, since each Amazon site has its own sign-in.
+        With the default ``cookie_jar_path``, the ``amazon.com`` session is kept there (``cookies.json``), and every
+        other site's beside it, named for the site (e.g. ``cookies.amazon.de.json``). Any other ``cookie_jar_path``
+        is used as-is, whatever the site.
+        """
+        cookie_jar_path = self._get("cookie_jar_path")
+        if cookie_jar_path != self._default_cookie_jar_path() or self.site == DEFAULT_COOKIE_JAR_SITE:
+            return cookie_jar_path
+
+        root, extension = os.path.splitext(cookie_jar_path)
+        return f"{root}.{self.site}{extension}"
+
+    @cookie_jar_path.setter
+    def cookie_jar_path(self,
+                        value: str) -> None:
+        self._data["cookie_jar_path"] = value
+
+    @property
+    def shared_cookie_jar_path(self) -> Optional[str]:
+        """
+        The default ``cookie_jar_path``, which every site's session was persisted to before each site had its own,
+        when the active ``domain`` now has a jar of its own (see :attr:`cookie_jar_path`), otherwise ``None``.
+        """
+        shared_cookie_jar_path = self._get("cookie_jar_path")
+        if self.cookie_jar_path == shared_cookie_jar_path:
+            return None
+
+        return shared_cookie_jar_path
 
     def __getattr__(self,
                     key: str) -> Any:
