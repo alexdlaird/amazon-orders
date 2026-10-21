@@ -4,18 +4,28 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.9.5...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.9.6...HEAD)
+
+## [4.9.6](https://github.com/alexdlaird/amazon-orders/compare/4.9.5...4.9.6) - 2026-10-21
+
+### Added
+
+- `AmazonPrime`, the `PrimePayment` entity, and the `prime-payments` CLI command, for the Prime membership payment history.
+
+### Fixed
+
+- Bug fixes and stability improvements.
 
 ## [4.9.5](https://github.com/alexdlaird/amazon-orders/compare/4.9.4...4.9.5) - 2026-10-20
 
 ### Added
 
 - `InvoicePdf` entity, `AmazonOrders.get_invoice_pdfs()`, `parse_invoice_pdfs()`, and `download_invoice_pdf()`, and the `invoice-pdfs` CLI command (with `--download`), for an Order's invoice PDFs, including credit notes.
-- Parsing of amazon.de in English, with British English labels ("Postage & Packing", "Estimated VAT"), and its pages as test resources.
+- Parsing of `amazon.de` in English, with British English labels ("Postage & Packing", "Estimated VAT").
 
 ### Fixed
 
-- `Recipient.address` keeps every line of the address, including the country, where it ran the first two together.
+- `Recipient.address` keeps every line of the address, including the country.
 - Bug fixes and stability improvements.
 
 ## [4.9.4](https://github.com/alexdlaird/amazon-orders/compare/4.9.3...4.9.4) - 2026-10-19

@@ -5,7 +5,7 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import quote, urlencode
 
 from bs4 import BeautifulSoup, Tag
@@ -657,11 +657,11 @@ class AmazonOrders:
                                   progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
                                   total_known: bool = False
                                   ) -> Tuple[List[Order], Optional[str], int]:
-        order_tasks: List[Coroutine[Any, Any, Order]] = []
+        order_builds: List[Tuple[Tag, int]] = []
         start_index = current_index
         orders_before_start_on_page = current_index % self.config.constants.ORDER_HISTORY_PAGE_SIZE
 
-        while next_page and (limit is None or len(order_tasks) < limit):
+        while next_page and (limit is None or len(order_builds) < limit):
             page_response = self.amazon_session.get(next_page)
             self.amazon_session.check_response(page_response, meta={"index": current_index})
 
@@ -673,7 +673,7 @@ class AmazonOrders:
                 break
 
             for order_tag in order_tags[orders_before_start_on_page:]:
-                order_tasks.append(self._async_wrapper(self._build_order, order_tag, full_details, current_index))
+                order_builds.append((order_tag, current_index))
 
                 current_index += 1
             orders_before_start_on_page = 0
@@ -692,16 +692,28 @@ class AmazonOrders:
                 logger.debug("keep_paging is False, not paging")
 
             if progress:
-                progress(len(order_tasks))
+                progress(len(order_builds))
             if progress_with_total:
                 order_count = self._parse_order_count(
                     util.select_one(page_response.parsed, self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR),
                     self.config) if total_known else None
-                progress_with_total(len(order_tasks),
-                                    self._expected_total(order_count, start_index, len(order_tasks), limit,
+                progress_with_total(len(order_builds),
+                                    self._expected_total(order_count, start_index, len(order_builds), limit,
                                                          bool(next_page)))
 
-        return await asyncio.gather(*order_tasks), next_page, current_index
+        if not order_builds:
+            return [], next_page, current_index
+
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.config.thread_pool_size) as pool:
+            try:
+                orders = await asyncio.gather(
+                    *(loop.run_in_executor(pool, self._build_order, tag, full_details, index)
+                      for tag, index in order_builds))
+            except BaseException:
+                pool.shutdown(cancel_futures=True)
+                raise
+        return orders, next_page, current_index
 
     @staticmethod
     def _expected_total(order_count: Optional[int],
@@ -732,7 +744,7 @@ class AmazonOrders:
         return expected
 
     def _build_order(self,
-                     order_tag: List[Tag],
+                     order_tag: Tag,
                      full_details: bool,
                      current_index: int) -> Order:
         order: Order = self.config.order_cls(order_tag, self.config, index=current_index)
@@ -781,11 +793,3 @@ class AmazonOrders:
                                     f"Check if Amazon changed the HTML.")
 
         return order
-
-    async def _async_wrapper(self,
-                             func: Callable,
-                             *args: Any) -> Order:
-        loop = asyncio.get_running_loop()
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.config.thread_pool_size) as pool:
-            result = await loop.run_in_executor(pool, func, *args)
-        return result

@@ -89,6 +89,13 @@ class Constants:
     INVOICE_PDF_CONTENT_TYPE = "application/pdf"
 
     ##########################################################################
+    # URLs for Prime
+    ##########################################################################
+
+    PRIME_PAYMENTS_ROUTE = "/mc/payments"
+    PRIME_PAYMENTS_URL = f"{BASE_URL}{PRIME_PAYMENTS_ROUTE}"
+
+    ##########################################################################
     # URLs for Transactions
     ##########################################################################
 
@@ -378,6 +385,7 @@ class Constants:
         self.ORDER_INVOICE_URL = f"{base_url}/gp/css/summary/print.html"
         self.TRACKING_URL = f"{base_url}{self.TRACKING_ROUTE}"
         self.INVOICE_PDFS_URL = f"{base_url}{self.INVOICE_PDFS_ROUTE}"
+        self.PRIME_PAYMENTS_URL = f"{base_url}{self.PRIME_PAYMENTS_ROUTE}"
         self.TRANSACTION_HISTORY_URL = f"{base_url}{self.TRANSACTION_HISTORY_ROUTE}"
         self.TRANSACTION_DATA_URL = f"{base_url}{self.TRANSACTION_DATA_ROUTE}"
         self.GIFT_CARD_BALANCE_URL = f"{base_url}{self.GIFT_CARD_BALANCE_ROUTE}"

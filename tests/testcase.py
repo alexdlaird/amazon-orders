@@ -7,10 +7,12 @@ from datetime import date
 
 class TestCase(unittest.TestCase):
     def assert_orders_list_index(self, orders):
-        for i in range(1, len(orders)):
-            if orders[i].index < orders[i - 1].index:
-                return False
-        return True
+        first_index = orders[0].index if orders else 0
+        self.assertEqual(list(range(first_index, first_index + len(orders))), [order.index for order in orders])
+
+    def assert_populated_on_any(self, entities, attr_name):
+        self.assertTrue(any(getattr(entity, attr_name) for entity in entities),
+                        f"No entity of {len(entities)} has {attr_name} populated")
 
     def assert_populated_generic(self, order, full_details):
         self.assertIsNotNone(order.order_number)
