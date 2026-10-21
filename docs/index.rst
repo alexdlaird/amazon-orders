@@ -60,7 +60,7 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==4.9.*``, not ``==4.9.0``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==4.10.*``, not ``==4.10.0``)
 to ensure you always get the latest stable release.
 
 Basic Usage
@@ -224,6 +224,11 @@ Languages and Regions
 - **Any site, in another language**: install a language package and set ``language_package``. A language package
   lets ``amazon-orders`` read the site's pages; its own CLI and messages stay in English. See
   :doc:`language-packages`.
+
+Each site has its own sign-in, so each keeps its own session: ``amazon.com``'s in ``cookies.json`` in the config
+directory, and every other site's beside it, named for the site (e.g. ``cookies.amazon.de.json``). Signing in with
+``--domain amazon.de`` leaves the ``amazon.com`` session as it is. An explicit ``cookie_jar_path`` is used for every
+site.
 
 AI Assistants
 -------------

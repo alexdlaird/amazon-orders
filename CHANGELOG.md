@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.9.6...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.10.0...HEAD)
+
+## [4.10.0](https://github.com/alexdlaird/amazon-orders/compare/4.9.6...4.10.0) - 2026-10-21
+
+### Added
+
+- `amazonorders.util.has_display()`, the display check made before opening a browser window.
+
+### Changed
+
+- Each Amazon site keeps its own session (e.g. `cookies.amazon.de.json`), so signing in to one with `domain` no longer signs out of another.
+
+### Fixed
+
+- Akamai's interstitial JavaScript challenge is now detected, and `PlaywrightJSAuthForm` tries to resolve it in the browser.
+- Bug fixes and stability improvements.
 
 ## [4.9.6](https://github.com/alexdlaird/amazon-orders/compare/4.9.5...4.9.6) - 2026-10-21
 

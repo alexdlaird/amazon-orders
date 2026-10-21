@@ -11,6 +11,7 @@ from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.contrib.browser.playwright import (
     PlaywrightAcicForm,
     PlaywrightBrowserLauncher,
+    PlaywrightBrowserLogin,
     PlaywrightJSAuthForm,
     PlaywrightManualWafForm,
 )
@@ -820,11 +821,26 @@ class TestPlaywrightJSAuthForm(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "auth", "post-signin-js-bot-challenge.html"),
                   "r", encoding="utf-8") as f:
             self.js_html = f.read()
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "akamai-interstitial.html"),
+                  "r", encoding="utf-8") as f:
+            self.akamai_html = f.read()
 
     def test_select_form_detects_js_robot_challenge(self):
         # GIVEN
         form = PlaywrightJSAuthForm(self.test_config)
         parsed = BeautifulSoup(self.js_html, self.test_config.bs4_parser)
+
+        # WHEN
+        result = form.select_form(self.amazon_session, parsed)
+
+        # THEN
+        self.assertTrue(result)
+        self.assertEqual(self.amazon_session, form.amazon_session)
+
+    def test_select_form_detects_akamai_interstitial(self):
+        # GIVEN
+        form = PlaywrightJSAuthForm(self.test_config)
+        parsed = BeautifulSoup(self.akamai_html, self.test_config.bs4_parser)
 
         # WHEN
         result = form.select_form(self.amazon_session, parsed)
@@ -845,12 +861,25 @@ class TestPlaywrightJSAuthForm(UnitTestCase):
         # THEN
         self.assertFalse(result)
 
+    def test_select_form_returns_false_on_home_page(self):
+        # GIVEN
+        form = PlaywrightJSAuthForm(self.test_config)
+        with open(os.path.join(self.RESOURCES_DIR, "auth", "unauth-index.html"), "r", encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN
+        result = form.select_form(self.amazon_session, parsed)
+
+        # THEN
+        self.assertFalse(result)
+
     def test_regex_sourced_from_config_constants(self):
         # GIVEN / WHEN
         form = PlaywrightJSAuthForm(self.test_config)
 
         # THEN
         self.assertEqual(self.test_config.constants.JS_ROBOT_TEXT_REGEX, form.regex)
+        self.assertEqual(self.test_config.constants.AKAMAI_INTERSTITIAL_REGEX, form.markup_regex)
 
     def test_is_challenge_url_always_false(self):
         # GIVEN
@@ -886,7 +915,35 @@ class TestPlaywrightJSAuthForm(UnitTestCase):
         # THEN
         mock_page.wait_for_function.assert_called_once()
         _, kwargs = mock_page.wait_for_function.call_args
-        self.assertEqual([form.regex, 120], kwargs["arg"])
+        self.assertEqual([form.regex, form.markup_regex, 120], kwargs["arg"])
+        self.assertEqual(self.test_config.browser_timeout * 1000, kwargs["timeout"])
+        self.assertEqual("refetched", result)
+        self.amazon_session.get.assert_called_once_with(original_url, persist_cookies=True)
+
+    def test_submit_waits_for_akamai_interstitial_markup_to_disappear(self):
+        # GIVEN
+        form = PlaywrightJSAuthForm(self.test_config)
+        parsed = BeautifulSoup(self.akamai_html, self.test_config.bs4_parser)
+        form.select_form(self.amazon_session, parsed)
+
+        original_url = "https://www.amazon.com/"
+        last_response = MagicMock()
+        last_response.url = original_url
+        self.amazon_session.get = MagicMock(return_value="refetched")
+
+        mock_sync_playwright, mock_page, _, _ = _make_mock_playwright(final_url=original_url)
+        fake_module = _playwright_module(mock_sync_playwright)
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            result = form.submit(last_response)
+
+        # THEN
+        mock_page.evaluate.assert_not_called()
+        mock_page.wait_for_function.assert_called_once()
+        _, kwargs = mock_page.wait_for_function.call_args
+        self.assertEqual([form.regex, form.markup_regex, 0], kwargs["arg"],
+                         "the page may already have reloaded, so its text length can't be the bar to clear")
         self.assertEqual(self.test_config.browser_timeout * 1000, kwargs["timeout"])
         self.assertEqual("refetched", result)
         self.amazon_session.get.assert_called_once_with(original_url, persist_cookies=True)
@@ -1067,3 +1124,21 @@ class TestPlaywrightManualWafForm(UnitTestCase):
         # THEN
         self.assertEqual("refetched", result)
         self.amazon_session.get.assert_called_once_with(final_url, persist_cookies=True)
+
+
+class TestPlaywrightBrowserLogin(UnitTestCase):
+    @patch("amazonorders.contrib.browser.playwright.has_display", return_value=False)
+    def test_login_without_display_raises(self, mock_has_display):
+        # GIVEN
+        mock_sync_playwright, _, _, _ = _make_mock_playwright()
+        browser_login = PlaywrightBrowserLogin(AmazonSession(config=self.test_config))
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(),
+                                      "playwright.sync_api": _playwright_module(mock_sync_playwright)}), \
+                self.assertRaises(AmazonOrdersError) as cm:
+            browser_login.login()
+
+        # THEN
+        self.assertIn("requires a display", str(cm.exception))
+        mock_sync_playwright.assert_not_called()

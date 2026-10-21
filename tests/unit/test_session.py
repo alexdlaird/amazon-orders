@@ -266,6 +266,88 @@ class TestSession(UnitTestCase):
         self.assertEqual(".amazon.com", cookies["session-id"])
 
     @responses.activate
+    def test_site_session_persisted_to_own_cookie_jar(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        with open(self.test_cookie_jar_path, "r", encoding="utf-8") as f:
+            shared_before = f.read()
+        config = AmazonOrdersConfig(data={"domain": "amazon.de", "output_dir": self.test_output_dir})
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=config)
+        url = f"{config.constants.BASE_URL}/some/page"
+        responses.add(responses.GET, url, body="<html></html>", status=200,
+                      headers={"Set-Cookie": "session-id=de-session-id; Domain=.amazon.de; Path=/"})
+
+        # WHEN
+        amazon_session.get(url, persist_cookies=True)
+
+        # THEN the amazon.com session is untouched
+        self.assertEqual(os.path.join(os.path.dirname(self.test_cookie_jar_path), "cookies.amazon.de.json"),
+                         config.cookie_jar_path)
+        with open(config.cookie_jar_path, "r", encoding="utf-8") as f:
+            persisted = json.loads(f.read())
+        self.assertEqual(["de-session-id"], [cookie["value"] for cookie in persisted
+                                             if cookie["name"] == "session-id" and cookie["domain"] == ".amazon.de"])
+        with open(self.test_cookie_jar_path, "r", encoding="utf-8") as f:
+            self.assertEqual(shared_before, f.read())
+
+    @responses.activate
+    def test_site_logout_keeps_other_site_session(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        with open(self.test_cookie_jar_path, "r", encoding="utf-8") as f:
+            shared_before = f.read()
+        config = AmazonOrdersConfig(data={"domain": "amazon.de", "output_dir": self.test_output_dir})
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=config)
+        responses.add(responses.GET, config.constants.SIGN_OUT_URL, body="<html></html>", status=200)
+
+        # WHEN
+        amazon_session.logout()
+
+        # THEN
+        with open(self.test_cookie_jar_path, "r", encoding="utf-8") as f:
+            self.assertEqual(shared_before, f.read())
+        self.assertTrue(os.path.exists(config.cookie_jar_path))
+
+    def test_site_session_loads_from_shared_cookie_jar(self):
+        # GIVEN a session saved before each site had its own jar
+        with open(self.test_cookie_jar_path, "w", encoding="utf-8") as f:
+            f.write(json.dumps([
+                {"name": "x-acbde", "value": "de-main", "domain": ".amazon.de", "path": "/"},
+                {"name": "x-main", "value": "com-main", "domain": ".amazon.com", "path": "/"},
+                {"name": "x-main", "value": "au-main", "domain": ".amazon.com.au", "path": "/"},
+            ]))
+
+        # WHEN
+        de_session = AmazonSession("some-username@gmail.com", "some-password",
+                                   config=AmazonOrdersConfig(data={"domain": "amazon.de"}))
+        com_session = AmazonSession("some-username@gmail.com", "some-password",
+                                    config=AmazonOrdersConfig(data={"domain": "amazon.com"}))
+
+        # THEN another site gets only its own cookies, and amazon.com keeps the jar as it is
+        self.assertEqual({("x-acbde", ".amazon.de")},
+                         {(cookie.name, cookie.domain) for cookie in de_session.session.cookies
+                          if cookie.name.startswith("x-")})
+        self.assertFalse(os.path.exists(de_session.config.cookie_jar_path))
+        self.assertEqual({("x-acbde", ".amazon.de"), ("x-main", ".amazon.com"), ("x-main", ".amazon.com.au")},
+                         {(cookie.name, cookie.domain) for cookie in com_session.session.cookies
+                          if cookie.name.startswith("x-")})
+
+    def test_site_cookie_jar_preferred_over_shared_cookie_jar(self):
+        # GIVEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.de"})
+        with open(self.test_cookie_jar_path, "w", encoding="utf-8") as f:
+            f.write(json.dumps([{"name": "x-acbde", "value": "old", "domain": ".amazon.de", "path": "/"}]))
+        with open(config.cookie_jar_path, "w", encoding="utf-8") as f:
+            f.write(json.dumps([{"name": "x-acbde", "value": "new", "domain": ".amazon.de", "path": "/"}]))
+
+        # WHEN
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=config)
+
+        # THEN
+        self.assertEqual(["new"], [cookie.value for cookie in amazon_session.session.cookies
+                                   if cookie.name == "x-acbde"])
+
+    @responses.activate
     def test_reissued_cookie_replaces_persisted_cookie(self):
         # GIVEN
         self.given_persisted_session_exists()
@@ -1063,6 +1145,27 @@ class TestSession(UnitTestCase):
                       str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
+
+    @responses.activate
+    def test_akamai_interstitial_login_blocker(self):
+        # GIVEN
+        self.given_unauthenticated_home_page("akamai-interstitial.html")
+        signin_response = responses.add(
+            responses.GET,
+            self.test_config.constants.SIGN_IN_URL,
+            status=200,
+        )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
+            self.amazon_session.login()
+
+        # THEN
+        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertIn("Amazon returned a JavaScript-based authentication challenge.",
+                      str(cm.exception))
+        self.assertEqual(1, self.index_response.call_count)
+        self.assertEqual(0, signin_response.call_count)
 
     @responses.activate
     def test_acic_login_blocker(self):

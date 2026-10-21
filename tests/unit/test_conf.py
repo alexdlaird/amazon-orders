@@ -399,3 +399,61 @@ some_custom_config: {custom_config}
         self.assertEqual("https://www.amazon.co.uk", config.constants.BASE_URL)
         self.assertIn("AMAZON_BASE_URL is deprecated", "".join(cm.output))
         self.assertEqual("https://www.amazon.ca", config_with_domain.constants.BASE_URL)
+
+    def test_cookie_jar_path_per_site(self):
+        # GIVEN
+        shared_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.json")
+
+        # WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.de"})
+
+        # THEN amazon.com keeps the default jar, and every other site gets its own beside it
+        self.assertEqual("amazon.de", config.site)
+        self.assertEqual(os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.amazon.de.json"), config.cookie_jar_path)
+        self.assertEqual(shared_cookie_jar_path, config.shared_cookie_jar_path)
+
+        # WHEN
+        config.set_domain("https://www.amazon.com")
+
+        # THEN
+        self.assertEqual("amazon.com", config.site)
+        self.assertEqual(shared_cookie_jar_path, config.cookie_jar_path)
+        self.assertIsNone(config.shared_cookie_jar_path)
+
+    def test_cookie_jar_path_per_site_after_save(self):
+        # GIVEN the default cookie_jar_path is persisted, as save() persists every default
+        AmazonOrdersConfig(data={"domain": "amazon.co.uk"}).save()
+
+        # WHEN
+        config = AmazonOrdersConfig()
+
+        # THEN
+        self.assertEqual(os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.amazon.co.uk.json"), config.cookie_jar_path)
+
+    def test_explicit_cookie_jar_path_wins_for_every_site(self):
+        # GIVEN
+        explicit_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "my-cookies.json")
+
+        # WHEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.de", "cookie_jar_path": explicit_cookie_jar_path})
+
+        # THEN
+        self.assertEqual(explicit_cookie_jar_path, config.cookie_jar_path)
+        self.assertIsNone(config.shared_cookie_jar_path)
+
+        # WHEN
+        with patch.dict(os.environ, {"AMAZON_COOKIE_JAR_PATH": "/some/env-cookies.json"}):
+            config = AmazonOrdersConfig(data={"domain": "amazon.de"})
+
+        # THEN
+        self.assertEqual("/some/env-cookies.json", config.cookie_jar_path)
+
+    def test_cookie_jar_path_setter(self):
+        # GIVEN
+        config = AmazonOrdersConfig(data={"domain": "amazon.de"})
+
+        # WHEN
+        config.cookie_jar_path = "/some/cookies.json"
+
+        # THEN
+        self.assertEqual("/some/cookies.json", config.cookie_jar_path)

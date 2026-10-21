@@ -168,6 +168,7 @@ class Constants:
     COOKIES_SET_WHEN_AUTHENTICATED = ["x-main"]
     SIGNED_OUT_TEXT = "Hello, sign in"
     JS_ROBOT_TEXT_REGEX = r"[.\s\S]*verify that you're not a robot[.\s\S]*Enable JavaScript[.\s\S]*"
+    AKAMAI_INTERSTITIAL_REGEX = r"/_sec/verify\?provider=interstitial"
     GOKU_PROPS_REGEX = r"window\.gokuProps\s*=\s*(\{.*?\});"
     ACIC_CHALLENGE_PATH = "/ax/aaut/verify/ap/challenge"
     WAF_TOKEN_COOKIE = "aws-waf-token"

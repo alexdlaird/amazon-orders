@@ -78,7 +78,7 @@ class Parsable:
 
         try:
             return parse_function(**kwargs)
-        except (AttributeError, IndexError, ValueError):
+        except (AttributeError, IndexError, ValueError, TypeError, RecursionError):
             function = "simple_parse"
             if parse_function.__name__ != function:
                 function = parse_function.__name__.split("_parse_")[1]

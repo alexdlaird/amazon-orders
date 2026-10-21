@@ -146,6 +146,8 @@ class AmazonSession:
                 with open(self.config.cookie_jar_path, "r", encoding="utf-8") as f:
                     self._cookie_jar_mtime = os.fstat(f.fileno()).st_mtime
                     self._load_cookie_jar_data(json.loads(f.read()))
+            else:
+                self._load_shared_cookie_jar()
 
     @property
     def cookie_jar_mtime(self) -> Optional[float]:
@@ -181,7 +183,8 @@ class AmazonSession:
                         config.selectors.CAPTCHA_OTP_FORM_SELECTOR),
                 AcicAuthBlocker(config),
                 JSAuthBlocker(config,
-                              config.constants.JS_ROBOT_TEXT_REGEX)]
+                              config.constants.JS_ROBOT_TEXT_REGEX,
+                              config.constants.AKAMAI_INTERSTITIAL_REGEX)]
 
     def request(self,
                 method: str,
@@ -381,6 +384,33 @@ class AmazonSession:
             self.session.cookies.set(cookie["name"], cookie["value"], domain=cookie.get("domain", ""),
                                      path=cookie.get("path", "/"), secure=cookie.get("secure", False),
                                      expires=cookie.get("expires"))
+
+    def _load_shared_cookie_jar(self) -> None:
+        """
+        Load the active site's cookies from the jar every site shared before each had its own, if the site has no jar
+        of its own yet, so a session saved there still works. The shared jar is left as it is, and the site's
+        cookies are persisted to its own jar from then on.
+        """
+        shared_cookie_jar_path = self.config.shared_cookie_jar_path
+        if not shared_cookie_jar_path or not os.path.exists(shared_cookie_jar_path):
+            return
+
+        with open(shared_cookie_jar_path, "r", encoding="utf-8") as f:
+            data = json.loads(f.read())
+
+        if isinstance(data, list):
+            data = [cookie for cookie in data if self._is_site_cookie(cookie)]
+            if not data:
+                return
+
+        logger.debug(f"Loading the {self.config.site} session from {shared_cookie_jar_path}, which every site "
+                     f"shared, until it is saved to {self.config.cookie_jar_path} ...")
+        self._load_cookie_jar_data(data)
+
+    def _is_site_cookie(self,
+                        cookie: Dict[str, Any]) -> bool:
+        domain = (cookie.get("domain") or "").lstrip(".")
+        return domain == self.config.site or domain.endswith(f".{self.config.site}")
 
     def _write_cookie_jar(self) -> None:
         file_descriptor, temp_path = tempfile.mkstemp(dir=os.path.dirname(self.config.cookie_jar_path),
