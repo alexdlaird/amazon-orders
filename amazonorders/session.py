@@ -181,7 +181,8 @@ class AmazonSession:
                         config.selectors.CAPTCHA_OTP_FORM_SELECTOR),
                 AcicAuthBlocker(config),
                 JSAuthBlocker(config,
-                              config.constants.JS_ROBOT_TEXT_REGEX)]
+                              config.constants.JS_ROBOT_TEXT_REGEX,
+                              config.constants.AKAMAI_INTERSTITIAL_REGEX)]
 
     def request(self,
                 method: str,

@@ -638,8 +638,9 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
     headless browser. This is a best-effort form; effectiveness
     depends on whether the challenge can be resolved by a real browser without a visual puzzle.
 
-    Detects the challenge via ``JS_ROBOT_TEXT_REGEX``
-    and waits for navigation away from the original challenge URL path.
+    Detects the challenge via ``JS_ROBOT_TEXT_REGEX`` against the page text, or Akamai Bot Manager's interstitial via
+    ``AKAMAI_INTERSTITIAL_REGEX`` against its markup, and waits for the page to render something other than the
+    challenge.
 
     Register by adding ``amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm`` to ``auth_forms_classes`` in
     :class:`~amazonorders.conf.AmazonOrdersConfig`.
@@ -650,38 +651,44 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
         super().__init__(config)
         #: The regex used to detect the JavaScript bot-detection page text.
         self.regex: str = config.constants.JS_ROBOT_TEXT_REGEX
+        #: The regex used to detect Akamai's interstitial JavaScript challenge by its markup, since it has no text.
+        self.markup_regex: str = config.constants.AKAMAI_INTERSTITIAL_REGEX
+        self._found_by_markup: bool = False
 
     def select_form(self,
                     amazon_session: "AmazonSession",
                     parsed: Tag) -> bool:
         """
-        Detect a JavaScript bot-detection page by matching
-        ``JS_ROBOT_TEXT_REGEX`` against the page text.
+        Detect a JavaScript bot-detection page by matching ``JS_ROBOT_TEXT_REGEX`` against the page text, or Akamai's
+        interstitial by matching ``AKAMAI_INTERSTITIAL_REGEX`` against its markup.
 
         :param amazon_session: The ``AmazonSession`` on which to submit the form.
         :param parsed: The ``Tag`` for the page being inspected.
         :return: ``True`` if a JavaScript bot challenge was detected, ``False`` otherwise.
         """
         self.amazon_session = amazon_session
-        return bool(re.search(self.regex, parsed.text))
+        self._found_by_markup = bool(re.search(self.markup_regex, str(parsed)))
+        return self._found_by_markup or bool(re.search(self.regex, parsed.text))
 
     def _on_challenge_page(self, page: Any, context: Any, output_dir: Optional[str]) -> None:
         # The challenge resolves by reloading the original URL, so wait on the content rather than the URL.
         # The reload leaves the DOM empty then partially rendered, so the challenge page's own length is
-        # the bar a resolved page has to clear
+        # the bar a resolved page has to clear. Akamai's interstitial has no text, and usually reloads before
+        # page.goto() returns, so it has resolved once its markup is gone and the page has any text
         from playwright.sync_api import TimeoutError as PlaywrightTimeoutError  # type: ignore[import-not-found]
 
-        challenge_text_length = page.evaluate(BODY_TEXT_LENGTH_JS)
+        challenge_text_length = 0 if self._found_by_markup else page.evaluate(BODY_TEXT_LENGTH_JS)
 
         try:
             page.wait_for_function(
-                "([pattern, challengeTextLength]) => {"
+                "([pattern, markupPattern, challengeTextLength]) => {"
                 "  const el = document.body;"
                 "  if (!el) return false;"
                 "  const text = el.innerText || '';"
-                "  return text.length > challengeTextLength && !new RegExp(pattern, 'i').test(text);"
+                "  return text.length > challengeTextLength && !new RegExp(pattern, 'i').test(text) &&"
+                "    !new RegExp(markupPattern).test(document.documentElement.innerHTML);"
                 "}",
-                arg=[self.regex, challenge_text_length],
+                arg=[self.regex, self.markup_regex, challenge_text_length],
                 timeout=self.config.browser_timeout * 1000,
             )
         except PlaywrightTimeoutError as e:

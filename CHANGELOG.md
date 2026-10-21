@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.9.6...HEAD)
 
+### Fixed
+
+- Akamai Bot Manager's interstitial, a JavaScript challenge Amazon sometimes serves in place of a page, is now detected as a JavaScript-based authentication challenge (with `Constants.AKAMAI_INTERSTITIAL_REGEX`) instead of being read as the page, and `PlaywrightJSAuthForm` resolves it in the browser.
+
 ## [4.9.6](https://github.com/alexdlaird/amazon-orders/compare/4.9.5...4.9.6) - 2026-10-21
 
 ### Added

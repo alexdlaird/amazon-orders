@@ -581,8 +581,10 @@ class AcicAuthBlocker(AuthForm):
 class JSAuthBlocker(AuthForm):
     def __init__(self,
                  config: AmazonOrdersConfig,
-                 regex: str) -> None:
+                 regex: str,
+                 markup_regex: Optional[str] = None) -> None:
         self.regex = regex
+        self.markup_regex = markup_regex
 
         super().__init__(config, None)
 
@@ -592,7 +594,7 @@ class JSAuthBlocker(AuthForm):
         if not self.regex:
             raise AmazonOrdersError("Must set a regex first.")  # pragma: no cover
 
-        if re.search(self.regex, parsed.text):
+        if re.search(self.regex, parsed.text) or (self.markup_regex and re.search(self.markup_regex, str(parsed))):
             _raise_js_challenge_error()
 
         return False
