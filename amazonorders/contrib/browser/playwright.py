@@ -25,7 +25,7 @@ from amazonorders.exception import (
     AmazonOrdersWafSolverError,
 )
 from amazonorders.forms import AuthForm
-from amazonorders.util import AmazonSessionResponse
+from amazonorders.util import AmazonSessionResponse, has_display
 
 if TYPE_CHECKING:
     from amazonorders.contrib.waf.base import AwsWafForm
@@ -873,8 +873,7 @@ class PlaywrightBrowserLogin:
             logger.debug(f"Skipped pre-filling the username in the browser: {e}")
 
     def _require_display(self) -> None:
-        if (not self.headless and sys.platform.startswith("linux") and
-                not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))):
+        if not self.headless and not has_display():
             raise AmazonOrdersError("Signing in with a browser requires a display, and this machine doesn't have one.")
 
     def _wait_for_sign_in(self,

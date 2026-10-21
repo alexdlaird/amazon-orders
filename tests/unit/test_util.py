@@ -1,12 +1,15 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import os
+import sys
 from datetime import date
+from unittest.mock import patch
 
 from bs4 import BeautifulSoup
 
 from amazonorders.selectors import Selector
-from amazonorders.util import to_type, to_date, cleanup_html_text, select, select_one
+from amazonorders.util import to_type, to_date, cleanup_html_text, has_display, select, select_one
 from tests.unittestcase import UnitTestCase
 
 
@@ -131,3 +134,33 @@ class TestUtil(UnitTestCase):
 
         # THEN
         self.assertIsNone(tag)
+
+    @patch.object(sys, "platform", "linux")
+    def test_has_display_linux_without_display(self):
+        # GIVEN
+        with patch.dict(os.environ):
+            os.environ.pop("DISPLAY", None)
+            os.environ.pop("WAYLAND_DISPLAY", None)
+
+            # WHEN / THEN
+            self.assertFalse(has_display())
+
+    @patch.object(sys, "platform", "linux")
+    def test_has_display_linux_with_display(self):
+        # GIVEN
+        for name, value in (("DISPLAY", ":0"), ("WAYLAND_DISPLAY", "wayland-0")):
+            with self.subTest(name=name), patch.dict(os.environ, {name: value}):
+                os.environ.pop("WAYLAND_DISPLAY" if name == "DISPLAY" else "DISPLAY", None)
+
+                # WHEN / THEN
+                self.assertTrue(has_display())
+
+    @patch.object(sys, "platform", "darwin")
+    def test_has_display_assumed_off_linux(self):
+        # GIVEN
+        with patch.dict(os.environ):
+            os.environ.pop("DISPLAY", None)
+            os.environ.pop("WAYLAND_DISPLAY", None)
+
+            # WHEN / THEN
+            self.assertTrue(has_display())
