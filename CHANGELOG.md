@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.9.6...HEAD)
 
+### Changed
+
+- Each Amazon site's session has its own cookie jar, so signing in to one site with `domain` (or `--domain`) no longer replaces another's. `amazon.com`'s session stays in `cookies.json`, and every other site's is kept beside it (e.g. `cookies.amazon.de.json`). A session saved for another site in `cookies.json` is still loaded until that site's own jar is saved. An explicit `cookie_jar_path` is still used as-is for every site.
+
 ### Fixed
 
 - Akamai's interstitial JavaScript challenge is now detected, and `PlaywrightJSAuthForm` tries to resolve it in the browser.
