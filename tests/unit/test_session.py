@@ -1065,6 +1065,27 @@ class TestSession(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
 
     @responses.activate
+    def test_akamai_interstitial_login_blocker(self):
+        # GIVEN
+        self.given_unauthenticated_home_page("akamai-interstitial.html")
+        signin_response = responses.add(
+            responses.GET,
+            self.test_config.constants.SIGN_IN_URL,
+            status=200,
+        )
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthError) as cm:
+            self.amazon_session.login()
+
+        # THEN
+        self.assertFalse(self.amazon_session.is_authenticated)
+        self.assertIn("Amazon returned a JavaScript-based authentication challenge.",
+                      str(cm.exception))
+        self.assertEqual(1, self.index_response.call_count)
+        self.assertEqual(0, signin_response.call_count)
+
+    @responses.activate
     def test_acic_login_blocker(self):
         # GIVEN
         self.given_unauthenticated_home_page()
