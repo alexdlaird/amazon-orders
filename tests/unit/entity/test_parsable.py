@@ -7,6 +7,7 @@ import os
 from bs4 import BeautifulSoup
 
 from amazonorders.entity.parsable import Parsable
+from amazonorders.exception import AmazonOrdersError
 from amazonorders.orders import AmazonOrders
 from amazonorders.transactions import AmazonTransactions
 from tests.unittestcase import UnitTestCase
@@ -35,6 +36,39 @@ class TestItem(UnitTestCase):
         self.assertEqual(parsable.to_currency("52,34\u00a0zł"), 52.34)
         self.assertEqual(parsable.to_currency("\u20ba1.299,00"), 1299.0)
         self.assertIsNone(parsable.to_currency("not currency"))
+
+    def test_safe_parse_degrades_json_shaped_failures(self):
+        # GIVEN
+        parsable = Parsable(BeautifulSoup("<html />", self.test_config.bs4_parser), self.test_config)
+
+        def _parse_deep():
+            return json.loads("[" * 100000 + "]" * 100000)
+
+        def _parse_wrong_shape():
+            return BeautifulSoup(json.loads("[[]]"), self.test_config.bs4_parser)
+
+        # WHEN
+        with self.assertLogs("amazonorders.entity.parsable", level="WARNING") as logs:
+            deep = parsable.safe_parse(_parse_deep)
+            wrong_shape = parsable.safe_parse(_parse_wrong_shape)
+
+        # THEN
+        self.assertIsNone(deep)
+        self.assertIsNone(wrong_shape)
+        self.assertEqual(2, len(logs.records))
+        self.assertIn("`deep` could not be parsed", logs.output[0])
+        self.assertIn("`wrong_shape` could not be parsed", logs.output[1])
+
+    def test_safe_parse_propagates_library_errors(self):
+        # GIVEN
+        parsable = Parsable(BeautifulSoup("<html />", self.test_config.bs4_parser), self.test_config)
+
+        def _parse_required():
+            raise AmazonOrdersError("required field did not populate")
+
+        # WHEN/THEN
+        with self.assertRaises(AmazonOrdersError):
+            parsable.safe_parse(_parse_required)
 
     def test_to_currency_decimal_comma(self):
         # GIVEN
