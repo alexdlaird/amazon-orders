@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import re
 from typing import Any, Callable, Dict, Optional, Tuple
 
 
@@ -290,8 +291,10 @@ class Selectors:
     FIELD_ORDER_COUPON_SAVINGS_LABELS = ["coupon"]
     FIELD_ORDER_REWARD_POINTS_LABELS = ["reward"]
     FIELD_ORDER_SUBSCRIPTION_DISCOUNT_LABELS = ["subscribe", "subscription"]
-    FIELD_ORDER_TOTAL_BEFORE_TAX_LABELS = ["before tax"]
-    FIELD_ORDER_ESTIMATED_TAX_LABELS = ["estimated tax", "tax collected", "estimated vat"]
+    # British English sites (e.g. amazon.co.uk in English) label it "Total before VAT"
+    FIELD_ORDER_TOTAL_BEFORE_TAX_LABELS = ["before tax", "before vat"]
+    # Some sites (e.g. amazon.es in English) label it "VAT" alone, which "Total before VAT" also contains
+    FIELD_ORDER_ESTIMATED_TAX_LABELS = ["estimated tax", "tax collected", "estimated vat", re.compile(r"^\s*vat\b")]
     FIELD_ORDER_REFUND_TOTAL_LABELS = ["refund total"]
     FIELD_ORDER_MULTIBUY_DISCOUNT_LABELS = ["multibuy discount"]
     FIELD_ORDER_AMAZON_DISCOUNT_LABELS = ["amazon discount"]
@@ -332,8 +335,10 @@ class Selectors:
     FIELD_RECIPIENT_ADDRESS2_SELECTOR = "li.displayAddressAddressLine2"
     FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR = "li.displayAddressCityStateOrRegionPostalCode"
     FIELD_RECIPIENT_ADDRESS_COUNTRY_SELECTOR = "li.displayAddressCountryName"
-    #: The address lines that follow the Recipient's name in an unclassed list.
-    FIELD_RECIPIENT_ADDRESS_LINES_SELECTOR = "ul > li:not(:first-child)"
+    #: The address lines that follow the Recipient's name in an unclassed list, or in the rows of the history
+    #: page's address popover.
+    FIELD_RECIPIENT_ADDRESS_LINES_SELECTOR = ["ul > li:not(:first-child)",
+                                              "div.a-popover-preload div.a-row:not(:first-child)"]
     #: Separates the parts of an address Amazon renders inline (e.g. ``", Musterstraße 1 , 10115"``), but not a
     #: comma within a line (e.g. ``"Chicago, IL 60007"``).
     FIELD_RECIPIENT_ADDRESS_INLINE_SEPARATOR_REGEX = r"(?:^|\s),\s*"

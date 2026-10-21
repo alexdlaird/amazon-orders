@@ -1063,9 +1063,10 @@ class TestOrders(UnitTestCase):
         self.assertEqual(3, len(orders))
         self.assertEqual(["Jane Doe", "Alex Laird", "Alex Laird"],
                          [order.recipient.name for order in orders])
-        self.assertIn("555 Some Road", orders[0].recipient.address)
-        self.assertIn("555 My Road", orders[1].recipient.address)
-        self.assertIn("555 My Road", orders[2].recipient.address)
+        self.assertEqual(["555 Some Road\nMy City, Illinois 12345\nUnited States",
+                          "555 My Road\nChicago, IL 60007\nUnited States",
+                          "555 My Road\nChicago, IL 60007\nUnited States"],
+                         [order.recipient.address for order in orders])
 
     def test_parse_order_history_empty_page_within_window(self):
         # GIVEN

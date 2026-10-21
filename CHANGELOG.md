@@ -6,6 +6,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.10.0...HEAD)
 
+### Added
+
+- Test fixtures for `amazon.co.uk` and `amazon.es` order history and details pages, in English.
+
+### Fixed
+
+- `total_before_tax` is parsed from "Total before VAT" (e.g. `amazon.de` and `amazon.es` in English), and `estimated_tax` from a bare "VAT" label (e.g. `amazon.es`).
+- A Recipient's `address` on the order history page is the address lines alone, without the Recipient's name and stray whitespace.
+
 ## [4.10.0](https://github.com/alexdlaird/amazon-orders/compare/4.9.6...4.10.0) - 2026-10-21
 
 ### Added
