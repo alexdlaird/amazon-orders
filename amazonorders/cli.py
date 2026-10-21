@@ -539,6 +539,40 @@ def order_transactions(ctx: Context,
         ctx.fail(str(e))
 
 
+@amazon_orders_cli.command()
+@click.pass_context
+@click.argument("query")
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+              help="The output format. Defaults to text.")
+def search(ctx: Context, query: str, **kwargs: Any) -> None:
+    """
+    Search the Order history, across every year, for a product, Order number, address, or recipient.
+    """
+    amazon_session = ctx.obj["amazon_session"]
+
+    try:
+        CliAuth(amazon_session).authenticate()
+
+        config = ctx.obj["conf"]
+        amazon_orders = AmazonOrders(amazon_session,
+                                     config=config)
+
+        start_time = time.time()
+        results = amazon_orders.search_orders(query)
+        end_time = time.time()
+
+        click.echo(config.output_cls(config).format(results, kwargs["output"]))
+
+        click.echo(
+            "... {total} matching Items found in {time} seconds.\n".format(
+                total=len(results), time=int(end_time - start_time)), err=True)
+    except AmazonOrdersAuthRedirectError:
+        IOClick.echo_session_expired()
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+
 @amazon_orders_cli.command("prime-payments")
 @click.pass_context
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",

@@ -696,6 +696,73 @@ class TestCli(UnitTestCase):
         self.assertIn("Order #112-2961628-4757846", response.output)
 
     @responses.activate
+    def test_search_command(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-search.html"), "r", encoding="utf-8") as f:
+            resp = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_SEARCH_URL}?search=example",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(
+            amazon_orders_cli,
+            [
+                "--config-path", self.test_config.config_path,
+                "--username", "some-username@gmail.com",
+                "--password", "some-password",
+                "search", "example",
+            ],
+        )
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, resp.call_count)
+        self.assert_login_responses_success()
+        self.assertIn("Order #112-0000000-0000003: Example Ground Coffee 1 kg, Medium Roast\n"
+                      "  Order Placed Date: 2019-06-15\n  Quantity: 2\n"
+                      "  Link: https://www.amazon.com/dp/B000000003?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_3\n"
+                      "  Order Details Link: https://www.amazon.com/gp/your-account/order-details"
+                      "?orderID=112-0000000-0000003\n", response.output)
+        self.assertIn("... 3 matching Items found in", response.output)
+
+    @responses.activate
+    def test_search_command_json(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-search.html"), "r", encoding="utf-8") as f:
+            responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_SEARCH_URL}?search=example",
+                body=f.read(),
+                status=200,
+            )
+
+        # WHEN
+        response = self.runner.invoke(
+            amazon_orders_cli,
+            [
+                "--config-path", self.test_config.config_path,
+                "--username", "some-username@gmail.com",
+                "--password", "some-password",
+                "search", "example", "--output", "json",
+            ],
+        )
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        results = json.loads(response.stdout)
+        self.assertEqual(["111-0000000-0000001", "111-0000000-0000002", "112-0000000-0000003"],
+                         [result["order_number"] for result in results])
+        self.assertEqual("2026-04-22", results[0]["order_placed_date"])
+        self.assertEqual("B000000001", results[0]["asin"])
+
+    @responses.activate
     def test_prime_payments_command(self):
         # GIVEN
         self.given_unauthenticated_home_page()

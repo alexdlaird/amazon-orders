@@ -15,6 +15,7 @@ from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.family_member import FamilyMember
 from amazonorders.entity.invoice_pdf import InvoicePdf
 from amazonorders.entity.order import Order
+from amazonorders.entity.order_search_result import OrderSearchResult
 from amazonorders.entity.tracking import Tracking
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError, AmazonOrdersUnavailableError
 from amazonorders.paging import PagedResults
@@ -111,6 +112,20 @@ class AmazonOrders:
         :return: The parsed FamilyMembers, or an empty list if the page lists none.
         """
         return cls._parse_family_members(BeautifulSoup(html, config.bs4_parser), config)
+
+    @classmethod
+    def parse_order_search(cls,
+                           html: str,
+                           config: AmazonOrdersConfig) -> List[OrderSearchResult]:
+        """
+        Parse an already-fetched Order search page into its OrderSearchResults, without a session driving the
+        fetch. Useful for parsing HTML obtained elsewhere and for network-free testing.
+
+        :param html: The Order search page HTML to parse.
+        :param config: The config providing the selectors used for parsing.
+        :return: The parsed OrderSearchResults, or an empty list if nothing matched.
+        """
+        return cls._parse_order_search(BeautifulSoup(html, config.bs4_parser), config)
 
     def get_order(self,
                   order_id: str,
@@ -283,6 +298,36 @@ class AmazonOrders:
         self.amazon_session.check_response(page_response)
 
         return self._parse_family_members(page_response.parsed, self.config)
+
+    def search_orders(self,
+                      query: str) -> List[OrderSearchResult]:
+        """
+        Search the Order history, across every year, as the search box on Your Orders does. Amazon matches the
+        query against each Order's Items (e.g. a product title), Order number, address and recipient, and lists
+        each matching Item. Fetch an Order's details with :func:`get_order`, by the result's
+        :attr:`~amazonorders.entity.order_search_result.OrderSearchResult.order_number`.
+
+        :param query: What to search for.
+        :return: The OrderSearchResults, one per matching Item, or an empty list if nothing matched.
+        """
+        if not self.amazon_session.is_authenticated:
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
+        if not query or not query.strip():
+            raise AmazonOrdersError("The search query must not be empty.")
+
+        constants = self.config.constants
+        results: List[OrderSearchResult] = []
+        next_page: Optional[str] = constants.ORDER_SEARCH_URL
+        params: Optional[Dict[str, str]] = {constants.ORDER_SEARCH_QUERY_PARAM: query.strip()}
+        while next_page:
+            page_response = self.amazon_session.get(next_page, params=params)
+            self.amazon_session.check_response(page_response)
+            results += self._parse_order_search(page_response.parsed, self.config)
+
+            next_page = self._next_order_search_page(page_response.parsed)
+            params = None
+
+        return results
 
     @classmethod
     def parse_invoice_pdfs(cls,
@@ -529,6 +574,36 @@ class AmazonOrders:
         members = [FamilyMember(tag, config)
                    for tag in util.select(parsed, config.selectors.FAMILY_MEMBER_ENTITY_SELECTOR)]
         return [member for member in members if member.id]
+
+    @staticmethod
+    def _parse_order_search(parsed: Tag,
+                            config: AmazonOrdersConfig) -> List[OrderSearchResult]:
+        results_tag = util.select_one(parsed, config.selectors.ORDER_SEARCH_RESULTS_SELECTOR)
+        if not results_tag:
+            raise AmazonOrdersError("Could not parse Order search results. Check if Amazon changed the HTML.")
+
+        return [OrderSearchResult(tag, config)
+                for tag in util.select(results_tag, config.selectors.ORDER_SEARCH_RESULT_SELECTOR)]
+
+    def _next_order_search_page(self,
+                                parsed: Tag) -> Optional[str]:
+        """
+        The next page of Order search results, if there is one. A next-page link to another host isn't followed,
+        since the session's cookies would go with it.
+        """
+        next_page_tag = util.select_one(parsed, self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
+        if not next_page_tag or not next_page_tag.get("href"):
+            return None
+
+        next_page = str(next_page_tag["href"])
+        base_url = self.config.constants.BASE_URL
+        if next_page.startswith("/"):
+            return f"{base_url}{next_page}"
+        if next_page.startswith(f"{base_url}/"):
+            return next_page
+
+        logger.debug(f"Not following the Order search's next-page link off {base_url}: {next_page}")
+        return None
 
     @staticmethod
     def _parse_order_count(order_count_tag: Optional[Tag],

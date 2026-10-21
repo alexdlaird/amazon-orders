@@ -381,6 +381,23 @@ class Selectors:
     FIELD_INVOICE_PDF_CREDIT_NOTE_TEXT = "Credit note"
 
     #####################################
+    # CSS selectors for Order search results
+    #####################################
+
+    #: The Order search page's results. Present with no result rows when nothing matches.
+    ORDER_SEARCH_RESULTS_SELECTOR = "div.hzsearch-content-container"
+    #: A result: one Item of a matching Order.
+    ORDER_SEARCH_RESULT_SELECTOR = "div.a-fixed-left-grid"
+
+    FIELD_ORDER_SEARCH_RESULT_ORDER_DETAILS_LINK_SELECTOR = "div.a-col-right a[href*='order-details']"
+    FIELD_ORDER_SEARCH_RESULT_DATE_SELECTOR = "div.a-col-right span"
+    FIELD_ORDER_SEARCH_RESULT_DATE_PREFIX = "Ordered on"
+    FIELD_ORDER_SEARCH_RESULT_TITLE_SELECTOR = ["div.a-col-right a[href*='/dp/']",
+                                                "div.a-col-right a[href*='/gp/product/']"]
+    #: Shown on the Item's image only when more than one was ordered.
+    FIELD_ORDER_SEARCH_RESULT_QUANTITY_SELECTOR = ".hzsearch-item-view-qty"
+
+    #####################################
     # CSS selectors for Prime payment fields
     #####################################
 

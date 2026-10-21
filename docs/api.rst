@@ -144,6 +144,12 @@ Entities
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.entity.order_search_result
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: amazonorders.entity.prime_payment
     :members:
     :private-members:
