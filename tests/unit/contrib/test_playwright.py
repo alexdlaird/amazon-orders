@@ -930,7 +930,6 @@ class TestPlaywrightJSAuthForm(UnitTestCase):
         last_response.url = original_url
         self.amazon_session.get = MagicMock(return_value="refetched")
 
-        # the interstitial resolves by reloading the SAME url, usually before page.goto() returns
         mock_sync_playwright, mock_page, _, _ = _make_mock_playwright(final_url=original_url)
         fake_module = _playwright_module(mock_sync_playwright)
 
