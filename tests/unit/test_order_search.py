@@ -124,20 +124,24 @@ class TestOrderSearch(UnitTestCase):
         self.assertEqual(["111-0000000-0000001", "111-0000000-0000002", "112-0000000-0000003",
                           "111-0000000-0000004"], [r.order_number for r in results])
 
-    @responses.activate
     def test_search_orders_does_not_follow_next_page_off_site(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        self.given_search_page_exists(
-            self.with_next_page(self.read_resource("orders", "order-search.html"),
-                                "https://example.com/your-orders/search?search=example&amp;page=2"))
+        for href in ["https://example.com/your-orders/search?search=example&amp;page=2",
+                     "https://www.amazon.com.example.com/your-orders/search?page=2",
+                     "https://user:secret@www.amazon.com/your-orders/search?page=2"]:
+            with self.subTest(href=href), responses.RequestsMock() as rsps:
+                # GIVEN
+                self.amazon_session.is_authenticated = True
+                rsps.add(responses.GET, self.test_config.constants.ORDER_SEARCH_URL,
+                         body=self.with_next_page(self.read_resource("orders", "order-search.html"), href),
+                         status=200, match=[query_param_matcher({"search": "example"})])
 
-        # WHEN
-        results = self.amazon_orders.search_orders("example")
+                # WHEN
+                with self.assertLogs("amazonorders.util", level="WARNING"):
+                    results = self.amazon_orders.search_orders("example")
 
-        # THEN no request is made to the other host
-        self.assertEqual(3, len(results))
-        self.assertEqual(1, len(responses.calls))
+                # THEN no request is made to the other site
+                self.assertEqual(3, len(results))
+                self.assertEqual(1, len(rsps.calls))
 
     @responses.activate
     def test_search_orders_amazon_de(self):

@@ -589,22 +589,14 @@ class AmazonOrders:
     def _next_order_search_page(self,
                                 parsed: Tag) -> Optional[str]:
         """
-        The next page of Order search results, if there is one. A next-page link to another host isn't followed,
-        since the session's cookies would go with it.
+        The next page of Order search results, if there is one on the same site (see
+        :func:`~amazonorders.util.resolve_site_url`).
         """
         next_page_tag = util.select_one(parsed, self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
         if not next_page_tag or not next_page_tag.get("href"):
             return None
 
-        next_page = str(next_page_tag["href"])
-        base_url = self.config.constants.BASE_URL
-        if next_page.startswith("/"):
-            return f"{base_url}{next_page}"
-        if next_page.startswith(f"{base_url}/"):
-            return next_page
-
-        logger.debug(f"Not following the Order search's next-page link off {base_url}: {next_page}")
-        return None
+        return util.resolve_site_url(str(next_page_tag["href"]), self.config.constants.BASE_URL)
 
     @staticmethod
     def _parse_order_count(order_count_tag: Optional[Tag],
