@@ -3,7 +3,9 @@ __license__ = "MIT"
 
 import importlib
 import logging
+import os
 import re
+import sys
 import unicodedata
 from datetime import date, datetime
 from typing import Iterable, List, Union, Optional, Callable, Any
@@ -232,6 +234,17 @@ def load_class(package: List[str], clazz: str) -> Union[Callable, Any]:
     """
     constants_mod = importlib.import_module(".".join(package))
     return getattr(constants_mod, clazz)
+
+
+def has_display() -> bool:
+    """
+    Check whether a browser window can be opened here, as signing in with a browser window needs. On Linux, that
+    needs a display (``DISPLAY`` or ``WAYLAND_DISPLAY``), which a server or a container usually doesn't have. Other
+    platforms always have one.
+
+    :return: Whether there's a display.
+    """
+    return not sys.platform.startswith("linux") or bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
 
 
 def cleanup_html_text(text: str) -> str:
