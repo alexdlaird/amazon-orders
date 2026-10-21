@@ -147,8 +147,6 @@ class AmazonGiftCards:
         next_page_url = None
         next_page_link = util.select_one(parsed, config.selectors.GIFT_CARD_ACTIVITY_NEXT_PAGE_LINK_SELECTOR)
         if next_page_link and next_page_link.get("href"):
-            next_page_url = str(next_page_link["href"])
-            if not next_page_url.startswith("http"):
-                next_page_url = f"{config.constants.BASE_URL}{next_page_url}"
+            next_page_url = util.resolve_site_url(str(next_page_link["href"]), config.constants.BASE_URL)
 
         return activity, next_page_url

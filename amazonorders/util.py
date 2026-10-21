@@ -9,6 +9,7 @@ import sys
 import unicodedata
 from datetime import date, datetime
 from typing import Iterable, List, Union, Optional, Callable, Any
+from urllib.parse import urljoin, urlsplit
 
 from bs4 import Tag, BeautifulSoup
 from dateutil import parser
@@ -17,6 +18,38 @@ from requests import Response
 from amazonorders.selectors import Selector
 
 logger = logging.getLogger(__name__)
+
+
+def resolve_site_url(url: str, base_url: str) -> Optional[str]:
+    """Resolve a URL against ``base_url`` only when it remains on the same site.
+
+    Amazon's pagination links may be relative or absolute, with or without the ``www.`` prefix. Reject links to
+    other hosts so an untrusted page cannot make the authenticated session send cookies and headers elsewhere.
+
+    :param url: The relative or absolute URL to resolve.
+    :param base_url: The configured base URL for the Amazon site.
+    :return: The resolved URL, or ``None`` when it is malformed or points outside the site.
+    """
+    try:
+        resolved_url = urljoin(base_url, url)
+        resolved = urlsplit(resolved_url)
+        base = urlsplit(base_url)
+        resolved_host = (resolved.hostname or "").lower().removeprefix("www.")
+        base_host = (base.hostname or "").lower().removeprefix("www.")
+        default_ports = {"http": 80, "https": 443}
+        same_port = (resolved.port or default_ports.get(resolved.scheme)) == (
+            base.port or default_ports.get(base.scheme))
+    except ValueError:
+        logger.warning("Ignoring malformed pagination URL: %s", url)
+        return None
+
+    if (resolved.scheme != base.scheme or resolved.username is not None or resolved.password is not None
+            or not resolved_host or resolved_host != base_host or not same_port):
+        logger.warning("Ignoring pagination URL outside the configured site: %s", url)
+        return None
+
+    return resolved_url
+
 
 #: Matches the Japanese ``年``/``月``/``日`` date notation used by amazon.co.jp (e.g.
 #: ``2024年8月23日``), which ``dateutil`` cannot parse.

@@ -369,6 +369,35 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp2.call_count)
 
     @responses.activate
+    def test_get_order_history_stops_at_external_next_page(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2010-0.html"), "r",
+                  encoding="utf-8") as f:
+            body = f.read()
+        body = re.sub(r'(<li class="a-last"><a href=")[^"]+',
+                      r'\1https://evil.example/your-orders/orders?timeFilter=year-2010&amp;startIndex=10',
+                      body, count=1)
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2010-10.html"), "r",
+                  encoding="utf-8") as f:
+            second_page_body = f.read()
+        first_page = responses.add(responses.GET,
+                                   f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-2010",
+                                   body=body,
+                                   status=200)
+        external_page = responses.add(responses.GET,
+                                      "https://evil.example/your-orders/orders?timeFilter=year-2010&startIndex=10",
+                                      body=second_page_body,
+                                      status=200)
+
+        # WHEN
+        self.amazon_orders.get_order_history(year=2010)
+
+        # THEN
+        self.assertEqual(1, first_page.call_count)
+        self.assertEqual(0, external_page.call_count)
+
+    @responses.activate
     def test_get_order_history_page_limit_stops_at_page_boundary(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
