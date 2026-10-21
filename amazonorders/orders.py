@@ -706,9 +706,13 @@ class AmazonOrders:
 
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.config.thread_pool_size) as pool:
-            orders = await asyncio.gather(
-                *(loop.run_in_executor(pool, self._build_order, tag, full_details, index)
-                  for tag, index in order_builds))
+            try:
+                orders = await asyncio.gather(
+                    *(loop.run_in_executor(pool, self._build_order, tag, full_details, index)
+                      for tag, index in order_builds))
+            except BaseException:
+                pool.shutdown(cancel_futures=True)
+                raise
         return orders, next_page, current_index
 
     @staticmethod

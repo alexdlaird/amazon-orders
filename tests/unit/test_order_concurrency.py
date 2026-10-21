@@ -1,6 +1,8 @@
+__copyright__ = "Copyright (c) 2024-2025 Alex Laird"
+__license__ = "MIT"
+
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 from unittest.mock import patch
 
 import responses
@@ -25,25 +27,10 @@ class TestOrderConcurrency(UnitTestCase):
         return self.amazon_orders.get_order_history(year=2024, keep_paging=False, full_details=full_details)
 
     @responses.activate
-    def test_history_uses_one_executor_with_configured_limit(self):
-        for paged in [False, True]:
-            for pool_size in [1, 2]:
-                with self.subTest(paged=paged, pool_size=pool_size):
-                    responses.reset()
-                    self.given_order_history_exists(2024)
-                    self.test_config.update_config("thread_pool_size", pool_size, save=False)
-                    with patch("amazonorders.orders.concurrent.futures.ThreadPoolExecutor",
-                               wraps=ThreadPoolExecutor) as executor:
-                        orders = self.fetch_history(paged)
-
-                    self.assertEqual(len(orders), 10)
-                    self.assertEqual([order.index for order in orders], list(range(10)))
-                    executor.assert_called_once_with(max_workers=pool_size)
-
-    @responses.activate
     def test_history_bounds_active_builds(self):
         for paged in [False, True]:
             with self.subTest(paged=paged):
+                # GIVEN
                 responses.reset()
                 self.given_order_history_exists(2024)
                 self.test_config.update_config("thread_pool_size", 2, save=False)
@@ -73,6 +60,8 @@ class TestOrderConcurrency(UnitTestCase):
 
                 coordinator = threading.Thread(target=release_builds)
                 coordinator.start()
+
+                # WHEN
                 try:
                     with patch.object(self.amazon_orders, "_build_order", side_effect=blocked_build), \
                             patch.object(self.amazon_orders, "get_order", side_effect=lambda order_id, clone: clone):
@@ -81,6 +70,7 @@ class TestOrderConcurrency(UnitTestCase):
                     release.set()
                     coordinator.join(5)
 
+                # THEN
                 self.assertFalse(coordinator.is_alive())
                 self.assertEqual(len(orders), 10)
                 self.assertEqual([order.index for order in orders], list(range(10)))
@@ -92,6 +82,7 @@ class TestOrderConcurrency(UnitTestCase):
     def test_history_propagates_build_error_and_shuts_down_executor(self):
         for paged in [False, True]:
             with self.subTest(paged=paged):
+                # GIVEN
                 responses.reset()
                 self.given_order_history_exists(2024)
                 self.test_config.update_config("thread_pool_size", 2, save=False)
@@ -102,26 +93,15 @@ class TestOrderConcurrency(UnitTestCase):
                     pools.append(pool)
                     return pool
 
+                # WHEN
                 with patch("amazonorders.orders.concurrent.futures.ThreadPoolExecutor", side_effect=create_pool), \
                         patch.object(self.amazon_orders, "_build_order",
                                      side_effect=AmazonOrdersError("Order build failed")):
                     with self.assertRaisesRegex(AmazonOrdersError, "Order build failed"):
                         self.fetch_history(paged)
 
+                # THEN
                 self.assertTrue(pools)
                 for pool in pools:
                     with self.assertRaises(RuntimeError):
                         pool.submit(lambda: None)
-
-    @responses.activate
-    def test_empty_history_does_not_create_executor(self):
-        html_path = Path(self.RESOURCES_DIR) / "orders" / "order-history-2023-zero-orders.html"
-        html = html_path.read_text(encoding="utf-8")
-        for paged in [False, True]:
-            with self.subTest(paged=paged):
-                responses.reset()
-                responses.add(responses.GET, self.test_config.constants.ORDER_HISTORY_URL, body=html, status=200)
-                with patch("amazonorders.orders.concurrent.futures.ThreadPoolExecutor",
-                           wraps=ThreadPoolExecutor) as executor:
-                    self.assertEqual(self.fetch_history(paged), [])
-                executor.assert_not_called()

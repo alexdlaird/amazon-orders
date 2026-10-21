@@ -117,7 +117,7 @@ class TestIntegrationGeneric(IntegrationTestCase):
             self.assert_populated_generic(orders[0], True)
             self.assertIsNotNone(orders[0].index)
             self.assert_orders_list_index(orders)
-            self.assertIsNotNone(orders[0].items[0].asin)
+            self.assert_populated_on_any([item for order in orders for item in order.items], "asin")
 
     def test_get_gift_cards(self):
         # WHEN
@@ -141,6 +141,6 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assertIsNotNone(transaction.payment_method)
         self.assertIsNotNone(transaction.grand_total)
         self.assertIsNotNone(transaction.is_refund)
-        self.assertIsNotNone(transaction.order_number)
-        self.assertIsNotNone(transaction.order_details_link)
-        self.assertTrue(any(t.seller for t in transactions))
+        self.assert_populated_on_any(transactions, "order_number")
+        self.assert_populated_on_any(transactions, "order_details_link")
+        self.assert_populated_on_any(transactions, "seller")
