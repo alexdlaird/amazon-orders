@@ -17,7 +17,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - Akamai's interstitial JavaScript challenge is now detected, and `PlaywrightJSAuthForm` tries to resolve it in the browser.
-- A field whose page data has an unexpected shape now parses as `None`, instead of failing the whole entity.
+- Bug fixes and stability improvements.
 
 ## [4.9.6](https://github.com/alexdlaird/amazon-orders/compare/4.9.5...4.9.6) - 2026-10-21
 
