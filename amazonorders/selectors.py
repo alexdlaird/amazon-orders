@@ -291,7 +291,7 @@ class Selectors:
     FIELD_ORDER_COUPON_SAVINGS_LABELS = ["coupon"]
     FIELD_ORDER_REWARD_POINTS_LABELS = ["reward"]
     FIELD_ORDER_SUBSCRIPTION_DISCOUNT_LABELS = ["subscribe", "subscription"]
-    # British English sites (e.g. amazon.co.uk in English) label it "Total before VAT"
+    # Some sites (e.g. amazon.de and amazon.es in English) label it "Total before VAT"
     FIELD_ORDER_TOTAL_BEFORE_TAX_LABELS = ["before tax", "before vat"]
     # Some sites (e.g. amazon.es in English) label it "VAT" alone, which "Total before VAT" also contains
     FIELD_ORDER_ESTIMATED_TAX_LABELS = ["estimated tax", "tax collected", "estimated vat", re.compile(r"^\s*vat\b")]
