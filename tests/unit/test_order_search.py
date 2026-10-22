@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 import datetime
 import os
+import re
 
 import responses
 from responses.matchers import query_param_matcher
@@ -202,6 +203,44 @@ class TestOrderSearch(UnitTestCase):
 
         # THEN
         self.assertEqual(datetime.date(2026, 4, 22), results[0].order_placed_date)
+
+    def test_parse_order_search_result_without_order_number(self):
+        # GIVEN a result whose Order details link is gone
+        html = re.sub(r'<a [^>]*href="/your-orders/order-details\?orderID=111-0000000-0000001[^"]*"[^>]*>',
+                      '<a class="a-link-normal" href="/your-orders/orders">',
+                      self.read_resource("orders", "order-search.html"))
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonOrders.parse_order_search(html, self.test_config)
+
+        # THEN
+        self.assertIn("OrderSearchResult.order_number could not be parsed, but it's required.", str(cm.exception))
+
+        # GIVEN
+        self.test_config.update_config("warn_on_missing_required_field", True, save=False)
+
+        # WHEN
+        with self.assertLogs("amazonorders.entity.order_search_result", level="WARNING"):
+            results = AmazonOrders.parse_order_search(html, self.test_config)
+
+        # THEN
+        self.assertIsNone(results[0].order_number)
+        self.assertIsNone(results[0].order_details_link)
+        self.assertEqual("111-0000000-0000002", results[1].order_number)
+
+    def test_parse_order_search_result_without_product_link(self):
+        # GIVEN a result whose Item has no product page
+        html = self.read_resource("orders", "order-search.html").replace("/dp/B000000001?", "/your-orders/orders?")
+
+        # WHEN
+        results = AmazonOrders.parse_order_search(html, self.test_config)
+
+        # THEN
+        self.assertIsNone(results[0].link)
+        self.assertIsNone(results[0].asin)
+        self.assertIsNone(results[0].title)
+        self.assertEqual("B000000002", results[1].asin)
 
     def test_parse_order_search_unknown_page(self):
         # WHEN

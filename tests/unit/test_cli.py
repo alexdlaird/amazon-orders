@@ -742,9 +742,10 @@ class TestCli(UnitTestCase):
                 body=f.read(),
                 status=200,
             )
+        runner = self.given_runner_with_split_streams()
 
         # WHEN
-        response = self.runner.invoke(
+        response = runner.invoke(
             amazon_orders_cli,
             [
                 "--config-path", self.test_config.config_path,
@@ -761,6 +762,58 @@ class TestCli(UnitTestCase):
                          [result["order_number"] for result in results])
         self.assertEqual("2026-04-22", results[0]["order_placed_date"])
         self.assertEqual("B000000001", results[0]["asin"])
+
+    @responses.activate
+    def test_search_command_error(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        responses.add(
+            responses.GET,
+            f"{self.test_config.constants.ORDER_SEARCH_URL}?search=example",
+            body="<html><body><p>Something else</p></body></html>",
+            status=200,
+        )
+
+        # WHEN
+        response = self.runner.invoke(
+            amazon_orders_cli,
+            [
+                "--config-path", self.test_config.config_path,
+                "--username", "some-username@gmail.com",
+                "--password", "some-password",
+                "search", "example",
+            ],
+        )
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertIn("Could not parse Order search results.", response.output)
+
+    @responses.activate
+    def test_search_command_session_expired(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        auth_redirect_response = responses.add(
+            responses.GET,
+            f"{self.test_config.constants.ORDER_SEARCH_URL}?search=example",
+            status=302,
+            headers={"Location": self.test_config.constants.SIGN_IN_URL}
+        )
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "search", "example"
+                                      ])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, auth_redirect_response.call_count)
+        self.assertIn("Amazon redirected to login", response.output)
 
     @responses.activate
     def test_prime_payments_command(self):
