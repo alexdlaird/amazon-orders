@@ -21,8 +21,8 @@ except ImportError:  # pragma: no cover
     sync_playwright = None
 
 EMAIL = "person@example.com"
-# Pasted, so it may hold any character
-PASSWORD = "pässwörd ß✓"
+# What's pasted for the password, which may hold any character
+PASTED = "pässwörd ß✓"
 
 
 class _FakeAmazon(ThreadingHTTPServer):
@@ -215,12 +215,12 @@ class TestPlaywrightRemoteLoginInBrowsers(UnitTestCase):
             page.mouse.click(**self._at(page, 160, 100))
             page.evaluate("text => { const data = new DataTransfer(); data.setData('text/plain', text); "
                           "document.getElementById('input').dispatchEvent(new ClipboardEvent('paste', "
-                          "{clipboardData: data, bubbles: true, cancelable: true})); }", PASSWORD)
+                          "{clipboardData: data, bubbles: true, cancelable: true})); }", PASTED)
             page.keyboard.press("Enter")
 
             # THEN
             self._assert_signed_in(page)
-            self.assertEqual([PASSWORD], self.amazon.passwords)
+            self.assertEqual([PASTED], self.amazon.passwords)
 
     def test_sign_in_from_a_phone(self):
         with sync_playwright() as pw:
@@ -245,14 +245,14 @@ class TestPlaywrightRemoteLoginInBrowsers(UnitTestCase):
 
             # WHEN the password is pasted with the Paste button, as on a phone with no paste key
             page.touchscreen.tap(**self._at(page, 160, 100))
-            page.evaluate("text => navigator.clipboard.writeText(text)", PASSWORD)
+            page.evaluate("text => navigator.clipboard.writeText(text)", PASTED)
             page.tap("#paste")
             page.wait_for_function("() => document.activeElement.id === 'input'")
             page.keyboard.insert_text("\n")
 
             # THEN
             self._assert_signed_in(page)
-            self.assertEqual([PASSWORD], self.amazon.passwords)
+            self.assertEqual([PASTED], self.amazon.passwords)
 
     def test_link_works_in_one_browser_only(self):
         with sync_playwright() as pw:

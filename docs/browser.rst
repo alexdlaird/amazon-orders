@@ -128,7 +128,7 @@ For instance, in a container:
         -v amazon-orders:/root/.config/amazonorders <image> amazon-orders login --remote
 
 From Python, :class:`~amazonorders.contrib.browser.remote.PlaywrightRemoteLogin` does the same. Give it a
-:class:`~amazonorders.contrib.browser.remote.RemoteLoginServer` to serve several sign-ins from one long-running
+:class:`~amazonorders.contrib.browser.remote_server.RemoteLoginServer` to serve several sign-ins from one long-running
 server, e.g. for each Amazon site:
 
 .. code-block:: python

@@ -1,10 +1,11 @@
 // The page through which a person signs in to Amazon from their own browser, while the browser doing the sign-in runs
 // headless where amazon-orders runs: it shows that browser's page as it's drawn, and passes clicks, taps, scrolling,
-// typing and pastes on to it. See amazonorders/contrib/browser/remote.py.
+// typing and pastes on to it. See amazonorders/contrib/browser/remote.py and remote_server.py.
 "use strict";
 
 (() => {
-  const base = location.pathname.replace(/\/+$/, "");
+  // The page's own calls are relative to it, so they work under any path a proxy serves it at
+  const token = document.body.dataset.token;
   const site = document.body.dataset.site;
   const statusText = document.getElementById("status");
   const keyboardButton = document.getElementById("keyboard");
@@ -14,22 +15,22 @@
   const context = canvas.getContext("2d");
   const input = document.getElementById("input");
 
-  const MESSAGES = {
-    starting: "Opening Amazon's sign-in page…",
-    signing_in: `Sign in to ${site} below. What you type goes to Amazon's page.`,
-    verifying: "Checking the sign-in with Amazon…",
-    signed_in: `You're signed in to ${site}. You can close this page.`,
-    failed: "The sign-in didn't complete. Start a new sign-in to try again.",
-    timed_out: "This sign-in ran out of time. Start a new sign-in to try again.",
-    claimed: "This sign-in is open in another browser. Use that one, or start a new sign-in.",
-    gone: "This sign-in link isn't valid anymore. Start a new sign-in for a new link.",
-    offline: "Reconnecting…",
-    paste_failed: "This browser didn't let the page read the clipboard. Type it instead.",
-  };
+  const MESSAGES = new Map([
+    ["starting", "Opening Amazon's sign-in page…"],
+    ["signing_in", `Sign in to ${site} below. What you type goes to Amazon's page.`],
+    ["verifying", "Checking the sign-in with Amazon…"],
+    ["signed_in", `You're signed in to ${site}. You can close this page.`],
+    ["failed", "The sign-in didn't complete. Start a new sign-in to try again."],
+    ["timed_out", "This sign-in ran out of time. Start a new sign-in to try again."],
+    ["claimed", "This sign-in is open in another browser. Use that one, or start a new sign-in."],
+    ["gone", "This sign-in link isn't valid anymore. Start a new sign-in for a new link."],
+    ["offline", "Reconnecting…"],
+    ["paste_failed", "This browser didn't let the page read the clipboard. Type it instead."],
+  ]);
   const FINAL_STATES = new Set(["signed_in", "failed", "timed_out", "claimed", "gone"]);
   const SPECIAL_KEYS = new Set(["Enter", "Tab", "Backspace", "Delete", "Escape", "ArrowLeft", "ArrowRight", "ArrowUp",
     "ArrowDown", "Home", "End", "PageUp", "PageDown"]);
-  const MOUSE_BUTTONS = ["left", "middle", "right"];
+  const MOUSE_BUTTONS = new Map([[0, "left"], [1, "middle"], [2, "right"]]);
   const MAX_TEXT_LENGTH = 1000;
   const MAX_EVENTS_PER_REQUEST = 100;
   const TAP_SLOP = 10;
@@ -49,11 +50,11 @@
   let reportedSize = "";
 
   function setState(next) {
-    if (ended || !MESSAGES[next]) {
+    if (ended || !MESSAGES.has(next)) {
       return;
     }
     state = next;
-    statusText.textContent = MESSAGES[next];
+    statusText.textContent = MESSAGES.get(next);
     if (FINAL_STATES.has(next)) {
       ended = true;
       pending = [];
@@ -66,7 +67,7 @@
 
   function showOffline(offline) {
     if (!ended) {
-      statusText.textContent = offline ? MESSAGES.offline : MESSAGES[state];
+      statusText.textContent = MESSAGES.get(offline ? "offline" : state);
     }
   }
 
@@ -74,8 +75,8 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async function request(path, options) {
-    return fetch(`${base}/${path}`, {credentials: "same-origin", cache: "no-store", ...options});
+  function request(action, options) {
+    return fetch(`${token}/${action}`, {credentials: "same-origin", cache: "no-store", ...options});
   }
 
   function endOnRefusal(response) {
@@ -93,33 +94,30 @@
     if (ended) {
       return;
     }
-    const last = pending[pending.length - 1];
+    const last = pending.slice(-1)[0];
     if (event.t === "move" && last && last.t === "move") {
-      pending[pending.length - 1] = event;
+      pending.splice(-1, 1, event);
     } else {
       pending.push(event);
     }
     flush();
   }
 
-  async function flush() {
+  function flush() {
     if (sending || pending.length === 0) {
       return;
     }
     sending = true;
     const batch = pending.splice(0, MAX_EVENTS_PER_REQUEST);
-    try {
-      const response = await request("input", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(batch),
+    request("input", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(batch)})
+      .then(endOnRefusal)
+      .catch(() => {
+        // The frame requests show the connection is lost; what was typed meanwhile has to be typed again
+      })
+      .finally(() => {
+        sending = false;
+        flush();
       });
-      endOnRefusal(response);
-    } catch (error) {
-      // The frame requests show the connection is lost; what was typed meanwhile has to be typed again
-    }
-    sending = false;
-    flush();
   }
 
   function sendText(text, kind) {
@@ -161,7 +159,7 @@
       return;
     }
     let common = 0;
-    while (common < value.length && common < SENTINEL.length && value[common] === SENTINEL[common]) {
+    while (common < value.length && common < SENTINEL.length && value.charAt(common) === SENTINEL.charAt(common)) {
       common++;
     }
     for (let removed = SENTINEL.length - common; removed > 0; removed--) {
@@ -178,23 +176,32 @@
     }
   }
 
+  // What a key pressed on a computer's keyboard passes on, if anything
+  function keyEvent(event) {
+    const mods = modifiers(event);
+    if (SPECIAL_KEYS.has(event.key)) {
+      return {t: "key", key: event.key, mods};
+    }
+    if (Array.from(event.key).length !== 1) {
+      return null;
+    }
+    if (!mods.includes("Control") && !mods.includes("Meta")) {
+      return {t: "type", text: event.key};
+    }
+    // Ctrl+V or Cmd+V pastes from this computer's clipboard, through the paste event
+    const shortcut = event.key.toLowerCase();
+    return shortcut !== "v" && /^[a-z0-9]$/.test(shortcut) ? {t: "key", key: shortcut, mods} : null;
+  }
+
   input.addEventListener("keydown", (event) => {
+    // A phone's keyboard, or one composing text, sends no usable keys: its text arrives as input instead
     if (event.isComposing || composing || event.keyCode === 229) {
       return;
     }
-    const mods = modifiers(event);
-    if (SPECIAL_KEYS.has(event.key)) {
+    const pressed = keyEvent(event);
+    if (pressed) {
       event.preventDefault();
-      send({t: "key", key: event.key, mods});
-    } else if (Array.from(event.key).length === 1 && (mods.includes("Control") || mods.includes("Meta"))) {
-      // Ctrl+V or Cmd+V pastes from this computer's clipboard, through the paste event
-      if (event.key.toLowerCase() !== "v" && /^[a-z0-9]$/i.test(event.key)) {
-        event.preventDefault();
-        send({t: "key", key: event.key.toLowerCase(), mods});
-      }
-    } else if (Array.from(event.key).length === 1) {
-      event.preventDefault();
-      send({t: "type", text: event.key});
+      send(pressed);
     }
   });
   input.addEventListener("compositionstart", () => {
@@ -237,7 +244,7 @@
     }
     if (event.pointerType === "mouse") {
       canvas.setPointerCapture(event.pointerId);
-      send({t: "down", ...pagePoint(event), button: MOUSE_BUTTONS[event.button] || "left"});
+      send({t: "down", ...pagePoint(event), button: MOUSE_BUTTONS.get(event.button) || "left"});
       focusInput();
     } else if (!touch) {
       touch = {id: event.pointerId, x: event.clientX, y: event.clientY, start: pagePoint(event), scrolled: false};
@@ -271,7 +278,7 @@
       return;
     }
     if (event.pointerType === "mouse") {
-      send({t: "up", ...pagePoint(event), button: MOUSE_BUTTONS[event.button] || "left"});
+      send({t: "up", ...pagePoint(event), button: MOUSE_BUTTONS.get(event.button) || "left"});
     } else if (touch && touch.id === event.pointerId) {
       if (!touch.scrolled) {
         send({t: "down", ...touch.start, button: "left"});
@@ -304,7 +311,7 @@
         sendText(text, "insert");
       }
     } catch (error) {
-      statusText.textContent = MESSAGES.paste_failed;
+      statusText.textContent = MESSAGES.get("paste_failed");
       setTimeout(() => showOffline(false), 4000);
     }
     focusInput();
@@ -401,6 +408,7 @@
   async function poll() {
     let failures = 0;
     while (!ended) {
+      let delay = 0;
       try {
         await pollOnce();
         failures = 0;
@@ -409,7 +417,10 @@
         // A lost connection, or a frame that didn't arrive whole: wait a little, then ask again
         failures++;
         showOffline(true);
-        await sleep(Math.min(1000 * failures, 5000));
+        delay = Math.min(1000 * failures, 5000);
+      }
+      if (delay) {
+        await sleep(delay);
       }
     }
   }
@@ -417,11 +428,11 @@
   function start() {
     keyboardButton.hidden = !window.matchMedia("(pointer: coarse)").matches;
     pasteButton.hidden = !(navigator.clipboard && navigator.clipboard.readText);
-    statusText.textContent = MESSAGES.starting;
+    statusText.textContent = MESSAGES.get("starting");
     resetInput();
     reportSize();
     focusInput();
-    poll();
+    poll().catch(() => showOffline(true));
   }
 
   start();

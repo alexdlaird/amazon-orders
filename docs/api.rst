@@ -91,6 +91,12 @@ Challenge Solvers
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: amazonorders.contrib.browser.remote_server
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 Configuration
 -------------
 .. automodule:: amazonorders.conf
