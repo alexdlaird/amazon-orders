@@ -4,8 +4,8 @@
 "use strict";
 
 (() => {
-  // The page's own calls are relative to it, so they work under any path a proxy serves it at
-  const token = document.body.dataset.token;
+  // The page is served at its link with a slash after it, so its own calls are relative to it, whatever path a proxy
+  // serves it at
   const site = document.body.dataset.site;
   const statusText = document.getElementById("status");
   const keyboardButton = document.getElementById("keyboard");
@@ -76,7 +76,7 @@
   }
 
   function request(action, options) {
-    return fetch(`${token}/${action}`, {credentials: "same-origin", cache: "no-store", ...options});
+    return fetch(action, {credentials: "same-origin", cache: "no-store", ...options});
   }
 
   function endOnRefusal(response) {
@@ -382,7 +382,7 @@
   }
 
   async function pollOnce() {
-    const response = await request(`frame?after=${seq}&state=${encodeURIComponent(state)}`);
+    const response = await request("frame", {headers: {"X-Frame-After": String(seq), "X-Sign-In-State": state}});
     if (endOnRefusal(response)) {
       return;
     }
@@ -406,22 +406,22 @@
   }
 
   async function poll() {
-    let failures = 0;
-    while (!ended) {
-      let delay = 0;
-      try {
-        await pollOnce();
-        failures = 0;
-        showOffline(false);
-      } catch (error) {
-        // A lost connection, or a frame that didn't arrive whole: wait a little, then ask again
-        failures++;
-        showOffline(true);
-        delay = Math.min(1000 * failures, 5000);
+    try {
+      let failures = 0;
+      while (!ended) {
+        try {
+          await pollOnce();
+          failures = 0;
+          showOffline(false);
+        } catch (error) {
+          // A lost connection, or a frame that didn't arrive whole: wait a little, then ask again
+          failures++;
+          showOffline(true);
+          await sleep(Math.min(1000 * failures, 5000));
+        }
       }
-      if (delay) {
-        await sleep(delay);
-      }
+    } catch (error) {
+      showOffline(true);
     }
   }
 
@@ -432,7 +432,7 @@
     resetInput();
     reportSize();
     focusInput();
-    poll().catch(() => showOffline(true));
+    poll();
   }
 
   start();

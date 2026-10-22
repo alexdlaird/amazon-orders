@@ -174,7 +174,7 @@ class TestRemoteLoginServer(UnitTestCase):
 
     def test_url(self):
         self.assertEqual(f"http://localhost:{self.client.port}/", self.server.url)
-        self.assertEqual(f"http://localhost:{self.client.port}/{self.view.token}", self.server.link(self.view))
+        self.assertEqual(f"http://localhost:{self.client.port}/{self.view.token}/", self.server.link(self.view))
         self.assertEqual("http://localhost:8765/", RemoteLoginServer().url)
         self.assertEqual("https://example.com/sign-in/", RemoteLoginServer(url="https://example.com/sign-in").url)
         self.assertEqual("https://example.com/sign-in/", RemoteLoginServer(url="https://example.com/sign-in/").url)
@@ -210,7 +210,7 @@ class TestRemoteLoginServer(UnitTestCase):
         self.view.site = "<amazon.de>"
 
         # WHEN
-        response, content = self.client.request("GET", self.path)
+        response, content = self.client.request("GET", f"{self.path}/")
 
         # THEN
         self.assertEqual(200, response.status)
@@ -221,6 +221,14 @@ class TestRemoteLoginServer(UnitTestCase):
         self.assertEqual("DENY", response.getheader("X-Frame-Options"))
         self.assertIn(b"data-site=\"&lt;amazon.de&gt;\"", content)
         self.assertNotIn(b"{site}", content)
+
+    def test_page_without_a_slash_is_redirected(self):
+        # WHEN
+        response, _ = self.client.request("GET", f"/amazon/sign-in{self.path}")
+
+        # THEN its calls, relative to it, reach it
+        self.assertEqual(308, response.status)
+        self.assertEqual(f"{self.view.token}/", response.getheader("Location"))
 
     def test_page_under_a_prefix(self):
         response, _ = self.client.request("GET", f"/amazon/sign-in{self.path}/")
@@ -359,7 +367,7 @@ class TestRemoteLoginServer(UnitTestCase):
         self.assertTrue(received.startswith(b"HTTP/1.1 400 "))
 
     def test_malformed_length_closes_the_connection(self):
-        received = self.raw_request(b"GET " + self.path.encode() + b" HTTP/1.1\r\nHost: x\r\nContent-Length: x\r\n"
+        received = self.raw_request(b"GET " + self.path.encode() + b"/ HTTP/1.1\r\nHost: x\r\nContent-Length: x\r\n"
                                     b"\r\nGET / HTTP/1.1\r\nHost: x\r\n\r\n")
         self.assertTrue(received.startswith(b"HTTP/1.1 200 "))
         self.assertIn(b"Connection: close", received)
@@ -419,6 +427,18 @@ class TestRemoteLoginServer(UnitTestCase):
         # A malformed sequence asks for any frame
         response, content = self.client.request("GET", f"{self.path}/frame?after=x&state=starting")
         self.assertEqual(b"jpeg", content)
+
+    def test_frame_asked_for_in_headers(self):
+        # GIVEN
+        self.view.set_state("signing_in")
+        self.view.set_frame(b"jpeg", (390, 700))
+
+        # WHEN
+        response, content = self.client.request("GET", f"{self.path}/frame",
+                                                headers={"X-Frame-After": "0", "X-Sign-In-State": "signing_in"})
+
+        # THEN
+        self.assertEqual((200, b"jpeg"), (response.status, content))
 
     def test_frame_once_the_sign_in_ends(self):
         # GIVEN

@@ -215,6 +215,9 @@ class _RemoteLoginRequestHandler(BaseHTTPRequestHandler):
         view = self.server.remote_login_server.find(target)
         if view is None:
             self._send_gone()
+        elif action is None and not urlparse(self.path).path.endswith("/"):
+            # The page's calls are relative to it, so it's served with a slash after its link
+            self._send(308, b"", None, {"Location": f"{target}/"})
         elif action is None:
             self._send_page(view)
         elif action == "frame":
@@ -292,12 +295,13 @@ class _RemoteLoginRequestHandler(BaseHTTPRequestHandler):
             self._send_json(409, {"state": "claimed"})
             return
 
+        # The page says which frame and state it has in headers; a query (?after=1&state=signing_in) works too
         query = parse_qs(urlparse(self.path).query)
         try:
-            after_seq = int(query.get("after", ["0"])[0])
+            after_seq = int(self.headers.get("X-Frame-After") or query.get("after", ["0"])[0])
         except ValueError:
             after_seq = 0
-        known_state = query.get("state", [""])[0]
+        known_state = self.headers.get("X-Sign-In-State") or query.get("state", [""])[0]
 
         if not view.start_frame_wait():
             self._send(429, b"", "text/plain")
@@ -384,8 +388,7 @@ class _RemoteLoginRequestHandler(BaseHTTPRequestHandler):
 
     def _send_page(self,
                    view: _RemoteLoginView) -> None:
-        page = (_read_static("remote-login.html").decode().replace("{site}", html.escape(view.site))
-                .replace("{token}", view.token))
+        page = _read_static("remote-login.html").decode().replace("{site}", html.escape(view.site))
         self._send(200, page.encode(), "text/html; charset=utf-8",
                    {"Content-Security-Policy": PAGE_CONTENT_SECURITY_POLICY})
 
@@ -529,7 +532,7 @@ class RemoteLoginServer:
 
     def link(self,
              view: _RemoteLoginView) -> str:
-        return f"{self.url}{view.token}"
+        return f"{self.url}{view.token}/"
 
     def add(self,
             view: _RemoteLoginView) -> None:
