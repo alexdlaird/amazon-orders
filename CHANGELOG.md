@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.10.0...HEAD)
 
+### Added
+
+- `PlaywrightBrowserLogin` hooks for a subclass to sign in some other way: `launch_args()`, `new_context()`, `on_sign_in_page()`, `wait_for_sign_in()`, and `is_signed_in()`, and `args` on `PlaywrightBrowserLauncher.launch()`.
+
 ### Fixed
 
 - Order history and Gift Card activity stop paging at a next-page link to another site, instead of following it.
