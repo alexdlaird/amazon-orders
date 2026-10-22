@@ -208,22 +208,18 @@ class _RemoteLoginRequestHandler(BaseHTTPRequestHandler):
             return
 
         target, action = route
-        if target in STATIC_FILES and action == "static":
+        if action == "static":
             self._send_static(target)
             return
 
         view = self.server.remote_login_server.find(target)
+        send = {None: self._send_page, "frame": self._send_frame}.get(action)
         if view is None:
             self._send_gone()
-        elif action is None and not urlparse(self.path).path.endswith("/"):
-            # The page's calls are relative to it, so it's served with a slash after its link
-            self._send(308, b"", None, {"Location": f"{target}/"})
-        elif action is None:
-            self._send_page(view)
-        elif action == "frame":
-            self._send_frame(view)
-        else:
+        elif send is None:
             self._send(405, b"", "text/plain")
+        else:
+            send(view)
 
     def do_POST(self) -> None:  # noqa: N802
         if not self._check_framing():
@@ -295,14 +291,7 @@ class _RemoteLoginRequestHandler(BaseHTTPRequestHandler):
             self._send_json(409, {"state": "claimed"})
             return
 
-        # The page says which frame and state it has in headers; a query (?after=1&state=signing_in) works too
-        query = parse_qs(urlparse(self.path).query)
-        try:
-            after_seq = int(self.headers.get("X-Frame-After") or query.get("after", ["0"])[0])
-        except ValueError:
-            after_seq = 0
-        known_state = self.headers.get("X-Sign-In-State") or query.get("state", [""])[0]
-
+        after_seq, known_state = self._frame_asked_for()
         if not view.start_frame_wait():
             self._send(429, b"", "text/plain")
             return
@@ -321,6 +310,18 @@ class _RemoteLoginRequestHandler(BaseHTTPRequestHandler):
                             "X-Viewport-Width": str(snapshot["viewport"][0]),
                             "X-Viewport-Height": str(snapshot["viewport"][1])})
             self._send(200, snapshot["frame"], "image/jpeg", headers)
+
+    def _frame_asked_for(self) -> Tuple[int, str]:
+        """
+        The frame the page has, and the state, which it says in headers; a query (``?after=1&state=signing_in``)
+        works too. A frame that isn't a number asks for any frame.
+        """
+        query = parse_qs(urlparse(self.path).query)
+        known_state = self.headers.get("X-Sign-In-State") or query.get("state", [""])[0]
+        try:
+            return int(self.headers.get("X-Frame-After") or query.get("after", ["0"])[0]), known_state
+        except ValueError:
+            return 0, known_state
 
     def _receive_input(self,
                        view: _RemoteLoginView) -> None:
@@ -388,13 +389,21 @@ class _RemoteLoginRequestHandler(BaseHTTPRequestHandler):
 
     def _send_page(self,
                    view: _RemoteLoginView) -> None:
+        if not urlparse(self.path).path.endswith("/"):
+            # The page's calls are relative to it, so it's served with a slash after its link
+            self._send(308, b"", None, {"Location": f"{view.token}/"})
+            return
+
         page = _read_static("remote-login.html").decode().replace("{site}", html.escape(view.site))
         self._send(200, page.encode(), "text/html; charset=utf-8",
                    {"Content-Security-Policy": PAGE_CONTENT_SECURITY_POLICY})
 
     def _send_static(self,
                      name: str) -> None:
-        self._send(200, _read_static(name), STATIC_FILES[name])
+        if name in STATIC_FILES:
+            self._send(200, _read_static(name), STATIC_FILES[name])
+        else:
+            self._send_gone()
 
     def _send_gone(self) -> None:
         self._send(404, GONE_PAGE.encode(), "text/html; charset=utf-8",

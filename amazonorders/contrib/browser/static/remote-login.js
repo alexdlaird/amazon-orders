@@ -75,8 +75,20 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  function request(action, options) {
-    return fetch(action, {credentials: "same-origin", cache: "no-store", ...options});
+  const REQUEST_OPTIONS = {credentials: "same-origin", cache: "no-store"};
+
+  // The page's two calls, relative to it
+  function fetchFrame() {
+    return fetch("frame", {...REQUEST_OPTIONS, headers: {"X-Frame-After": String(seq), "X-Sign-In-State": state}});
+  }
+
+  function postInput(batch) {
+    return fetch("input", {
+      ...REQUEST_OPTIONS,
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(batch),
+    });
   }
 
   function endOnRefusal(response) {
@@ -109,7 +121,7 @@
     }
     sending = true;
     const batch = pending.splice(0, MAX_EVENTS_PER_REQUEST);
-    request("input", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(batch)})
+    postInput(batch)
       .then(endOnRefusal)
       .catch(() => {
         // The frame requests show the connection is lost; what was typed meanwhile has to be typed again
@@ -382,7 +394,7 @@
   }
 
   async function pollOnce() {
-    const response = await request("frame", {headers: {"X-Frame-After": String(seq), "X-Sign-In-State": state}});
+    const response = await fetchFrame();
     if (endOnRefusal(response)) {
       return;
     }
