@@ -95,6 +95,7 @@ package-dir = { amazonorders = "amazonorders" }
 
 [tool.setuptools.package-data]
 amazonorders = ["py.typed"]
+"amazonorders.contrib.browser" = ["static/*"]
 
 [tool.setuptools.dynamic]
 version = { attr = "amazonorders.__version__" }

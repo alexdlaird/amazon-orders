@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.10.0...HEAD)
 
+### Added
+
+- `login --remote`, and `PlaywrightRemoteLogin`, to sign in on Amazon's own page from a browser on another device, like your phone, through a one-time link, for a machine without a display, like a server or a container. The `remote_login_host`, `remote_login_port`, `remote_login_url` and `remote_login_timeout` config values set where the link's page is served and for how long.
+
 ### Fixed
 
 - Order history and Gift Card activity stop paging at a next-page link to another site, instead of following it.

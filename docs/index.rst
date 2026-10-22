@@ -166,6 +166,16 @@ The session is persisted, so neither the CLI nor the Python API needs credential
 
 This requires a display and the ``browser`` extra (see :ref:`Browser Automation <browser-installation>` to install it).
 
+On a machine without a display, like a server or a container, sign in from a browser on another device, like your
+phone, instead:
+
+.. code:: sh
+
+    amazon-orders login --remote
+
+It prints a one-time link to a page that shows Amazon's sign-in page, from a browser running headless on the machine,
+and passes your clicks and typing on to it. See :ref:`Signing In From Another Device <remote-sign-in>`.
+
 .. _automating-authentication:
 
 Automating Authentication
@@ -238,7 +248,8 @@ as shown above. Any MCP client gets the same as tools through
 `amazon-orders-mcp <https://github.com/alexdlaird/amazon-orders-mcp#readme>`_, a server built on ``amazon-orders``  —
 see its README for setup.
 
-The server signs you in with a browser, so it needs a display. Without one, use the CLI or library with
+The server signs you in with a browser, so it needs a display. Without one, sign in with
+``amazon-orders login --remote`` (see :ref:`Secure Sign-In <secure-sign-in>`), or use the CLI or library with
 :ref:`Automating Authentication <automating-authentication>`.
 
 .. _known-limitations:

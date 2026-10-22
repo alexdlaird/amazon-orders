@@ -105,6 +105,25 @@ class TestLaunchBrowser(UnitTestCase):
         self.assertEqual(mock_browser, browser)
         pw.chromium.launch.assert_called_once_with(headless=True, channel="chrome")
 
+    def test_launches_with_args(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+        pw.chromium.launch.side_effect = [_FakePlaywrightError("Chromium distribution 'chrome' is not found"),
+                                          _FakePlaywrightError("Chromium distribution 'msedge' is not found"),
+                                          MagicMock(), MagicMock()]
+        configured = AmazonOrdersConfig(data={"browser": "chromium"})
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            PlaywrightBrowserLauncher(AmazonOrdersConfig(data={})).launch(pw, headless=True, args=["--some-arg"])
+            PlaywrightBrowserLauncher(configured).launch(pw, headless=True, args=["--some-arg"])
+
+        # THEN every launch has the args: the default channels, the fallback, and a configured browser
+        self.assertEqual([call(headless=True, args=["--some-arg"], channel="chrome"),
+                          call(headless=True, args=["--some-arg"], channel="msedge"),
+                          call(headless=True, args=["--some-arg"]),
+                          call(headless=True, args=["--some-arg"])], pw.chromium.launch.call_args_list)
+
     def test_falls_back_to_playwright_chromium_without_chrome_or_edge(self):
         # GIVEN
         pw, fake_module, mock_browser = self.given_playwright()

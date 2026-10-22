@@ -55,6 +55,10 @@ class TestConf(UnitTestCase):
         self.assertEqual("html.parser", config.bs4_parser)
         self.assertFalse(config.warn_on_missing_required_field)
         self.assertIsNone(config.request_timeout)
+        self.assertEqual("127.0.0.1", config.remote_login_host)
+        self.assertEqual(8765, config.remote_login_port)
+        self.assertIsNone(config.remote_login_url)
+        self.assertEqual(600, config.remote_login_timeout)
 
         # GIVEN
         config.save()
@@ -81,6 +85,10 @@ max_cookie_attempts: 10
 order_class: amazonorders.entity.order.Order
 output_class: amazonorders.output.OutputFormatter
 output_dir: {output_dir}
+remote_login_host: 127.0.0.1
+remote_login_port: 8765
+remote_login_timeout: 600
+remote_login_url: null
 request_timeout: null
 selectors_class: amazonorders.selectors.Selectors
 shipment_class: amazonorders.entity.shipment.Shipment

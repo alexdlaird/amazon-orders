@@ -19,6 +19,7 @@ from click.core import Context
 from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.contrib.browser.playwright import PlaywrightBrowserLauncher, PlaywrightBrowserLogin
+from amazonorders.contrib.browser.remote import PlaywrightRemoteLogin
 from amazonorders.entity.invoice_pdf import InvoicePdf
 from amazonorders.exception import (
     AmazonOrdersAuthError,
@@ -182,8 +183,10 @@ class CliAuth:
             else:
                 raise e
 
-    def authenticate_with_browser(self) -> None:
-        browser_login = PlaywrightBrowserLogin(self.amazon_session)
+    def authenticate_with_browser(self,
+                                  remote: bool = False) -> None:
+        browser_login = (PlaywrightRemoteLogin(self.amazon_session) if remote
+                         else PlaywrightBrowserLogin(self.amazon_session))
         try:
             browser_login.login()
         except AmazonOrdersBrowserNotInstalledError as e:
@@ -742,6 +745,9 @@ def check_session(ctx: Context) -> None:
 @click.option("--browser", is_flag=True, default=False,
               help="Sign in with a browser window, so amazon-orders never needs to store your credentials. "
                    "Requires the browser extra.")
+@click.option("--remote", is_flag=True, default=False,
+              help="Sign in on Amazon's own page from a browser on another device, through a one-time link, for a "
+                   "machine without a display, like a server or a container. Requires the browser extra.")
 def login(ctx: Context, **kwargs: Any) -> None:
     """
     Log in to establish an Amazon session and cookies.
@@ -753,8 +759,8 @@ def login(ctx: Context, **kwargs: Any) -> None:
             click.echo("Info: Logging out of the persisted session first, so this login starts fresh.\n")
             amazon_session.logout()
 
-        if kwargs["browser"]:
-            CliAuth(amazon_session).authenticate_with_browser()
+        if kwargs["browser"] or kwargs["remote"]:
+            CliAuth(amazon_session).authenticate_with_browser(remote=kwargs["remote"])
         else:
             CliAuth(amazon_session).authenticate()
     except AmazonOrdersError as e:

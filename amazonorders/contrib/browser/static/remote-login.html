@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Sign in to {site}</title>
+<link rel="stylesheet" href="_static/remote-login.css">
+<script src="_static/remote-login.js" defer></script>
+</head>
+<body data-site="{site}">
+<header>
+<p id="status" role="status">Opening Amazon's sign-in page…</p>
+<button id="paste" type="button" hidden>Paste</button>
+<button id="keyboard" type="button" hidden>Keyboard</button>
+</header>
+<main id="screen">
+<canvas id="canvas" aria-label="Amazon's sign-in page"></canvas>
+</main>
+<textarea id="input" aria-label="Typing for Amazon's sign-in page" autocomplete="off" autocorrect="off"
+          autocapitalize="off" spellcheck="false"></textarea>
+</body>
+</html>

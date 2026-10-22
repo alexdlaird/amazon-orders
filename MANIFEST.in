@@ -3,6 +3,7 @@ include LICENSE README.md CHANGELOG.md
 
 # Include files
 include amazonorders/banner.txt
+recursive-include amazonorders/contrib/browser/static *
 
 # Exclude build
 prune build

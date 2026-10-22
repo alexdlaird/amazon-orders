@@ -125,6 +125,17 @@ amazon_session.login()
 
 This requires a display and the `browser` extra (see [Browser Automation](https://amazon-orders.readthedocs.io/browser.html#installation) to install it).
 
+On a machine without a display, like a server or a container, sign in from a browser on another device, like your
+phone, instead:
+
+```sh
+amazon-orders login --remote
+```
+
+It prints a one-time link to a page that shows Amazon's sign-in page, from a browser running headless on the machine,
+and passes your clicks and typing on to it. See
+[Signing In From Another Device](https://amazon-orders.readthedocs.io/browser.html#signing-in-from-another-device).
+
 ### Automating Authentication
 
 Authentication can be automated by (in order of precedence) storing credentials in environment variables, passing them
@@ -159,7 +170,8 @@ as shown above. Any MCP client gets the same as tools through
 [`amazon-orders-mcp`](https://github.com/alexdlaird/amazon-orders-mcp#readme), a server built on `amazon-orders` — see
 its README for setup.
 
-The server signs you in with a browser, so it needs a display. Without one, use the CLI or library with
+The server signs you in with a browser, so it needs a display. Without one, sign in with `amazon-orders login --remote`
+(see [Secure Sign-In](#secure-sign-in)), or use the CLI or library with
 [Automating Authentication](#automating-authentication).
 
 ## Documentation

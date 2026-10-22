@@ -78,6 +78,33 @@ jobs:
       - name: Test
         run: python -m pytest -v --ignore=tests/integration
 
+  build-browser:
+    name: Build (3.12, [browser] extra)
+
+    env:
+      FORCE_COLOR: 1
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      BROWSER_TESTS: required
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install jpeg
+        run: sudo apt-get install -y libjpeg-dev zlib1g-dev
+      - name: Install with [browser] extra
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev,browser]"
+          python -m playwright install --with-deps chromium
+      - name: Test
+        run: python -m pytest -v tests/unit/contrib/test_remote_browser.py
+
   validate:
     name: Validate
     uses: ./.github/workflows/validate.yml

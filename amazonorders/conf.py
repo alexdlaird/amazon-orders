@@ -178,6 +178,14 @@ class AmazonOrdersConfig:
             "auth_forms_classes": [],
             # Timeout in seconds for browser-based challenge detection and resolution
             "browser_timeout": 30,
+            # Where ``login --remote`` serves the page for signing in from another device's browser
+            "remote_login_host": "127.0.0.1",
+            "remote_login_port": 8765,
+            # The address people open sign-in links at (e.g. behind a reverse proxy); by default,
+            # ``http://localhost:<remote_login_port>/``
+            "remote_login_url": None,
+            # Timeout in seconds for a sign-in from another device's browser to be completed
+            "remote_login_timeout": 600,
             # Timeout in seconds for HTTP requests; ``None`` leaves requests with no timeout
             "request_timeout": None,
             "thread_pool_size": (os.cpu_count() or 1) * 4,

@@ -78,6 +78,19 @@ class TestCli(UnitTestCase):
         self.assert_login_responses_success()
         self.assertIn("Successfully logged in to Amazon", response.output)
 
+    @patch("amazonorders.cli.PlaywrightBrowserLogin")
+    @patch("amazonorders.cli.PlaywrightRemoteLogin")
+    def test_login_remote(self, mock_remote_login, mock_browser_login):
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      ["--config-path", self.test_config.config_path, "login", "--remote"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        mock_remote_login.return_value.login.assert_called_once_with()
+        mock_browser_login.assert_not_called()
+        self.assertIn("Successfully logged in to Amazon", response.output)
+
     def given_browser_not_installed(self, mock_browser_login, browser_types):
         mock_browser_login.return_value.login.side_effect = [
             AmazonOrdersBrowserNotInstalledError("Not installed.", meta={"browser_types": browser_types}),
