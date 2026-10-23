@@ -137,7 +137,7 @@ class TestIntegrationJSON(IntegrationTestCase):
         # GIVEN
         func = data.pop("func")
 
-        if func in ("get_orders", "get_order_history"):
+        if func == "get_orders":
             order_len = data.pop("orders_len")
             orders_json = data.pop("orders")
             full_details = data.get("full_details")

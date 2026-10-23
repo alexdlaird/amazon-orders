@@ -277,7 +277,6 @@ class AmazonTransactions:
 
     def get_transactions(self,
                          days: int = 365,
-                         next_page_data: Optional[Dict[str, Any]] = None,
                          keep_paging: bool = True,
                          order_id: Optional[str] = None,
                          progress: Optional[Callable[[int], None]] = None) -> List[Transaction]:
@@ -285,8 +284,6 @@ class AmazonTransactions:
         Get Amazon Transaction history for a given number of days, or for a single Order.
 
         :param days: The number of days worth of Transactions to get. Ignored when ``order_id`` is given.
-        :param next_page_data: If a call to this method previously errored out, passing the exception's
-            :attr:`~amazonorders.exception.AmazonOrdersError.meta` will continue paging where it left off.
         :param keep_paging: ``False`` if only one page should be fetched.
         :param order_id: If given, only Transactions for this Amazon Order ID are returned, scoped
             server-side via Amazon's ``transactionTag`` filter (the ``days`` window does not apply).
@@ -297,7 +294,7 @@ class AmazonTransactions:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         min_date = None if order_id else datetime.date.today() - datetime.timedelta(days=days)
-        transactions, _ = self._collect_transactions(order_id, min_date, next_page_data, keep_paging, None, progress)
+        transactions, _ = self._collect_transactions(order_id, min_date, None, keep_paging, None, progress)
 
         return transactions
 

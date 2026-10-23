@@ -5,7 +5,6 @@ import csv
 import io
 import json
 import logging
-import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Sequence
 
 import yaml
@@ -221,15 +220,6 @@ Order #{order_number}
         invoice_str += f"\n  Link: {invoice.link}"
 
         return invoice_str
-
-    def invoice_pdf_text(self,
-                         invoice_pdf: Invoice) -> str:
-        """
-        Deprecated, use :func:`invoice_text` instead. To be removed in 5.0.
-        """
-        warnings.warn("invoice_pdf_text() is deprecated and will be removed in 5.0. Use invoice_text() instead.",
-                      DeprecationWarning, stacklevel=2)
-        return self.invoice_text(invoice_pdf)
 
     def family_member_text(self,
                            family_member: FamilyMember) -> str:

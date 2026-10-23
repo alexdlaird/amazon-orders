@@ -5,7 +5,6 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
-import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, quote, urlencode, urlsplit
 
@@ -252,39 +251,6 @@ class AmazonOrders:
                                     f"{order_id}. Check if Amazon changed the HTML.")
         return tracking
 
-    def get_invoice(self,
-                    order_id: str) -> util.AmazonSessionResponse:
-        """
-        Deprecated, use :func:`get_invoices` instead, whose Printable Order Summary is this page. To be removed in
-        5.0.
-
-        :param order_id: The Amazon Order ID to lookup.
-        :return: The invoice page response.
-        """
-        warnings.warn("get_invoice() is deprecated and will be removed in 5.0. Use get_invoices() instead.",
-                      DeprecationWarning, stacklevel=2)
-        if not self.amazon_session.is_authenticated:
-            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
-
-        invoice_response = self.amazon_session.get(
-            f"{self.config.constants.ORDER_INVOICE_URL}?{self.config.constants.ORDER_ID_QUERY_PARAM}={order_id}")
-        self.amazon_session.check_response(invoice_response)
-
-        response_url = invoice_response.response.url
-        if not response_url.startswith(self.config.constants.ORDER_INVOICE_URL):
-            raise AmazonOrdersNotFoundError(f"Amazon redirected to {response_url}, which likely means Order "
-                                            f"{order_id} was not found.", meta={"redirect_url": response_url})
-
-        amazon_message = self._unavailable_message(invoice_response.parsed,
-                                                   self.config.selectors.ORDER_DETAILS_ERROR_SELECTOR)
-        if amazon_message:
-            raise AmazonOrdersUnavailableError(f"Amazon could not load Order {order_id}. It may not exist, or Amazon "
-                                               f"had an issue on their end. Wait a bit before trying again. "
-                                               f"Amazon's page said: \"{amazon_message}\"",
-                                               meta={"amazon_message": amazon_message})
-
-        return invoice_response
-
     def get_family_members(self) -> List[FamilyMember]:
         """
         Get the members of the Amazon Household whose Orders this account can view, such as linked Teen accounts,
@@ -379,7 +345,8 @@ class AmazonOrders:
         """
         Get the invoice documents of a given Amazon Order ID from its invoice list: the Printable Order Summary (an
         HTML page, on every site), then any invoice and credit note PDFs (issued by sellers, mostly on EU sites).
-        This executes one request per call. Use :func:`download_invoice` to get a document itself.
+        This executes one request per call, and a second for an Order with no invoice list, whose Printable Order
+        Summary is then requested directly. Use :func:`download_invoice` to get a document itself.
 
         :param order_id: The Amazon Order ID to lookup.
         :return: The Order's Invoices, the Printable Order Summary first.
@@ -388,27 +355,54 @@ class AmazonOrders:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         constants = self.config.constants
-        query = urlencode({constants.INVOICE_PDFS_ORDER_ID_QUERY_PARAM: order_id})
-        invoices_response = self.amazon_session.get(f"{constants.INVOICE_PDFS_URL}?{query}")
+        query = urlencode({constants.INVOICES_ORDER_ID_QUERY_PARAM: order_id})
+        invoices_response = self.amazon_session.get(f"{constants.INVOICES_URL}?{query}")
 
-        # The invoice list answers an Order that doesn't exist with an error status, not a redirect
+        # The invoice list answers an Order it doesn't have (one that doesn't exist, or may have no list, like a
+        # Whole Foods in-store Order) with an error status or a redirect, not a page
         status_code = invoices_response.response.status_code
-        if status_code == 400:
-            raise AmazonOrdersNotFoundError(f"Amazon returned {status_code} for the invoices of Order {order_id}, "
-                                            f"which likely means it was not found.",
-                                            meta={"status_code": status_code})
-        if 500 <= status_code < 600:
-            raise AmazonOrdersUnavailableError(f"Amazon could not load the invoices of Order {order_id}. It may not "
-                                               f"exist, or Amazon had an issue on their end. Wait a bit before trying "
-                                               f"again.", meta={"status_code": status_code})
-        self.amazon_session.check_response(invoices_response)
+        if status_code != 400 and not 500 <= status_code < 600:
+            self.amazon_session.check_response(invoices_response)
+            if invoices_response.response.url.startswith(constants.INVOICES_URL):
+                return self._parse_invoices(invoices_response.parsed, self.config, order_id)
 
-        response_url = invoices_response.response.url
-        if not response_url.startswith(constants.INVOICE_PDFS_URL):
+        logger.debug(f"Order {order_id} has no invoice list (status {status_code}), so its Printable Order Summary is "
+                     f"requested directly.")
+
+        return [self._get_order_summary(order_id)]
+
+    def _get_order_summary(self,
+                           order_id: str) -> Invoice:
+        """
+        Get the Printable Order Summary of an Order that has no invoice list, from its page.
+
+        :param order_id: The Amazon Order ID to lookup.
+        :return: The Order's Printable Order Summary.
+        :raises AmazonOrdersNotFoundError: If Amazon redirected away from the page, so the Order likely doesn't exist.
+        :raises AmazonOrdersUnavailableError: If Amazon couldn't load the Order.
+        """
+        constants = self.config.constants
+        summary_url = f"{constants.ORDER_INVOICE_URL}?{urlencode({constants.ORDER_ID_QUERY_PARAM: order_id})}"
+        summary_response = self.amazon_session.get(summary_url)
+        self.amazon_session.check_response(summary_response)
+
+        response_url = summary_response.response.url
+        if not response_url.startswith(constants.ORDER_INVOICE_URL):
             raise AmazonOrdersNotFoundError(f"Amazon redirected to {response_url}, which likely means Order "
                                             f"{order_id} was not found.", meta={"redirect_url": response_url})
 
-        return self._parse_invoices(invoices_response.parsed, self.config, order_id)
+        amazon_message = self._unavailable_message(summary_response.parsed,
+                                                   self.config.selectors.ORDER_DETAILS_ERROR_SELECTOR)
+        if amazon_message:
+            raise AmazonOrdersUnavailableError(f"Amazon could not load Order {order_id}. It may not exist, or Amazon "
+                                               f"had an issue on their end. Wait a bit before trying again. "
+                                               f"Amazon's page said: \"{amazon_message}\"",
+                                               meta={"amazon_message": amazon_message})
+
+        summary_tag = BeautifulSoup("", self.config.bs4_parser).new_tag("a", attrs={"href": summary_url})
+        summary_tag.string = self.config.selectors.INVOICE_ORDER_SUMMARY_TEXT
+
+        return Invoice(summary_tag, self.config, order_number=order_id, format=constants.INVOICE_HTML_FORMAT)
 
     def download_invoice(self,
                          invoice: Invoice) -> bytes:
@@ -562,70 +556,6 @@ class AmazonOrders:
         } if next_page else None
 
         return PagedResults(orders, next_cursor)
-
-    @classmethod
-    def parse_order_history(cls,
-                            *args: Any,
-                            **kwargs: Any) -> List[Order]:
-        """
-        Deprecated, use :func:`parse_orders` instead. To be removed in 5.0.
-        """
-        warnings.warn("parse_order_history() is deprecated and will be removed in 5.0. Use parse_orders() instead.",
-                      DeprecationWarning, stacklevel=2)
-        return cls.parse_orders(*args, **kwargs)
-
-    def get_order_history(self,
-                          *args: Any,
-                          **kwargs: Any) -> List[Order]:
-        """
-        Deprecated, use :func:`get_orders` instead. To be removed in 5.0.
-        """
-        warnings.warn("get_order_history() is deprecated and will be removed in 5.0. Use get_orders() instead.",
-                      DeprecationWarning, stacklevel=2)
-        return self.get_orders(*args, **kwargs)
-
-    def get_order_history_page(self,
-                               *args: Any,
-                               **kwargs: Any) -> PagedResults[Order]:
-        """
-        Deprecated, use :func:`get_orders_page` instead. To be removed in 5.0.
-        """
-        warnings.warn("get_order_history_page() is deprecated and will be removed in 5.0. Use get_orders_page() "
-                      "instead.", DeprecationWarning, stacklevel=2)
-        return self.get_orders_page(*args, **kwargs)
-
-    @classmethod
-    def parse_invoice_pdfs(cls,
-                           *args: Any,
-                           **kwargs: Any) -> List[Invoice]:
-        """
-        Deprecated, use :func:`parse_invoices` instead. To be removed in 5.0.
-        """
-        warnings.warn("parse_invoice_pdfs() is deprecated and will be removed in 5.0. Use parse_invoices() "
-                      "instead.", DeprecationWarning, stacklevel=2)
-        return [invoice for invoice in cls.parse_invoices(*args, **kwargs)
-                if invoice.format == invoice.config.constants.INVOICE_PDF_FORMAT]
-
-    def get_invoice_pdfs(self,
-                         *args: Any,
-                         **kwargs: Any) -> List[Invoice]:
-        """
-        Deprecated, use :func:`get_invoices` instead. To be removed in 5.0.
-        """
-        warnings.warn("get_invoice_pdfs() is deprecated and will be removed in 5.0. Use get_invoices() instead.",
-                      DeprecationWarning, stacklevel=2)
-        return [invoice for invoice in self.get_invoices(*args, **kwargs)
-                if invoice.format == self.config.constants.INVOICE_PDF_FORMAT]
-
-    def download_invoice_pdf(self,
-                             *args: Any,
-                             **kwargs: Any) -> bytes:
-        """
-        Deprecated, use :func:`download_invoice` instead. To be removed in 5.0.
-        """
-        warnings.warn("download_invoice_pdf() is deprecated and will be removed in 5.0. Use download_invoice() "
-                      "instead.", DeprecationWarning, stacklevel=2)
-        return self.download_invoice(*args, **kwargs)
 
     def _history_filter_value(self,
                               year: Optional[int],

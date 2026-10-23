@@ -437,17 +437,6 @@ def invoices(ctx: Context,
     Get the invoices for the given Amazon Order IDs (the Printable Order Summary, and any invoice and credit note
     PDFs), and optionally download them.
     """
-    _get_invoices(ctx, order_ids, download_dir, kwargs["output"], pdfs_only=False)
-
-
-@amazon_orders_cli.command(hidden=True, deprecated=True)
-@click.pass_context
-@click.argument("order_id")
-def invoice(ctx: Context,
-            order_id: str) -> None:
-    """
-    Deprecated, use invoices instead.
-    """
     amazon_session = ctx.obj["amazon_session"]
 
     try:
@@ -457,31 +446,30 @@ def invoice(ctx: Context,
         amazon_orders = AmazonOrders(amazon_session,
                                      config=config)
 
-        invoice_response = amazon_orders.get_invoice(order_id)
+        invoice_list = []
+        for order_id in order_ids:
+            order_invoices = amazon_orders.get_invoices(order_id)
+            if not order_invoices:
+                click.echo(f"No invoices for Order {order_id}.", err=True)
+            invoice_list += order_invoices
 
-        click.echo(invoice_response.response.text)
+        click.echo(config.output_cls(config).format(invoice_list, kwargs["output"]))
+
+        if download_dir:
+            os.makedirs(download_dir, exist_ok=True)
+            saved_paths: Set[str] = set()
+            for document in invoice_list:
+                path = _invoice_path(download_dir, document, saved_paths)
+                with open(path, "wb") as invoice_file:
+                    invoice_file.write(amazon_orders.download_invoice(document))
+                click.echo(f"Saved {path}", err=True)
+
+        click.echo(f"... {len(invoice_list)} Invoices for {len(order_ids)} Orders.\n", err=True)
     except AmazonOrdersAuthRedirectError:
         IOClick.echo_session_expired()
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
-
-
-@amazon_orders_cli.command(hidden=True, deprecated=True)
-@click.pass_context
-@click.argument("order_ids", nargs=-1, required=True)
-@click.option("--download", "download_dir", type=click.Path(file_okay=False),
-              help="Save the documents (PDFs) to this directory, replacing any of the same name from an earlier run.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
-              help="The output format. Defaults to text.")
-def invoice_pdfs(ctx: Context,
-                 order_ids: Tuple[str, ...],
-                 download_dir: Optional[str],
-                 **kwargs: Any) -> None:
-    """
-    Deprecated, use invoices instead.
-    """
-    _get_invoices(ctx, order_ids, download_dir, kwargs["output"], pdfs_only=True)
 
 
 @amazon_orders_cli.command("order-transactions")
@@ -731,80 +719,6 @@ Gift Cards, with {days} days of activity
         ctx.fail(str(e))
 
 
-@amazon_orders_cli.command(hidden=True, deprecated=True)
-@click.pass_context
-def gift_card_balance(ctx: Context) -> None:
-    """
-    Deprecated, use gift-cards instead.
-    """
-    amazon_session = ctx.obj["amazon_session"]
-
-    try:
-        CliAuth(amazon_session).authenticate()
-
-        config = ctx.obj["conf"]
-        amazon_gift_cards = AmazonGiftCards(amazon_session,
-                                            config=config)
-
-        balance = amazon_gift_cards.get_gift_cards(days=0, keep_paging=False).balance
-        if balance is None:
-            raise AmazonOrdersError("Could not parse Gift Card balance. Check if Amazon changed the HTML.")
-
-        click.echo(f"Gift Card Balance: {config.constants.format_currency(balance)}")
-    except AmazonOrdersAuthRedirectError:
-        IOClick.echo_session_expired()
-    except AmazonOrdersError as e:
-        logger.debug("An error occurred.", exc_info=True)
-        ctx.fail(str(e))
-
-
-@amazon_orders_cli.command(hidden=True, deprecated=True)
-@click.pass_context
-@click.option("--days", default=365,
-              help="The number of days of Gift Card activity to get.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
-              help="The output format. Defaults to text.")
-def gift_card_activity(ctx: Context, **kwargs: Any) -> None:
-    """
-    Deprecated, use gift-cards instead.
-    """
-    amazon_session = ctx.obj["amazon_session"]
-
-    try:
-        CliAuth(amazon_session).authenticate()
-
-        days = kwargs["days"]
-        output = kwargs["output"]
-
-        click.echo(
-            """-----------------------------------------------------------------------
-Gift Card Activity for {days} days
------------------------------------------------------------------------\n""".format(days=days), err=True
-        )
-        if not ctx.obj["show_progress"]:
-            click.echo("Info: Fetching Gift Card activity, this might take a minute ...", err=True)
-
-        config = ctx.obj["conf"]
-        amazon_gift_cards = AmazonGiftCards(amazon_session,
-                                            config=config)
-
-        start_time = time.time()
-        with ProgressSpinner("Gift Card activity entries", ctx.obj["show_progress"]) as progress:
-            activity = amazon_gift_cards.get_gift_cards(days=days, progress=progress).items
-        end_time = time.time()
-
-        click.echo(config.output_cls(config).format(activity, output))
-
-        click.echo(
-            "... {total} Gift Card activity entries parsed in {time} seconds.\n".format(
-                total=len(activity), time=int(end_time - start_time)), err=True)
-    except AmazonOrdersAuthRedirectError:
-        IOClick.echo_session_expired()
-    except AmazonOrdersError as e:
-        logger.debug("An error occurred.", exc_info=True)
-        ctx.fail(str(e))
-
-
 @amazon_orders_cli.command(short_help="Check if a persisted session exists.")
 @click.pass_context
 def check_session(ctx: Context) -> None:
@@ -890,58 +804,6 @@ def version(ctx: Context) -> None:
     ctx.exit(0)
 
 
-def _deprecated_alias(command: click.Command,
-                      name: str) -> click.Command:
-    return click.Command(name,
-                         callback=command.callback,
-                         params=command.params,
-                         help=f"Deprecated, use {command.name} instead.",
-                         hidden=True,
-                         deprecated=True)
-
-
-def _get_invoices(ctx: Context,
-                  order_ids: Tuple[str, ...],
-                  download_dir: Optional[str],
-                  output: str,
-                  pdfs_only: bool) -> None:
-    amazon_session = ctx.obj["amazon_session"]
-
-    try:
-        CliAuth(amazon_session).authenticate()
-
-        config = ctx.obj["conf"]
-        amazon_orders = AmazonOrders(amazon_session,
-                                     config=config)
-
-        invoice_list = []
-        for order_id in order_ids:
-            order_invoices = [invoice for invoice in amazon_orders.get_invoices(order_id)
-                              if not pdfs_only or invoice.format == config.constants.INVOICE_PDF_FORMAT]
-            if not order_invoices:
-                click.echo(f"No {'invoice PDFs' if pdfs_only else 'invoices'} for Order {order_id}.", err=True)
-            invoice_list += order_invoices
-
-        click.echo(config.output_cls(config).format(invoice_list, output))
-
-        if download_dir:
-            os.makedirs(download_dir, exist_ok=True)
-            saved_paths: Set[str] = set()
-            for document in invoice_list:
-                path = _invoice_path(download_dir, document, saved_paths)
-                with open(path, "wb") as invoice_file:
-                    invoice_file.write(amazon_orders.download_invoice(document))
-                click.echo(f"Saved {path}", err=True)
-
-        click.echo(f"... {len(invoice_list)} {'Invoice PDFs' if pdfs_only else 'Invoices'} for {len(order_ids)} "
-                   f"Orders.\n", err=True)
-    except AmazonOrdersAuthRedirectError:
-        IOClick.echo_session_expired()
-    except AmazonOrdersError as e:
-        logger.debug("An error occurred.", exc_info=True)
-        ctx.fail(str(e))
-
-
 def _is_interactive_terminal() -> bool:
     return sys.stderr.isatty() and os.environ.get("TERM") != "dumb"
 
@@ -961,10 +823,6 @@ def _invoice_path(download_dir: str,
     saved_paths.add(path)
     return path
 
-
-# Deprecated aliases, to be removed in 5.0
-amazon_orders_cli.add_command(_deprecated_alias(orders, "history"))
-amazon_orders_cli.add_command(_deprecated_alias(search_orders, "search"))
 
 if __name__ == "__main__":
     amazon_orders_cli(obj={})

@@ -275,7 +275,7 @@ class TestTransactions(UnitTestCase):
         self.assertIn("Could not parse Transaction history", str(cm.exception))
 
     @responses.activate
-    def test_get_transactions_errors_with_meta(self):
+    def test_get_transactions_page_errors_with_meta(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         resp = responses.add(
@@ -287,7 +287,8 @@ class TestTransactions(UnitTestCase):
 
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
-            self.amazon_transactions.get_transactions(next_page_data=next_page_data, keep_paging=False)
+            self.amazon_transactions.get_transactions_page(cursor={"next_page_data": next_page_data, "min_date": None,
+                                                                   "order_id": None})
 
         # THEN
         self.assertEqual(1, resp.call_count)

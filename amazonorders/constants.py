@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import logging
-import os
 import re
 from datetime import date
 from typing import Dict, List, Optional, Union
@@ -31,8 +30,7 @@ class Constants:
     (each only when a subclass has not overridden it). The domain is resolved in this precedence order:
 
     1. The ``domain`` key on :class:`~amazonorders.conf.AmazonOrdersConfig`.
-    2. The ``AMAZON_BASE_URL`` environment variable (deprecated).
-    3. The default, ``amazon.com``.
+    2. The default, ``amazon.com``.
 
     ``amazon-orders`` reads Amazon's pages in English, and requests them from any site known to offer English. To
     read a site in another language, use a language package; subclass and set ``constants_class`` to override any
@@ -86,9 +84,9 @@ class Constants:
     TRACKING_ORDER_ID_QUERY_PARAM = "orderId"
     SHIPMENT_ID_QUERY_PARAM = "shipmentId"
     TRACKING_PACKAGE_INDEX_QUERY_PARAM = "packageIndex"
-    INVOICE_PDFS_ROUTE = "/your-orders/invoice/popover"
-    INVOICE_PDFS_URL = f"{BASE_URL}{INVOICE_PDFS_ROUTE}"
-    INVOICE_PDFS_ORDER_ID_QUERY_PARAM = "orderId"
+    INVOICES_ROUTE = "/your-orders/invoice/popover"
+    INVOICES_URL = f"{BASE_URL}{INVOICES_ROUTE}"
+    INVOICES_ORDER_ID_QUERY_PARAM = "orderId"
     INVOICE_PDF_CONTENT_TYPE = "application/pdf"
     INVOICE_HTML_FORMAT = "html"
     INVOICE_PDF_FORMAT = "pdf"
@@ -206,8 +204,6 @@ class Constants:
         else:
             environment = AmazonOrdersConfig.read_environment()
             domain, browser = environment.get("domain"), environment.get("browser")
-        if not domain:
-            domain = self._deprecated_base_url()
         if browser:
             self._apply_browser(browser)
         if domain:
@@ -393,7 +389,7 @@ class Constants:
         self.ORDER_DETAILS_URL = f"{base_url}/gp/your-account/order-details"
         self.ORDER_INVOICE_URL = f"{base_url}/gp/css/summary/print.html"
         self.TRACKING_URL = f"{base_url}{self.TRACKING_ROUTE}"
-        self.INVOICE_PDFS_URL = f"{base_url}{self.INVOICE_PDFS_ROUTE}"
+        self.INVOICES_URL = f"{base_url}{self.INVOICES_ROUTE}"
         self.ORDER_SEARCH_URL = f"{base_url}{self.ORDER_SEARCH_ROUTE}"
         self.PRIME_PAYMENTS_URL = f"{base_url}{self.PRIME_PAYMENTS_ROUTE}"
         self.TRANSACTION_HISTORY_URL = f"{base_url}{self.TRANSACTION_HISTORY_ROUTE}"
@@ -457,11 +453,3 @@ class Constants:
         if value.startswith("www."):
             return f"https://{value}"
         return f"https://www.{value}"
-
-    @staticmethod
-    def _deprecated_base_url() -> Optional[str]:
-        base_url = os.environ.get("AMAZON_BASE_URL")
-        if base_url:
-            logger.warning("AMAZON_BASE_URL is deprecated and will be removed in the next major release. Use "
-                           "AMAZON_DOMAIN instead.")
-        return base_url

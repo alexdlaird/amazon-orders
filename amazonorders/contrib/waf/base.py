@@ -5,7 +5,6 @@ import json
 import logging
 import os
 import re
-import warnings
 from typing import Any, ClassVar, Dict, Optional, TYPE_CHECKING
 from urllib.parse import urlparse
 
@@ -146,12 +145,6 @@ class AwsWafForm(AuthForm):
         :return: The ``aws-waf-token`` cookie value.
         :raises NotImplementedError: if a subclass does not override this method.
         """
-        if type(self)._solve_token is not AwsWafForm._solve_token:
-            warnings.warn(f"{type(self).__name__} overrides _solve_token(), which is deprecated and "
-                          f"will be removed in the next major release. Override solve_token() instead.",
-                          DeprecationWarning, stacklevel=2)
-            return self._solve_token(url, goku, challenge_script)
-
         raise NotImplementedError
 
     def solve_visual_captcha(self,
@@ -168,32 +161,4 @@ class AwsWafForm(AuthForm):
         :return: A list of zero-based grid cell indices to select, or ``None`` if
             this solver does not support Puzzle classification.
         """
-        if type(self)._solve_visual_captcha is not AwsWafForm._solve_visual_captcha:
-            warnings.warn(f"{type(self).__name__} overrides _solve_visual_captcha(), which is deprecated and "
-                          f"will be removed in the next major release. Override solve_visual_captcha() instead.",
-                          DeprecationWarning, stacklevel=2)
-            return self._solve_visual_captcha(url, image_data, question)
-
         return None
-
-    def _solve_token(self,
-                     url: str,
-                     goku: Dict[str, Any],
-                     challenge_script: str) -> str:
-        """
-        Deprecated, and will be removed in the next major release. Use :func:`solve_token` instead.
-        """
-        warnings.warn("AwsWafForm._solve_token() is deprecated and will be removed in the next major release. Use "
-                      "solve_token() instead.", DeprecationWarning, stacklevel=2)
-        return self.solve_token(url, goku, challenge_script)
-
-    def _solve_visual_captcha(self,
-                              url: str,
-                              image_data: list,
-                              question: str) -> Optional[list]:
-        """
-        Deprecated, and will be removed in the next major release. Use :func:`solve_visual_captcha` instead.
-        """
-        warnings.warn("AwsWafForm._solve_visual_captcha() is deprecated and will be removed in the next major "
-                      "release. Use solve_visual_captcha() instead.", DeprecationWarning, stacklevel=2)
-        return self.solve_visual_captcha(url, image_data, question)

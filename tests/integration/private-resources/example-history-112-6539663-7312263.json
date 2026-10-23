@@ -1,5 +1,5 @@
 {
-    "func": "get_order_history",
+    "func": "get_orders",
     "year": 2024,
     "start_index": 20,
     "full_details": true,
