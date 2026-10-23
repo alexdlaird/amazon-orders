@@ -178,21 +178,78 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
-    def test_get_orders_csd_encrypted(self):
+    def test_get_orders_csd_encrypted_falls_back_to_no_js(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
+        url = f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-2018"
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-csd-encrypted-siege.html"), "r",
                   encoding="utf-8") as f:
-            resp = responses.add(responses.GET, f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-2026",
-                                 body=f.read(), status=200)
+            encrypted_page = responses.add(responses.GET, url, body=f.read(), status=200)
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
+                  encoding="utf-8") as f:
+            fallback_page = responses.add(responses.GET, f"{url}&disableCsd=no-js", body=f.read(), status=200)
+
+        # WHEN
+        with self.assertLogs("amazonorders.orders", level="DEBUG") as logs:
+            orders = self.amazon_orders.get_orders(year=2018, keep_paging=False)
+
+        # THEN
+        self.assertEqual(10, len(orders))
+        self.assert_order_112_0399923_3070642(orders[3], False)
+        self.assertEqual(1, encrypted_page.call_count)
+        self.assertEqual(1, fallback_page.call_count)
+        self.assertTrue(any("no-JavaScript fallback" in line for line in logs.output))
+
+    @responses.activate
+    def test_get_orders_csd_encrypted_fallback_also_encrypted(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        url = f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-2018"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-csd-encrypted-siege.html"), "r",
+                  encoding="utf-8") as f:
+            body = f.read()
+        encrypted_page = responses.add(responses.GET, url, body=body, status=200)
+        fallback_page = responses.add(responses.GET, f"{url}&disableCsd=no-js", body=body, status=200)
 
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
-            self.amazon_orders.get_orders(year=2026, keep_paging=False)
+            self.amazon_orders.get_orders(year=2018, keep_paging=False)
 
         # THEN
-        self.assertIn("encrypted", str(cm.exception))
-        self.assertEqual(1, resp.call_count)
+        self.assertIn("no-JavaScript fallback", str(cm.exception))
+        self.assertEqual(0, cm.exception.meta["index"])
+        self.assertEqual(1, encrypted_page.call_count)
+        self.assertEqual(1, fallback_page.call_count)
+
+    @responses.activate
+    def test_get_orders_csd_fallback_does_not_carry_to_next_page(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        url = f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-2010"
+        next_page_url = f"{url}&startIndex=10&ref_=ppx_yo2ov_dt_b_pagination_1_2"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-csd-encrypted-siege.html"), "r",
+                  encoding="utf-8") as f:
+            encrypted_page = responses.add(responses.GET, url, body=f.read(), status=200)
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2010-0.html"), "r",
+                  encoding="utf-8") as f:
+            body = re.sub(r'(<li class="a-last"><a href="[^"?]+\?)', r"\1disableCsd=no-js&amp;", f.read(), count=1)
+        fallback_page = responses.add(responses.GET, f"{url}&disableCsd=no-js", body=body, status=200)
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2010-10.html"), "r",
+                  encoding="utf-8") as f:
+            next_page_body = f.read()
+        next_page = responses.add(responses.GET, next_page_url, body=next_page_body, status=200)
+        next_page_fallback = responses.add(responses.GET, f"{next_page_url}&disableCsd=no-js", body=next_page_body,
+                                           status=200)
+
+        # WHEN
+        orders = self.amazon_orders.get_orders(year=2010)
+
+        # THEN
+        self.assertEqual(12, len(orders))
+        self.assertEqual(1, encrypted_page.call_count)
+        self.assertEqual(1, fallback_page.call_count)
+        self.assertEqual(1, next_page.call_count)
+        self.assertEqual(0, next_page_fallback.call_count)
 
     @responses.activate
     def test_get_orders_errors_with_meta(self):
@@ -454,6 +511,27 @@ class TestOrders(UnitTestCase):
         self.assertEqual("year-2010", first_page.cursor["time_filter"])
         self.assertEqual(2, len(page.items))
         self.assertEqual(1, resp2.call_count)
+
+    @responses.activate
+    def test_get_orders_page_csd_encrypted_falls_back_to_no_js(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        url = f"{self.test_config.constants.ORDER_HISTORY_URL}?timeFilter=year-2010"
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-csd-encrypted-siege.html"), "r",
+                  encoding="utf-8") as f:
+            encrypted_page = responses.add(responses.GET, url, body=f.read(), status=200)
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2010-0.html"), "r",
+                  encoding="utf-8") as f:
+            fallback_page = responses.add(responses.GET, f"{url}&disableCsd=no-js", body=f.read(), status=200)
+
+        # WHEN
+        page = self.amazon_orders.get_orders_page(year=2010, limit=5)
+
+        # THEN
+        self.assertEqual(10, len(page.items))
+        self.assertEqual({"start_index": 10, "time_filter": "year-2010", "order_filter": None}, page.cursor)
+        self.assertEqual(1, encrypted_page.call_count)
+        self.assertEqual(1, fallback_page.call_count)
 
     @responses.activate
     def test_get_orders_page_without_limit_fetches_every_page(self):

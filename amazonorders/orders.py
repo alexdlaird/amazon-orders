@@ -799,6 +799,20 @@ class AmazonOrders:
         return not (order_number_tag and order_number_tag.get_text(strip=True))
 
     @classmethod
+    def _has_csd_encrypted_orders(cls,
+                                  parsed: Tag,
+                                  config: AmazonOrdersConfig) -> bool:
+        """
+        Whether any Order card on an Order history page is encrypted, by :func:`_is_csd_encrypted`.
+
+        :param parsed: The parsed Order history page.
+        :param config: The config providing the selectors.
+        :return: ``True`` if any Order card on the page is encrypted.
+        """
+        return any(cls._is_csd_encrypted(order_tag, config)
+                   for order_tag in util.select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR))
+
+    @classmethod
     def _parse_orders(cls,
                       parsed: Tag,
                       config: AmazonOrdersConfig,
@@ -886,6 +900,39 @@ class AmazonOrders:
                                     format=config.constants.INVOICE_PDF_FORMAT)
                             for invoice_tag in util.select(parsed, config.selectors.INVOICE_PDF_ENTITY_SELECTOR)]
 
+    def _fetch_orders_page(self,
+                           url: str,
+                           index: int) -> util.AmazonSessionResponse:
+        """
+        Fetch an Order history page, re-requesting it once as Amazon's no-JavaScript fallback (``disableCsd=no-js``)
+        if its Order cards were served encrypted.
+
+        :param url: The Order history page URL.
+        :param index: The index to resume from, for the error's ``meta``.
+        :return: The page's response.
+        :raises AmazonOrdersError: If the fallback's Order cards are encrypted too.
+        """
+        constants = self.config.constants
+        # The fallback never carries over from the previous page
+        url = util.with_query_param(url, constants.DISABLE_CSD_QUERY_PARAM, None)
+
+        page_response = self.amazon_session.get(url)
+        self.amazon_session.check_response(page_response, meta={"index": index})
+
+        if self._has_csd_encrypted_orders(page_response.parsed, self.config):
+            fallback_url = util.with_query_param(url, constants.DISABLE_CSD_QUERY_PARAM, constants.DISABLE_CSD_NO_JS)
+            logger.debug(f"Order history page was served encrypted, requesting its no-JavaScript fallback: "
+                         f"{fallback_url}")
+            page_response = self.amazon_session.get(fallback_url)
+            self.amazon_session.check_response(page_response, meta={"index": index})
+
+            if self._has_csd_encrypted_orders(page_response.parsed, self.config):
+                raise AmazonOrdersError("Could not parse Order history. Amazon served the page and its "
+                                        "no-JavaScript fallback with the Order cards encrypted.",
+                                        meta={"index": index})
+
+        return page_response
+
     async def _build_orders_async(self,
                                   next_page: Optional[str],
                                   keep_paging: bool,
@@ -901,8 +948,7 @@ class AmazonOrders:
         orders_before_start_on_page = current_index % self.config.constants.ORDER_HISTORY_PAGE_SIZE
 
         while next_page and (limit is None or len(order_builds) < limit):
-            page_response = self.amazon_session.get(next_page)
-            self.amazon_session.check_response(page_response, meta={"index": current_index})
+            page_response = self._fetch_orders_page(next_page, current_index)
 
             order_tags = self._parse_orders(page_response.parsed, self.config,
                                             current_index - orders_before_start_on_page)
