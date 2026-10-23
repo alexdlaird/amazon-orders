@@ -105,6 +105,25 @@ class TestLaunchBrowser(UnitTestCase):
         self.assertEqual(mock_browser, browser)
         pw.chromium.launch.assert_called_once_with(headless=True, channel="chrome")
 
+    def test_launches_with_args(self):
+        # GIVEN
+        pw, fake_module, _ = self.given_playwright()
+        pw.chromium.launch.side_effect = [_FakePlaywrightError("Chromium distribution 'chrome' is not found"),
+                                          _FakePlaywrightError("Chromium distribution 'msedge' is not found"),
+                                          MagicMock(), MagicMock()]
+        configured = AmazonOrdersConfig(data={"browser": "chromium"})
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(), "playwright.sync_api": fake_module}):
+            PlaywrightBrowserLauncher(AmazonOrdersConfig(data={})).launch(pw, headless=True, args=["--some-arg"])
+            PlaywrightBrowserLauncher(configured).launch(pw, headless=True, args=["--some-arg"])
+
+        # THEN every launch has the args: the default channels, the fallback, and a configured browser
+        self.assertEqual([call(headless=True, args=["--some-arg"], channel="chrome"),
+                          call(headless=True, args=["--some-arg"], channel="msedge"),
+                          call(headless=True, args=["--some-arg"]),
+                          call(headless=True, args=["--some-arg"])], pw.chromium.launch.call_args_list)
+
     def test_falls_back_to_playwright_chromium_without_chrome_or_edge(self):
         # GIVEN
         pw, fake_module, mock_browser = self.given_playwright()
@@ -1142,3 +1161,110 @@ class TestPlaywrightBrowserLogin(UnitTestCase):
         # THEN
         self.assertIn("requires a display", str(cm.exception))
         mock_sync_playwright.assert_not_called()
+
+    @patch("amazonorders.contrib.browser.playwright.has_display", return_value=True)
+    def test_login_signs_in_in_a_browser_window(self, mock_has_display):
+        # GIVEN
+        mock_sync_playwright, mock_page, mock_context, mock_browser = _make_mock_playwright(
+            pw_cookies=[{"name": "x-main", "value": "signed-in", "domain": ".amazon.com", "path": "/"},
+                        {"name": "other", "value": "elsewhere", "domain": ".example.com", "path": "/"}])
+        amazon_session = AmazonSession(config=self.test_config)
+        amazon_session.io = MagicMock()
+        browser_login = PlaywrightBrowserLogin(amazon_session)
+        pw = mock_sync_playwright.return_value.__enter__.return_value
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(),
+                                      "playwright.sync_api": _playwright_module(mock_sync_playwright)}), \
+                patch.object(PlaywrightBrowserLogin, "_verify_session") as mock_verify_session:
+            browser_login.login()
+
+        # THEN a visible browser opens with no extra args, on the sign-in page, and the site's cookies become the
+        # session
+        pw.chromium.launch.assert_called_once_with(headless=False, channel="chrome")
+        mock_browser.new_context.assert_called_once_with(
+            user_agent=self.test_config.constants.BASE_HEADERS.get("User-Agent"))
+        self.assertTrue(mock_page.goto.call_args.args[0].startswith(self.test_config.constants.SIGN_IN_URL))
+        amazon_session.io.echo.assert_called_once_with("Info: A browser window has opened. Sign in to Amazon there, "
+                                                       "and this will continue once you're signed in.")
+        self.assertEqual({"x-main": "signed-in"}, amazon_session.session.cookies.get_dict())
+        mock_browser.close.assert_called_once_with()
+        mock_verify_session.assert_called_once_with()
+
+    @patch("amazonorders.contrib.browser.playwright.has_display", return_value=False)
+    def test_login_calls_overridden_hooks(self, mock_has_display):
+        # GIVEN a subclass that shows the sign-in somewhere other than a browser window
+        mock_sync_playwright, mock_page, mock_context, mock_browser = _make_mock_playwright()
+        mock_browser.new_context.return_value = None
+        custom_context = MagicMock()
+        custom_context.new_page.return_value = mock_page
+        hook_calls = []
+
+        class OtherBrowserLogin(PlaywrightBrowserLogin):
+            def launch_args(self):
+                return ["--some-arg"]
+
+            def new_context(self, browser):
+                hook_calls.append(("new_context", browser))
+                return custom_context
+
+            def on_sign_in_page(self, context, page):
+                hook_calls.append(("on_sign_in_page", context, page))
+
+            def wait_for_sign_in(self, context, page, timeout):
+                hook_calls.append(("wait_for_sign_in", context, page, timeout))
+
+        amazon_session = AmazonSession(config=self.test_config)
+        amazon_session.io = MagicMock()
+        browser_login = OtherBrowserLogin(amazon_session)
+        browser_login.headless = True
+        pw = mock_sync_playwright.return_value.__enter__.return_value
+
+        # WHEN
+        with patch.dict(sys.modules, {"playwright": MagicMock(),
+                                      "playwright.sync_api": _playwright_module(mock_sync_playwright)}), \
+                patch.object(PlaywrightBrowserLogin, "_verify_session"):
+            browser_login.login(timeout=42)
+
+        # THEN the hooks are used in order, with the subclass's launch args, and with no display needed
+        pw.chromium.launch.assert_called_once_with(headless=True, args=["--some-arg"], channel="chrome")
+        self.assertEqual([("new_context", mock_browser),
+                          ("on_sign_in_page", custom_context, mock_page),
+                          ("wait_for_sign_in", custom_context, mock_page, 42)], hook_calls)
+        amazon_session.io.echo.assert_not_called()
+        custom_context.cookies.assert_called_once_with()
+
+    def test_wait_for_sign_in_returns_once_signed_in(self):
+        # GIVEN
+        browser_login = PlaywrightBrowserLogin(AmazonSession(config=self.test_config))
+        context = MagicMock()
+        context.cookies.side_effect = [[], [{"name": "x-main", "value": "signed-in", "domain": "www.amazon.com"}]]
+        page = MagicMock()
+
+        # WHEN
+        browser_login.wait_for_sign_in(context, page, timeout=60)
+
+        # THEN
+        self.assertEqual(2, context.cookies.call_count)
+        page.wait_for_timeout.assert_called_once()
+
+    def test_wait_for_sign_in_times_out(self):
+        # GIVEN
+        browser_login = PlaywrightBrowserLogin(AmazonSession(config=self.test_config))
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            browser_login.wait_for_sign_in(MagicMock(), MagicMock(), timeout=0)
+
+        # THEN
+        self.assertEqual("Timed out after 0 seconds waiting for sign-in to complete in the browser.",
+                         str(cm.exception))
+
+    def test_is_signed_in(self):
+        # GIVEN
+        browser_login = PlaywrightBrowserLogin(AmazonSession(config=self.test_config))
+
+        # WHEN / THEN only the site's own auth cookie signs it in
+        self.assertTrue(browser_login.is_signed_in([{"name": "x-main", "value": "v", "domain": ".amazon.com"}]))
+        self.assertFalse(browser_login.is_signed_in([{"name": "x-main", "value": "v", "domain": ".amazon.de"}]))
+        self.assertFalse(browser_login.is_signed_in([{"name": "session-id", "value": "v", "domain": ".amazon.com"}]))

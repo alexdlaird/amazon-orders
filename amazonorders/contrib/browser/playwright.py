@@ -61,12 +61,14 @@ class PlaywrightBrowserLauncher:
 
     def launch(self,
                pw: Any,
-               headless: bool) -> Any:
+               headless: bool,
+               args: Optional[List[str]] = None) -> Any:
         """
         Launch the browser the config selects.
 
         :param pw: The running Playwright instance.
         :param headless: Whether to launch the browser without a window.
+        :param args: Command line arguments to launch the browser with, beside Playwright's own.
         :return: The launched Playwright ``Browser``.
         :raises AmazonOrdersBrowserNotInstalledError: If no browser is installed to launch.
         :raises AmazonOrdersError: If the browser can't be launched.
@@ -76,9 +78,9 @@ class PlaywrightBrowserLauncher:
         browser_name = self.config.browser
         executable_path = self.config.browser_executable_path
         if not browser_name and not executable_path:
-            return self._launch_default(pw, headless)
+            return self._launch_default(pw, headless, args)
 
-        launch_options: Dict[str, Any] = {"headless": headless}
+        launch_options = self._launch_options(headless, args)
         channel = None
         browser_type = self._browser_types(pw).get(browser_name or self.FALLBACK_BROWSER_TYPE)
         if browser_type is None:
@@ -128,12 +130,14 @@ class PlaywrightBrowserLauncher:
 
     def _launch_default(self,
                         pw: Any,
-                        headless: bool) -> Any:
+                        headless: bool,
+                        args: Optional[List[str]]) -> Any:
         from playwright.sync_api import Error as PlaywrightError  # type: ignore[import-not-found]
 
+        launch_options = self._launch_options(headless, args)
         for channel in (self.DEFAULT_BROWSER_CHANNEL, self.FALLBACK_BROWSER_CHANNEL):
             try:
-                return pw.chromium.launch(headless=headless, channel=channel)
+                return pw.chromium.launch(channel=channel, **launch_options)
             except PlaywrightError as channel_error:
                 logger.debug(f"Could not launch {channel}: {self._first_line(channel_error)}")
 
@@ -149,11 +153,20 @@ class PlaywrightBrowserLauncher:
             )
 
         try:
-            return fallback.launch(headless=headless)
+            return fallback.launch(**launch_options)
         except PlaywrightError as e:
             raise AmazonOrdersError(
                 f"{self._describe_launch_failure(self.FALLBACK_BROWSER_TYPE, None, None)} ({self._first_line(e)})"
             ) from e
+
+    @staticmethod
+    def _launch_options(headless: bool,
+                        args: Optional[List[str]]) -> Dict[str, Any]:
+        launch_options: Dict[str, Any] = {"headless": headless}
+        if args:
+            launch_options["args"] = args
+
+        return launch_options
 
     @staticmethod
     def _browser_types(pw: Any) -> Dict[str, Any]:
@@ -785,6 +798,10 @@ class PlaywrightBrowserLogin:
     Because it opens a browser window it requires a display and a user at the keyboard, making it suitable for
     local/interactive use but not for headless environments.
 
+    To sign in some other way, like with the sign-in shown somewhere other than a browser window, subclass it and
+    override its hooks: :func:`launch_args`, :func:`new_context`, :func:`on_sign_in_page`, and
+    :func:`wait_for_sign_in`.
+
     Requires the ``[browser]`` extra: ``pip install amazon-orders[browser]``. Defaults to Chrome, then
     Edge, then Playwright's Chromium (``playwright install chromium``), whichever is installed first.
     """
@@ -796,7 +813,8 @@ class PlaywrightBrowserLogin:
         #: The config to use.
         self.config: AmazonOrdersConfig = amazon_session.config
         #: Whether to launch the browser in headless mode. Defaults to ``False``, since a person completes the
-        #: sign-in. Only meant to be changed for automated testing.
+        #: sign-in in the browser's window. A subclass that shows the sign-in some other way can set it to ``True``,
+        #: and then no display is needed.
         self.headless: bool = False
 
     def login(self,
@@ -827,20 +845,16 @@ class PlaywrightBrowserLogin:
         sign_in_url = f"{constants.SIGN_IN_URL}?{urlencode(constants.SIGN_IN_QUERY_PARAMS)}"
 
         with sync_playwright() as pw:
-            browser = PlaywrightBrowserLauncher(self.config).launch(pw, self.headless)
+            browser = PlaywrightBrowserLauncher(self.config).launch(pw, self.headless, self.launch_args())
 
             try:
-                context = browser.new_context(user_agent=constants.BASE_HEADERS.get("User-Agent"))
+                context = self.new_context(browser)
                 page = context.new_page()
                 page.goto(sign_in_url)
                 self._prefill_username(page)
+                self.on_sign_in_page(context, page)
 
-                message = ("Info: A browser window has opened. Sign in to Amazon there, and this will continue "
-                           "once you're signed in.")
-                logger.info(message)
-                self.amazon_session.io.echo(message)
-
-                self._wait_for_sign_in(context, page, timeout)
+                self.wait_for_sign_in(context, page, timeout)
                 page.wait_for_timeout(SIGN_IN_SETTLE_MS)
                 self._harvest_cookies(context)
             except PlaywrightError as e:
@@ -849,6 +863,41 @@ class PlaywrightBrowserLogin:
                 browser.close()
 
         self._verify_session()
+
+    def launch_args(self) -> Optional[List[str]]:
+        """
+        Hook for the command line arguments to launch the browser with, beside Playwright's own. By default, there are
+        none.
+
+        :return: The arguments, or ``None`` for none.
+        """
+        return None
+
+    def new_context(self,
+                    browser: Any) -> Any:
+        """
+        Hook that creates the browser context the sign-in runs in. By default, a context with the session's
+        ``User-Agent``.
+
+        :param browser: The launched Playwright ``Browser``.
+        :return: The new Playwright ``BrowserContext``.
+        """
+        return browser.new_context(user_agent=self.config.constants.BASE_HEADERS.get("User-Agent"))
+
+    def on_sign_in_page(self,
+                        context: Any,
+                        page: Any) -> None:
+        """
+        Hook called once the browser is on Amazon's sign-in page, with the username filled in if one is configured,
+        before :func:`wait_for_sign_in`. By default, it tells the person to sign in in the browser's window.
+
+        :param context: The Playwright ``BrowserContext``.
+        :param page: The Playwright ``Page`` on the sign-in page.
+        """
+        message = ("Info: A browser window has opened. Sign in to Amazon there, and this will continue once you're "
+                   "signed in.")
+        logger.info(message)
+        self.amazon_session.io.echo(message)
 
     def _prefill_username(self,
                           page: Any) -> None:
@@ -876,21 +925,37 @@ class PlaywrightBrowserLogin:
         if not self.headless and not has_display():
             raise AmazonOrdersError("Signing in with a browser requires a display, and this machine doesn't have one.")
 
-    def _wait_for_sign_in(self,
-                          context: Any,
-                          page: Any,
-                          timeout: int) -> None:
+    def wait_for_sign_in(self,
+                         context: Any,
+                         page: Any,
+                         timeout: int) -> None:
+        """
+        Hook that waits for the sign-in to complete in the browser. By default, it checks :func:`is_signed_in` with
+        the browser's cookies every few seconds.
+
+        :param context: The Playwright ``BrowserContext``.
+        :param page: The Playwright ``Page`` the sign-in started on.
+        :param timeout: The number of seconds to wait for the sign-in to be completed.
+        :raises AmazonOrdersError: If the timeout passes before the sign-in completes.
+        """
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
-            if self._is_signed_in(context.cookies()):
+            if self.is_signed_in(context.cookies()):
                 return
 
             page.wait_for_timeout(SIGN_IN_POLL_INTERVAL_MS)
 
         raise AmazonOrdersError(f"Timed out after {timeout} seconds waiting for sign-in to complete in the browser.")
 
-    def _is_signed_in(self,
-                      cookies: List[Dict[str, Any]]) -> bool:
+    def is_signed_in(self,
+                     cookies: List[Dict[str, Any]]) -> bool:
+        """
+        Whether the browser's cookies hold a signed-in session: the site's cookies include every one in
+        ``COOKIES_SET_WHEN_AUTHENTICATED``.
+
+        :param cookies: The browser's cookies, as Playwright's ``BrowserContext.cookies()`` returns them.
+        :return: Whether the browser is signed in.
+        """
         cookie_names = {cookie["name"] for cookie in self._amazon_cookies(cookies)}
 
         return all(name in cookie_names for name in self.config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
