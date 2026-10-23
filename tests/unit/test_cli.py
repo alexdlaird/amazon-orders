@@ -480,31 +480,6 @@ class TestCli(UnitTestCase):
         self.assertIn("Invalid value", response.output)
 
     @responses.activate
-    def test_deprecated_invoice_command(self):
-        # GIVEN
-        order_id = "123-4567890-1234567"
-        self.given_unauthenticated_home_page()
-        self.given_login_responses_success()
-        resp = self.given_any_invoice_exists("get-invoice.html")
-
-        # WHEN
-        with self.assertWarns(DeprecationWarning):
-            response = self.runner.invoke(amazon_orders_cli,
-                                          [
-                                              "--config-path", self.test_config.config_path,
-                                              "--username", "some-username@gmail.com",
-                                              "--password", "some-password",
-                                              "invoice", order_id
-                                          ])
-
-        # THEN
-        self.assertEqual(0, response.exit_code)
-        self.assert_login_responses_success()
-        self.assertEqual(1, resp.call_count)
-        self.assertIn(f"orderID={order_id}", resp.calls[0].request.url)
-        self.assertIn("Order Details", response.output)
-
-    @responses.activate
     def test_invoices_command(self):
         # GIVEN
         self.given_unauthenticated_home_page()
@@ -605,21 +580,11 @@ class TestCli(UnitTestCase):
                                           "--password", "some-password",
                                           "invoices", "302-0000000-0000003"
                                       ])
-        deprecated_response = self.runner.invoke(amazon_orders_cli,
-                                                 [
-                                                     "--config-path", self.test_config.config_path,
-                                                     "--username", "some-username@gmail.com",
-                                                     "--password", "some-password",
-                                                     "invoice-pdfs", "302-0000000-0000003"
-                                                 ])
 
         # THEN
         self.assertEqual(0, response.exit_code)
         self.assertIn("Invoice: Printable Order Summary", response.output)
         self.assertIn("1 Invoices for 1 Orders", response.output)
-        self.assertEqual(0, deprecated_response.exit_code)
-        self.assertIn("No invoice PDFs for Order 302-0000000-0000003.", deprecated_response.output)
-        self.assertIn("0 Invoice PDFs for 1 Orders", deprecated_response.output)
 
     @responses.activate
     def test_invoices_command_download_not_a_document(self):
@@ -687,7 +652,7 @@ class TestCli(UnitTestCase):
 
     def given_invoice_list(self, filename):
         with open(os.path.join(self.RESOURCES_DIR, "invoices", filename), "r", encoding="utf-8") as f:
-            return responses.add(responses.GET, self.test_config.constants.INVOICE_PDFS_URL, body=f.read(),
+            return responses.add(responses.GET, self.test_config.constants.INVOICES_URL, body=f.read(),
                                  status=200)
 
     def given_order_summary(self):
@@ -1071,23 +1036,13 @@ class TestCli(UnitTestCase):
                 "gift-cards", "--days", 0,
             ],
         )
-        deprecated_response = self.runner.invoke(
-            amazon_orders_cli,
-            [
-                "--config-path", self.test_config.config_path,
-                "--username", "some-username@gmail.com",
-                "--password", "some-password",
-                "gift-card-balance",
-            ],
-        )
 
         # THEN
         self.assertEqual(0, response.exit_code)
-        self.assertEqual(2, resp.call_count)
+        self.assertEqual(1, resp.call_count)
+        self.assert_login_responses_success()
         self.assertIn("Gift Card Balance: $0.00", response.output)
         self.assertIn("0 Gift Card activity entries parsed", response.output)
-        self.assertEqual(0, deprecated_response.exit_code)
-        self.assertIn("Gift Card Balance: $0.00", deprecated_response.output)
 
     @responses.activate
     @patch("amazonorders.gift_cards.datetime", wraps=datetime)
@@ -1145,13 +1100,10 @@ class TestCli(UnitTestCase):
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli, args + ["gift-cards"])
-        deprecated_response = self.runner.invoke(amazon_orders_cli, args + ["gift-card-activity"])
 
         # THEN
         self.assertEqual(2, response.exit_code)
         self.assertIn("Could not parse Gift Card activity.", response.output)
-        self.assertEqual(2, deprecated_response.exit_code)
-        self.assertIn("Could not parse Gift Card activity.", deprecated_response.output)
 
     @responses.activate
     def test_order_transactions_command(self):
@@ -1294,7 +1246,7 @@ class TestCli(UnitTestCase):
         self.assertIn("Error from Amazon: There was a problem. Your password is incorrect.", response.output)
 
     @responses.activate
-    def test_invoice_command_error(self):
+    def test_invoices_command_error(self):
         # GIVEN
         self.given_unauthenticated_home_page()
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
@@ -1319,7 +1271,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "invoice", "1234-fake-id"
+                                          "invoices", "1234-fake-id"
                                       ])
 
         # THEN

@@ -384,6 +384,8 @@ class Selectors:
                                              "a[href*='/gp/css/summary/print.html']"]
     #: Matched case-insensitively in a document's name, e.g. "Credit note 1", to tell a credit note from an invoice.
     FIELD_INVOICE_PDF_CREDIT_NOTE_TEXT = "Credit note"
+    #: The name given to the Printable Order Summary when an Order has no invoice list to read it from.
+    INVOICE_ORDER_SUMMARY_TEXT = "Printable Order Summary"
 
     #####################################
     # CSS selectors for Order search results

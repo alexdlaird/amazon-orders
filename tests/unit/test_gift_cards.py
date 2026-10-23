@@ -234,28 +234,6 @@ class TestGiftCards(UnitTestCase):
 
     @responses.activate
     @patch("amazonorders.gift_cards.datetime", wraps=datetime)
-    def test_deprecated_balance_and_activity(self, mock_today):
-        # GIVEN
-        mock_today.date.today.return_value = datetime.date(2026, 5, 15)
-        self.amazon_session.is_authenticated = True
-        self.given_gift_card_page_exists("gift-card-balance-activity.html")
-
-        # WHEN
-        with self.assertWarns(DeprecationWarning):
-            balance = self.amazon_gift_cards.get_balance()
-        with self.assertWarns(DeprecationWarning):
-            activity = self.amazon_gift_cards.get_gift_card_activity(keep_paging=False)
-        with self.assertWarns(DeprecationWarning):
-            parsed_activity = AmazonGiftCards.parse_gift_card_activity(
-                self.read_gift_card_page("gift-card-balance-activity.html"), self.test_config)
-
-        # THEN
-        self.assertEqual(0.00, balance)
-        self.assertEqual(15, len(activity))
-        self.assertEqual(15, len(parsed_activity))
-
-    @responses.activate
-    @patch("amazonorders.gift_cards.datetime", wraps=datetime)
     def test_get_gift_cards_page_limit_and_cursor(self, mock_today):
         # GIVEN
         mock_today.date.today.return_value = datetime.date(2026, 5, 15)

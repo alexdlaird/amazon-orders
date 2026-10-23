@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersEntityError
 from tests.unittestcase import UnitTestCase
 
 
@@ -215,10 +215,10 @@ class TestOrder(UnitTestCase):
             parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
 
         # WHEN / THEN
-        with self.assertRaises(AmazonOrdersError) as context:
+        with self.assertRaises(AmazonOrdersEntityError) as context:
             Order(parsed, self.test_config, full_details=True)
 
-        self.assertIn("grand_total could not be parsed", str(context.exception))
+        self.assertIn("Order.grand_total of Order", str(context.exception))
         self.assertIn("warn_on_missing_required_field=True", str(context.exception))
 
     def test_order_missing_grand_total_logs_warning_when_configured(self):
@@ -240,7 +240,7 @@ class TestOrder(UnitTestCase):
         # THEN
         self.assertIsNone(order.grand_total)
         mock_logger.warning.assert_called_once()
-        self.assertIn("grand_total could not be parsed", mock_logger.warning.call_args[0][0])
+        self.assertIn("Order.grand_total of Order", mock_logger.warning.call_args[0][0])
 
     def test_order_recipient_from_popover_inline_content(self):
         # GIVEN
@@ -266,10 +266,11 @@ class TestOrder(UnitTestCase):
             parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
 
         # WHEN / THEN
-        with self.assertRaises(AmazonOrdersError) as context:
+        with self.assertRaises(AmazonOrdersEntityError) as context:
             Order(parsed, self.test_config, full_details=True)
 
-        self.assertIn("Recipient parent not found", str(context.exception))
+        self.assertIn("Order.recipient could not be parsed", str(context.exception))
+        self.assertIn("warn_on_missing_required_field=True", str(context.exception))
 
     def test_order_recipient_parent_not_found_logs_warning_when_configured(self):
         # GIVEN
@@ -290,7 +291,7 @@ class TestOrder(UnitTestCase):
         # THEN
         self.assertIsNone(order.recipient)
         mock_logger.warning.assert_called_once()
-        self.assertIn("Recipient parent not found", mock_logger.warning.call_args[0][0])
+        self.assertIn("Order.recipient could not be parsed", mock_logger.warning.call_args[0][0])
 
     def given_order_subscriptions_and_reward_points(self):
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-subscriptions-and-reward-points-snippet.html"),

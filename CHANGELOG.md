@@ -4,7 +4,27 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.12.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.0.0...HEAD)
+
+## [5.0.0](https://github.com/alexdlaird/amazon-orders/compare/4.12.0...5.0.0) - 2026-10-23
+
+### Changed
+
+- `AmazonOrders.get_invoices()` gets an Order's Printable Order Summary directly when the Order has no invoice list.
+- A required field that can't be parsed now always raises `AmazonOrdersEntityError`.
+- Renamed `Constants.INVOICE_PDFS_ROUTE`, `INVOICE_PDFS_URL`, and `INVOICE_PDFS_ORDER_ID_QUERY_PARAM` to `INVOICES_ROUTE`, `INVOICES_URL`, and `INVOICES_ORDER_ID_QUERY_PARAM`.
+
+### Removed
+
+- The deprecated `history`, `search`, `gift-card-balance`, `gift-card-activity`, `invoice`, and `invoice-pdfs` commands.
+- The deprecated `AmazonOrders.get_order_history()`, `get_order_history_page()`, `parse_order_history()`, `get_invoice()`, `get_invoice_pdfs()`, `parse_invoice_pdfs()`, and `download_invoice_pdf()`, `AmazonGiftCards.get_balance()`, `get_gift_card_activity()`, and `parse_gift_card_activity()`, `InvoicePdf`, and `OutputFormatter.invoice_pdf_text()`.
+- `next_page_data` on `get_transactions()` and `next_page_url` on `get_gift_cards()`, resume with the `cursor` of `get_transactions_page()` and `get_gift_cards_page()`.
+- The deprecated `AMAZON_BASE_URL` environment variable, use `AMAZON_DOMAIN`.
+- The deprecated `AwsWafForm._solve_token()` and `_solve_visual_captcha()`, use `solve_token()` and `solve_visual_captcha()`.
+
+### Fixed
+
+- Bug fixes and stability improvements.
 
 ## [4.12.0](https://github.com/alexdlaird/amazon-orders/compare/4.11.0...4.12.0) - 2026-10-23
 

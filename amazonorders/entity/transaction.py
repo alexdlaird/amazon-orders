@@ -10,7 +10,7 @@ from bs4 import Tag
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersEntityError
 
 logger = logging.getLogger(__name__)
 
@@ -101,12 +101,12 @@ class Transaction(Parsable):
         value = self.to_currency(value)
 
         if value is None:  # pragma: no cover
-            err_msg = ("Order.grand_total did not populate, but it's required. "
-                       "Check if Amazon changed the HTML.")
+            err_msg = ("Transaction.grand_total could not be parsed, but it's required. "
+                       "Check if Amazon changed the HTML")
             if not self.config.warn_on_missing_required_field:
-                raise AmazonOrdersError(err_msg)
+                raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
             else:
-                logger.warning(err_msg)
+                logger.warning(f"{err_msg}.")
 
         return value
 
@@ -114,12 +114,12 @@ class Transaction(Parsable):
         value = self.simple_parse(self.config.selectors.FIELD_TRANSACTION_ORDER_NUMBER_SELECTOR)
 
         if value is None:  # pragma: no cover
-            err_msg = ("Transaction.order_number did not populate, but it's required. "
-                       "Check if Amazon changed the HTML.")
+            err_msg = ("Transaction.order_number could not be parsed, but it's required. "
+                       "Check if Amazon changed the HTML")
             if not self.config.warn_on_missing_required_field:
-                raise AmazonOrdersError(err_msg)
+                raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
             else:
-                logger.warning(err_msg)
+                logger.warning(f"{err_msg}.")
 
                 return None
 

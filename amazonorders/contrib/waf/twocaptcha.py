@@ -58,7 +58,7 @@ class TwoCaptchaWafForm(AwsWafForm):
             )
         except Exception as e:
             raise AmazonOrdersWafSolverError(
-                f"2Captcha failed to solve AWS WAF challenge: {e}",
+                f"2Captcha could not solve the AWS WAF challenge: {e}",
                 meta={"provider": self.PROVIDER_NAME, "provider_error": str(e)}
             ) from e
 
@@ -66,6 +66,6 @@ class TwoCaptchaWafForm(AwsWafForm):
             return json.loads(result["code"])["existing_token"]
         except (KeyError, TypeError, json.JSONDecodeError) as e:
             raise AmazonOrdersWafSolverError(
-                f"Unexpected 2Captcha response (missing 'existing_token'): {result!r}",
+                f"Unexpected 2Captcha response (missing \"existing_token\"): {result!r}",
                 meta={"provider": self.PROVIDER_NAME, "provider_error": repr(result)}
             ) from e

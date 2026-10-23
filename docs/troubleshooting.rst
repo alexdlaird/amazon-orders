@@ -141,13 +141,13 @@ If you identify the issue, please `submit a bug report <https://github.com/alexd
 If you're able to resolve the issue, please `also submit a PR <https://github.com/alexdlaird/amazon-orders/compare>`_
 so others can benefit.
 
-Found an Unknown Page in Auth Flow
-----------------------------------
+Found an Unknown Page in the Sign-In Flow
+-----------------------------------------
 
 If you get an error during :func:`~amazonorders.session.AmazonSession.login()` saying you've encountered an unknown
-page, you've found a page in the login flow that we haven't. Amazon has many different routes through
-authentication, and is always adding more, so this is bound to happen. Hopefully you'll consider implementing the
-solution to this auth flow and contributing it back to the repo.
+page, you've found a page in the sign-in flow that we haven't. Amazon has many different routes through sign-in,
+and is always adding more, so this is bound to happen. Hopefully you'll consider implementing the solution to this
+sign-in flow and contributing it back to the repo.
 
 Auth forms are actually relatively simple to implement. To get started investigating, `enable debug mode`_, then try
 to login again. With ``debug`` mode enabled, the new page will be saved locally as an HTML file that you can open

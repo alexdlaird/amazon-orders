@@ -40,6 +40,7 @@ class Selectors(selectors.Selectors):
     FIELD_TRACKING_NUMBER_PREFIX = "Laboris:"
     FIELD_TRACKING_CARRIER_REGEX = r"^(?:nisi ut aliquip)\s+"
     FIELD_INVOICE_PDF_CREDIT_NOTE_TEXT = "Ex ea commodo"
+    INVOICE_ORDER_SUMMARY_TEXT = "Duis aute irure"
     TRANSACTION_HISTORY_EMPTY_TEXT = "laborum"
     FIELD_ORDER_SEARCH_RESULT_DATE_PREFIX = "Nulla pariatur"
     FIELD_PRIME_PAYMENT_TOTAL_TEXT = "Excepteur"

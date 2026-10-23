@@ -66,18 +66,6 @@ class TestInvoice(UnitTestCase):
         self.assertEqual([("Printable Order Summary", "html")],
                          [(invoice.name, invoice.format) for invoice in invoices])
 
-    def test_deprecated_parse_invoice_pdfs(self):
-        # GIVEN
-        html = self.given_invoice_list("invoice-pdfs-multiple.html")
-
-        # WHEN
-        with self.assertWarns(DeprecationWarning):
-            invoices = AmazonOrders.parse_invoice_pdfs(html, self.test_config, order_number="302-0000000-0000002")
-
-        # THEN
-        self.assertEqual(5, len(invoices))
-        self.assertEqual({"pdf"}, {invoice.format for invoice in invoices})
-
     def test_invoice_without_name_or_link(self):
         # WHEN
         invoice = Invoice(BeautifulSoup("<a> </a>", "html.parser").a, self.test_config)

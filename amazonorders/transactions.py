@@ -155,8 +155,8 @@ class TransactionsPage:
             date = config.constants.parse_date(date_str)
             grand_total = config.constants.parse_currency(total_str) if total_str else None
             if date is None or grand_total is None:
-                err_msg = (f"Transaction date {date_str!r} or total {total_str!r} could not be parsed, but both are "
-                           f"required. Check if Amazon changed the HTML")
+                err_msg = (f"Transaction.completed_date (\"{date_str}\") or Transaction.grand_total (\"{total_str}\") "
+                           f"could not be parsed, but both are required. Check if Amazon changed the HTML")
                 if not config.warn_on_missing_required_field:
                     raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
 
@@ -198,8 +198,8 @@ class TransactionsPage:
             date_str = date_tag.text
             date = config.constants.parse_date(date_str)
             if date is None:
-                err_msg = (f"Transaction date {date_str!r} could not be parsed, but it's required. Check if "
-                           f"Amazon changed the HTML")
+                err_msg = (f"Transaction.completed_date (\"{date_str}\") could not be parsed, but it's required. "
+                           f"Check if Amazon changed the HTML")
                 if not config.warn_on_missing_required_field:
                     raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
 
@@ -277,7 +277,6 @@ class AmazonTransactions:
 
     def get_transactions(self,
                          days: int = 365,
-                         next_page_data: Optional[Dict[str, Any]] = None,
                          keep_paging: bool = True,
                          order_id: Optional[str] = None,
                          progress: Optional[Callable[[int], None]] = None) -> List[Transaction]:
@@ -285,8 +284,6 @@ class AmazonTransactions:
         Get Amazon Transaction history for a given number of days, or for a single Order.
 
         :param days: The number of days worth of Transactions to get. Ignored when ``order_id`` is given.
-        :param next_page_data: If a call to this method previously errored out, passing the exception's
-            :attr:`~amazonorders.exception.AmazonOrdersError.meta` will continue paging where it left off.
         :param keep_paging: ``False`` if only one page should be fetched.
         :param order_id: If given, only Transactions for this Amazon Order ID are returned, scoped
             server-side via Amazon's ``transactionTag`` filter (the ``days`` window does not apply).
@@ -297,7 +294,7 @@ class AmazonTransactions:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         min_date = None if order_id else datetime.date.today() - datetime.timedelta(days=days)
-        transactions, _ = self._collect_transactions(order_id, min_date, next_page_data, keep_paging, None, progress)
+        transactions, _ = self._collect_transactions(order_id, min_date, None, keep_paging, None, progress)
 
         return transactions
 

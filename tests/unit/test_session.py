@@ -997,7 +997,7 @@ class TestSession(UnitTestCase):
         self.assertEqual(5, resp3.call_count)
         self.assertEqual(5, resp4.call_count)
         self.assertEqual(5, resp5.call_count)
-        self.assertIn("Authentication attempts exhausted.", str(cm.exception))
+        self.assertIn("Sign-in attempts exhausted.", str(cm.exception))
 
     @responses.activate
     def test_captcha_fields_keywords_1(self):
@@ -1141,7 +1141,7 @@ class TestSession(UnitTestCase):
 
         # THEN
         self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertIn("Amazon returned a JavaScript-based authentication challenge.",
+        self.assertIn("Amazon returned a JavaScript-based sign-in challenge.",
                       str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
@@ -1162,7 +1162,7 @@ class TestSession(UnitTestCase):
 
         # THEN
         self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertIn("Amazon returned a JavaScript-based authentication challenge.",
+        self.assertIn("Amazon returned a JavaScript-based sign-in challenge.",
                       str(cm.exception))
         self.assertEqual(1, self.index_response.call_count)
         self.assertEqual(0, signin_response.call_count)
@@ -1192,7 +1192,7 @@ class TestSession(UnitTestCase):
 
         # THEN
         self.assertFalse(self.amazon_session.is_authenticated)
-        self.assertIn("Amazon returned a JavaScript-based authentication challenge.",
+        self.assertIn("Amazon returned a JavaScript-based sign-in challenge.",
                       str(cm.exception))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)

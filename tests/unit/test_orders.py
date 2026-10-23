@@ -69,82 +69,6 @@ class TestOrders(UnitTestCase):
         self.assertTrue(self.amazon_session.is_authenticated)
         self.assertEqual(1, resp.call_count)
 
-    def test_get_invoice_unauthenticated(self):
-        # WHEN
-        with self.assertRaises(AmazonOrdersError) as cm, self.assertWarns(DeprecationWarning):
-            self.amazon_orders.get_invoice("1234-fake-id")
-
-        self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
-
-    @responses.activate
-    def test_get_invoice(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        resp = self.given_any_invoice_exists("get-invoice.html")
-
-        # WHEN
-        with self.assertWarns(DeprecationWarning):
-            invoice = self.amazon_orders.get_invoice("123-4567890-1234567")
-
-        # THEN
-        self.assertEqual(1, resp.call_count)
-        self.assertIn("Grand Total", invoice.response.text)
-        self.assertEqual("Order Details", invoice.parsed.find("title").text.strip())
-
-    @responses.activate
-    def test_get_invoice_session_expires(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        resp = self.given_authenticated_url_redirects_to_login()
-        self.given_login_responses_success()
-
-        # WHEN
-        with self.assertRaises(AmazonOrdersAuthRedirectError) as cm, self.assertWarns(DeprecationWarning):
-            self.amazon_orders.get_invoice("1234-fake-id")
-
-        self.assertIn("Amazon redirected to login.", str(cm.exception))
-        self.assertTrue(self.amazon_session.is_authenticated)
-        self.assertEqual(1, resp.call_count)
-
-    @responses.activate
-    def test_get_invoice_not_found(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        order_id = "123-4567890-1234567"
-        # A redirect away from the invoice URL (not to login) simulates a not-found order
-        resp1 = responses.add(
-            responses.GET,
-            f"{self.test_config.constants.ORDER_INVOICE_URL}?orderID={order_id}",
-            status=302,
-            headers={"Location": self.test_config.constants.ORDER_HISTORY_URL},
-        )
-        resp2 = responses.add(responses.GET, self.test_config.constants.ORDER_HISTORY_URL, status=200)
-
-        # WHEN
-        with self.assertRaises(AmazonOrdersNotFoundError) as cm, self.assertWarns(DeprecationWarning):
-            self.amazon_orders.get_invoice(order_id)
-        self.assertIn("was not found", str(cm.exception))
-        self.assertEqual(1, resp1.call_count)
-        self.assertEqual(1, resp2.call_count)
-
-    @responses.activate
-    def test_get_invoice_unavailable(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        order_id = "112-1234567-7654321"
-        resp = self.given_any_invoice_exists("invoice-not-found-snippet.html")
-
-        # WHEN
-        with self.assertRaises(AmazonOrdersUnavailableError) as cm, self.assertWarns(DeprecationWarning):
-            self.amazon_orders.get_invoice(order_id)
-
-        # THEN
-        self.assertEqual(1, resp.call_count)
-        self.assertIn(order_id, str(cm.exception))
-        self.assertEqual("We're unable to load your order details Please try again later Go to Your Orders "
-                         "Continue shopping", cm.exception.meta["amazon_message"])
-        self.assertIn(f"Amazon's page said: \"{cm.exception.meta['amazon_message']}\"", str(cm.exception))
-
     @responses.activate
     def test_get_orders_session_expires(self):
         # GIVEN
@@ -1841,8 +1765,8 @@ class TestOrders(UnitTestCase):
         with self.assertRaises(AmazonOrdersError) as cm:
             self.amazon_orders.get_orders(time_filter="last90")
 
-        self.assertIn("Invalid time_filter 'last90'", str(cm.exception))
-        self.assertIn("Valid values are 'last30', 'months-3', or 'year-YYYY'", str(cm.exception))
+        self.assertIn("Invalid time_filter \"last90\"", str(cm.exception))
+        self.assertIn("Valid values are \"last30\", \"months-3\", or \"year-YYYY\"", str(cm.exception))
 
     @responses.activate
     def test_get_orders_with_order_filter(self):
@@ -2101,7 +2025,7 @@ class TestOrders(UnitTestCase):
         self.amazon_session.is_authenticated = True
         with open(os.path.join(self.RESOURCES_DIR, "invoices", "invoice-pdfs-multiple.html"), "r",
                   encoding="utf-8") as f:
-            resp = responses.add(responses.GET, self.test_config.constants.INVOICE_PDFS_URL, body=f.read(),
+            resp = responses.add(responses.GET, self.test_config.constants.INVOICES_URL, body=f.read(),
                                  status=200)
 
         # WHEN
@@ -2109,7 +2033,7 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assertEqual(1, resp.call_count)
-        self.assertEqual(f"{self.test_config.constants.INVOICE_PDFS_URL}?orderId=302-0000000-0000002",
+        self.assertEqual(f"{self.test_config.constants.INVOICES_URL}?orderId=302-0000000-0000002",
                          resp.calls[0].request.url)
         self.assertEqual(6, len(invoices))
         self.assertEqual("html", invoices[0].format)
@@ -2120,12 +2044,10 @@ class TestOrders(UnitTestCase):
     def test_get_invoices_not_found(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        # A redirect away from the invoice list (not to login) simulates an Order that doesn't exist
-        responses.add(responses.GET, self.test_config.constants.INVOICE_PDFS_URL, status=302,
+        # A redirect away from the invoice list and the summary (not to login) simulates an Order that doesn't exist
+        responses.add(responses.GET, self.test_config.constants.INVOICES_URL, status=302,
                       headers={"Location": self.test_config.constants.ORDER_HISTORY_URL})
-        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
-                  encoding="utf-8") as f:
-            responses.add(responses.GET, self.test_config.constants.ORDER_HISTORY_URL, body=f.read(), status=200)
+        summary_resp = self.given_order_summary_redirects("302-0000000-0000000")
 
         # WHEN
         with self.assertRaises(AmazonOrdersNotFoundError) as cm:
@@ -2133,35 +2055,58 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assertIn("Order 302-0000000-0000000 was not found", str(cm.exception))
+        self.assertEqual(1, summary_resp.call_count)
 
     @responses.activate
     def test_get_invoices_malformed_order_not_found(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        responses.add(responses.GET, self.test_config.constants.INVOICE_PDFS_URL, body="<html></html>", status=400)
+        responses.add(responses.GET, self.test_config.constants.INVOICES_URL, body="<html></html>", status=400)
+        summary_resp = self.given_order_summary_redirects("1234-fake-id")
 
         # WHEN
         with self.assertRaises(AmazonOrdersNotFoundError) as cm:
             self.amazon_orders.get_invoices("1234-fake-id")
 
         # THEN
-        self.assertIn("Order 1234-fake-id, which likely means it was not found", str(cm.exception))
-        self.assertEqual({"status_code": 400}, cm.exception.meta)
+        self.assertIn("Order 1234-fake-id was not found", str(cm.exception))
+        self.assertEqual(1, summary_resp.call_count)
 
     @responses.activate
     def test_get_invoices_unknown_order_unavailable(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        responses.add(responses.GET, self.test_config.constants.INVOICE_PDFS_URL, body="<html></html>", status=500)
+        responses.add(responses.GET, self.test_config.constants.INVOICES_URL, body="<html></html>", status=500)
+        with open(os.path.join(self.RESOURCES_DIR, "invoices", "invoice-not-found-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            responses.add(responses.GET, f"{self.test_config.constants.ORDER_INVOICE_URL}?orderID=112-0000000-0000000",
+                          body=f.read(), status=200)
 
         # WHEN
         with self.assertRaises(AmazonOrdersUnavailableError) as cm:
             self.amazon_orders.get_invoices("112-0000000-0000000")
 
         # THEN
-        self.assertIn("Amazon could not load the invoices of Order 112-0000000-0000000. It may not exist",
-                      str(cm.exception))
-        self.assertEqual({"status_code": 500}, cm.exception.meta)
+        self.assertIn("Amazon could not load Order 112-0000000-0000000. It may not exist", str(cm.exception))
+        self.assertEqual("We're unable to load your order details Please try again later Go to Your Orders "
+                         "Continue shopping", cm.exception.meta["amazon_message"])
+
+    @responses.activate
+    def test_get_invoices_without_invoice_list_gets_order_summary(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        summary_url = f"{self.test_config.constants.ORDER_INVOICE_URL}?orderID=112-0000000-0000001"
+        responses.add(responses.GET, self.test_config.constants.INVOICES_URL, body="<html></html>", status=500)
+        with open(os.path.join(self.RESOURCES_DIR, "invoices", "get-invoice.html"), "r", encoding="utf-8") as f:
+            summary_resp = responses.add(responses.GET, summary_url, body=f.read(), status=200)
+
+        # WHEN
+        invoices = self.amazon_orders.get_invoices("112-0000000-0000001")
+
+        # THEN
+        self.assertEqual(1, summary_resp.call_count)
+        self.assertEqual([("Printable Order Summary", "html", summary_url, "112-0000000-0000001")],
+                         [(invoice.name, invoice.format, invoice.link, invoice.order_number) for invoice in invoices])
 
     @responses.activate
     def test_get_invoices_session_expires(self):
@@ -2264,27 +2209,10 @@ class TestOrders(UnitTestCase):
                          "Continue shopping", cm.exception.meta["amazon_message"])
         self.assertIn(f"Amazon's page said: \"{cm.exception.meta['amazon_message']}\"", str(cm.exception))
 
-    @responses.activate
-    def test_deprecated_invoice_pdfs(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        with open(os.path.join(self.RESOURCES_DIR, "invoices", "invoice-pdfs-multiple.html"), "r",
-                  encoding="utf-8") as f:
-            responses.add(responses.GET, self.test_config.constants.INVOICE_PDFS_URL, body=f.read(), status=200)
-        invoice = self.given_invoice()
-        responses.add(responses.GET, invoice.link, body=b"%PDF-1.4 some-pdf", status=200,
-                      content_type="application/pdf")
-
-        # WHEN
-        with self.assertWarns(DeprecationWarning):
-            invoices = self.amazon_orders.get_invoice_pdfs("302-0000000-0000002")
-        with self.assertWarns(DeprecationWarning):
-            content = self.amazon_orders.download_invoice_pdf(invoice)
-
-        # THEN
-        self.assertEqual(5, len(invoices))
-        self.assertEqual({"pdf"}, {invoice.format for invoice in invoices})
-        self.assertEqual(b"%PDF-1.4 some-pdf", content)
+    def given_order_summary_redirects(self, order_id):
+        responses.add(responses.GET, self.test_config.constants.ORDER_HISTORY_URL, body="<html></html>", status=200)
+        return responses.add(responses.GET, f"{self.test_config.constants.ORDER_INVOICE_URL}?orderID={order_id}",
+                             status=302, headers={"Location": self.test_config.constants.ORDER_HISTORY_URL})
 
     def given_invoice_list(self, filename):
         with open(os.path.join(self.RESOURCES_DIR, "invoices", filename), "r", encoding="utf-8") as f:

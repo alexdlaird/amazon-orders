@@ -3,7 +3,6 @@ __license__ = "MIT"
 
 import datetime
 import logging
-import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from bs4 import BeautifulSoup, Tag
@@ -94,7 +93,6 @@ class AmazonGiftCards:
 
     def get_gift_cards(self,
                        days: int = 365,
-                       next_page_url: Optional[str] = None,
                        keep_paging: bool = True,
                        progress: Optional[Callable[[int], None]] = None) -> GiftCards:
         """
@@ -102,9 +100,6 @@ class AmazonGiftCards:
         ``days=0`` gets the balance (and only today's activity) in one request.
 
         :param days: The number of days worth of Gift Card activity to get.
-        :param next_page_url: If a call to this method previously errored out, passing the exception's
-            :attr:`~amazonorders.exception.AmazonOrdersError.meta` value for ``next_page_url`` will continue
-            paging where it left off.
         :param keep_paging: ``False`` if only one page should be fetched.
         :param progress: Called after each page of activity is fetched, with the number of GiftCardActivity
             entries found so far.
@@ -114,8 +109,8 @@ class AmazonGiftCards:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
         min_date = datetime.date.today() - datetime.timedelta(days=days)
-        url = next_page_url or self.config.constants.GIFT_CARD_BALANCE_URL
-        activity, balance, _ = self._collect_gift_cards(url, min_date, keep_paging, None, progress)
+        activity, balance, _ = self._collect_gift_cards(self.config.constants.GIFT_CARD_BALANCE_URL, min_date,
+                                                        keep_paging, None, progress)
 
         return GiftCards(activity, None, balance)
 
@@ -157,39 +152,6 @@ class AmazonGiftCards:
         } if next_page_url else None
 
         return GiftCards(activity, next_cursor, balance)
-
-    def get_balance(self) -> float:
-        """
-        Deprecated, use :func:`get_gift_cards` instead. To be removed in 5.0.
-        """
-        warnings.warn("get_balance() is deprecated and will be removed in 5.0. Use get_gift_cards() instead.",
-                      DeprecationWarning, stacklevel=2)
-        balance = self.get_gift_cards(days=0, keep_paging=False).balance
-        if balance is None:
-            raise AmazonOrdersError("Could not parse Gift Card balance. Check if Amazon changed the HTML.")
-
-        return balance
-
-    def get_gift_card_activity(self,
-                               *args: Any,
-                               **kwargs: Any) -> List[GiftCardActivity]:
-        """
-        Deprecated, use :func:`get_gift_cards` instead. To be removed in 5.0.
-        """
-        warnings.warn("get_gift_card_activity() is deprecated and will be removed in 5.0. Use get_gift_cards() "
-                      "instead.", DeprecationWarning, stacklevel=2)
-        return self.get_gift_cards(*args, **kwargs).items
-
-    @classmethod
-    def parse_gift_card_activity(cls,
-                                 *args: Any,
-                                 **kwargs: Any) -> List[GiftCardActivity]:
-        """
-        Deprecated, use :func:`parse_gift_cards` instead. To be removed in 5.0.
-        """
-        warnings.warn("parse_gift_card_activity() is deprecated and will be removed in 5.0. Use parse_gift_cards() "
-                      "instead.", DeprecationWarning, stacklevel=2)
-        return cls.parse_gift_cards(*args, **kwargs).items
 
     def _collect_gift_cards(self,
                             url: Optional[str],

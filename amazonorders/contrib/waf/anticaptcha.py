@@ -56,7 +56,7 @@ class AntiCaptchaWafForm(AwsWafForm):
             token = solver.solve_and_return_solution()
         except Exception as e:
             raise AmazonOrdersWafSolverError(
-                f"Anti-Captcha failed to solve AWS WAF challenge: {e}",
+                f"Anti-Captcha could not solve the AWS WAF challenge: {e}",
                 meta={"provider": self.PROVIDER_NAME, "provider_error": str(e)}
             ) from e
 

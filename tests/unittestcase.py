@@ -344,16 +344,6 @@ class UnitTestCase(TestCase):
                 status=200,
             )
 
-    def given_any_invoice_exists(self, invoice_html_file):
-        with open(os.path.join(self.RESOURCES_DIR, "invoices", invoice_html_file), "r",
-                  encoding="utf-8") as f:
-            return responses.add(
-                responses.GET,
-                re.compile(rf"^{re.escape(self.test_config.constants.ORDER_INVOICE_URL)}\?.*"),
-                body=f.read(),
-                status=200,
-            )
-
     def given_persisted_session_exists(self):
         cookies = {"session-id": "my-session-id",
                    "session-token": "my-session-token",

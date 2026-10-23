@@ -135,7 +135,7 @@ class TestTransactions(UnitTestCase):
             AmazonTransactions.parse_transactions(html, self.test_config)
 
         # THEN
-        self.assertIn("'Not a date' could not be parsed", str(cm.exception))
+        self.assertIn("Transaction.completed_date (\"Not a date\") could not be parsed", str(cm.exception))
         self.assertIn("warn_on_missing_required_field=True", str(cm.exception))
 
     def test_parse_transactions_unparseable_date_logs_warning_when_configured(self):
@@ -154,7 +154,7 @@ class TestTransactions(UnitTestCase):
         # THEN
         self.assertEqual(1, len(transactions))
         self.assertEqual(datetime.date(2024, 10, 9), transactions[0].completed_date)
-        self.assertIn("'Not a date' could not be parsed", cm.output[0])
+        self.assertIn("Transaction.completed_date (\"Not a date\") could not be parsed", cm.output[0])
 
     def test_parse_transactions_digital_order(self):
         # GIVEN
@@ -275,7 +275,7 @@ class TestTransactions(UnitTestCase):
         self.assertIn("Could not parse Transaction history", str(cm.exception))
 
     @responses.activate
-    def test_get_transactions_errors_with_meta(self):
+    def test_get_transactions_page_errors_with_meta(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         resp = responses.add(
@@ -287,7 +287,8 @@ class TestTransactions(UnitTestCase):
 
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
-            self.amazon_transactions.get_transactions(next_page_data=next_page_data, keep_paging=False)
+            self.amazon_transactions.get_transactions_page(cursor={"next_page_data": next_page_data, "min_date": None,
+                                                                   "order_id": None})
 
         # THEN
         self.assertEqual(1, resp.call_count)

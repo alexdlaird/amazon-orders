@@ -387,19 +387,6 @@ some_custom_config: {custom_config}
         # THEN
         self.assertEqual("https://www.amazon.co.uk", config.constants.BASE_URL)
 
-    def test_deprecated_base_url_environment_variable_still_applies_below_config(self):
-        # GIVEN
-        with patch.dict(os.environ, {"AMAZON_BASE_URL": "amazon.co.uk"}):
-            # WHEN
-            with self.assertLogs("amazonorders.constants", level="WARNING") as cm:
-                config = AmazonOrdersConfig()
-            config_with_domain = AmazonOrdersConfig(data={"domain": "amazon.ca"})
-
-        # THEN
-        self.assertEqual("https://www.amazon.co.uk", config.constants.BASE_URL)
-        self.assertIn("AMAZON_BASE_URL is deprecated", "".join(cm.output))
-        self.assertEqual("https://www.amazon.ca", config_with_domain.constants.BASE_URL)
-
     def test_cookie_jar_path_per_site(self):
         # GIVEN
         shared_cookie_jar_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "cookies.json")
