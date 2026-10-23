@@ -210,7 +210,9 @@ class Selectors:
                                     "img.ufpo-itemListWidget-image"]
     FIELD_ITEM_QUANTITY_SELECTOR = [".od-item-view-qty",
                                     "span.item-view-qty",
-                                    "span.product-image__qty"]
+                                    "span.product-image__qty",
+                                    # Order search results
+                                    ".hzsearch-item-view-qty"]
     # WFM items render "Qty: N" or "Qty: 0.31 lb"; extracted in Item._parse_quantity
     FIELD_ITEM_WHOLE_FOODS_QUANTITY_SELECTOR = ["span.a-size-small"]
     FIELD_ITEM_WHOLE_FOODS_QUANTITY_REGEX = r"^Qty:\s*{count}$"
@@ -219,13 +221,17 @@ class Selectors:
                                  "div.a-column.a-span10 > a",
                                  # ASINLESS WFM items render the title in a span rather than a link
                                  "div.a-column.a-span10 > span",
-                                 ".yo-enhanced-title a"]
+                                 ".yo-enhanced-title a",
+                                 # Order search results
+                                 "div.a-col-right a > p"]
     FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a",
                                 ".yohtmlc-item a",
                                 "a:has(> .yohtmlc-product-title)",
                                 ".yohtmlc-product-title a",
                                 "div.a-column.a-span10 > a",
-                                ".yo-enhanced-title a"]
+                                ".yo-enhanced-title a",
+                                # Order search results
+                                "div.a-col-right a:has(> p)"]
     FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div"]
     FIELD_ITEM_CONDITION_PREFIX = "Condition:"
     FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice'] .a-text-price :not(.a-offscreen)",
@@ -246,7 +252,9 @@ class Selectors:
                                          # ".order-header__header-link-list-item:first-of-type a"
                                          # WFM receipt and FOPO orders link to dedicated pages, not standard endpoint
                                          "a[href*='/wholefoodsmarket/receipts/order/']",
-                                         "a[href*='/fopo/order-details']"]
+                                         "a[href*='/fopo/order-details']",
+                                         # Order search results
+                                         "div.a-col-right > div.a-row > a[href*='/your-orders/order-details']"]
     FIELD_ORDER_NUMBER_SELECTOR = ["[data-component='orderId']",
                                    "[data-component='briefOrderInfo'] div.a-column",
                                    ".order-date-invoice-item :is(bdi, span)[dir='ltr']",
@@ -386,16 +394,12 @@ class Selectors:
 
     #: The Order search page's results. Present with no result rows when nothing matches.
     ORDER_SEARCH_RESULTS_SELECTOR = "div.hzsearch-content-container"
-    #: A result: one Item of a matching Order.
+    #: A result: one Item of a matching Order, parsed as an Item (the ``FIELD_ITEM_*`` selectors end with the search
+    #: page's markup) and with the Order's details link (``FIELD_ORDER_DETAILS_LINK_SELECTOR``).
     ORDER_SEARCH_RESULT_SELECTOR = "div.a-fixed-left-grid"
 
-    FIELD_ORDER_SEARCH_RESULT_ORDER_DETAILS_LINK_SELECTOR = "div.a-col-right a[href*='order-details']"
     FIELD_ORDER_SEARCH_RESULT_DATE_SELECTOR = "div.a-col-right span"
     FIELD_ORDER_SEARCH_RESULT_DATE_PREFIX = "Ordered on"
-    FIELD_ORDER_SEARCH_RESULT_TITLE_SELECTOR = ["div.a-col-right a[href*='/dp/']",
-                                                "div.a-col-right a[href*='/gp/product/']"]
-    #: Shown on the Item's image only when more than one was ordered.
-    FIELD_ORDER_SEARCH_RESULT_QUANTITY_SELECTOR = ".hzsearch-item-view-qty"
 
     #####################################
     # CSS selectors for Prime payment fields

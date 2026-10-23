@@ -695,18 +695,31 @@ class TestCli(UnitTestCase):
         self.assert_login_responses_success()
         self.assertIn("Order #112-2961628-4757846", response.output)
 
-    @responses.activate
-    def test_search_command(self):
-        # GIVEN
-        self.given_unauthenticated_home_page()
-        self.given_login_responses_success()
+    def given_search_pages_exist(self):
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-search.html"), "r", encoding="utf-8") as f:
-            resp = responses.add(
+            first_page = responses.add(
                 responses.GET,
                 f"{self.test_config.constants.ORDER_SEARCH_URL}?search=example",
                 body=f.read(),
                 status=200,
             )
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-search-page-2.html"), "r", encoding="utf-8") as f:
+            second_page = responses.add(
+                responses.GET,
+                f"{self.test_config.constants.ORDER_SEARCH_URL}?page=2&search=example"
+                f"&ref_=ppx_hzsearch_pagination_dt_b_pg_1",
+                body=f.read(),
+                status=200,
+            )
+
+        return first_page, second_page
+
+    @responses.activate
+    def test_search_command(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        first_page, second_page = self.given_search_pages_exist()
 
         # WHEN
         response = self.runner.invoke(
@@ -721,27 +734,49 @@ class TestCli(UnitTestCase):
 
         # THEN
         self.assertEqual(0, response.exit_code)
-        self.assertEqual(1, resp.call_count)
+        self.assertEqual(1, first_page.call_count)
+        self.assertEqual(1, second_page.call_count)
         self.assert_login_responses_success()
-        self.assertIn("Order #112-0000000-0000003: Example Ground Coffee 1 kg, Medium Roast\n"
-                      "  Order Placed Date: 2019-06-15\n  Quantity: 2\n"
-                      "  Link: https://www.amazon.com/dp/B000000003?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_3\n"
-                      "  Order Details Link: https://www.amazon.com/gp/your-account/order-details"
-                      "?orderID=112-0000000-0000003\n", response.output)
-        self.assertIn("... 3 matching Items found in", response.output)
+        self.assertIn("Order #111-0000000-0000004: Example Board Game\n"
+                      "  Order Placed Date: 2025-06-30\n  Quantity: 2\n"
+                      "  Link: https://www.amazon.com/dp/B000000005?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_4\n"
+                      "  Order Details Link: https://www.amazon.com/your-orders/order-details"
+                      "?orderID=111-0000000-0000004&ref_=ppx_hzsearch_conn_dt_b_fed_order_details_4\n",
+                      response.output)
+        self.assertIn("Order #113-0000000-0000011: Example Chess Set, Wooden\n", response.output)
+        self.assertIn("... 17 matching Items found in", response.output)
+
+    @responses.activate
+    def test_search_command_single_page(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        first_page, second_page = self.given_search_pages_exist()
+
+        # WHEN
+        response = self.runner.invoke(
+            amazon_orders_cli,
+            [
+                "--config-path", self.test_config.config_path,
+                "--username", "some-username@gmail.com",
+                "--password", "some-password",
+                "search", "example", "--single-page",
+            ],
+        )
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, first_page.call_count)
+        self.assertEqual(0, second_page.call_count)
+        self.assertNotIn("Order #113-0000000-0000011", response.output)
+        self.assertIn("... 10 matching Items found in", response.output)
 
     @responses.activate
     def test_search_command_json(self):
         # GIVEN
         self.given_unauthenticated_home_page()
         self.given_login_responses_success()
-        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-search.html"), "r", encoding="utf-8") as f:
-            responses.add(
-                responses.GET,
-                f"{self.test_config.constants.ORDER_SEARCH_URL}?search=example",
-                body=f.read(),
-                status=200,
-            )
+        self.given_search_pages_exist()
         runner = self.given_runner_with_split_streams()
 
         # WHEN
@@ -751,17 +786,18 @@ class TestCli(UnitTestCase):
                 "--config-path", self.test_config.config_path,
                 "--username", "some-username@gmail.com",
                 "--password", "some-password",
-                "search", "example", "--output", "json",
+                "search", "example", "--single-page", "--output", "json",
             ],
         )
 
         # THEN
         self.assertEqual(0, response.exit_code)
         results = json.loads(response.stdout)
-        self.assertEqual(["111-0000000-0000001", "111-0000000-0000002", "112-0000000-0000003"],
-                         [result["order_number"] for result in results])
-        self.assertEqual("2026-04-22", results[0]["order_placed_date"])
-        self.assertEqual("B000000001", results[0]["asin"])
+        self.assertEqual(10, len(results))
+        self.assertEqual("111-0000000-0000001", results[0]["order_number"])
+        self.assertEqual("2025-09-18", results[0]["order_placed_date"])
+        self.assertEqual("B000000001", results[0]["item"]["asin"])
+        self.assertEqual("Example Garden Trowel", results[0]["item"]["title"])
 
     @responses.activate
     def test_search_command_error(self):

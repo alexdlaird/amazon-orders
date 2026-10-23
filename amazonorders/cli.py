@@ -542,9 +542,13 @@ def order_transactions(ctx: Context,
 @amazon_orders_cli.command()
 @click.pass_context
 @click.argument("query")
+@click.option("--single-page", is_flag=True, default=False,
+              help="Only one page should be fetched.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
-def search(ctx: Context, query: str, **kwargs: Any) -> None:
+def search(ctx: Context,
+           query: str,
+           **kwargs: Any) -> None:
     """
     Search the Order history, across every year, for a product, Order number, address, or recipient.
     """
@@ -558,7 +562,10 @@ def search(ctx: Context, query: str, **kwargs: Any) -> None:
                                      config=config)
 
         start_time = time.time()
-        results = amazon_orders.search_orders(query)
+        with ProgressSpinner("Items", ctx.obj["show_progress"]) as progress:
+            results = amazon_orders.search_orders(query,
+                                                  keep_paging=not kwargs["single_page"],
+                                                  progress=progress)
         end_time = time.time()
 
         click.echo(config.output_cls(config).format(results, kwargs["output"]))

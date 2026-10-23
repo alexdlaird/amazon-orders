@@ -6,7 +6,7 @@ import concurrent.futures
 import datetime
 import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple
-from urllib.parse import quote, urlencode
+from urllib.parse import parse_qs, quote, urlencode, urlsplit
 
 from bs4 import BeautifulSoup, Tag
 
@@ -300,7 +300,9 @@ class AmazonOrders:
         return self._parse_family_members(page_response.parsed, self.config)
 
     def search_orders(self,
-                      query: str) -> List[OrderSearchResult]:
+                      query: str,
+                      keep_paging: bool = True,
+                      progress: Optional[Callable[[int], None]] = None) -> List[OrderSearchResult]:
         """
         Search every year of the Order history for Orders by product title, Order number, address, or recipient,
         as the search box on Your Orders does, getting each matching Item with its Order's number and date. Fetch
@@ -309,26 +311,48 @@ class AmazonOrders:
 
         :param query: What to search for: words from a product title, an Order number, or a name or address an
             Order was sent to.
+        :param keep_paging: ``False`` if only one page should be fetched.
+        :param progress: Called after each page of results is fetched, with the number of results found so far.
         :return: The OrderSearchResults, one per matching Item, or an empty list if nothing matched.
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
-        if not query or not query.strip():
-            raise AmazonOrdersError("The search query must not be empty.")
 
-        constants = self.config.constants
-        results: List[OrderSearchResult] = []
-        next_page: Optional[str] = constants.ORDER_SEARCH_URL
-        params: Optional[Dict[str, str]] = {constants.ORDER_SEARCH_QUERY_PARAM: query.strip()}
-        while next_page:
-            page_response = self.amazon_session.get(next_page, params=params)
-            self.amazon_session.check_response(page_response)
-            results += self._parse_order_search(page_response.parsed, self.config)
-
-            next_page = self._next_order_search_page(page_response.parsed)
-            params = None
+        results, _ = self._collect_order_search(self._order_search_url(query), keep_paging, None, progress)
 
         return results
+
+    def search_orders_page(self,
+                           query: Optional[str] = None,
+                           limit: Optional[int] = None,
+                           cursor: Optional[Dict[str, Any]] = None,
+                           progress: Optional[Callable[[int], None]] = None) -> PagedResults[OrderSearchResult]:
+        """
+        Get a batch of the results of an Order search, as in :func:`search_orders`, with a cursor to fetch the next
+        batch.
+
+        :param query: What to search for, as in :func:`search_orders`. Ignored if ``cursor`` is provided.
+        :param limit: Stop fetching result pages once at least this many results are collected. Whole pages are
+            fetched, so the batch can hold up to a page more than ``limit``. ``None`` fetches every page.
+        :param cursor: The :attr:`~amazonorders.paging.PagedResults.cursor` of the previous batch, to fetch the
+            next one.
+        :param progress: Called after each page of results is fetched, with the number of results found so far in
+            this batch.
+        :return: The batch of OrderSearchResults, and the cursor for the next one.
+        """
+        if not self.amazon_session.is_authenticated:
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
+
+        if cursor:
+            next_page = util.resolve_site_url(cursor["next_page"], self.config.constants.BASE_URL)
+            if not next_page:
+                raise AmazonOrdersError("The cursor's next page is not on this Amazon site.")
+        else:
+            next_page = self._order_search_url(query)
+
+        results, next_page = self._collect_order_search(next_page, True, limit, progress)
+
+        return PagedResults(results, {"next_page": next_page} if next_page else None)
 
     @classmethod
     def parse_invoice_pdfs(cls,
@@ -586,17 +610,66 @@ class AmazonOrders:
         return [OrderSearchResult(tag, config)
                 for tag in util.select(results_tag, config.selectors.ORDER_SEARCH_RESULT_SELECTOR)]
 
+    def _order_search_url(self,
+                          query: Optional[str]) -> str:
+        if not query or not query.strip():
+            raise AmazonOrdersError("The search query must not be empty.")
+
+        constants = self.config.constants
+        return f"{constants.ORDER_SEARCH_URL}?{urlencode({constants.ORDER_SEARCH_QUERY_PARAM: query.strip()})}"
+
+    def _collect_order_search(self,
+                              next_page: Optional[str],
+                              keep_paging: bool,
+                              limit: Optional[int],
+                              progress: Optional[Callable[[int], None]]
+                              ) -> Tuple[List[OrderSearchResult], Optional[str]]:
+        """
+        Fetch Order search pages until there is no next page, a page has no results, ``keep_paging`` is ``False``
+        after the first page, or at least ``limit`` results are collected.
+
+        :return: The OrderSearchResults, and the next page to fetch (``None`` if there is none).
+        """
+        results: List[OrderSearchResult] = []
+        while next_page and (limit is None or len(results) < limit):
+            page_response = self.amazon_session.get(next_page)
+            self.amazon_session.check_response(page_response)
+
+            page_results = self._parse_order_search(page_response.parsed, self.config)
+            results += page_results
+
+            next_page = self._next_order_search_page(page_response.parsed, next_page) \
+                if page_results and keep_paging else None
+
+            if progress:
+                progress(len(results))
+
+        return results, next_page
+
     def _next_order_search_page(self,
-                                parsed: Tag) -> Optional[str]:
+                                parsed: Tag,
+                                current_page: str) -> Optional[str]:
         """
         The next page of Order search results, if there is one on the same site (see
-        :func:`~amazonorders.util.resolve_site_url`).
+        :func:`~amazonorders.util.resolve_site_url`) that comes after ``current_page``. Pages are numbered and
+        fetched in order, so a next link to a page that isn't after the current one is to a page already fetched.
         """
         next_page_tag = util.select_one(parsed, self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
         if not next_page_tag or not next_page_tag.get("href"):
             return None
 
-        return util.resolve_site_url(str(next_page_tag["href"]), self.config.constants.BASE_URL)
+        next_page = util.resolve_site_url(str(next_page_tag["href"]), self.config.constants.BASE_URL)
+        if next_page and self._order_search_page_number(next_page) <= self._order_search_page_number(current_page):
+            logger.warning(f"Ignoring a next link to an Order search page already fetched: {next_page}")
+            return None
+
+        return next_page
+
+    def _order_search_page_number(self,
+                                  url: str) -> int:
+        values = parse_qs(urlsplit(url).query).get(self.config.constants.ORDER_SEARCH_PAGE_QUERY_PARAM)
+
+        return int(values[0]) if values and values[0].isdigit() else 1
 
     @staticmethod
     def _parse_order_count(order_count_tag: Optional[Tag],

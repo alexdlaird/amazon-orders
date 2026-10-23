@@ -77,7 +77,8 @@ amazon-orders search "coffee"
 ```
 
 `search` searches every year of the Order history for a product title, Order number, address, or recipient, as the
-search box on Your Orders does, and lists each matching Item with its Order number and date.
+search box on Your Orders does, and lists each matching Item with its Order number and date. It reads every page of
+results, or only the first with `--single-page`.
 
 ### Output Formats
 

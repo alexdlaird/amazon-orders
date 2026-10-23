@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- `AmazonOrders.search_orders()`, `parse_order_search()`, the `OrderSearchResult` entity, and the `search` CLI command, to search every year of the Order history (by product title, Order number, address, or recipient) as the search box on Your Orders does.
+- `AmazonOrders.search_orders()`, `search_orders_page()`, `parse_order_search()`, the `OrderSearchResult` entity, and the `search` CLI command (with `--single-page`), to search every year of the Order history (by product title, Order number, address, or recipient) as the search box on Your Orders does. Each result holds the matching `Item`, built with `item_class`, and pages like the Order history: `keep_paging` and `progress`, or batches with a `limit` and `cursor`.
 
 ### Fixed
 

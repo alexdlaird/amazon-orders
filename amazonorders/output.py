@@ -241,12 +241,13 @@ Order #{order_number}
         :param result: The OrderSearchResult to render.
         :return: The OrderSearchResult as text.
         """
-        result_str = f"Order #{result.order_number}: {result.title}"
+        item = result.item
+        result_str = f"Order #{result.order_number}: {item.title}"
         result_str += f"\n  Order Placed Date: {result.order_placed_date}"
-        if result.quantity > 1:
-            result_str += f"\n  Quantity: {result.quantity}"
-        if result.link:
-            result_str += f"\n  Link: {result.link}"
+        if item.quantity:
+            result_str += f"\n  Quantity: {item.quantity}"
+        if item.link:
+            result_str += f"\n  Link: {item.link}"
         if result.order_details_link:
             result_str += f"\n  Order Details Link: {result.order_details_link}"
 

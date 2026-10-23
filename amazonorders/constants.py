@@ -90,6 +90,7 @@ class Constants:
     ORDER_SEARCH_ROUTE = "/your-orders/search"
     ORDER_SEARCH_URL = f"{BASE_URL}{ORDER_SEARCH_ROUTE}"
     ORDER_SEARCH_QUERY_PARAM = "search"
+    ORDER_SEARCH_PAGE_QUERY_PARAM = "page"
 
     ##########################################################################
     # URLs for Prime
