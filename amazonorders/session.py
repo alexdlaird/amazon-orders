@@ -297,23 +297,32 @@ class AmazonSession:
                 return False
         return True
 
-    def check_signed_in(self) -> bool:
+    def check_session(self,
+                      verify: bool = False) -> bool:
         """
-        Check that Amazon still accepts the persisted session. Its cookies outlive it, so
-        :func:`auth_cookies_stored` can be ``True`` for a session Amazon no longer accepts. The Order history is
-        requested and checked with :func:`check_response`.
+        Check if a persisted session exists, meaning requests can be made without needing to provide credentials.
 
-        :return: ``True`` if Amazon showed the Order history, so it accepts the session, or ``False`` if its response
-            wasn't ``ok``, which says nothing about the session.
-        :raises AmazonOrdersAuthRedirectError: If Amazon redirected to login, so the session needs to sign in again.
+        A session's cookies outlive it, so pass ``verify`` to also ask Amazon whether it still accepts the session.
+        This requests the Order history and checks it with :func:`check_response`.
+
+        :param verify: ``True`` to also ask Amazon whether it still accepts the persisted session.
+        :return: ``True`` if a persisted session exists and, with ``verify``, Amazon accepts it. ``False`` if none
+            exists or, with ``verify``, Amazon redirected to login, so the session needs to sign in again.
+        :raises AmazonOrdersError: With ``verify``, if Amazon's response wasn't ``ok``, which says nothing about the
+            session.
         """
-        logger.debug("Checking that Amazon still accepts the persisted session ...")
-
-        history_response = self.get(self.config.constants.ORDER_HISTORY_URL)
-        if not history_response.response.ok:
+        if not self.auth_cookies_stored():
             return False
+        if not verify:
+            return True
 
-        self.check_response(history_response)
+        logger.debug("Asking Amazon whether it still accepts the persisted session ...")
+
+        orders_response = self.get(self.config.constants.ORDER_HISTORY_URL)
+        try:
+            self.check_response(orders_response)
+        except AmazonOrdersAuthRedirectError:
+            return False
 
         return True
 

@@ -1378,55 +1378,89 @@ class TestSession(UnitTestCase):
         self.assertEqual("env-otp", amazon_session.otp_secret_key)
 
     @responses.activate
-    def test_check_signed_in(self):
+    def test_check_session(self):
         # GIVEN
+        self.given_persisted_session_exists()
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
+
+        # WHEN
+        session_exists = amazon_session.check_session()
+
+        # THEN
+        self.assertTrue(session_exists)
+        self.assertEqual(0, len(responses.calls))
+
+    @responses.activate
+    def test_check_session_no_persisted_session(self):
+        # WHEN
+        session_exists = self.amazon_session.check_session()
+        session_verified = self.amazon_session.check_session(verify=True)
+
+        # THEN
+        self.assertFalse(session_exists)
+        self.assertFalse(session_verified)
+        self.assertEqual(0, len(responses.calls))
+
+    @responses.activate
+    def test_check_session_verify(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
         history_response = self.given_order_history_page_exists()
 
         # WHEN
-        signed_in = self.amazon_session.check_signed_in()
+        session_verified = amazon_session.check_session(verify=True)
 
         # THEN
-        self.assertTrue(signed_in)
+        self.assertTrue(session_verified)
         self.assertEqual(1, history_response.call_count)
 
     @responses.activate
-    def test_check_signed_in_session_expired(self):
+    def test_check_session_verify_session_expired(self):
         # GIVEN
+        self.given_persisted_session_exists()
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
         auth_redirect_response = self.given_authenticated_url_redirects_to_login()
         self.given_login_responses_success()
         signout_response = self.given_logout_response_success()
 
         # WHEN
-        with self.assertRaises(AmazonOrdersAuthRedirectError) as cm:
-            self.amazon_session.check_signed_in()
+        session_verified = amazon_session.check_session(verify=True)
 
         # THEN
-        self.assertIn("Amazon redirected to login.", str(cm.exception))
+        self.assertFalse(session_verified)
         self.assertEqual(1, auth_redirect_response.call_count)
         self.assertEqual(0, signout_response.call_count)
+        self.assertTrue(amazon_session.auth_cookies_stored())
 
     @responses.activate
-    def test_check_signed_in_renders_login(self):
+    def test_check_session_verify_renders_login(self):
         # GIVEN
+        self.given_persisted_session_exists()
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
         auth_render_response = self.given_authenticated_url_renders_login()
 
         # WHEN
-        with self.assertRaises(AmazonOrdersAuthRedirectError):
-            self.amazon_session.check_signed_in()
+        session_verified = amazon_session.check_session(verify=True)
 
         # THEN
+        self.assertFalse(session_verified)
         self.assertEqual(1, auth_render_response.call_count)
 
     @responses.activate
-    def test_check_signed_in_response_not_ok(self):
+    def test_check_session_verify_response_not_ok(self):
         # GIVEN
+        self.given_persisted_session_exists()
+        amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=self.test_config)
         history_response = self.given_order_history_page_exists(status=503)
 
         # WHEN
-        signed_in = self.amazon_session.check_signed_in()
+        with self.assertRaises(AmazonOrdersError) as cm:
+            amazon_session.check_session(verify=True)
 
         # THEN
-        self.assertFalse(signed_in)
+        self.assertNotIsInstance(cm.exception, AmazonOrdersAuthRedirectError)
+        self.assertIn("returned 503", str(cm.exception))
         self.assertEqual(1, history_response.call_count)
 
 

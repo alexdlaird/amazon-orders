@@ -8,12 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- `AmazonSession.check_signed_in()`, to check that Amazon still accepts the persisted session.
-
-### Changed
-
-- The `check-session` command asks Amazon whether it still accepts the persisted session, instead of only checking
-  that one is stored.
+- `AmazonSession.check_session(verify=True)` and `check-session --verify`, to ask Amazon whether it still accepts the persisted session.
 
 ## [5.0.0](https://github.com/alexdlaird/amazon-orders/compare/4.12.0...5.0.0) - 2026-10-23
 
