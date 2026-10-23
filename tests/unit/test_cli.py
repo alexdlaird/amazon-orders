@@ -197,6 +197,7 @@ class TestCli(UnitTestCase):
     def test_check_session_command(self):
         # GIVEN
         self.given_persisted_session_exists()
+        history_response = self.given_order_history_page_exists()
 
         # WHEN
         response = self.runner.invoke(amazon_orders_cli,
@@ -206,7 +207,76 @@ class TestCli(UnitTestCase):
                                       ])
 
         self.assertEqual(0, response.exit_code)
-        self.assertIn("A persisted session exists", response.output)
+        self.assertEqual(1, history_response.call_count)
+        self.assertIn("A persisted session exists, and Amazon accepts it.", response.output)
+
+    @responses.activate
+    def test_check_session_command_session_expired(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        self.given_login_responses_success()
+        auth_redirect_response = self.given_authenticated_url_redirects_to_login()
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "check-session"
+                                      ])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, auth_redirect_response.call_count)
+        self.assertIn("A persisted session exists, but Amazon no longer accepts it.", response.output)
+        self.assertIn("Call the `login` command to sign in again", response.output)
+
+    @responses.activate
+    def test_check_session_command_response_not_ok(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+        history_response = self.given_order_history_page_exists(status=503)
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "check-session"
+                                      ])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(1, history_response.call_count)
+        self.assertIn("didn't say whether it still accepts it", response.output)
+
+    @responses.activate
+    def test_check_session_command_no_persisted_session(self):
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "check-session"
+                                      ])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertEqual(0, len(responses.calls))
+        self.assertIn("No persisted session exists.", response.output)
+
+    @responses.activate
+    def test_check_session_command_no_response(self):
+        # GIVEN
+        self.given_persisted_session_exists()
+
+        # WHEN
+        response = self.runner.invoke(amazon_orders_cli,
+                                      [
+                                          "--config-path", self.test_config.config_path,
+                                          "check-session"
+                                      ])
+
+        # THEN
+        self.assertEqual(2, response.exit_code)
+        self.assertIn("returned no response", response.output)
 
     @responses.activate
     def test_history_command(self):

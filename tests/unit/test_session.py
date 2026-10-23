@@ -14,7 +14,7 @@ from responses.matchers import query_string_matcher, urlencoded_params_matcher
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.constants import Constants
-from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError
+from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersAuthRedirectError, AmazonOrdersError
 from amazonorders.forms import JSAuthBlocker, MfaDeviceSelectForm
 from amazonorders.session import AmazonSession, IODefault
 from tests._auth_form_stubs import OtherStubAuthForm, StubAuthForm
@@ -1376,6 +1376,58 @@ class TestSession(UnitTestCase):
         self.assertEqual("env-username", amazon_session.username)
         self.assertEqual("argument-password", amazon_session.password)
         self.assertEqual("env-otp", amazon_session.otp_secret_key)
+
+    @responses.activate
+    def test_check_signed_in(self):
+        # GIVEN
+        history_response = self.given_order_history_page_exists()
+
+        # WHEN
+        signed_in = self.amazon_session.check_signed_in()
+
+        # THEN
+        self.assertTrue(signed_in)
+        self.assertEqual(1, history_response.call_count)
+
+    @responses.activate
+    def test_check_signed_in_session_expired(self):
+        # GIVEN
+        auth_redirect_response = self.given_authenticated_url_redirects_to_login()
+        self.given_login_responses_success()
+        signout_response = self.given_logout_response_success()
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthRedirectError) as cm:
+            self.amazon_session.check_signed_in()
+
+        # THEN
+        self.assertIn("Amazon redirected to login.", str(cm.exception))
+        self.assertEqual(1, auth_redirect_response.call_count)
+        self.assertEqual(0, signout_response.call_count)
+
+    @responses.activate
+    def test_check_signed_in_renders_login(self):
+        # GIVEN
+        auth_render_response = self.given_authenticated_url_renders_login()
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersAuthRedirectError):
+            self.amazon_session.check_signed_in()
+
+        # THEN
+        self.assertEqual(1, auth_render_response.call_count)
+
+    @responses.activate
+    def test_check_signed_in_response_not_ok(self):
+        # GIVEN
+        history_response = self.given_order_history_page_exists(status=503)
+
+        # WHEN
+        signed_in = self.amazon_session.check_signed_in()
+
+        # THEN
+        self.assertFalse(signed_in)
+        self.assertEqual(1, history_response.call_count)
 
 
 class RecordingIO(IODefault):

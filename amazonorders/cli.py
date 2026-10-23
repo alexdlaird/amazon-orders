@@ -719,17 +719,30 @@ Gift Cards, with {days} days of activity
         ctx.fail(str(e))
 
 
-@amazon_orders_cli.command(short_help="Check if a persisted session exists.")
+@amazon_orders_cli.command(short_help="Check if a persisted session exists, and that Amazon still accepts it.")
 @click.pass_context
 def check_session(ctx: Context) -> None:
     """
-    Check if a persisted session exists, meaning commands can be called without needing to provide credentials.
+    Check if a persisted session exists, meaning commands can be called without needing to provide credentials. If
+    one does, Amazon is asked whether it still accepts it, since a session's cookies outlive it.
     """
     amazon_session = ctx.obj["amazon_session"]
-    if amazon_session.auth_cookies_stored():
-        click.echo("Info: A persisted session exists.\n")
-    else:
+    if not amazon_session.auth_cookies_stored():
         click.echo("Info: No persisted session exists.\n")
+        return
+
+    try:
+        if amazon_session.check_signed_in():
+            click.echo("Info: A persisted session exists, and Amazon accepts it.\n")
+        else:
+            click.echo("Info: A persisted session exists, but Amazon's response didn't say whether it still accepts "
+                       "it. Try again later.\n")
+    except AmazonOrdersAuthRedirectError:
+        click.echo("Info: A persisted session exists, but Amazon no longer accepts it.\n")
+        IOClick.echo_session_expired()
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
 
 
 @amazon_orders_cli.command()

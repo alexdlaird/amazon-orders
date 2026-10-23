@@ -166,6 +166,10 @@ The session is persisted, so neither the CLI nor the Python API needs credential
 
 This requires a display and the ``browser`` extra (see :ref:`Browser Automation <browser-installation>` to install it).
 
+Amazon ends a persisted session after a while, though its cookies remain. ``amazon-orders check-session`` asks Amazon
+whether it still accepts the session, as does :func:`~amazonorders.session.AmazonSession.check_signed_in`. When it
+doesn't, sign in again.
+
 .. _automating-authentication:
 
 Automating Authentication

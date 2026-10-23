@@ -297,6 +297,26 @@ class AmazonSession:
                 return False
         return True
 
+    def check_signed_in(self) -> bool:
+        """
+        Check that Amazon still accepts the persisted session. Its cookies outlive it, so
+        :func:`auth_cookies_stored` can be ``True`` for a session Amazon no longer accepts. The Order history is
+        requested and checked with :func:`check_response`.
+
+        :return: ``True`` if Amazon showed the Order history, so it accepts the session, or ``False`` if its response
+            wasn't ``ok``, which says nothing about the session.
+        :raises AmazonOrdersAuthRedirectError: If Amazon redirected to login, so the session needs to sign in again.
+        """
+        logger.debug("Checking that Amazon still accepts the persisted session ...")
+
+        history_response = self.get(self.config.constants.ORDER_HISTORY_URL)
+        if not history_response.response.ok:
+            return False
+
+        self.check_response(history_response)
+
+        return True
+
     def login(self) -> None:
         """
         Execute an Amazon login process. This will include the sign-in page, and may also include OTP (if 2FA is
