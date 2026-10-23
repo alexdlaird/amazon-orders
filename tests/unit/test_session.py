@@ -997,7 +997,7 @@ class TestSession(UnitTestCase):
         self.assertEqual(5, resp3.call_count)
         self.assertEqual(5, resp4.call_count)
         self.assertEqual(5, resp5.call_count)
-        self.assertIn("Authentication attempts exhausted.", str(cm.exception))
+        self.assertIn("Sign-in attempts exhausted.", str(cm.exception))
 
     @responses.activate
     def test_captcha_fields_keywords_1(self):
