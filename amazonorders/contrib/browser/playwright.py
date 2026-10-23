@@ -798,9 +798,7 @@ class PlaywrightBrowserLogin:
     Because it opens a browser window it requires a display and a user at the keyboard, making it suitable for
     local/interactive use but not for headless environments.
 
-    To sign in some other way, like with the sign-in shown somewhere other than a browser window, subclass it and
-    override its hooks: :func:`launch_args`, :func:`new_context`, :func:`on_sign_in_page`, and
-    :func:`wait_for_sign_in`.
+    To customize the sign-in, subclass it and override its hooks.
 
     Requires the ``[browser]`` extra: ``pip install amazon-orders[browser]``. Defaults to Chrome, then
     Edge, then Playwright's Chromium (``playwright install chromium``), whichever is installed first.
@@ -813,8 +811,7 @@ class PlaywrightBrowserLogin:
         #: The config to use.
         self.config: AmazonOrdersConfig = amazon_session.config
         #: Whether to launch the browser in headless mode. Defaults to ``False``, since a person completes the
-        #: sign-in in the browser's window. A subclass that shows the sign-in some other way can set it to ``True``,
-        #: and then no display is needed.
+        #: sign-in in the browser's window; with ``True``, no display is needed.
         self.headless: bool = False
 
     def login(self,

@@ -127,7 +127,6 @@ class Selectors:
     # CSS selectors for Amazon Household family members
     ##########################################################################
 
-    #: The Order history's "My Orders" / "<name>'s Orders" dropdown; the account's own entry has an empty value
     FAMILY_MEMBER_ENTITY_SELECTOR = ["select#family-member-filter option[value]:not([value=''])",
                                      "select[name='familyMemberId'] option[value]:not([value=''])"]
     FAMILY_MEMBER_ID_ATTR = "value"
@@ -186,7 +185,6 @@ class Selectors:
         Selector("div.yohtmlc-shipment-status-primaryText", text_contains=whole_foods_text),
         "img.ufpo-itemListWidget-image"
     ], "ORDER_WHOLE_FOODS_TEXT")
-    # Selectors defined here mean the Order will not have parsable totals
     ORDER_SKIP_TOTALS = SelectorsFromText(lambda cancelled_text, service_cancelled_text: [
         # Identifies a cancelled order on the history page
         Selector("div.yohtmlc-shipment-status-primaryText", cancelled_text),
@@ -205,8 +203,8 @@ class Selectors:
     # CSS selectors for Item fields
     #####################################
 
-    # Last entry matches WFM in-store line items
     FIELD_ITEM_IMG_LINK_SELECTOR = ["a img",
+                                    # WFM in-store line items
                                     "img.ufpo-itemListWidget-image"]
     FIELD_ITEM_QUANTITY_SELECTOR = [".od-item-view-qty",
                                     "span.item-view-qty",
@@ -265,7 +263,6 @@ class Selectors:
                                         "div.order-header div.a-col-left .a-span9",
                                         "#wfm-grand-total-amount"]
     FIELD_ORDER_GRAND_TOTAL_PREFIX = "total"
-    # WFM in-store (FOPO) details page amounts
     FIELD_ORDER_WHOLE_FOODS_SUBTOTAL_SELECTOR = "#wfm-subtotal-amount"
     FIELD_ORDER_WHOLE_FOODS_TAX_SELECTOR = "#wfm-tax-total-amount"
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_METHOD_SELECTOR = "#wfm-0-card-brand"
@@ -343,8 +340,6 @@ class Selectors:
     FIELD_RECIPIENT_ADDRESS2_SELECTOR = "li.displayAddressAddressLine2"
     FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR = "li.displayAddressCityStateOrRegionPostalCode"
     FIELD_RECIPIENT_ADDRESS_COUNTRY_SELECTOR = "li.displayAddressCountryName"
-    #: The address lines that follow the Recipient's name in an unclassed list, or in the rows of the history
-    #: page's address popover.
     FIELD_RECIPIENT_ADDRESS_LINES_SELECTOR = ["ul > li:not(:first-child)",
                                               "div.a-popover-preload div.a-row:not(:first-child)"]
     #: Separates the parts of an address Amazon renders inline (e.g. ``", Musterstraße 1 , 10115"``), but not a
@@ -394,8 +389,6 @@ class Selectors:
 
     #: The Order search page's results. Present with no result rows when nothing matches.
     ORDER_SEARCH_RESULTS_SELECTOR = "div.hzsearch-content-container"
-    #: A result: one Item of a matching Order, parsed as an Item (the ``FIELD_ITEM_*`` selectors end with the search
-    #: page's markup) and with the Order's details link (``FIELD_ORDER_DETAILS_LINK_SELECTOR``).
     ORDER_SEARCH_RESULT_SELECTOR = "div.a-fixed-left-grid"
 
     FIELD_ORDER_SEARCH_RESULT_DATE_SELECTOR = "div.a-col-right span"

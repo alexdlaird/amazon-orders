@@ -118,7 +118,7 @@ class TestLaunchBrowser(UnitTestCase):
             PlaywrightBrowserLauncher(AmazonOrdersConfig(data={})).launch(pw, headless=True, args=["--some-arg"])
             PlaywrightBrowserLauncher(configured).launch(pw, headless=True, args=["--some-arg"])
 
-        # THEN every launch has the args: the default channels, the fallback, and a configured browser
+        # THEN
         self.assertEqual([call(headless=True, args=["--some-arg"], channel="chrome"),
                           call(headless=True, args=["--some-arg"], channel="msedge"),
                           call(headless=True, args=["--some-arg"]),
@@ -1179,8 +1179,7 @@ class TestPlaywrightBrowserLogin(UnitTestCase):
                 patch.object(PlaywrightBrowserLogin, "_verify_session") as mock_verify_session:
             browser_login.login()
 
-        # THEN a visible browser opens with no extra args, on the sign-in page, and the site's cookies become the
-        # session
+        # THEN
         pw.chromium.launch.assert_called_once_with(headless=False, channel="chrome")
         mock_browser.new_context.assert_called_once_with(
             user_agent=self.test_config.constants.BASE_HEADERS.get("User-Agent"))
@@ -1193,7 +1192,7 @@ class TestPlaywrightBrowserLogin(UnitTestCase):
 
     @patch("amazonorders.contrib.browser.playwright.has_display", return_value=False)
     def test_login_calls_overridden_hooks(self, mock_has_display):
-        # GIVEN a subclass that shows the sign-in somewhere other than a browser window
+        # GIVEN
         mock_sync_playwright, mock_page, mock_context, mock_browser = _make_mock_playwright()
         mock_browser.new_context.return_value = None
         custom_context = MagicMock()
@@ -1226,7 +1225,7 @@ class TestPlaywrightBrowserLogin(UnitTestCase):
                 patch.object(PlaywrightBrowserLogin, "_verify_session"):
             browser_login.login(timeout=42)
 
-        # THEN the hooks are used in order, with the subclass's launch args, and with no display needed
+        # THEN
         pw.chromium.launch.assert_called_once_with(headless=True, args=["--some-arg"], channel="chrome")
         self.assertEqual([("new_context", mock_browser),
                           ("on_sign_in_page", custom_context, mock_page),
@@ -1264,7 +1263,7 @@ class TestPlaywrightBrowserLogin(UnitTestCase):
         # GIVEN
         browser_login = PlaywrightBrowserLogin(AmazonSession(config=self.test_config))
 
-        # WHEN / THEN only the site's own auth cookie signs it in
+        # WHEN / THEN
         self.assertTrue(browser_login.is_signed_in([{"name": "x-main", "value": "v", "domain": ".amazon.com"}]))
         self.assertFalse(browser_login.is_signed_in([{"name": "x-main", "value": "v", "domain": ".amazon.de"}]))
         self.assertFalse(browser_login.is_signed_in([{"name": "session-id", "value": "v", "domain": ".amazon.com"}]))

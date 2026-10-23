@@ -101,37 +101,21 @@ cannot solve them. Two options are available:
 Customizing the Sign-In
 -----------------------
 
-:class:`~amazonorders.contrib.browser.playwright.PlaywrightBrowserLogin` (``amazon-orders login --browser``) can be
-subclassed to sign in some other way, like with Amazon's sign-in page shown somewhere other than a browser window on
-this machine. Override any of its hooks:
-
-- :func:`~amazonorders.contrib.browser.playwright.PlaywrightBrowserLogin.launch_args` — command line arguments to
-  launch the browser with.
-- :func:`~amazonorders.contrib.browser.playwright.PlaywrightBrowserLogin.new_context` — create the browser context
-  the sign-in runs in, e.g. with another viewport, or a route on its requests.
-- :func:`~amazonorders.contrib.browser.playwright.PlaywrightBrowserLogin.on_sign_in_page` — called once the browser
-  is on Amazon's sign-in page. By default, it tells the person to sign in in the browser's window.
-- :func:`~amazonorders.contrib.browser.playwright.PlaywrightBrowserLogin.wait_for_sign_in` — wait for the sign-in to
-  complete, e.g. while passing the person's input on to the page. Use
-  :func:`~amazonorders.contrib.browser.playwright.PlaywrightBrowserLogin.is_signed_in` with the browser's cookies to
-  check.
-
-Set ``headless`` to ``True`` if the person won't sign in in a browser window, and then no display is needed. The
-session is persisted the same way once the sign-in completes.
+To customize the sign-in, subclass :class:`~amazonorders.contrib.browser.playwright.PlaywrightBrowserLogin` and
+override its hooks, like ``on_sign_in_page()`` and ``wait_for_sign_in()``. Set ``headless`` to ``True`` if no browser
+window is needed.
 
 .. code-block:: python
 
     from amazonorders.contrib.browser.playwright import PlaywrightBrowserLogin
-    from amazonorders.session import AmazonSession
+
 
     class MyBrowserLogin(PlaywrightBrowserLogin):
-        def launch_args(self):
-            return ["--lang=en-US"]
-
         def on_sign_in_page(self, context, page):
             ...
 
-    MyBrowserLogin(AmazonSession()).login()
+        def wait_for_sign_in(self, context, page, timeout):
+            ...
 
 If a supported extra isn't working for you, please
 `open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_

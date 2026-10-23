@@ -8,8 +8,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- `AmazonOrders.search_orders()`, `search_orders_page()`, `parse_order_search()`, the `OrderSearchResult` entity, and the `search` CLI command (with `--single-page`), to search every year of the Order history (by product title, Order number, address, or recipient) as the search box on Your Orders does. Each result holds the matching `Item`, built with `item_class`, and pages like the Order history: `keep_paging` and `progress`, or batches with a `limit` and `cursor`.
-- `PlaywrightBrowserLogin` hooks for a subclass to sign in some other way: `launch_args()`, `new_context()`, `on_sign_in_page()`, `wait_for_sign_in()`, and `is_signed_in()`, and `args` on `PlaywrightBrowserLauncher.launch()`.
+- `AmazonOrders.search_orders()` and the `search` command, to search the Order history.
+- `PlaywrightBrowserLogin` hooks, to customize the sign-in.
 
 ### Fixed
 

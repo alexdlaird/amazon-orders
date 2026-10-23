@@ -187,7 +187,6 @@ class Constants:
     CURRENCY_SYMBOL = "$"
     #: ``CURRENCY_SYMBOL`` for each site by the TLD that follows ``amazon.``, taking precedence over its region data.
     REGION_CURRENCY_OVERRIDES: Dict[str, str] = {}
-    #: Currency symbols :func:`format_currency` renders without decimals.
     ZERO_DECIMAL_CURRENCY_SYMBOLS: List[str] = ["¥", "￥"]
     CURRENCY_FORMAT = "{symbol}{amount}"
     CURRENCY_FREE_TEXT = "free"

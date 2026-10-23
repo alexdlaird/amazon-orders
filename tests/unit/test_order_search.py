@@ -16,8 +16,6 @@ from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
 
-# The next page link order-search.html serves, and the "Next" of order-search-page-2.html, the last page, which has
-# no link.
 PAGE_2_HREF = "/your-orders/search?page=2&amp;search=example&amp;ref_=ppx_hzsearch_pagination_dt_b_pg_1"
 LAST_PAGE_NEXT_HTML = ('<li class="a-disabled a-last">Next<span class="a-letter-space"></span>'
                        '<span class="a-letter-space"></span><span class="larr">→</span></li>')
@@ -88,7 +86,7 @@ class TestOrderSearch(UnitTestCase):
         # WHEN
         results = self.amazon_orders.search_orders(" example ", progress=progress_calls.append)
 
-        # THEN the next link Amazon serves is followed to the last page
+        # THEN
         self.assertEqual(1, first_page.call_count)
         self.assertEqual(1, second_page.call_count)
         self.assertEqual([10, 17], progress_calls)
@@ -149,7 +147,7 @@ class TestOrderSearch(UnitTestCase):
 
     @responses.activate
     def test_search_orders_stops_on_page_with_no_results(self):
-        # GIVEN a first page with a next link, but no results
+        # GIVEN
         self.amazon_session.is_authenticated = True
         parsed = BeautifulSoup(self.read_resource("orders", "order-search.html"), "html.parser")
         for tag in parsed.select("div.a-fixed-left-grid"):
@@ -168,7 +166,7 @@ class TestOrderSearch(UnitTestCase):
     def test_search_orders_stops_at_page_already_fetched(self):
         for page in ["1", "2"]:
             with self.subTest(page=page), responses.RequestsMock() as rsps:
-                # GIVEN the last page's next link goes back to a page already fetched
+                # GIVEN
                 self.amazon_session.is_authenticated = True
                 first_page = self.given_search_page_exists(rsps=rsps)
                 next_html = (f'<li class="a-last"><a href="/your-orders/search?page={page}&amp;search=example&amp;'
@@ -202,7 +200,7 @@ class TestOrderSearch(UnitTestCase):
                 with self.assertLogs("amazonorders.util", level="WARNING"):
                     results = self.amazon_orders.search_orders("example")
 
-                # THEN no request is made to the other site
+                # THEN
                 self.assertEqual(10, len(results))
                 self.assertEqual(1, len(rsps.calls))
 
@@ -217,7 +215,7 @@ class TestOrderSearch(UnitTestCase):
         # WHEN
         batch = self.amazon_orders.search_orders_page("example", limit=5, progress=progress_calls.append)
 
-        # THEN whole pages are fetched, and the cursor is the next one
+        # THEN
         self.assertEqual(1, first_page.call_count)
         self.assertEqual(0, second_page.call_count)
         self.assertEqual(10, len(batch.items))
@@ -324,7 +322,7 @@ class TestOrderSearch(UnitTestCase):
         self.assertEqual("Example Garden Trowel", results[0].item.title)
 
     def test_parse_order_search_language_package(self):
-        # GIVEN a language package's own "Ordered on" text and dates
+        # GIVEN
         config = AmazonOrdersConfig(config_path=self.test_config.config_path,
                                     data={"language_package": "tests.unit.example_language_package"})
         html = self.read_resource("orders", "order-search.html")
@@ -337,7 +335,7 @@ class TestOrderSearch(UnitTestCase):
         self.assertEqual(datetime.date(2025, 9, 18), results[0].order_placed_date)
 
     def test_parse_order_search_result_without_order_number(self):
-        # GIVEN a result whose Order details link is gone
+        # GIVEN
         html = re.sub(r'<a [^>]*href="/your-orders/order-details\?orderID=112-0000000-0000002[^"]*"[^>]*>',
                       '<a class="a-link-normal" href="/your-orders/orders">',
                       self.read_resource("orders", "order-search.html"))
@@ -363,7 +361,7 @@ class TestOrderSearch(UnitTestCase):
         self.assertEqual("113-0000000-0000003", results[3].order_number)
 
     def test_parse_order_search_result_without_product_page(self):
-        # GIVEN a result whose Item has no product page
+        # GIVEN
         html = self.read_resource("orders", "order-search.html").replace("/dp/B000000003?", "/your-orders/orders?")
 
         # WHEN
