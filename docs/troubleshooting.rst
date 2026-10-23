@@ -25,7 +25,7 @@ To enable ``debug`` mode in Python, you need to pass ``debug=True`` to
     amazon_session.login()
 
     amazon_orders = AmazonOrders(amazon_session)
-    orders = amazon_orders.get_order_history()
+    orders = amazon_orders.get_orders()
 
 To enable ``debug`` mode when using the CLI, pass the ``--debug`` flag, which works with any
 command:

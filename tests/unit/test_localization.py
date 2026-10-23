@@ -20,10 +20,11 @@ _PACKAGE_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".
 _PARSING_MODULES = (sorted(glob.glob(os.path.join(_PACKAGE_DIR, "entity", "*.py"))) +
                     [os.path.join(_PACKAGE_DIR, name) for name in ("orders.py", "transactions.py", "session.py",
                                                                    "forms.py", "gift_cards.py", "prime.py")])
-_MESSAGE_CALLS = {"debug", "info", "warning", "error", "exception", "critical", "echo", "prompt", "input"}
+_MESSAGE_CALLS = {"debug", "info", "warning", "warn", "error", "exception", "critical", "echo", "prompt", "input"}
 _DISPLAY_METHODS = {"__repr__", "__str__"}
 _PLUMBING_LITERALS = {
     "", "\n", "\x00", " ", " ****", " - ", " - (redirected) ", "&", "']", ".", "/",
+    "InvoicePdf", "balance",
     "/(?:dp|gp/product|product)/([A-Z0-9]{10})(?:[/?]|$)", ": ", "://", "=", "?", "?transactionTag=",
     ".cookies-", ".tmp", "Accept", "Content-Type", "GET", "GetTransactions", "POST",
     "Referer", "\\*+(\\d+)$", "\\*\\s*(\\d+)", "^\\s*{count}\\s*$", "_parse_", "aa-challenge-page-captcha-container",
@@ -133,10 +134,10 @@ class TestLocalization(UnitTestCase):
         lorem_html = self._translate(lorem_html, {"Return window closed on": "Commodo consequat"})
 
         # WHEN
-        orders = AmazonOrders.parse_order_history(lorem_html, self.example_config)
+        orders = AmazonOrders.parse_orders(lorem_html, self.example_config)
 
         # THEN
-        expected = AmazonOrders.parse_order_history(html, self.test_config)
+        expected = AmazonOrders.parse_orders(html, self.test_config)
         self.assertEqual([o.to_dict() for o in expected], [o.to_dict() for o in orders])
         self.assertEqual(71.90, orders[0].grand_total)
         self.assertEqual(datetime.date(2018, 12, 30), orders[0].order_placed_date)
@@ -151,10 +152,10 @@ class TestLocalization(UnitTestCase):
         # WHEN
         with patch.object(example_constants_class, "parse_currency", autospec=True,
                           side_effect=example_constants_class.parse_currency) as parse_currency:
-            orders = AmazonOrders.parse_order_history(lorem_html, self.example_config)
+            orders = AmazonOrders.parse_orders(lorem_html, self.example_config)
 
         # THEN
-        expected = AmazonOrders.parse_order_history(html, self.test_config)
+        expected = AmazonOrders.parse_orders(html, self.test_config)
         self.assertEqual([o.grand_total for o in expected], [o.grand_total for o in orders])
         self.assertFalse([call for call in parse_currency.call_args_list if "officia" in str(call.args[1]).lower()])
 
@@ -191,11 +192,11 @@ class TestLocalization(UnitTestCase):
         phrases = {">Cancelled<": ">Velit<", "was cancelled": "was velit"}
 
         # WHEN
-        orders = AmazonOrders.parse_order_history(self._translate(history_html, phrases), self.example_config)
+        orders = AmazonOrders.parse_orders(self._translate(history_html, phrases), self.example_config)
         order = AmazonOrders.parse_order_details(self._translate(details_html, phrases), self.example_config)
 
         # THEN
-        expected_orders = AmazonOrders.parse_order_history(history_html, self.test_config)
+        expected_orders = AmazonOrders.parse_orders(history_html, self.test_config)
         self.assertEqual([o.cancelled for o in expected_orders], [o.cancelled for o in orders])
         self.assertTrue(orders[0].cancelled)
         self.assertTrue(order.cancelled)
@@ -208,14 +209,14 @@ class TestLocalization(UnitTestCase):
         whole_foods_html = self.given_resource("orders", "order-history-wholefoods.html")
 
         # WHEN
-        store_orders = AmazonOrders.parse_order_history(
+        store_orders = AmazonOrders.parse_orders(
             store_html.replace("Purchased at Amazon", "Sint culpa"), self.example_config)
-        whole_foods_orders = AmazonOrders.parse_order_history(
+        whole_foods_orders = AmazonOrders.parse_orders(
             whole_foods_html.replace("Whole Foods Market", "Anim id est"), self.example_config)
 
         # THEN
-        expected_store = AmazonOrders.parse_order_history(store_html, self.test_config)
-        expected_whole_foods = AmazonOrders.parse_order_history(whole_foods_html, self.test_config)
+        expected_store = AmazonOrders.parse_orders(store_html, self.test_config)
+        expected_whole_foods = AmazonOrders.parse_orders(whole_foods_html, self.test_config)
         self.assertEqual([len(o.items) for o in expected_store], [len(o.items) for o in store_orders])
         self.assertEqual([o.is_whole_foods for o in expected_whole_foods],
                          [o.is_whole_foods for o in whole_foods_orders])

@@ -22,7 +22,7 @@ class Item(Parsable):
     """
     An Item in an Amazon :class:`~amazonorders.entity.order.Order`. If desired fields are populated as ``None``,
     ensure ``full_details`` is ``True`` when retrieving the Order (for instance, with
-    :func:`~amazonorders.orders.AmazonOrders.get_order_history`), since by default it is ``False`` (it will slow
+    :func:`~amazonorders.orders.AmazonOrders.get_orders`), since by default it is ``False`` (it will slow
     down querying).
     """
 

@@ -5,6 +5,7 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
+import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, quote, urlencode, urlsplit
 
@@ -13,7 +14,7 @@ from bs4 import BeautifulSoup, Tag
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.family_member import FamilyMember
-from amazonorders.entity.invoice_pdf import InvoicePdf
+from amazonorders.entity.invoice import Invoice
 from amazonorders.entity.order import Order
 from amazonorders.entity.order_search_result import OrderSearchResult
 from amazonorders.entity.tracking import Tracking
@@ -50,10 +51,10 @@ class AmazonOrders:
             logger.setLevel(logging.DEBUG)
 
     @classmethod
-    def parse_order_history(cls,
-                            html: str,
-                            config: AmazonOrdersConfig,
-                            start_index: int = 0) -> List[Order]:
+    def parse_orders(cls,
+                     html: str,
+                     config: AmazonOrdersConfig,
+                     start_index: int = 0) -> List[Order]:
         """
         Parse an already-fetched Amazon Order history page into Orders, without a session driving the
         fetch. Useful for parsing HTML obtained elsewhere (a browser, a proxy, a fixture) and for
@@ -69,12 +70,12 @@ class AmazonOrders:
         :param html: The Order history page HTML to parse.
         :param config: The config providing the selectors and entity classes used for parsing.
         :param start_index: The index of the first Order on the page within its window, seeding
-            :attr:`~amazonorders.entity.order.Order.index` the way ``get_order_history()`` does.
+            :attr:`~amazonorders.entity.order.Order.index` the way ``get_orders()`` does.
         :return: A list of the parsed Orders.
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
 
-        order_tags = cls._parse_order_history(parsed, config, start_index)
+        order_tags = cls._parse_orders(parsed, config, start_index)
 
         return [config.order_cls(tag, config, index=start_index + i) for i, tag in enumerate(order_tags)]
 
@@ -254,12 +255,14 @@ class AmazonOrders:
     def get_invoice(self,
                     order_id: str) -> util.AmazonSessionResponse:
         """
-        Get the print-friendly invoice page for a given Amazon Order ID, returning the response
-        (including its parsed HTML) so callers can render or print the page.
+        Deprecated, use :func:`get_invoices` instead, whose Printable Order Summary is this page. To be removed in
+        5.0.
 
         :param order_id: The Amazon Order ID to lookup.
         :return: The invoice page response.
         """
+        warnings.warn("get_invoice() is deprecated and will be removed in 5.0. Use get_invoices() instead.",
+                      DeprecationWarning, stacklevel=2)
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
@@ -287,7 +290,7 @@ class AmazonOrders:
         Get the members of the Amazon Household whose Orders this account can view, such as linked Teen accounts,
         from the Order history's member filter. Pass a member's
         :attr:`~amazonorders.entity.family_member.FamilyMember.id` as ``family_member_id`` to
-        :func:`get_order_history` to get their Orders.
+        :func:`get_orders` to get their Orders.
 
         :return: The FamilyMembers, or an empty list if the account has none.
         """
@@ -355,30 +358,31 @@ class AmazonOrders:
         return PagedResults(results, {"next_page": next_page} if next_page else None)
 
     @classmethod
-    def parse_invoice_pdfs(cls,
-                           html: str,
-                           config: AmazonOrdersConfig,
-                           order_number: Optional[str] = None) -> List[InvoicePdf]:
+    def parse_invoices(cls,
+                       html: str,
+                       config: AmazonOrdersConfig,
+                       order_number: Optional[str] = None) -> List[Invoice]:
         """
-        Parse an already-fetched Amazon invoice list into its InvoicePdfs, without a session driving the fetch. Useful
+        Parse an already-fetched Amazon invoice list into its Invoices, without a session driving the fetch. Useful
         for parsing HTML obtained elsewhere and for network-free testing.
 
         :param html: The invoice list HTML to parse.
         :param config: The config providing the selectors used for parsing.
         :param order_number: The Order number the invoice list belongs to.
-        :return: The parsed InvoicePdfs, empty if the Order has none.
+        :return: The parsed Invoices, the Printable Order Summary first.
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
-        return cls._parse_invoice_pdfs(parsed, config, order_number)
+        return cls._parse_invoices(parsed, config, order_number)
 
-    def get_invoice_pdfs(self,
-                         order_id: str) -> List[InvoicePdf]:
+    def get_invoices(self,
+                     order_id: str) -> List[Invoice]:
         """
-        Get the invoice PDFs (invoices and credit notes) of a given Amazon Order ID from its invoice list. This
-        executes one request per call. Use :func:`download_invoice_pdf` to get a document itself.
+        Get the invoice documents of a given Amazon Order ID from its invoice list: the Printable Order Summary (an
+        HTML page, on every site), then any invoice and credit note PDFs (issued by sellers, mostly on EU sites).
+        This executes one request per call. Use :func:`download_invoice` to get a document itself.
 
         :param order_id: The Amazon Order ID to lookup.
-        :return: The Order's InvoicePdfs, empty if Amazon lists none.
+        :return: The Order's Invoices, the Printable Order Summary first.
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
@@ -386,6 +390,17 @@ class AmazonOrders:
         constants = self.config.constants
         query = urlencode({constants.INVOICE_PDFS_ORDER_ID_QUERY_PARAM: order_id})
         invoices_response = self.amazon_session.get(f"{constants.INVOICE_PDFS_URL}?{query}")
+
+        # The invoice list answers an Order that doesn't exist with an error status, not a redirect
+        status_code = invoices_response.response.status_code
+        if status_code == 400:
+            raise AmazonOrdersNotFoundError(f"Amazon returned {status_code} for the invoices of Order {order_id}, "
+                                            f"which likely means it was not found.",
+                                            meta={"status_code": status_code})
+        if 500 <= status_code < 600:
+            raise AmazonOrdersUnavailableError(f"Amazon could not load the invoices of Order {order_id}. It may not "
+                                               f"exist, or Amazon had an issue on their end. Wait a bit before trying "
+                                               f"again.", meta={"status_code": status_code})
         self.amazon_session.check_response(invoices_response)
 
         response_url = invoices_response.response.url
@@ -393,44 +408,58 @@ class AmazonOrders:
             raise AmazonOrdersNotFoundError(f"Amazon redirected to {response_url}, which likely means Order "
                                             f"{order_id} was not found.", meta={"redirect_url": response_url})
 
-        return self._parse_invoice_pdfs(invoices_response.parsed, self.config, order_id)
+        return self._parse_invoices(invoices_response.parsed, self.config, order_id)
 
-    def download_invoice_pdf(self,
-                             invoice_pdf: InvoicePdf) -> bytes:
+    def download_invoice(self,
+                         invoice: Invoice) -> bytes:
         """
-        Download an invoice PDF. This executes one request per call.
+        Download an invoice document. This executes one request per call.
 
-        :param invoice_pdf: The InvoicePdf to download, from :func:`get_invoice_pdfs`.
-        :return: The document's content (a PDF).
+        :param invoice: The Invoice to download, from :func:`get_invoices`.
+        :return: The document's content, an HTML page or a PDF per the Invoice's
+            :attr:`~amazonorders.entity.invoice.Invoice.format`.
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
-        if not invoice_pdf.link:
-            raise AmazonOrdersError(f"Invoice PDF \"{invoice_pdf.name}\" of Order {invoice_pdf.order_number} "
-                                    f"has no link.")
+        if not invoice.link:
+            raise AmazonOrdersError(f"Invoice \"{invoice.name}\" of Order {invoice.order_number} has no link.")
 
-        pdf_response = self.amazon_session.get(invoice_pdf.link, binary=True)
+        if invoice.format == self.config.constants.INVOICE_HTML_FORMAT:
+            html_response = self.amazon_session.get(invoice.link)
+            self.amazon_session.check_response(html_response)
+
+            amazon_message = self._unavailable_message(html_response.parsed,
+                                                       self.config.selectors.ORDER_DETAILS_ERROR_SELECTOR)
+            if amazon_message:
+                raise AmazonOrdersUnavailableError(f"Amazon could not load the \"{invoice.name}\" of Order "
+                                                   f"{invoice.order_number}. Amazon may have had an issue on their "
+                                                   f"end. Wait a bit before trying again. Amazon's page said: "
+                                                   f"\"{amazon_message}\"", meta={"amazon_message": amazon_message})
+
+            return html_response.response.content
+
+        pdf_response = self.amazon_session.get(invoice.link, binary=True)
         self.amazon_session.check_response(pdf_response)
 
         content_type = pdf_response.response.headers.get("Content-Type", "")
         if self.config.constants.INVOICE_PDF_CONTENT_TYPE not in content_type:
             self.amazon_session.check_response(
                 util.AmazonSessionResponse(pdf_response.response, self.config.bs4_parser))
-            raise AmazonOrdersError(f"Invoice PDF \"{invoice_pdf.name}\" of Order {invoice_pdf.order_number} "
-                                    f"returned Content-Type \"{content_type}\", not a PDF.")
+            raise AmazonOrdersError(f"Invoice \"{invoice.name}\" of Order {invoice.order_number} returned "
+                                    f"Content-Type \"{content_type}\", not a PDF.")
 
         return pdf_response.response.content
 
-    def get_order_history(self,
-                          year: Optional[int] = None,
-                          start_index: Optional[int] = None,
-                          full_details: bool = False,
-                          keep_paging: bool = True,
-                          time_filter: Optional[str] = None,
-                          order_filter: Optional[str] = None,
-                          progress: Optional[Callable[[int], None]] = None,
-                          progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
-                          family_member_id: Optional[str] = None) -> List[Order]:
+    def get_orders(self,
+                   year: Optional[int] = None,
+                   start_index: Optional[int] = None,
+                   full_details: bool = False,
+                   keep_paging: bool = True,
+                   time_filter: Optional[str] = None,
+                   order_filter: Optional[str] = None,
+                   progress: Optional[Callable[[int], None]] = None,
+                   progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
+                   family_member_id: Optional[str] = None) -> List[Order]:
         """
         Get the Amazon Order history for a given time period.
 
@@ -469,21 +498,21 @@ class AmazonOrders:
                                                             total_known=not order_filter))
         return orders
 
-    def get_order_history_page(self,
-                               year: Optional[int] = None,
-                               start_index: Optional[int] = None,
-                               full_details: bool = False,
-                               time_filter: Optional[str] = None,
-                               order_filter: Optional[str] = None,
-                               limit: Optional[int] = None,
-                               cursor: Optional[Dict[str, Any]] = None,
-                               progress: Optional[Callable[[int], None]] = None,
-                               progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
-                               family_member_id: Optional[str] = None
-                               ) -> PagedResults[Order]:
+    def get_orders_page(self,
+                        year: Optional[int] = None,
+                        start_index: Optional[int] = None,
+                        full_details: bool = False,
+                        time_filter: Optional[str] = None,
+                        order_filter: Optional[str] = None,
+                        limit: Optional[int] = None,
+                        cursor: Optional[Dict[str, Any]] = None,
+                        progress: Optional[Callable[[int], None]] = None,
+                        progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
+                        family_member_id: Optional[str] = None
+                        ) -> PagedResults[Order]:
         """
         Get a batch of the Amazon Order history for a given time period, with a cursor to fetch the next batch.
-        Takes the same filters as :func:`get_order_history`.
+        Takes the same filters as :func:`get_orders`.
 
         :param year: The year for which to get history. Ignored if ``time_filter`` or ``cursor`` is provided.
             Defaults to the current year if neither ``year`` nor ``time_filter`` is specified.
@@ -491,9 +520,9 @@ class AmazonOrders:
             ``cursor`` is provided.
         :param full_details: Get the full details for each Order in the batch. This will execute an additional
             request per Order.
-        :param time_filter: The time filter to use, as in :func:`get_order_history`. Ignored if ``cursor`` is
+        :param time_filter: The time filter to use, as in :func:`get_orders`. Ignored if ``cursor`` is
             provided.
-        :param order_filter: The order type filter to use, as in :func:`get_order_history`. Ignored if ``cursor`` is
+        :param order_filter: The order type filter to use, as in :func:`get_orders`. Ignored if ``cursor`` is
             provided.
         :param limit: Stop fetching history pages once at least this many Orders are collected. Whole pages are
             fetched, so the batch can hold up to a page more than ``limit``. ``None`` fetches every page.
@@ -502,9 +531,9 @@ class AmazonOrders:
         :param progress: Called after each page of history is fetched, with the number of Orders found so far in
             this batch (before their full details are fetched, if ``full_details`` is ``True``).
         :param progress_with_total: Like ``progress``, but also called with the number of Orders expected in this
-            batch, as in :func:`get_order_history`, and at most ``limit`` until the batch ends.
+            batch, as in :func:`get_orders`, and at most ``limit`` until the batch ends.
         :param family_member_id: The ID of an Amazon Household member whose Orders to get, as in
-            :func:`get_order_history`. Ignored if ``cursor`` is provided.
+            :func:`get_orders`. Ignored if ``cursor`` is provided.
         :return: The batch of Orders, and the cursor for the next one.
         """
         if not self.amazon_session.is_authenticated:
@@ -533,6 +562,70 @@ class AmazonOrders:
         } if next_page else None
 
         return PagedResults(orders, next_cursor)
+
+    @classmethod
+    def parse_order_history(cls,
+                            *args: Any,
+                            **kwargs: Any) -> List[Order]:
+        """
+        Deprecated, use :func:`parse_orders` instead. To be removed in 5.0.
+        """
+        warnings.warn("parse_order_history() is deprecated and will be removed in 5.0. Use parse_orders() instead.",
+                      DeprecationWarning, stacklevel=2)
+        return cls.parse_orders(*args, **kwargs)
+
+    def get_order_history(self,
+                          *args: Any,
+                          **kwargs: Any) -> List[Order]:
+        """
+        Deprecated, use :func:`get_orders` instead. To be removed in 5.0.
+        """
+        warnings.warn("get_order_history() is deprecated and will be removed in 5.0. Use get_orders() instead.",
+                      DeprecationWarning, stacklevel=2)
+        return self.get_orders(*args, **kwargs)
+
+    def get_order_history_page(self,
+                               *args: Any,
+                               **kwargs: Any) -> PagedResults[Order]:
+        """
+        Deprecated, use :func:`get_orders_page` instead. To be removed in 5.0.
+        """
+        warnings.warn("get_order_history_page() is deprecated and will be removed in 5.0. Use get_orders_page() "
+                      "instead.", DeprecationWarning, stacklevel=2)
+        return self.get_orders_page(*args, **kwargs)
+
+    @classmethod
+    def parse_invoice_pdfs(cls,
+                           *args: Any,
+                           **kwargs: Any) -> List[Invoice]:
+        """
+        Deprecated, use :func:`parse_invoices` instead. To be removed in 5.0.
+        """
+        warnings.warn("parse_invoice_pdfs() is deprecated and will be removed in 5.0. Use parse_invoices() "
+                      "instead.", DeprecationWarning, stacklevel=2)
+        return [invoice for invoice in cls.parse_invoices(*args, **kwargs)
+                if invoice.format == invoice.config.constants.INVOICE_PDF_FORMAT]
+
+    def get_invoice_pdfs(self,
+                         *args: Any,
+                         **kwargs: Any) -> List[Invoice]:
+        """
+        Deprecated, use :func:`get_invoices` instead. To be removed in 5.0.
+        """
+        warnings.warn("get_invoice_pdfs() is deprecated and will be removed in 5.0. Use get_invoices() instead.",
+                      DeprecationWarning, stacklevel=2)
+        return [invoice for invoice in self.get_invoices(*args, **kwargs)
+                if invoice.format == self.config.constants.INVOICE_PDF_FORMAT]
+
+    def download_invoice_pdf(self,
+                             *args: Any,
+                             **kwargs: Any) -> bytes:
+        """
+        Deprecated, use :func:`download_invoice` instead. To be removed in 5.0.
+        """
+        warnings.warn("download_invoice_pdf() is deprecated and will be removed in 5.0. Use download_invoice() "
+                      "instead.", DeprecationWarning, stacklevel=2)
+        return self.download_invoice(*args, **kwargs)
 
     def _history_filter_value(self,
                               year: Optional[int],
@@ -706,10 +799,24 @@ class AmazonOrders:
         return not (order_number_tag and order_number_tag.get_text(strip=True))
 
     @classmethod
-    def _parse_order_history(cls,
-                             parsed: Tag,
-                             config: AmazonOrdersConfig,
-                             start_index: int) -> List[Tag]:
+    def _has_csd_encrypted_orders(cls,
+                                  parsed: Tag,
+                                  config: AmazonOrdersConfig) -> bool:
+        """
+        Whether any Order card on an Order history page is encrypted, by :func:`_is_csd_encrypted`.
+
+        :param parsed: The parsed Order history page.
+        :param config: The config providing the selectors.
+        :return: ``True`` if any Order card on the page is encrypted.
+        """
+        return any(cls._is_csd_encrypted(order_tag, config)
+                   for order_tag in util.select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR))
+
+    @classmethod
+    def _parse_orders(cls,
+                      parsed: Tag,
+                      config: AmazonOrdersConfig,
+                      start_index: int) -> List[Tag]:
         """
         Select the Order cards from an Order history page, gating an empty page on the page's own Order
         count so a spent window can be told apart from a page that failed to render.
@@ -774,19 +881,57 @@ class AmazonOrders:
         return Tracking(tracking_tag, config)
 
     @staticmethod
-    def _parse_invoice_pdfs(parsed: Tag,
-                            config: AmazonOrdersConfig,
-                            order_number: Optional[str] = None) -> List[InvoicePdf]:
+    def _parse_invoices(parsed: Tag,
+                        config: AmazonOrdersConfig,
+                        order_number: Optional[str] = None) -> List[Invoice]:
         """
-        Build the InvoicePdfs from an invoice list.
+        Build the Invoices from an invoice list, the Printable Order Summary first.
 
         :param parsed: The parsed invoice list.
         :param config: The config providing the selectors.
         :param order_number: The Order number the invoice list belongs to.
-        :return: The parsed InvoicePdfs.
+        :return: The parsed Invoices.
         """
-        return [InvoicePdf(invoice_tag, config, order_number=order_number)
-                for invoice_tag in util.select(parsed, config.selectors.INVOICE_PDF_ENTITY_SELECTOR)]
+        summary_tag = util.select_one(parsed, config.selectors.INVOICE_ORDER_SUMMARY_ENTITY_SELECTOR)
+        summaries = ([Invoice(summary_tag, config, order_number=order_number,
+                              format=config.constants.INVOICE_HTML_FORMAT)] if summary_tag else [])
+
+        return summaries + [Invoice(invoice_tag, config, order_number=order_number,
+                                    format=config.constants.INVOICE_PDF_FORMAT)
+                            for invoice_tag in util.select(parsed, config.selectors.INVOICE_PDF_ENTITY_SELECTOR)]
+
+    def _fetch_orders_page(self,
+                           url: str,
+                           index: int) -> util.AmazonSessionResponse:
+        """
+        Fetch an Order history page, re-requesting it once as Amazon's no-JavaScript fallback (``disableCsd=no-js``)
+        if its Order cards were served encrypted.
+
+        :param url: The Order history page URL.
+        :param index: The index to resume from, for the error's ``meta``.
+        :return: The page's response.
+        :raises AmazonOrdersError: If the fallback's Order cards are encrypted too.
+        """
+        constants = self.config.constants
+        # The fallback never carries over from the previous page
+        url = util.with_query_param(url, constants.DISABLE_CSD_QUERY_PARAM, None)
+
+        page_response = self.amazon_session.get(url)
+        self.amazon_session.check_response(page_response, meta={"index": index})
+
+        if self._has_csd_encrypted_orders(page_response.parsed, self.config):
+            fallback_url = util.with_query_param(url, constants.DISABLE_CSD_QUERY_PARAM, constants.DISABLE_CSD_NO_JS)
+            logger.debug(f"Order history page was served encrypted, requesting its no-JavaScript fallback: "
+                         f"{fallback_url}")
+            page_response = self.amazon_session.get(fallback_url)
+            self.amazon_session.check_response(page_response, meta={"index": index})
+
+            if self._has_csd_encrypted_orders(page_response.parsed, self.config):
+                raise AmazonOrdersError("Could not parse Order history. Amazon served the page and its "
+                                        "no-JavaScript fallback with the Order cards encrypted.",
+                                        meta={"index": index})
+
+        return page_response
 
     async def _build_orders_async(self,
                                   next_page: Optional[str],
@@ -803,11 +948,10 @@ class AmazonOrders:
         orders_before_start_on_page = current_index % self.config.constants.ORDER_HISTORY_PAGE_SIZE
 
         while next_page and (limit is None or len(order_builds) < limit):
-            page_response = self.amazon_session.get(next_page)
-            self.amazon_session.check_response(page_response, meta={"index": current_index})
+            page_response = self._fetch_orders_page(next_page, current_index)
 
-            order_tags = self._parse_order_history(page_response.parsed, self.config,
-                                                   current_index - orders_before_start_on_page)
+            order_tags = self._parse_orders(page_response.parsed, self.config,
+                                            current_index - orders_before_start_on_page)
 
             if not order_tags:
                 next_page = None

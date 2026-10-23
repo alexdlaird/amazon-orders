@@ -112,7 +112,7 @@ class TestItem(UnitTestCase):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
                   encoding="utf-8") as f:
-            order = AmazonOrders.parse_order_history(f.read(), self.test_config)[3]
+            order = AmazonOrders.parse_orders(f.read(), self.test_config)[3]
 
         # WHEN
         serialized = order.to_dict()
@@ -127,7 +127,7 @@ class TestItem(UnitTestCase):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
                   encoding="utf-8") as f:
-            order = AmazonOrders.parse_order_history(f.read(), self.test_config)[3]
+            order = AmazonOrders.parse_orders(f.read(), self.test_config)[3]
 
         # WHEN
         serialized = order.to_dict()
@@ -144,7 +144,7 @@ class TestItem(UnitTestCase):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
                   encoding="utf-8") as f:
-            order = AmazonOrders.parse_order_history(f.read(), self.test_config)[3]
+            order = AmazonOrders.parse_orders(f.read(), self.test_config)[3]
         order.subscription_discount = None
         order.free_shipping = 0.0
         order.full_details = False
@@ -165,7 +165,7 @@ class TestItem(UnitTestCase):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
                   encoding="utf-8") as f:
-            order = AmazonOrders.parse_order_history(f.read(), self.test_config)[3]
+            order = AmazonOrders.parse_orders(f.read(), self.test_config)[3]
         order.subscription_discount = None
 
         # WHEN
@@ -179,7 +179,7 @@ class TestItem(UnitTestCase):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
                   encoding="utf-8") as f:
-            order = AmazonOrders.parse_order_history(f.read(), self.test_config)[3]
+            order = AmazonOrders.parse_orders(f.read(), self.test_config)[3]
         order.items = []
 
         # WHEN

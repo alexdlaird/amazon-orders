@@ -4,7 +4,26 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.11.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.12.0...HEAD)
+
+## [4.12.0](https://github.com/alexdlaird/amazon-orders/compare/4.11.0...4.12.0) - 2026-10-23
+
+### Added
+
+- `AmazonGiftCards.get_gift_cards()`, `get_gift_cards_page()`, `parse_gift_cards()`, and the `gift-cards` command, for the Gift Card balance and activity.
+- `AmazonOrders.get_invoices()`, `parse_invoices()`, `download_invoice()`, the `Invoice` entity, and the `invoices` command, for an Order's invoices, including the Printable Order Summary.
+
+### Deprecated
+
+- The `history` and `search` commands, renamed to `orders` and `search-orders`.
+- `AmazonOrders.get_order_history()`, `get_order_history_page()`, and `parse_order_history()`, renamed to `get_orders()`, `get_orders_page()`, and `parse_orders()`.
+- `AmazonGiftCards.get_balance()`, `get_gift_card_activity()`, `parse_gift_card_activity()`, and the `gift-card-balance` and `gift-card-activity` commands, use `get_gift_cards()`, `parse_gift_cards()`, and `gift-cards`.
+- `AmazonOrders.get_invoice()`, `get_invoice_pdfs()`, `parse_invoice_pdfs()`, `download_invoice_pdf()`, `InvoicePdf`, `OutputFormatter.invoice_pdf_text()`, and the `invoice` and `invoice-pdfs` commands, use `get_invoices()`, `parse_invoices()`, `download_invoice()`, `Invoice`, `invoice_text()`, and `invoices`.
+
+### Fixed
+
+- An Order history page served with its Order cards encrypted is re-requested as its no-JavaScript fallback.
+- Bug fixes and stability improvements.
 
 ## [4.11.0](https://github.com/alexdlaird/amazon-orders/compare/4.10.0...4.11.0) - 2026-10-23
 
@@ -15,7 +34,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- Order history and Gift Card activity stop paging at a next-page link to another site, instead of following it.
 - Bug fixes and stability improvements.
 
 ## [4.10.0](https://github.com/alexdlaird/amazon-orders/compare/4.9.6...4.10.0) - 2026-10-21

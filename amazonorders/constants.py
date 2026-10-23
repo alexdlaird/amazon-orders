@@ -72,6 +72,9 @@ class Constants:
     FAMILY_MEMBER_QUERY_PARAM = "familyMemberId"
     HISTORY_PAGE_QUERY_PARAM = "page"
     HISTORY_START_INDEX_QUERY_PARAM = "startIndex"
+    # Amazon's no-JavaScript fallback, which renders encrypted Order cards readable
+    DISABLE_CSD_QUERY_PARAM = "disableCsd"
+    DISABLE_CSD_NO_JS = "no-js"
     ORDER_ID_QUERY_PARAM = "orderID"
     LAST_30_DAYS_TIME_FILTER = "last30"
     LAST_3_MONTHS_TIME_FILTER = "months-3"
@@ -87,6 +90,8 @@ class Constants:
     INVOICE_PDFS_URL = f"{BASE_URL}{INVOICE_PDFS_ROUTE}"
     INVOICE_PDFS_ORDER_ID_QUERY_PARAM = "orderId"
     INVOICE_PDF_CONTENT_TYPE = "application/pdf"
+    INVOICE_HTML_FORMAT = "html"
+    INVOICE_PDF_FORMAT = "pdf"
     ORDER_SEARCH_ROUTE = "/your-orders/search"
     ORDER_SEARCH_URL = f"{BASE_URL}{ORDER_SEARCH_ROUTE}"
     ORDER_SEARCH_QUERY_PARAM = "search"

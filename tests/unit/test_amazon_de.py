@@ -273,8 +273,8 @@ class TestAmazonDe(UnitTestCase):
             return f.read()
 
     def given_order_history(self, name):
-        return AmazonOrders.parse_order_history(self.given_resource("orders", "de", f"order-history-{name}.html"),
-                                                self.de_config)
+        return AmazonOrders.parse_orders(self.given_resource("orders", "de", f"order-history-{name}.html"),
+                                         self.de_config)
 
     def given_order_details(self, order_number):
         return AmazonOrders.parse_order_details(

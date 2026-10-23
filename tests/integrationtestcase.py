@@ -9,6 +9,7 @@ from amazonorders import conf
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.gift_cards import AmazonGiftCards
 from amazonorders.orders import AmazonOrders
+from amazonorders.prime import AmazonPrime
 from amazonorders.session import AmazonSession
 from amazonorders.transactions import AmazonTransactions
 from tests.testcase import TestCase
@@ -45,6 +46,7 @@ class IntegrationTestCase(TestCase):
         cls.amazon_orders = AmazonOrders(cls.amazon_session)
         cls.amazon_transactions = AmazonTransactions(cls.amazon_session)
         cls.amazon_gift_cards = AmazonGiftCards(cls.amazon_session)
+        cls.amazon_prime = AmazonPrime(cls.amazon_session)
 
     @classmethod
     def tearDownClass(cls):
