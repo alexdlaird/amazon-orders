@@ -9,7 +9,7 @@ import sys
 import unicodedata
 from datetime import date, datetime
 from typing import Iterable, List, Union, Optional, Callable, Any
-from urllib.parse import SplitResult, urljoin, urlsplit
+from urllib.parse import SplitResult, parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
 from bs4 import Tag, BeautifulSoup
 from dateutil import parser
@@ -284,6 +284,27 @@ def resolve_site_url(url: str, base_url: str) -> Optional[str]:
         return None
 
     return resolved_url
+
+
+def with_query_param(url: str, name: str, value: Optional[str]) -> str:
+    """
+    Set a query parameter on a URL, replacing any value it already has, or remove it when ``value`` is ``None``.
+
+    :param url: The URL.
+    :param name: The query parameter's name.
+    :param value: The query parameter's value, or ``None`` to remove it.
+    :return: The URL with the query parameter set, or removed. Removing one the URL doesn't have returns it unchanged.
+    """
+    parts = urlsplit(url)
+    query = parse_qsl(parts.query, keep_blank_values=True)
+    kept = [(key, val) for key, val in query if key != name]
+    if value is None and len(kept) == len(query):
+        return url
+
+    if value is not None:
+        kept.append((name, value))
+
+    return urlunsplit(parts._replace(query=urlencode(kept)))
 
 
 def cleanup_html_text(text: str) -> str:

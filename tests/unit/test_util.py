@@ -9,7 +9,8 @@ from unittest.mock import patch
 from bs4 import BeautifulSoup
 
 from amazonorders.selectors import Selector
-from amazonorders.util import to_type, to_date, cleanup_html_text, has_display, resolve_site_url, select, select_one
+from amazonorders.util import to_type, to_date, cleanup_html_text, has_display, resolve_site_url, select, select_one, \
+    with_query_param
 from tests.unittestcase import UnitTestCase
 
 
@@ -53,6 +54,17 @@ class TestUtil(UnitTestCase):
         for url in invalid_urls:
             with self.subTest(url=url):
                 self.assertIsNone(resolve_site_url(url, base_url))
+
+    def test_with_query_param(self):
+        # GIVEN
+        url = "https://www.amazon.com/your-orders/orders?timeFilter=year-2010&startIndex=10"
+
+        # WHEN / THEN
+        self.assertEqual(f"{url}&disableCsd=no-js", with_query_param(url, "disableCsd", "no-js"))
+        self.assertEqual(f"{url}&disableCsd=no-js", with_query_param(f"{url}&disableCsd=x", "disableCsd", "no-js"))
+        self.assertEqual(url, with_query_param(f"{url}&disableCsd=no-js", "disableCsd", None))
+        self.assertEqual("https://www.amazon.com/your-orders/orders?ref_=a%2Cb",
+                         with_query_param("https://www.amazon.com/your-orders/orders?ref_=a%2Cb", "disableCsd", None))
 
     def test_to_date_english(self):
         # WHEN / THEN

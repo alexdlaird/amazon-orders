@@ -72,6 +72,9 @@ class Constants:
     FAMILY_MEMBER_QUERY_PARAM = "familyMemberId"
     HISTORY_PAGE_QUERY_PARAM = "page"
     HISTORY_START_INDEX_QUERY_PARAM = "startIndex"
+    # Amazon's no-JavaScript fallback, which renders encrypted Order cards readable
+    DISABLE_CSD_QUERY_PARAM = "disableCsd"
+    DISABLE_CSD_NO_JS = "no-js"
     ORDER_ID_QUERY_PARAM = "orderID"
     LAST_30_DAYS_TIME_FILTER = "last30"
     LAST_3_MONTHS_TIME_FILTER = "months-3"
