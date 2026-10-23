@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.11.0...HEAD)
 
+### Changed
+
+- The `history` and `search` commands were renamed to `orders` and `search-orders`. The old names are now deprecated aliases that will be removed in 5.0.
+- `AmazonOrders.get_order_history()`, `get_order_history_page()`, and `parse_order_history()` were renamed to `get_orders()`, `get_orders_page()`, and `parse_orders()`. The old names are now deprecated aliases that will be removed in 5.0.
+
 ## [4.11.0](https://github.com/alexdlaird/amazon-orders/compare/4.10.0...4.11.0) - 2026-10-23
 
 ### Added

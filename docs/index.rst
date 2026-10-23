@@ -70,7 +70,7 @@ You'll use :class:`~amazonorders.session.AmazonSession` to authenticate your Ama
 :class:`~amazonorders.orders.AmazonOrders`, :class:`~amazonorders.transactions.AmazonTransactions`,
 :class:`~amazonorders.gift_cards.AmazonGiftCards`, and :class:`~amazonorders.prime.AmazonPrime` to interact with
 account data.
-:func:`~amazonorders.orders.AmazonOrders.get_order_history` and
+:func:`~amazonorders.orders.AmazonOrders.get_orders` and
 :func:`~amazonorders.orders.AmazonOrders.get_order` are good places to start.
 
 .. code:: python
@@ -86,17 +86,17 @@ account data.
     amazon_orders = AmazonOrders(amazon_session)
 
     # Get orders from a specific year
-    orders = amazon_orders.get_order_history(year=2023)
+    orders = amazon_orders.get_orders(year=2023)
 
     # Or use time filters for recent orders
-    orders = amazon_orders.get_order_history(time_filter=Constants.LAST_30_DAYS_TIME_FILTER)
-    orders = amazon_orders.get_order_history(time_filter=Constants.LAST_3_MONTHS_TIME_FILTER)
+    orders = amazon_orders.get_orders(time_filter=Constants.LAST_30_DAYS_TIME_FILTER)
+    orders = amazon_orders.get_orders(time_filter=Constants.LAST_3_MONTHS_TIME_FILTER)
 
     for order in orders:
         print(f"{order.order_number} - {order.grand_total}")
 
 If the fields you're looking for aren't populated with the above, set ``full_details=True`` (or pass ``--full-details``
-to the ``history`` CLI command), since by default it is ``False`` (enabling it slows down querying, since an additional
+to the ``orders`` CLI command), since by default it is ``False`` (enabling it slows down querying, since an additional
 request for each order is necessary). Have a look at the :class:`~amazonorders.entity.order.Order` entity's docs to see
 what fields are only populated with full details.
 
@@ -108,10 +108,10 @@ You can also run any command available to the main Python interface from the com
 .. code:: sh
 
     amazon-orders login
-    amazon-orders history --year 2023
-    amazon-orders history --last-30-days
-    amazon-orders history --last-3-months
-    amazon-orders search "coffee"
+    amazon-orders orders --year 2023
+    amazon-orders orders --last-30-days
+    amazon-orders orders --last-3-months
+    amazon-orders search-orders "coffee"
 
 Output Formats
 --------------
@@ -122,8 +122,8 @@ captures only the data.
 
 .. code:: sh
 
-    amazon-orders history --year 2023 --output json > orders.json
-    amazon-orders history --last-30-days --output csv > orders.csv
+    amazon-orders orders --year 2023 --output json > orders.json
+    amazon-orders orders --last-30-days --output csv > orders.csv
 
 To serialize from Python instead, every entity has :func:`~amazonorders.entity.parsable.Parsable.to_dict`,
 which converts it and its nested entities to a ``dict`` of primitives.
@@ -135,7 +135,7 @@ which converts it and its nested entities to a ``dict`` of primitives.
     from amazonorders.orders import AmazonOrders
 
     amazon_orders = AmazonOrders(amazon_session)
-    orders = amazon_orders.get_order_history(year=2023)
+    orders = amazon_orders.get_orders(year=2023)
 
     # [{"order_number": "112-9685975-5907428", "grand_total": 35.98, ...}]
     print(json.dumps([order.to_dict() for order in orders], indent=2))

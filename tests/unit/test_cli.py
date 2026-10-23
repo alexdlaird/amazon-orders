@@ -223,7 +223,7 @@ class TestCli(UnitTestCase):
                                                                      "--config-path", self.test_config.config_path,
                                                                      "--username", "some-username@gmail.com",
                                                                      "--password", "some-password",
-                                                                     "history", "--year", year, "--start-index",
+                                                                     "orders", "--year", year, "--start-index",
                                                                      start_index, "--single-page"])
 
         # THEN
@@ -256,7 +256,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "history", "--year", year, "--order-filter", "digital-orders",
+                                          "orders", "--year", year, "--order-filter", "digital-orders",
                                           "--single-page"])
 
         # THEN
@@ -281,7 +281,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "history", "--year", year, "--family-member-id", "A1EXAMPLETEEN1",
+                                          "orders", "--year", year, "--family-member-id", "A1EXAMPLETEEN1",
                                           "--single-page"])
 
         # THEN
@@ -381,7 +381,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "history", "--last-30-days", "--single-page"])
+                                          "orders", "--last-30-days", "--single-page"])
 
         # THEN
         self.assertEqual(0, response.exit_code)
@@ -403,7 +403,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "history", "--last-3-months", "--single-page"])
+                                          "orders", "--last-3-months", "--single-page"])
 
         # THEN
         self.assertEqual(0, response.exit_code)
@@ -432,7 +432,7 @@ class TestCli(UnitTestCase):
                                                   "--config-path", self.test_config.config_path,
                                                   "--username", "some-username@gmail.com",
                                                   "--password", "some-password",
-                                                  "history", *flags])
+                                                  "orders", *flags])
 
                 # THEN
                 self.assertNotEqual(0, response.exit_code)
@@ -455,7 +455,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "history", "--year", year, "--start-index", start_index,
+                                          "orders", "--year", year, "--start-index", start_index,
                                           "--single-page", "--full-details"])
 
         # THEN
@@ -472,7 +472,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "history", "--start-index", "not-a-number"])
+                                          "orders", "--start-index", "not-a-number"])
 
         # THEN
         self.assertNotEqual(0, response.exit_code)
@@ -728,7 +728,7 @@ class TestCli(UnitTestCase):
                 "--config-path", self.test_config.config_path,
                 "--username", "some-username@gmail.com",
                 "--password", "some-password",
-                "search", "example",
+                "search-orders", "example",
             ],
         )
 
@@ -760,7 +760,7 @@ class TestCli(UnitTestCase):
                 "--config-path", self.test_config.config_path,
                 "--username", "some-username@gmail.com",
                 "--password", "some-password",
-                "search", "example", "--single-page",
+                "search-orders", "example", "--single-page",
             ],
         )
 
@@ -786,7 +786,7 @@ class TestCli(UnitTestCase):
                 "--config-path", self.test_config.config_path,
                 "--username", "some-username@gmail.com",
                 "--password", "some-password",
-                "search", "example", "--single-page", "--output", "json",
+                "search-orders", "example", "--single-page", "--output", "json",
             ],
         )
 
@@ -818,7 +818,7 @@ class TestCli(UnitTestCase):
                 "--config-path", self.test_config.config_path,
                 "--username", "some-username@gmail.com",
                 "--password", "some-password",
-                "search", "example",
+                "search-orders", "example",
             ],
         )
 
@@ -843,7 +843,7 @@ class TestCli(UnitTestCase):
         response = self.runner.invoke(amazon_orders_cli,
                                       [
                                           "--config-path", self.test_config.config_path,
-                                          "search", "example"
+                                          "search-orders", "example"
                                       ])
 
         # THEN
@@ -1169,7 +1169,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "history"
+                                          "orders"
                                       ])
 
         # THEN
@@ -1333,7 +1333,7 @@ class TestCli(UnitTestCase):
         response = self.runner.invoke(amazon_orders_cli,
                                       [
                                           "--config-path", self.test_config.config_path,
-                                          "history"
+                                          "orders"
                                       ])
 
         self.assertEqual(0, response.exit_code)
@@ -1383,7 +1383,7 @@ class TestCli(UnitTestCase):
 
         # WHEN
         history_response = self.runner.invoke(amazon_orders_cli,
-                                              ["--config-path", self.test_config.config_path, "history"])
+                                              ["--config-path", self.test_config.config_path, "orders"])
         version_response = self.runner.invoke(amazon_orders_cli,
                                               ["--config-path", self.test_config.config_path, "version"])
         update_response = self.runner.invoke(amazon_orders_cli,
@@ -1416,7 +1416,7 @@ class TestCli(UnitTestCase):
                                                                      "--config-path", self.test_config.config_path,
                                                                      "--username", "some-username@gmail.com",
                                                                      "--password", "some-password",
-                                                                     "history", "--year", year, "--single-page",
+                                                                     "orders", "--year", year, "--single-page",
                                                                      "--output", "json"])
 
         # THEN
@@ -1441,7 +1441,7 @@ class TestCli(UnitTestCase):
                                                                      "--config-path", self.test_config.config_path,
                                                                      "--username", "some-username@gmail.com",
                                                                      "--password", "some-password",
-                                                                     "history", "--year", year, "--single-page",
+                                                                     "orders", "--year", year, "--single-page",
                                                                      "--output", "yaml"])
 
         # THEN
@@ -1464,7 +1464,7 @@ class TestCli(UnitTestCase):
                                                                      "--config-path", self.test_config.config_path,
                                                                      "--username", "some-username@gmail.com",
                                                                      "--password", "some-password",
-                                                                     "history", "--year", year, "--single-page",
+                                                                     "orders", "--year", year, "--single-page",
                                                                      "--output", "csv"])
 
         # THEN
@@ -1483,7 +1483,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "history", "--output", "xml"])
+                                          "orders", "--output", "xml"])
 
         # THEN
         self.assertEqual(2, response.exit_code)

@@ -194,7 +194,7 @@ Testing
 
 - Test against real pages saved from that version of Amazon (anonymized), rather than generated ones. The parse
   methods work offline on saved HTML, so pass each a config with your ``language_package`` set:
-  :func:`~amazonorders.orders.AmazonOrders.parse_order_history`,
+  :func:`~amazonorders.orders.AmazonOrders.parse_orders`,
   :func:`~amazonorders.orders.AmazonOrders.parse_order_details`, and
   :func:`~amazonorders.transactions.AmazonTransactions.parse_transactions`.
 - Run an integration test against the live site at least weekly from your language package's own repo, with the

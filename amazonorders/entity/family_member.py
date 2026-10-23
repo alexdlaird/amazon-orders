@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class FamilyMember(Parsable):
     """
     A member of the Amazon Household whose Orders the account can view, such as a linked Teen account. Pass its
-    :attr:`id` as ``family_member_id`` to :func:`~amazonorders.orders.AmazonOrders.get_order_history` to get their
+    :attr:`id` as ``family_member_id`` to :func:`~amazonorders.orders.AmazonOrders.get_orders` to get their
     Orders.
     """
 

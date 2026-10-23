@@ -5,6 +5,7 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
+import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, quote, urlencode, urlsplit
 
@@ -50,10 +51,10 @@ class AmazonOrders:
             logger.setLevel(logging.DEBUG)
 
     @classmethod
-    def parse_order_history(cls,
-                            html: str,
-                            config: AmazonOrdersConfig,
-                            start_index: int = 0) -> List[Order]:
+    def parse_orders(cls,
+                     html: str,
+                     config: AmazonOrdersConfig,
+                     start_index: int = 0) -> List[Order]:
         """
         Parse an already-fetched Amazon Order history page into Orders, without a session driving the
         fetch. Useful for parsing HTML obtained elsewhere (a browser, a proxy, a fixture) and for
@@ -69,12 +70,12 @@ class AmazonOrders:
         :param html: The Order history page HTML to parse.
         :param config: The config providing the selectors and entity classes used for parsing.
         :param start_index: The index of the first Order on the page within its window, seeding
-            :attr:`~amazonorders.entity.order.Order.index` the way ``get_order_history()`` does.
+            :attr:`~amazonorders.entity.order.Order.index` the way ``get_orders()`` does.
         :return: A list of the parsed Orders.
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
 
-        order_tags = cls._parse_order_history(parsed, config, start_index)
+        order_tags = cls._parse_orders(parsed, config, start_index)
 
         return [config.order_cls(tag, config, index=start_index + i) for i, tag in enumerate(order_tags)]
 
@@ -287,7 +288,7 @@ class AmazonOrders:
         Get the members of the Amazon Household whose Orders this account can view, such as linked Teen accounts,
         from the Order history's member filter. Pass a member's
         :attr:`~amazonorders.entity.family_member.FamilyMember.id` as ``family_member_id`` to
-        :func:`get_order_history` to get their Orders.
+        :func:`get_orders` to get their Orders.
 
         :return: The FamilyMembers, or an empty list if the account has none.
         """
@@ -421,16 +422,16 @@ class AmazonOrders:
 
         return pdf_response.response.content
 
-    def get_order_history(self,
-                          year: Optional[int] = None,
-                          start_index: Optional[int] = None,
-                          full_details: bool = False,
-                          keep_paging: bool = True,
-                          time_filter: Optional[str] = None,
-                          order_filter: Optional[str] = None,
-                          progress: Optional[Callable[[int], None]] = None,
-                          progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
-                          family_member_id: Optional[str] = None) -> List[Order]:
+    def get_orders(self,
+                   year: Optional[int] = None,
+                   start_index: Optional[int] = None,
+                   full_details: bool = False,
+                   keep_paging: bool = True,
+                   time_filter: Optional[str] = None,
+                   order_filter: Optional[str] = None,
+                   progress: Optional[Callable[[int], None]] = None,
+                   progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
+                   family_member_id: Optional[str] = None) -> List[Order]:
         """
         Get the Amazon Order history for a given time period.
 
@@ -469,21 +470,21 @@ class AmazonOrders:
                                                             total_known=not order_filter))
         return orders
 
-    def get_order_history_page(self,
-                               year: Optional[int] = None,
-                               start_index: Optional[int] = None,
-                               full_details: bool = False,
-                               time_filter: Optional[str] = None,
-                               order_filter: Optional[str] = None,
-                               limit: Optional[int] = None,
-                               cursor: Optional[Dict[str, Any]] = None,
-                               progress: Optional[Callable[[int], None]] = None,
-                               progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
-                               family_member_id: Optional[str] = None
-                               ) -> PagedResults[Order]:
+    def get_orders_page(self,
+                        year: Optional[int] = None,
+                        start_index: Optional[int] = None,
+                        full_details: bool = False,
+                        time_filter: Optional[str] = None,
+                        order_filter: Optional[str] = None,
+                        limit: Optional[int] = None,
+                        cursor: Optional[Dict[str, Any]] = None,
+                        progress: Optional[Callable[[int], None]] = None,
+                        progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
+                        family_member_id: Optional[str] = None
+                        ) -> PagedResults[Order]:
         """
         Get a batch of the Amazon Order history for a given time period, with a cursor to fetch the next batch.
-        Takes the same filters as :func:`get_order_history`.
+        Takes the same filters as :func:`get_orders`.
 
         :param year: The year for which to get history. Ignored if ``time_filter`` or ``cursor`` is provided.
             Defaults to the current year if neither ``year`` nor ``time_filter`` is specified.
@@ -491,9 +492,9 @@ class AmazonOrders:
             ``cursor`` is provided.
         :param full_details: Get the full details for each Order in the batch. This will execute an additional
             request per Order.
-        :param time_filter: The time filter to use, as in :func:`get_order_history`. Ignored if ``cursor`` is
+        :param time_filter: The time filter to use, as in :func:`get_orders`. Ignored if ``cursor`` is
             provided.
-        :param order_filter: The order type filter to use, as in :func:`get_order_history`. Ignored if ``cursor`` is
+        :param order_filter: The order type filter to use, as in :func:`get_orders`. Ignored if ``cursor`` is
             provided.
         :param limit: Stop fetching history pages once at least this many Orders are collected. Whole pages are
             fetched, so the batch can hold up to a page more than ``limit``. ``None`` fetches every page.
@@ -502,9 +503,9 @@ class AmazonOrders:
         :param progress: Called after each page of history is fetched, with the number of Orders found so far in
             this batch (before their full details are fetched, if ``full_details`` is ``True``).
         :param progress_with_total: Like ``progress``, but also called with the number of Orders expected in this
-            batch, as in :func:`get_order_history`, and at most ``limit`` until the batch ends.
+            batch, as in :func:`get_orders`, and at most ``limit`` until the batch ends.
         :param family_member_id: The ID of an Amazon Household member whose Orders to get, as in
-            :func:`get_order_history`. Ignored if ``cursor`` is provided.
+            :func:`get_orders`. Ignored if ``cursor`` is provided.
         :return: The batch of Orders, and the cursor for the next one.
         """
         if not self.amazon_session.is_authenticated:
@@ -533,6 +534,37 @@ class AmazonOrders:
         } if next_page else None
 
         return PagedResults(orders, next_cursor)
+
+    @classmethod
+    def parse_order_history(cls,
+                            *args: Any,
+                            **kwargs: Any) -> List[Order]:
+        """
+        Deprecated, use :func:`parse_orders` instead. To be removed in 5.0.
+        """
+        warnings.warn("parse_order_history() is deprecated and will be removed in 5.0. Use parse_orders() instead.",
+                      DeprecationWarning, stacklevel=2)
+        return cls.parse_orders(*args, **kwargs)
+
+    def get_order_history(self,
+                          *args: Any,
+                          **kwargs: Any) -> List[Order]:
+        """
+        Deprecated, use :func:`get_orders` instead. To be removed in 5.0.
+        """
+        warnings.warn("get_order_history() is deprecated and will be removed in 5.0. Use get_orders() instead.",
+                      DeprecationWarning, stacklevel=2)
+        return self.get_orders(*args, **kwargs)
+
+    def get_order_history_page(self,
+                               *args: Any,
+                               **kwargs: Any) -> PagedResults[Order]:
+        """
+        Deprecated, use :func:`get_orders_page` instead. To be removed in 5.0.
+        """
+        warnings.warn("get_order_history_page() is deprecated and will be removed in 5.0. Use get_orders_page() "
+                      "instead.", DeprecationWarning, stacklevel=2)
+        return self.get_orders_page(*args, **kwargs)
 
     def _history_filter_value(self,
                               year: Optional[int],
@@ -706,10 +738,10 @@ class AmazonOrders:
         return not (order_number_tag and order_number_tag.get_text(strip=True))
 
     @classmethod
-    def _parse_order_history(cls,
-                             parsed: Tag,
-                             config: AmazonOrdersConfig,
-                             start_index: int) -> List[Tag]:
+    def _parse_orders(cls,
+                      parsed: Tag,
+                      config: AmazonOrdersConfig,
+                      start_index: int) -> List[Tag]:
         """
         Select the Order cards from an Order history page, gating an empty page on the page's own Order
         count so a spent window can be told apart from a page that failed to render.
@@ -806,8 +838,8 @@ class AmazonOrders:
             page_response = self.amazon_session.get(next_page)
             self.amazon_session.check_response(page_response, meta={"index": current_index})
 
-            order_tags = self._parse_order_history(page_response.parsed, self.config,
-                                                   current_index - orders_before_start_on_page)
+            order_tags = self._parse_orders(page_response.parsed, self.config,
+                                            current_index - orders_before_start_on_page)
 
             if not order_tags:
                 next_page = None

@@ -12,7 +12,7 @@ ParsableT = TypeVar("ParsableT", bound=Parsable)
 class PagedResults(Generic[ParsableT]):
     """
     One batch of results from a page-returning call, like
-    :func:`~amazonorders.orders.AmazonOrders.get_order_history_page`, with the cursor to fetch the next batch.
+    :func:`~amazonorders.orders.AmazonOrders.get_orders_page`, with the cursor to fetch the next batch.
     """
 
     def __init__(self,

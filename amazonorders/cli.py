@@ -312,8 +312,8 @@ def amazon_orders_cli(ctx: Context,
                    "See the family-members command for IDs.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
-def history(ctx: Context,
-            **kwargs: Any) -> None:
+def orders(ctx: Context,
+           **kwargs: Any) -> None:
     """
     Get the Amazon Order history for a given time period.
     """
@@ -367,20 +367,20 @@ Order History for {filter_description}{optional_start_index}{optional_full_detai
 
         start_time = time.time()
         with ProgressSpinner("Orders", ctx.obj["show_progress"]) as progress:
-            orders = amazon_orders.get_order_history(year=year,
-                                                     start_index=start_index,
-                                                     full_details=full_details,
-                                                     keep_paging=not single_page,
-                                                     time_filter=time_filter,
-                                                     order_filter=order_filter,
-                                                     family_member_id=family_member_id,
-                                                     progress_with_total=progress)
+            order_list = amazon_orders.get_orders(year=year,
+                                                  start_index=start_index,
+                                                  full_details=full_details,
+                                                  keep_paging=not single_page,
+                                                  time_filter=time_filter,
+                                                  order_filter=order_filter,
+                                                  family_member_id=family_member_id,
+                                                  progress_with_total=progress)
         end_time = time.time()
 
-        click.echo(config.output_cls(config).format(orders, output))
+        click.echo(config.output_cls(config).format(order_list, output))
 
         click.echo(
-            "... {total} Orders parsed in {time} seconds.\n".format(total=len(orders),
+            "... {total} Orders parsed in {time} seconds.\n".format(total=len(order_list),
                                                                     time=int(end_time - start_time)), err=True)
     except AmazonOrdersAuthRedirectError:
         IOClick.echo_session_expired()
@@ -539,16 +539,16 @@ def order_transactions(ctx: Context,
         ctx.fail(str(e))
 
 
-@amazon_orders_cli.command()
+@amazon_orders_cli.command("search-orders")
 @click.pass_context
 @click.argument("query")
 @click.option("--single-page", is_flag=True, default=False,
               help="Only one page should be fetched.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
-def search(ctx: Context,
-           query: str,
-           **kwargs: Any) -> None:
+def search_orders(ctx: Context,
+                  query: str,
+                  **kwargs: Any) -> None:
     """
     Search the Order history, across every year, for a product, Order number, address, or recipient.
     """
@@ -850,6 +850,16 @@ def version(ctx: Context) -> None:
     ctx.exit(0)
 
 
+def _deprecated_alias(command: click.Command,
+                      name: str) -> click.Command:
+    return click.Command(name,
+                         callback=command.callback,
+                         params=command.params,
+                         help=f"Deprecated, use {command.name} instead.",
+                         hidden=True,
+                         deprecated=True)
+
+
 def _is_interactive_terminal() -> bool:
     return sys.stderr.isatty() and os.environ.get("TERM") != "dumb"
 
@@ -868,6 +878,10 @@ def _invoice_pdf_path(download_dir: str,
     saved_paths.add(path)
     return path
 
+
+# Deprecated aliases, to be removed in 5.0
+amazon_orders_cli.add_command(_deprecated_alias(orders, "history"))
+amazon_orders_cli.add_command(_deprecated_alias(search_orders, "search"))
 
 if __name__ == "__main__":
     amazon_orders_cli(obj={})

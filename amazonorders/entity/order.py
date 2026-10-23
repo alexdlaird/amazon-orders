@@ -25,7 +25,7 @@ OrderEntity = TypeVar("OrderEntity", bound="Order")
 class Order(Parsable):
     """
     An Amazon Order. If desired fields are populated as ``None``, ensure ``full_details`` is ``True`` when
-    retrieving the Order (for instance, with :func:`~amazonorders.orders.AmazonOrders.get_order_history`), since
+    retrieving the Order (for instance, with :func:`~amazonorders.orders.AmazonOrders.get_orders`), since
     by default it is ``False`` (enabling slows down querying).
     """
 
@@ -44,7 +44,7 @@ class Order(Parsable):
         #: Where the Order appeared in the history when it was queried. This will inevitably change (e.g. when a new
         #: Order is placed, all indexes will then be off by one), but is still captured as it may be applicable in
         #: various use-cases. Populated when the Order was fetched through
-        #: :func:`~amazonorders.orders.AmazonOrders.get_order_history` (use ``start_index`` to correlate), or when
+        #: :func:`~amazonorders.orders.AmazonOrders.get_orders` (use ``start_index`` to correlate), or when
         #: the ``clone`` has its ``index`` set.
         self.index: Optional[int] = index if index is not None else (clone.index if clone else None)
 

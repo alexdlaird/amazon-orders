@@ -22,9 +22,9 @@ class TestOrderConcurrency(UnitTestCase):
 
     def fetch_history(self, paged, full_details=False):
         if paged:
-            return self.amazon_orders.get_order_history_page(
+            return self.amazon_orders.get_orders_page(
                 year=2024, limit=10, full_details=full_details).items
-        return self.amazon_orders.get_order_history(year=2024, keep_paging=False, full_details=full_details)
+        return self.amazon_orders.get_orders(year=2024, keep_paging=False, full_details=full_details)
 
     @responses.activate
     def test_history_bounds_active_builds(self):

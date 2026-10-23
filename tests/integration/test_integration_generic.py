@@ -34,10 +34,10 @@ class TestIntegrationGeneric(IntegrationTestCase):
         else:
             cls.full_details_loop_count = 1
 
-    def test_get_order_after_get_order_history_single_page(self):
+    def test_get_order_after_get_orders_single_page(self):
         # WHEN
-        orders = self.amazon_orders.get_order_history(year=self.year,
-                                                      keep_paging=False)
+        orders = self.amazon_orders.get_orders(year=self.year,
+                                               keep_paging=False)
 
         # THEN
         self.assertGreaterEqual(len(orders), 1)
@@ -91,10 +91,10 @@ class TestIntegrationGeneric(IntegrationTestCase):
         # THEN
         self.assertIn(order_id, str(cm.exception))
 
-    def test_get_order_history(self):
+    def test_get_orders(self):
         # WHEN
-        orders = self.amazon_orders.get_order_history(year=self.year,
-                                                      start_index=self.start_index)
+        orders = self.amazon_orders.get_orders(year=self.year,
+                                               start_index=self.start_index)
 
         # THEN
         self.assertGreaterEqual(len(orders), 1)
@@ -102,15 +102,15 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assertIsNotNone(orders[0].index)
         self.assert_orders_list_index(orders)
 
-    def test_get_order_history_full_details(self):
+    def test_get_orders_full_details(self):
         # The environment variable FULL_DETAILS_LOOP_COUNT can be set to a higher number to put
         # more successive request pressure on Amazon, which helps ensure the async concurrency that exists when
         # building Order history won't cause issues with rate limiting, etc.
         for i in range(self.full_details_loop_count):
             # WHEN
-            orders = self.amazon_orders.get_order_history(year=self.year,
-                                                          start_index=self.start_index,
-                                                          full_details=True)
+            orders = self.amazon_orders.get_orders(year=self.year,
+                                                   start_index=self.start_index,
+                                                   full_details=True)
 
             # THEN
             self.assertGreaterEqual(len(orders), 1)

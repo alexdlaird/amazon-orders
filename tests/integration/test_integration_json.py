@@ -81,16 +81,16 @@ class TestIntegrationJSON(IntegrationTestCase):
 
     History
     =======
-    In a ``get_order_history`` test, additional top-level fields are needed to define the test, and they are:
+    In a ``get_orders`` test, additional top-level fields are needed to define the test, and they are:
 
     .. code:: json
 
         {
-            "func": "get_order_history",
-            "year": <maps to ``year`` on ``get_order_history()``>,
-            "start_index": <maps to ``start_index`` on ``get_order_history()``>,
-            "full_details": <maps to ``full_details`` on ``get_order_history()``>,
-            "keep_paging": <maps to ``keep_paging`` on ``get_order_history()``>,
+            "func": "get_orders",
+            "year": <maps to ``year`` on ``get_orders()``>,
+            "start_index": <maps to ``start_index`` on ``get_orders()``>,
+            "full_details": <maps to ``full_details`` on ``get_orders()``>,
+            "keep_paging": <maps to ``keep_paging`` on ``get_orders()``>,
             "orders_len": <the expected response list length>,
             "orders": {
                 "3": {
@@ -134,13 +134,13 @@ class TestIntegrationJSON(IntegrationTestCase):
         # GIVEN
         func = data.pop("func")
 
-        if func == "get_order_history":
+        if func in ("get_orders", "get_order_history"):
             order_len = data.pop("orders_len")
             orders_json = data.pop("orders")
             full_details = data.get("full_details")
 
             # WHEN
-            orders = self.amazon_orders.get_order_history(**data)
+            orders = self.amazon_orders.get_orders(**data)
 
             # THEN
             self.assertEqual(order_len, len(orders))
