@@ -15,7 +15,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- Order history and Gift Card activity stop paging at a next-page link to another site, instead of following it.
 - Bug fixes and stability improvements.
 
 ## [4.10.0](https://github.com/alexdlaird/amazon-orders/compare/4.9.6...4.10.0) - 2026-10-21
