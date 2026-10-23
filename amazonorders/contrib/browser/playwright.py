@@ -147,7 +147,7 @@ class PlaywrightBrowserLauncher:
             installable = [self.FALLBACK_BROWSER_TYPE] + sorted(name for name in browser_types
                                                                 if name != self.FALLBACK_BROWSER_TYPE)
             raise AmazonOrdersBrowserNotInstalledError(
-                "No default browser was found. Set `browser` to one that's installed, or run: "
+                "No default browser was found. Set \"browser\" to one that's installed, or run: "
                 "`playwright install chromium`",
                 meta={"browser_types": installable}
             )
@@ -259,7 +259,7 @@ class PlaywrightAuthForm(AuthForm):
 
         debug = self.amazon_session.debug
 
-        message = "Info: A browser is handling a JavaScript authentication challenge."
+        message = "Info: A browser is handling a JavaScript sign-in challenge."
         logger.info(message)
         self.amazon_session.io.echo(message)
         output_dir = self.config.output_dir if debug else None
@@ -289,7 +289,8 @@ class PlaywrightAuthForm(AuthForm):
                 self._save_debug_snapshot(page, output_dir, "browser-timeout")
                 browser.close()
                 raise AmazonOrdersError(
-                    "Browser timed out waiting for the JavaScript challenge to resolve."
+                    f"Timed out after {self.config.browser_timeout} seconds waiting for the JavaScript challenge to "
+                    f"resolve in the browser."
                 ) from e
 
             final_url = page.url
@@ -710,7 +711,8 @@ class PlaywrightJSAuthForm(PlaywrightAuthForm):
             if page.context.browser:
                 page.context.browser.close()
             raise AmazonOrdersError(
-                "Browser timed out waiting for the JavaScript challenge to resolve."
+                f"Timed out after {self.config.browser_timeout} seconds waiting for the JavaScript challenge to "
+                f"resolve in the browser."
             ) from e
 
     def _is_challenge_url(self, url: str, original_url: str) -> bool:

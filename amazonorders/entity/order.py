@@ -15,7 +15,7 @@ from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.recipient import Recipient
 from amazonorders.entity.shipment import Shipment
-from amazonorders.exception import AmazonOrdersEntityError, AmazonOrdersError
+from amazonorders.exception import AmazonOrdersEntityError
 
 logger = logging.getLogger(__name__)
 
@@ -182,10 +182,8 @@ class Order(Parsable):
                 return order_number
 
         if required:
-            raise AmazonOrdersEntityError(
-                "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
-                    name=self.__class__.__name__,
-                    selector=selectors))
+            raise AmazonOrdersEntityError(f"{self.__class__.__name__}.order_number could not be parsed, but it's "
+                                          f"required. Check if Amazon changed the HTML (selector \"{selectors}\").")
 
         return None
 
@@ -232,10 +230,10 @@ class Order(Parsable):
         value = self.to_currency(value)
 
         if value is None:  # pragma: no cover
-            err_msg = (f"Order {getattr(self, 'order_number', 'UNKNOWN')} grand_total could not be parsed, but it's "
-                       f"required. Check if Amazon changed the HTML")
+            err_msg = (f"Order.grand_total of Order {getattr(self, 'order_number', 'UNKNOWN')} could not be "
+                       f"parsed, but it's required. Check if Amazon changed the HTML")
             if not self.config.warn_on_missing_required_field:
-                raise AmazonOrdersError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
+                raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
             else:
                 logger.warning(f"{err_msg}.")
 
@@ -338,12 +336,12 @@ class Order(Parsable):
         parsed_parent = self.parsed.find_parent()
 
         if parsed_parent is None:
-            err_msg = ("Recipient parent not found, but it's required. "
-                       "Check if Amazon changed the HTML.")
+            err_msg = ("Order.recipient could not be parsed, but it's required. "
+                       "Check if Amazon changed the HTML")
             if not self.config.warn_on_missing_required_field:
-                raise AmazonOrdersError(err_msg)
+                raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
             else:
-                logger.warning(err_msg)
+                logger.warning(f"{err_msg}.")
 
                 return None
 

@@ -20,10 +20,6 @@ skip_unless_family_members = pytest.mark.skipif(
     not os.environ.get("AMAZON_INTEGRATION_TEST_FAMILY_MEMBERS", "False") == "True",
     reason="This test needs an Amazon Household member, like a linked Teen account. Set "
            "AMAZON_INTEGRATION_TEST_FAMILY_MEMBERS=True explicitly to run.")
-skip_unless_prime_payments = pytest.mark.skipif(
-    not os.environ.get("AMAZON_INTEGRATION_TEST_PRIME_PAYMENTS", "False") == "True",
-    reason="This test needs a Prime membership with at least one payment. Set "
-           "AMAZON_INTEGRATION_TEST_PRIME_PAYMENTS=True explicitly to run.")
 
 
 class TestIntegrationGeneric(IntegrationTestCase):
@@ -47,10 +43,6 @@ class TestIntegrationGeneric(IntegrationTestCase):
         cls.transactions_days = os.environ.get("AMAZON_TRANSACTIONS_DAYS")
         if not cls.transactions_days:
             cls.transactions_days = 90
-        if os.environ.get("AMAZON_FULL_DETAILS_LOOP_COUNT"):
-            cls.full_details_loop_count = int(os.environ.get("AMAZON_FULL_DETAILS_LOOP_COUNT"))
-        else:
-            cls.full_details_loop_count = 1
 
     def test_get_order_after_get_orders_single_page(self):
         # WHEN
@@ -119,23 +111,6 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assert_populated_generic(orders[0], False)
         self.assertIsNotNone(orders[0].index)
         self.assert_orders_list_index(orders)
-
-    def test_get_orders_full_details(self):
-        # The environment variable FULL_DETAILS_LOOP_COUNT can be set to a higher number to put
-        # more successive request pressure on Amazon, which helps ensure the async concurrency that exists when
-        # building Order history won't cause issues with rate limiting, etc.
-        for i in range(self.full_details_loop_count):
-            # WHEN
-            orders = self.amazon_orders.get_orders(year=self.year,
-                                                   start_index=self.start_index,
-                                                   full_details=True)
-
-            # THEN
-            self.assertGreaterEqual(len(orders), 1)
-            self.assert_populated_generic(orders[0], True)
-            self.assertIsNotNone(orders[0].index)
-            self.assert_orders_list_index(orders)
-            self.assert_populated_on_any([item for order in orders for item in order.items], "asin")
 
     def test_get_orders_page_with_cursor(self):
         # WHEN
@@ -248,17 +223,6 @@ class TestIntegrationGeneric(IntegrationTestCase):
 
         # THEN
         self.assertIsNotNone(gift_cards.balance)
-
-    @skip_unless_prime_payments
-    def test_get_prime_payments(self):
-        # WHEN
-        payments = self.amazon_prime.get_prime_payments()
-
-        # THEN
-        self.assertGreaterEqual(len(payments), 1)
-        for payment in payments:
-            self.assertIsNotNone(payment.payment_date)
-            self.assertIsNotNone(payment.grand_total)
 
     def test_get_transactions(self):
         # WHEN

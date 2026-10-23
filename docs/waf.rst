@@ -50,7 +50,7 @@ Set your API key as an environment variable:
 Add ``amazonorders.contrib.waf.capsolver.CapSolverWafForm`` to ``auth_forms_classes`` in the
 :class:`config <amazonorders.conf.AmazonOrdersConfig>`.
 
-Now ``amazon-orders login`` will clear any AWS WAF challenge it encounters during authentication.
+Now ``amazon-orders login`` will clear any AWS WAF challenge it encounters during sign-in.
 
 Anti-Captcha
 ------------

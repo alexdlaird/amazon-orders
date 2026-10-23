@@ -155,8 +155,8 @@ class TransactionsPage:
             date = config.constants.parse_date(date_str)
             grand_total = config.constants.parse_currency(total_str) if total_str else None
             if date is None or grand_total is None:
-                err_msg = (f"Transaction date {date_str!r} or total {total_str!r} could not be parsed, but both are "
-                           f"required. Check if Amazon changed the HTML")
+                err_msg = (f"Transaction.completed_date (\"{date_str}\") or Transaction.grand_total (\"{total_str}\") "
+                           f"could not be parsed, but both are required. Check if Amazon changed the HTML")
                 if not config.warn_on_missing_required_field:
                     raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
 
@@ -198,8 +198,8 @@ class TransactionsPage:
             date_str = date_tag.text
             date = config.constants.parse_date(date_str)
             if date is None:
-                err_msg = (f"Transaction date {date_str!r} could not be parsed, but it's required. Check if "
-                           f"Amazon changed the HTML")
+                err_msg = (f"Transaction.completed_date (\"{date_str}\") could not be parsed, but it's required. "
+                           f"Check if Amazon changed the HTML")
                 if not config.warn_on_missing_required_field:
                     raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
 

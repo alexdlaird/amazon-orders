@@ -426,8 +426,8 @@ class AmazonOrders:
                                                        self.config.selectors.ORDER_DETAILS_ERROR_SELECTOR)
             if amazon_message:
                 raise AmazonOrdersUnavailableError(f"Amazon could not load the \"{invoice.name}\" of Order "
-                                                   f"{invoice.order_number}. Amazon may have had an issue on their "
-                                                   f"end. Wait a bit before trying again. Amazon's page said: "
+                                                   f"{invoice.order_number}. Amazon had an issue on their end. Wait a "
+                                                   f"bit before trying again. Amazon's page said: "
                                                    f"\"{amazon_message}\"", meta={"amazon_message": amazon_message})
 
             return html_response.response.content
@@ -561,7 +561,7 @@ class AmazonOrders:
                               year: Optional[int],
                               time_filter: Optional[str]) -> str:
         if time_filter and year:
-            raise AmazonOrdersError("Only one of 'year' or 'time_filter' may be used at a time.")
+            raise AmazonOrdersError("Only one of \"year\" or \"time_filter\" may be used at a time.")
 
         # Determine the filter value to use
         if time_filter:
@@ -572,8 +572,8 @@ class AmazonOrders:
             is_year_filter = time_filter.startswith(year_prefix) and time_filter[len(year_prefix):].isdigit()
             if time_filter not in valid_filters and not is_year_filter:
                 raise AmazonOrdersError(
-                    f"Invalid time_filter '{time_filter}'. "
-                    f"Valid values are '{valid_filters[0]}', '{valid_filters[1]}', or '{year_prefix}YYYY'."
+                    f"Invalid time_filter \"{time_filter}\". "
+                    f"Valid values are \"{valid_filters[0]}\", \"{valid_filters[1]}\", or \"{year_prefix}YYYY\"."
                 )
             filter_value = time_filter
         else:

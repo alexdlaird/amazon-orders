@@ -153,7 +153,7 @@ class TestLaunchBrowser(UnitTestCase):
                 PlaywrightBrowserLauncher(AmazonOrdersConfig(data={})).launch(pw, headless=True)
 
         # THEN
-        self.assertEqual("No default browser was found. Set `browser` to one that's installed, or run: "
+        self.assertEqual("No default browser was found. Set \"browser\" to one that's installed, or run: "
                          "`playwright install chromium`", str(cm.exception))
         self.assertEqual(["chromium", "firefox", "webkit"], cm.exception.meta["browser_types"])
         self.assertEqual([call(headless=True, channel="chrome"), call(headless=True, channel="msedge")],

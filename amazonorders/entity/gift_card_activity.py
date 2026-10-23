@@ -9,7 +9,7 @@ from bs4 import Tag
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersEntityError
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class GiftCardActivity(Parsable):
             err_msg = ("GiftCardActivity.activity_date could not be parsed, but it's required. "
                        "Check if Amazon changed the HTML")
             if not self.config.warn_on_missing_required_field:
-                raise AmazonOrdersError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
+                raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
 
             logger.warning(f"{err_msg}.")
 
@@ -67,7 +67,7 @@ class GiftCardActivity(Parsable):
             err_msg = ("GiftCardActivity.amount could not be parsed, but it's required. "
                        "Check if Amazon changed the HTML")
             if not self.config.warn_on_missing_required_field:
-                raise AmazonOrdersError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
+                raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
 
             logger.warning(f"{err_msg}.")
 
@@ -85,7 +85,7 @@ class GiftCardActivity(Parsable):
 
         order_number = self.config.constants.parse_order_number(value)
         if not order_number:
-            logger.warning(f"GiftCardActivity.order_number found but not an Order number: {value!r}. "
+            logger.warning(f"GiftCardActivity.order_number found but not an Order number: \"{value}\". "
                            f"Check if Amazon changed the HTML.")
 
         return order_number

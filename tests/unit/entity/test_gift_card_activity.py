@@ -60,7 +60,7 @@ class TestGiftCardActivity(UnitTestCase):
         # THEN
         self.assertIsNone(activity.order_number)
         self.assertIsNone(activity.order_details_link)
-        self.assertIn("not an Order number: 'pending'", cm.output[0])
+        self.assertIn("not an Order number: \"pending\"", cm.output[0])
 
     def test_parse_unparseable_date_raises(self):
         # GIVEN

@@ -231,7 +231,7 @@ class SignInForm(AuthForm):
         if not self.data:
             raise AmazonOrdersError(
                 "SignInForm data did not populate, but it's required. "
-                "Check if Amazon changed their login flow."
+                "Check if Amazon changed their sign-in flow."
             )  # pragma: no cover
 
         additional_attrs[self.solution_attr_key] = self.amazon_session.username
@@ -277,7 +277,7 @@ class ClaimForm(AuthForm):
         if not self.data:
             raise AmazonOrdersError(
                 "ClaimForm data did not populate, but it's required. "
-                "Check if Amazon changed their login flow."
+                "Check if Amazon changed their sign-in flow."
             )  # pragma: no cover
 
         if self._asks_for_email():
@@ -540,7 +540,7 @@ class CaptchaForm(AuthForm):
             solution = str(solution_tag["value"])
         else:
             raise AmazonOrdersError(
-                f"CaptchaForm <img> or <input name='{self.solution_attr_key}']> tags not found, but one is required. "
+                f"CaptchaForm <img> or <input name=\"{self.solution_attr_key}\"> tags not found, but one is required. "
                 "Check if Amazon changed their Captcha flow, and see "
                 "https://amazon-orders.readthedocs.io/troubleshooting.html#login-challenges."
             )  # pragma: no cover
@@ -552,14 +552,14 @@ class CaptchaForm(AuthForm):
 def _raise_js_challenge_error() -> NoReturn:
     if importlib.util.find_spec("playwright"):
         raise AmazonOrdersAuthError(
-            "Amazon returned a JavaScript-based authentication challenge. Add "
+            "Amazon returned a JavaScript-based sign-in challenge. Add "
             "amazonorders.contrib.browser.playwright.PlaywrightAcicForm, then "
             "amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm, to auth_forms_classes to handle this "
             "automatically, or sign in with `amazon-orders login --browser`. "
             "See https://amazon-orders.readthedocs.io/browser.html for details.")
 
     raise AmazonOrdersAuthError(
-        "Amazon returned a JavaScript-based authentication challenge. Install the [browser] extra to "
+        "Amazon returned a JavaScript-based sign-in challenge. Install the [browser] extra to "
         "handle this automatically: `pip install amazon-orders[browser]`. "
         "See https://amazon-orders.readthedocs.io/browser.html for details.")
 

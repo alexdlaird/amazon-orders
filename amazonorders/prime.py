@@ -64,10 +64,10 @@ class AmazonPrime:
         """
         Get every charge in the Prime membership payment history.
 
-        This is best-effort: Membership Central has served this library an error page in place of the payments,
-        on a session that had just read the Order history, while a browser on the same account got them. If
-        that happens, :class:`~amazonorders.exception.AmazonOrdersUnavailableError` is raised, and the page
-        fetched in a browser can be parsed with :func:`parse_prime_payments`.
+        This is best-effort: Membership Central serves an error page in place of the payments for a few minutes after
+        many requests in a row, like the Order history with full details. If that happens,
+        :class:`~amazonorders.exception.AmazonOrdersUnavailableError` is raised, and the page fetched in a browser can
+        be parsed with :func:`parse_prime_payments`.
 
         :return: A list of the PrimePayments, newest first.
         """
@@ -80,9 +80,8 @@ class AmazonPrime:
         error_tag = util.select_one(page_response.parsed, self.config.selectors.PRIME_PAYMENTS_ERROR_SELECTOR)
         if error_tag:
             amazon_message = " ".join(error_tag.get_text(" ").split())
-            raise AmazonOrdersUnavailableError(f"Amazon could not load the Prime payment history. Wait a bit before "
-                                               f"trying again, or parse the page fetched in a browser with "
-                                               f"AmazonPrime.parse_prime_payments(). Amazon's page said: "
+            raise AmazonOrdersUnavailableError(f"Amazon could not load the Prime payment history. Amazon had an issue "
+                                               f"on their end. Wait a bit before trying again. Amazon's page said: "
                                                f"\"{amazon_message}\"",
                                                meta={"amazon_message": amazon_message})
 

@@ -258,7 +258,7 @@ class TestAmazonDe(UnitTestCase):
             AmazonTransactions.parse_transactions(html, self.de_config)
 
         # THEN
-        self.assertIn("'Today'", str(cm.exception))
+        self.assertIn('"Today"', str(cm.exception))
 
     def given_de_config(self, **data):
         return AmazonOrdersConfig(data={

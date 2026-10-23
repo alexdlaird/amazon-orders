@@ -10,7 +10,7 @@ from bs4 import Tag
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
-from amazonorders.exception import AmazonOrdersError
+from amazonorders.exception import AmazonOrdersEntityError
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class OrderSearchResult(Parsable):
             err_msg = ("OrderSearchResult.order_number could not be parsed, but it's required. "
                        "Check if Amazon changed the HTML")
             if not self.config.warn_on_missing_required_field:
-                raise AmazonOrdersError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
+                raise AmazonOrdersEntityError(f"{err_msg} or set warn_on_missing_required_field=True in config.")
 
             logger.warning(f"{err_msg}.")
 

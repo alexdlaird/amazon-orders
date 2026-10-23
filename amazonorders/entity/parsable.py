@@ -73,8 +73,8 @@ class Parsable:
         :return: The return value from ``parse_function``.
         """
         if not parse_function.__name__.startswith("_parse_") and parse_function.__name__ != "simple_parse":
-            raise AmazonOrdersError("The name of the `parse_function` passed "
-                                    "to this method must start with `_parse_`.")
+            raise AmazonOrdersError("The name of the \"parse_function\" passed to this method must start with "
+                                    "\"_parse_\".")
 
         try:
             return parse_function(**kwargs)
@@ -174,10 +174,8 @@ class Parsable:
                 break
 
         if value is None and required:
-            raise AmazonOrdersEntityError(
-                "When building {name}, field for selector `{selector}` was None, but this is not allowed.".format(
-                    name=self.__class__.__name__,
-                    selector=selector))
+            raise AmazonOrdersEntityError(f"A {self.__class__.__name__} field could not be parsed, but it's required. "
+                                          f"Check if Amazon changed the HTML (selector \"{selector}\").")
 
         return value
 

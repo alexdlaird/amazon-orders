@@ -56,7 +56,7 @@ class CapSolverWafForm(AwsWafForm):
             })
         except Exception as e:
             raise AmazonOrdersWafSolverError(
-                f"CapSolver failed to solve AWS WAF challenge: {e}",
+                f"CapSolver could not solve the AWS WAF challenge: {e}",
                 meta={"provider": self.PROVIDER_NAME, "provider_error": str(e)}
             ) from e
 
@@ -64,7 +64,7 @@ class CapSolverWafForm(AwsWafForm):
             return solution["cookie"]
         except (KeyError, TypeError) as e:
             raise AmazonOrdersWafSolverError(
-                f"Unexpected CapSolver response (missing 'cookie'): {solution!r}",
+                f"Unexpected CapSolver response (missing \"cookie\"): {solution!r}",
                 meta={"provider": self.PROVIDER_NAME, "provider_error": repr(solution)}
             ) from e
 
@@ -109,7 +109,7 @@ class CapSolverWafForm(AwsWafForm):
             })
         except Exception as e:
             raise AmazonOrdersWafSolverError(
-                f"CapSolver failed to solve Puzzle: {e}",
+                f"CapSolver could not solve the AWS WAF Puzzle: {e}",
                 meta={"provider": self.PROVIDER_NAME, "provider_error": str(e)}
             ) from e
 
@@ -117,6 +117,6 @@ class CapSolverWafForm(AwsWafForm):
             return solution["objects"]
         except (KeyError, TypeError) as e:
             raise AmazonOrdersWafSolverError(
-                f"Unexpected CapSolver Puzzle response (missing 'objects'): {solution!r}",
+                f"Unexpected CapSolver Puzzle response (missing \"objects\"): {solution!r}",
                 meta={"provider": self.PROVIDER_NAME, "provider_error": repr(solution)}
             ) from e

@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - `AmazonOrders.get_invoices()` gets an Order's Printable Order Summary directly when the Order has no invoice list.
+- A required field that can't be parsed now always raises `AmazonOrdersEntityError`.
 - Renamed `Constants.INVOICE_PDFS_ROUTE`, `INVOICE_PDFS_URL`, and `INVOICE_PDFS_ORDER_ID_QUERY_PARAM` to `INVOICES_ROUTE`, `INVOICES_URL`, and `INVOICES_ORDER_ID_QUERY_PARAM`.
 
 ### Removed
@@ -18,6 +19,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `next_page_data` on `get_transactions()` and `next_page_url` on `get_gift_cards()`, resume with the `cursor` of `get_transactions_page()` and `get_gift_cards_page()`.
 - The deprecated `AMAZON_BASE_URL` environment variable, use `AMAZON_DOMAIN`.
 - The deprecated `AwsWafForm._solve_token()` and `_solve_visual_captcha()`, use `solve_token()` and `solve_visual_captcha()`.
+
+### Fixed
+
+- Bug fixes and stability improvements.
 
 ## [4.12.0](https://github.com/alexdlaird/amazon-orders/compare/4.11.0...4.12.0) - 2026-10-23
 

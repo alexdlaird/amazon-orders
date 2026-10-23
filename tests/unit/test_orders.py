@@ -1765,8 +1765,8 @@ class TestOrders(UnitTestCase):
         with self.assertRaises(AmazonOrdersError) as cm:
             self.amazon_orders.get_orders(time_filter="last90")
 
-        self.assertIn("Invalid time_filter 'last90'", str(cm.exception))
-        self.assertIn("Valid values are 'last30', 'months-3', or 'year-YYYY'", str(cm.exception))
+        self.assertIn("Invalid time_filter \"last90\"", str(cm.exception))
+        self.assertIn("Valid values are \"last30\", \"months-3\", or \"year-YYYY\"", str(cm.exception))
 
     @responses.activate
     def test_get_orders_with_order_filter(self):

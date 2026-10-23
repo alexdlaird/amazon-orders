@@ -90,11 +90,11 @@ class AmazonSession:
                     cls = load_class(module_path.split("."), class_name)
                 except (ImportError, AttributeError, ValueError) as e:
                     raise AmazonOrdersError(
-                        f"Could not load auth_forms_classes entry '{path}': {e}"
+                        f"Could not load auth_forms_classes entry \"{path}\": {e}"
                     ) from e
                 if not (isinstance(cls, type) and issubclass(cls, AuthForm)):
                     raise AmazonOrdersError(
-                        f"auth_forms_classes entry '{path}' must be a subclass of "
+                        f"auth_forms_classes entry \"{path}\" must be a subclass of "
                         f"{AuthForm.__module__}.{AuthForm.__name__}."
                     )
                 # AuthForm subclasses registered via auth_forms_classes are expected to take
@@ -353,7 +353,7 @@ class AmazonSession:
 
         if attempts == self.config.max_auth_attempts:
             raise AmazonOrdersAuthError(
-                "Authentication attempts exhausted. If authentication is correct, "
+                "Sign-in attempts exhausted. If your credentials are correct, "
                 "try increasing AmazonOrdersConfig.max_auth_attempts.")
 
     def logout(self) -> None:
@@ -495,7 +495,7 @@ class AmazonSession:
                           response: Response) -> None:
         if response.ok:
             error_msg = (f"This is an unknown page, or its parsed contents don't match a "
-                         f"known auth flow. {response.url}")
+                         f"known sign-in flow. {response.url}")
         else:
             error_msg = self.build_response_error(response)
 
