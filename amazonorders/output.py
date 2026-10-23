@@ -14,6 +14,7 @@ from amazonorders.entity.family_member import FamilyMember
 from amazonorders.entity.gift_card_activity import GiftCardActivity
 from amazonorders.entity.invoice_pdf import InvoicePdf
 from amazonorders.entity.order import Order
+from amazonorders.entity.order_search_result import OrderSearchResult
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.prime_payment import PrimePayment
 from amazonorders.entity.transaction import Transaction
@@ -96,6 +97,8 @@ class OutputFormatter:
             return self.family_member_text(entity)
         elif isinstance(entity, PrimePayment):
             return self.prime_payment_text(entity)
+        elif isinstance(entity, OrderSearchResult):
+            return self.order_search_result_text(entity)
 
         return str(entity)
 
@@ -229,6 +232,26 @@ Order #{order_number}
             payment_str += f"\n  Receipt Link: {payment.receipt_link}"
 
         return payment_str
+
+    def order_search_result_text(self,
+                                 result: OrderSearchResult) -> str:
+        """
+        Render an OrderSearchResult as human-readable text.
+
+        :param result: The OrderSearchResult to render.
+        :return: The OrderSearchResult as text.
+        """
+        item = result.item
+        result_str = f"Order #{result.order_number}: {item.title}"
+        result_str += f"\n  Order Placed Date: {result.order_placed_date}"
+        if item.quantity:
+            result_str += f"\n  Quantity: {item.quantity}"
+        if item.link:
+            result_str += f"\n  Link: {item.link}"
+        if result.order_details_link:
+            result_str += f"\n  Order Details Link: {result.order_details_link}"
+
+        return result_str
 
     def _csv(self,
              entities: List[Dict[str, Any]]) -> str:

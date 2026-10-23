@@ -73,13 +73,19 @@ amazon-orders login
 amazon-orders history --year 2023
 amazon-orders history --last-30-days
 amazon-orders history --last-3-months
+amazon-orders search "coffee"
 ```
+
+`search` searches every year of the Order history for a product title, Order number, address, or recipient, as the
+search box on Your Orders does, and lists each matching Item with its Order number and date. It reads every page of
+results, or only the first with `--single-page`.
 
 ### Output Formats
 
-The `history`, `order`, `invoice-pdfs`, `transactions`, `order-transactions`, `gift-card-activity`, `family-members`,
-and `prime-payments` commands accept `--output`, which renders Orders, Invoice PDFs, Transactions, Gift Card activity,
-Amazon Household members, and Prime payments as `text` (the default), `json`, `yaml`, or `csv`. Progress messages are
+The `history`, `order`, `search`, `invoice-pdfs`, `transactions`, `order-transactions`, `gift-card-activity`,
+`family-members`, and `prime-payments` commands accept `--output`, which renders Orders, Order search results, Invoice
+PDFs, Transactions, Gift Card activity, Amazon Household members, and Prime payments as `text` (the default), `json`,
+`yaml`, or `csv`. Progress messages are
 written to `stderr`, so redirecting `stdout` captures only the data.
 
 ```sh
