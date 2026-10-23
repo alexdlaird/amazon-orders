@@ -19,7 +19,7 @@ from click.core import Context
 from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.contrib.browser.playwright import PlaywrightBrowserLauncher, PlaywrightBrowserLogin
-from amazonorders.entity.invoice_pdf import InvoicePdf
+from amazonorders.entity.invoice import Invoice
 from amazonorders.exception import (
     AmazonOrdersAuthError,
     AmazonOrdersAuthRedirectError,
@@ -423,11 +423,30 @@ def order(ctx: Context,
 
 @amazon_orders_cli.command()
 @click.pass_context
+@click.argument("order_ids", nargs=-1, required=True)
+@click.option("--download", "download_dir", type=click.Path(file_okay=False),
+              help="Save the documents (HTML and PDFs) to this directory, replacing any of the same name from an "
+                   "earlier run.")
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+              help="The output format. Defaults to text.")
+def invoices(ctx: Context,
+             order_ids: Tuple[str, ...],
+             download_dir: Optional[str],
+             **kwargs: Any) -> None:
+    """
+    Get the invoices for the given Amazon Order IDs (the Printable Order Summary, and any invoice and credit note
+    PDFs), and optionally download them.
+    """
+    _get_invoices(ctx, order_ids, download_dir, kwargs["output"], pdfs_only=False)
+
+
+@amazon_orders_cli.command(hidden=True, deprecated=True)
+@click.pass_context
 @click.argument("order_id")
 def invoice(ctx: Context,
             order_id: str) -> None:
     """
-    Get the invoice for a given Amazon Order ID.
+    Deprecated, use invoices instead.
     """
     amazon_session = ctx.obj["amazon_session"]
 
@@ -448,7 +467,7 @@ def invoice(ctx: Context,
         ctx.fail(str(e))
 
 
-@amazon_orders_cli.command()
+@amazon_orders_cli.command(hidden=True, deprecated=True)
 @click.pass_context
 @click.argument("order_ids", nargs=-1, required=True)
 @click.option("--download", "download_dir", type=click.Path(file_okay=False),
@@ -460,44 +479,9 @@ def invoice_pdfs(ctx: Context,
                  download_dir: Optional[str],
                  **kwargs: Any) -> None:
     """
-    Get the invoice PDFs (invoices and credit notes) for the given Amazon Order IDs, and optionally download
-    them.
+    Deprecated, use invoices instead.
     """
-    amazon_session = ctx.obj["amazon_session"]
-
-    try:
-        CliAuth(amazon_session).authenticate()
-
-        config = ctx.obj["conf"]
-        amazon_orders = AmazonOrders(amazon_session,
-                                     config=config)
-
-        output = kwargs["output"]
-
-        invoice_list = []
-        for order_id in order_ids:
-            order_invoices = amazon_orders.get_invoice_pdfs(order_id)
-            if not order_invoices:
-                click.echo(f"No invoice PDFs for Order {order_id}.", err=True)
-            invoice_list += order_invoices
-
-        click.echo(config.output_cls(config).format(invoice_list, output))
-
-        if download_dir:
-            os.makedirs(download_dir, exist_ok=True)
-            saved_paths: Set[str] = set()
-            for document in invoice_list:
-                path = _invoice_pdf_path(download_dir, document, saved_paths)
-                with open(path, "wb") as invoice_file:
-                    invoice_file.write(amazon_orders.download_invoice_pdf(document))
-                click.echo(f"Saved {path}", err=True)
-
-        click.echo(f"... {len(invoice_list)} Invoice PDFs for {len(order_ids)} Orders.\n", err=True)
-    except AmazonOrdersAuthRedirectError:
-        IOClick.echo_session_expired()
-    except AmazonOrdersError as e:
-        logger.debug("An error occurred.", exc_info=True)
-        ctx.fail(str(e))
+    _get_invoices(ctx, order_ids, download_dir, kwargs["output"], pdfs_only=True)
 
 
 @amazon_orders_cli.command("order-transactions")
@@ -695,9 +679,63 @@ def family_members(ctx: Context, **kwargs: Any) -> None:
 
 @amazon_orders_cli.command()
 @click.pass_context
+@click.option("--days", default=365,
+              help="The number of days of Gift Card activity to get. 0 gets only the balance (and today's activity).")
+@click.option("--single-page", is_flag=True, default=False,
+              help="Only one page should be fetched.")
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+              help="The output format. Defaults to text.")
+def gift_cards(ctx: Context, **kwargs: Any) -> None:
+    """
+    Get the Amazon Gift Card balance, and its activity for a given number of days.
+    """
+    amazon_session = ctx.obj["amazon_session"]
+
+    try:
+        CliAuth(amazon_session).authenticate()
+
+        days = kwargs["days"]
+        output = kwargs["output"]
+
+        click.echo(
+            """-----------------------------------------------------------------------
+Gift Cards, with {days} days of activity
+-----------------------------------------------------------------------\n""".format(days=days), err=True
+        )
+        if not ctx.obj["show_progress"]:
+            click.echo("Info: Fetching Gift Cards, this might take a minute ...", err=True)
+
+        config = ctx.obj["conf"]
+        amazon_gift_cards = AmazonGiftCards(amazon_session,
+                                            config=config)
+
+        start_time = time.time()
+        with ProgressSpinner("Gift Card activity entries", ctx.obj["show_progress"]) as progress:
+            gift_card_results = amazon_gift_cards.get_gift_cards(days=days,
+                                                                 keep_paging=not kwargs["single_page"],
+                                                                 progress=progress)
+        end_time = time.time()
+
+        click.echo(config.output_cls(config).format_gift_cards(gift_card_results, output))
+
+        if output == "csv" and gift_card_results.balance is not None:
+            click.echo(f"Gift Card Balance: {config.constants.format_currency(gift_card_results.balance)}",
+                       err=True)
+        click.echo(
+            "... {total} Gift Card activity entries parsed in {time} seconds.\n".format(
+                total=len(gift_card_results.items), time=int(end_time - start_time)), err=True)
+    except AmazonOrdersAuthRedirectError:
+        IOClick.echo_session_expired()
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+
+@amazon_orders_cli.command(hidden=True, deprecated=True)
+@click.pass_context
 def gift_card_balance(ctx: Context) -> None:
     """
-    Get the current Amazon Gift Card balance.
+    Deprecated, use gift-cards instead.
     """
     amazon_session = ctx.obj["amazon_session"]
 
@@ -708,7 +746,9 @@ def gift_card_balance(ctx: Context) -> None:
         amazon_gift_cards = AmazonGiftCards(amazon_session,
                                             config=config)
 
-        balance = amazon_gift_cards.get_balance()
+        balance = amazon_gift_cards.get_gift_cards(days=0, keep_paging=False).balance
+        if balance is None:
+            raise AmazonOrdersError("Could not parse Gift Card balance. Check if Amazon changed the HTML.")
 
         click.echo(f"Gift Card Balance: {config.constants.format_currency(balance)}")
     except AmazonOrdersAuthRedirectError:
@@ -718,7 +758,7 @@ def gift_card_balance(ctx: Context) -> None:
         ctx.fail(str(e))
 
 
-@amazon_orders_cli.command()
+@amazon_orders_cli.command(hidden=True, deprecated=True)
 @click.pass_context
 @click.option("--days", default=365,
               help="The number of days of Gift Card activity to get.")
@@ -726,7 +766,7 @@ def gift_card_balance(ctx: Context) -> None:
               help="The output format. Defaults to text.")
 def gift_card_activity(ctx: Context, **kwargs: Any) -> None:
     """
-    Get Amazon Gift Card activity for a given number of days.
+    Deprecated, use gift-cards instead.
     """
     amazon_session = ctx.obj["amazon_session"]
 
@@ -750,7 +790,7 @@ Gift Card Activity for {days} days
 
         start_time = time.time()
         with ProgressSpinner("Gift Card activity entries", ctx.obj["show_progress"]) as progress:
-            activity = amazon_gift_cards.get_gift_card_activity(days=days, progress=progress)
+            activity = amazon_gift_cards.get_gift_cards(days=days, progress=progress).items
         end_time = time.time()
 
         click.echo(config.output_cls(config).format(activity, output))
@@ -860,20 +900,63 @@ def _deprecated_alias(command: click.Command,
                          deprecated=True)
 
 
+def _get_invoices(ctx: Context,
+                  order_ids: Tuple[str, ...],
+                  download_dir: Optional[str],
+                  output: str,
+                  pdfs_only: bool) -> None:
+    amazon_session = ctx.obj["amazon_session"]
+
+    try:
+        CliAuth(amazon_session).authenticate()
+
+        config = ctx.obj["conf"]
+        amazon_orders = AmazonOrders(amazon_session,
+                                     config=config)
+
+        invoice_list = []
+        for order_id in order_ids:
+            order_invoices = [invoice for invoice in amazon_orders.get_invoices(order_id)
+                              if not pdfs_only or invoice.format == config.constants.INVOICE_PDF_FORMAT]
+            if not order_invoices:
+                click.echo(f"No {'invoice PDFs' if pdfs_only else 'invoices'} for Order {order_id}.", err=True)
+            invoice_list += order_invoices
+
+        click.echo(config.output_cls(config).format(invoice_list, output))
+
+        if download_dir:
+            os.makedirs(download_dir, exist_ok=True)
+            saved_paths: Set[str] = set()
+            for document in invoice_list:
+                path = _invoice_path(download_dir, document, saved_paths)
+                with open(path, "wb") as invoice_file:
+                    invoice_file.write(amazon_orders.download_invoice(document))
+                click.echo(f"Saved {path}", err=True)
+
+        click.echo(f"... {len(invoice_list)} {'Invoice PDFs' if pdfs_only else 'Invoices'} for {len(order_ids)} "
+                   f"Orders.\n", err=True)
+    except AmazonOrdersAuthRedirectError:
+        IOClick.echo_session_expired()
+    except AmazonOrdersError as e:
+        logger.debug("An error occurred.", exc_info=True)
+        ctx.fail(str(e))
+
+
 def _is_interactive_terminal() -> bool:
     return sys.stderr.isatty() and os.environ.get("TERM") != "dumb"
 
 
-def _invoice_pdf_path(download_dir: str,
-                      invoice: InvoicePdf,
-                      saved_paths: Set[str]) -> str:
+def _invoice_path(download_dir: str,
+                  invoice: Invoice,
+                  saved_paths: Set[str]) -> str:
     # e.g. "302-0000000-0000000_invoice-2.pdf", with a counter if the name repeats within an Order. A file from an
     # earlier run is overwritten, so downloading again doesn't duplicate it.
     name = re.sub(r"[^a-z0-9]+", "-", (invoice.name or "").lower()).strip("-") or "invoice"
-    path = os.path.join(download_dir, f"{invoice.order_number}_{name}.pdf")
+    extension = invoice.format or "pdf"
+    path = os.path.join(download_dir, f"{invoice.order_number}_{name}.{extension}")
     i = 2
     while path in saved_paths:
-        path = os.path.join(download_dir, f"{invoice.order_number}_{name}-{i}.pdf")
+        path = os.path.join(download_dir, f"{invoice.order_number}_{name}-{i}.{extension}")
         i += 1
     saved_paths.add(path)
     return path

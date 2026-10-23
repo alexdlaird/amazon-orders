@@ -5,19 +5,23 @@ import csv
 import io
 import json
 import logging
-from typing import Any, Dict, List, Sequence
+import warnings
+from typing import TYPE_CHECKING, Any, Dict, List, Sequence
 
 import yaml
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.family_member import FamilyMember
 from amazonorders.entity.gift_card_activity import GiftCardActivity
-from amazonorders.entity.invoice_pdf import InvoicePdf
+from amazonorders.entity.invoice import Invoice
 from amazonorders.entity.order import Order
 from amazonorders.entity.order_search_result import OrderSearchResult
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.prime_payment import PrimePayment
 from amazonorders.entity.transaction import Transaction
+
+if TYPE_CHECKING:  # pragma: no cover
+    from amazonorders.gift_cards import GiftCards
 
 logger = logging.getLogger(__name__)
 
@@ -70,12 +74,29 @@ class OutputFormatter:
             return "\n".join(f"{self.text(entity)}\n" for entity in entities)
 
         serialized = [entity.to_dict() for entity in entities]
-        if output_format == "json":
-            return f"{json.dumps(serialized, indent=2)}\n"
-        elif output_format == "yaml":
-            return yaml.safe_dump(serialized, sort_keys=False, allow_unicode=True, default_flow_style=False)
+        if output_format in ("json", "yaml"):
+            return self._dump(serialized, output_format)
 
         return self._csv(serialized)
+
+    def format_gift_cards(self,
+                          gift_cards: "GiftCards",
+                          output_format: str) -> str:
+        """
+        Render the Gift Card balance and activity in the given format. ``csv`` renders one row per GiftCardActivity,
+        without the balance, since a spreadsheet cannot nest.
+
+        :param gift_cards: The Gift Cards to render.
+        :param output_format: One of :attr:`OUTPUT_FORMATS`.
+        :return: The rendered output.
+        """
+        if output_format == "text":
+            balance = "" if gift_cards.balance is None else self.config.constants.format_currency(gift_cards.balance)
+            return f"Gift Card Balance: {balance}\n\n{self.format(gift_cards.items, output_format)}"
+        elif output_format in ("json", "yaml"):
+            return self._dump(gift_cards.to_dict(), output_format)
+
+        return self.format(gift_cards.items, output_format)
 
     def text(self,
              entity: Parsable) -> str:
@@ -91,8 +112,8 @@ class OutputFormatter:
             return self.transaction_text(entity)
         elif isinstance(entity, GiftCardActivity):
             return self.gift_card_activity_text(entity)
-        elif isinstance(entity, InvoicePdf):
-            return self.invoice_pdf_text(entity)
+        elif isinstance(entity, Invoice):
+            return self.invoice_text(entity)
         elif isinstance(entity, FamilyMember):
             return self.family_member_text(entity)
         elif isinstance(entity, PrimePayment):
@@ -184,21 +205,31 @@ Order #{order_number}
 
         return activity_str
 
+    def invoice_text(self,
+                     invoice: Invoice) -> str:
+        """
+        Render an Invoice as human-readable text.
+
+        :param invoice: The Invoice to render.
+        :return: The Invoice as text.
+        """
+        invoice_str = f"Invoice: {invoice.name}"
+        invoice_str += f"\n  Order #{invoice.order_number}"
+        invoice_str += f"\n  Format: {invoice.format}"
+        if invoice.is_credit_note:
+            invoice_str += "\n  Credit Note: True"
+        invoice_str += f"\n  Link: {invoice.link}"
+
+        return invoice_str
+
     def invoice_pdf_text(self,
-                         invoice_pdf: InvoicePdf) -> str:
+                         invoice_pdf: Invoice) -> str:
         """
-        Render an InvoicePdf as human-readable text.
-
-        :param invoice_pdf: The InvoicePdf to render.
-        :return: The InvoicePdf as text.
+        Deprecated, use :func:`invoice_text` instead. To be removed in 5.0.
         """
-        invoice_pdf_str = f"Invoice PDF: {invoice_pdf.name}"
-        invoice_pdf_str += f"\n  Order #{invoice_pdf.order_number}"
-        if invoice_pdf.is_credit_note:
-            invoice_pdf_str += "\n  Credit Note: True"
-        invoice_pdf_str += f"\n  Link: {invoice_pdf.link}"
-
-        return invoice_pdf_str
+        warnings.warn("invoice_pdf_text() is deprecated and will be removed in 5.0. Use invoice_text() instead.",
+                      DeprecationWarning, stacklevel=2)
+        return self.invoice_text(invoice_pdf)
 
     def family_member_text(self,
                            family_member: FamilyMember) -> str:
@@ -252,6 +283,14 @@ Order #{order_number}
             result_str += f"\n  Order Details Link: {result.order_details_link}"
 
         return result_str
+
+    def _dump(self,
+              serialized: Any,
+              output_format: str) -> str:
+        if output_format == "json":
+            return f"{json.dumps(serialized, indent=2)}\n"
+
+        return yaml.safe_dump(serialized, sort_keys=False, allow_unicode=True, default_flow_style=False)
 
     def _csv(self,
              entities: List[Dict[str, Any]]) -> str:

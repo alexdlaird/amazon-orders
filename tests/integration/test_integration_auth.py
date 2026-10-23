@@ -3,8 +3,9 @@ __license__ = "MIT"
 
 import os
 import time
-import unittest
 from unittest import mock
+
+import pytest
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersNotFoundError, \
@@ -14,15 +15,18 @@ from amazonorders.session import AmazonSession
 from tests.integrationtestcase import IntegrationTestCase
 
 
-skip_unless_lockout_risk_allowed = unittest.skipIf(
+skip_unless_lockout_risk_allowed = pytest.mark.skipif(
     not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH_LOCKOUT_RISK", "False") == "True",
-    "These tests sign in extra times or submit bad credentials, which raises the risk of Captcha challenges or "
-    "locking the account, so they stay off CI. Set AMAZON_INTEGRATION_TEST_AUTH_LOCKOUT_RISK=True explicitly to run.")
+    reason="These tests sign in extra times or submit bad credentials, which raises the risk of Captcha challenges "
+           "or locking the account, so they stay off CI. Set AMAZON_INTEGRATION_TEST_AUTH_LOCKOUT_RISK=True "
+           "explicitly to run.")
+skip_unless_auth = pytest.mark.skipif(
+    not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH", "False") == "True",
+    reason="Running auth tests too frequently may lock the account. Set AMAZON_INTEGRATION_TEST_AUTH=True "
+           "explicitly to run.")
 
 
-@unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_AUTH", "False") == "True",
-                 "Running auth tests too frequently may lock the account. Set "
-                 "AMAZON_INTEGRATION_TEST_AUTH=True explicitly to run.")
+@skip_unless_auth
 class TestIntegrationAuth(IntegrationTestCase):
     """
     These integration tests run generically against any Amazon account to validate authentication.

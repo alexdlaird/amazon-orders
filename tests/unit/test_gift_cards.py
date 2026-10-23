@@ -37,22 +37,15 @@ class TestGiftCards(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "giftcards", html_file), "r", encoding="utf-8") as f:
             return f.read()
 
-    def test_get_balance_unauthenticated(self):
+    def test_get_gift_cards_unauthenticated(self):
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
-            self.amazon_gift_cards.get_balance()
-
-        self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
-
-    def test_get_gift_card_activity_unauthenticated(self):
-        # WHEN
-        with self.assertRaises(AmazonOrdersError) as cm:
-            self.amazon_gift_cards.get_gift_card_activity()
+            self.amazon_gift_cards.get_gift_cards()
 
         self.assertEqual("Call AmazonSession.login() to authenticate first.", str(cm.exception))
 
     @responses.activate
-    def test_get_balance_session_expires(self):
+    def test_get_gift_cards_session_expires(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         auth_redirect_response = self.given_authenticated_url_renders_login()
@@ -60,7 +53,7 @@ class TestGiftCards(UnitTestCase):
 
         # WHEN
         with self.assertRaises(AmazonOrdersAuthRedirectError) as cm:
-            self.amazon_gift_cards.get_balance()
+            self.amazon_gift_cards.get_gift_cards()
 
         self.assertIn("Amazon redirected to login.", str(cm.exception))
         self.assertTrue(self.amazon_session.is_authenticated)
@@ -68,50 +61,35 @@ class TestGiftCards(UnitTestCase):
         self.assertEqual(0, signout_response.call_count)
 
     @responses.activate
-    def test_get_balance(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        resp = self.given_gift_card_page_exists("gift-card-balance-activity.html")
-
-        # WHEN
-        balance = self.amazon_gift_cards.get_balance()
-
-        # THEN
-        self.assertEqual(0.00, balance)
-        self.assertEqual(1, resp.call_count)
-
-    @responses.activate
-    def test_get_balance_invalid_page(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        with open(os.path.join(self.RESOURCES_DIR, "500.html"), "r", encoding="utf-8") as f:
-            resp = responses.add(
-                responses.GET,
-                f"{self.test_config.constants.GIFT_CARD_BALANCE_URL}",
-                body=f.read(),
-                status=200,
-            )
-
-        # WHEN
-        with self.assertRaises(AmazonOrdersError) as cm:
-            self.amazon_gift_cards.get_balance()
-
-        # THEN
-        self.assertEqual(1, resp.call_count)
-        self.assertIn("Could not parse Gift Card balance.", str(cm.exception))
-
-    @responses.activate
     @patch("amazonorders.gift_cards.datetime", wraps=datetime)
-    def test_get_gift_card_activity(self, mock_today):
+    def test_get_gift_cards_balance_only(self, mock_today):
         # GIVEN
         mock_today.date.today.return_value = datetime.date(2026, 5, 15)
         self.amazon_session.is_authenticated = True
         resp = self.given_gift_card_page_exists("gift-card-balance-activity.html")
 
         # WHEN
-        activity = self.amazon_gift_cards.get_gift_card_activity(keep_paging=False)
+        gift_cards = self.amazon_gift_cards.get_gift_cards(days=0)
 
         # THEN
+        self.assertEqual(0.00, gift_cards.balance)
+        self.assertEqual([], gift_cards.items)
+        self.assertEqual(1, resp.call_count)
+
+    @responses.activate
+    @patch("amazonorders.gift_cards.datetime", wraps=datetime)
+    def test_get_gift_cards(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2026, 5, 15)
+        self.amazon_session.is_authenticated = True
+        resp = self.given_gift_card_page_exists("gift-card-balance-activity.html")
+
+        # WHEN
+        gift_cards = self.amazon_gift_cards.get_gift_cards(keep_paging=False)
+
+        # THEN
+        self.assertEqual(0.00, gift_cards.balance)
+        activity = gift_cards.items
         self.assertEqual(15, len(activity))
         self.assertEqual(1, resp.call_count)
         entry = activity[0]
@@ -140,7 +118,7 @@ class TestGiftCards(UnitTestCase):
 
     @responses.activate
     @patch("amazonorders.gift_cards.datetime", wraps=datetime)
-    def test_get_gift_card_activity_paginated(self, mock_today):
+    def test_get_gift_cards_paginated(self, mock_today):
         # GIVEN
         mock_today.date.today.return_value = datetime.date(2026, 5, 15)
         self.amazon_session.is_authenticated = True
@@ -149,9 +127,11 @@ class TestGiftCards(UnitTestCase):
         resp3 = self.given_gift_card_page_exists("gift-card-balance-activity-last-page.html")
 
         # WHEN
-        activity = self.amazon_gift_cards.get_gift_card_activity(days=4000)
+        gift_cards = self.amazon_gift_cards.get_gift_cards(days=4000)
 
         # THEN
+        self.assertEqual(0.00, gift_cards.balance)
+        activity = gift_cards.items
         self.assertEqual(41, len(activity))
         self.assertEqual(1, resp1.call_count)
         self.assertEqual(1, resp2.call_count)
@@ -162,7 +142,7 @@ class TestGiftCards(UnitTestCase):
 
     @responses.activate
     @patch("amazonorders.gift_cards.datetime", wraps=datetime)
-    def test_get_gift_card_activity_stops_at_external_next_page(self, mock_today):
+    def test_get_gift_cards_stops_at_external_next_page(self, mock_today):
         # GIVEN
         mock_today.date.today.return_value = datetime.date(2026, 5, 15)
         self.amazon_session.is_authenticated = True
@@ -179,7 +159,7 @@ class TestGiftCards(UnitTestCase):
                                       status=200)
 
         # WHEN
-        self.amazon_gift_cards.get_gift_card_activity(days=4000)
+        self.amazon_gift_cards.get_gift_cards(days=4000)
 
         # THEN
         self.assertEqual(1, first_page.call_count)
@@ -187,7 +167,7 @@ class TestGiftCards(UnitTestCase):
 
     @responses.activate
     @patch("amazonorders.gift_cards.datetime", wraps=datetime)
-    def test_get_gift_card_activity_reports_progress_per_page(self, mock_today):
+    def test_get_gift_cards_reports_progress_per_page(self, mock_today):
         # GIVEN
         mock_today.date.today.return_value = datetime.date(2026, 5, 15)
         self.amazon_session.is_authenticated = True
@@ -197,21 +177,21 @@ class TestGiftCards(UnitTestCase):
         counts = []
 
         # WHEN
-        self.amazon_gift_cards.get_gift_card_activity(days=4000, progress=counts.append)
+        self.amazon_gift_cards.get_gift_cards(days=4000, progress=counts.append)
 
         # THEN
         self.assertEqual([15, 30, 41], counts)
 
     @responses.activate
     @patch("amazonorders.gift_cards.datetime", wraps=datetime)
-    def test_get_gift_card_activity_days_filter(self, mock_today):
+    def test_get_gift_cards_days_filter(self, mock_today):
         # GIVEN
         mock_today.date.today.return_value = datetime.date(2026, 5, 12)
         self.amazon_session.is_authenticated = True
         resp = self.given_gift_card_page_exists("gift-card-balance-activity.html")
 
         # WHEN
-        activity = self.amazon_gift_cards.get_gift_card_activity(days=5)
+        activity = self.amazon_gift_cards.get_gift_cards(days=5).items
 
         # THEN
         self.assertEqual(2, len(activity))
@@ -219,20 +199,21 @@ class TestGiftCards(UnitTestCase):
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
-    def test_get_gift_card_activity_zero_activity(self):
+    def test_get_gift_cards_zero_activity(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         resp = self.given_gift_card_page_exists("gift-card-balance-zero-activity.html")
 
         # WHEN
-        activity = self.amazon_gift_cards.get_gift_card_activity()
+        gift_cards = self.amazon_gift_cards.get_gift_cards()
 
         # THEN
-        self.assertEqual([], activity)
+        self.assertIsNotNone(gift_cards.balance)
+        self.assertEqual([], gift_cards.items)
         self.assertEqual(1, resp.call_count)
 
     @responses.activate
-    def test_get_gift_card_activity_invalid_page(self):
+    def test_get_gift_cards_invalid_page(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         with open(os.path.join(self.RESOURCES_DIR, "500.html"), "r", encoding="utf-8") as f:
@@ -245,18 +226,93 @@ class TestGiftCards(UnitTestCase):
 
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
-            self.amazon_gift_cards.get_gift_card_activity(keep_paging=False)
+            self.amazon_gift_cards.get_gift_cards(keep_paging=False)
 
         # THEN
         self.assertEqual(1, resp.call_count)
         self.assertIn("Could not parse Gift Card activity.", str(cm.exception))
 
-    def test_parse_gift_card_activity_redemptions(self):
+    @responses.activate
+    @patch("amazonorders.gift_cards.datetime", wraps=datetime)
+    def test_deprecated_balance_and_activity(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2026, 5, 15)
+        self.amazon_session.is_authenticated = True
+        self.given_gift_card_page_exists("gift-card-balance-activity.html")
+
+        # WHEN
+        with self.assertWarns(DeprecationWarning):
+            balance = self.amazon_gift_cards.get_balance()
+        with self.assertWarns(DeprecationWarning):
+            activity = self.amazon_gift_cards.get_gift_card_activity(keep_paging=False)
+        with self.assertWarns(DeprecationWarning):
+            parsed_activity = AmazonGiftCards.parse_gift_card_activity(
+                self.read_gift_card_page("gift-card-balance-activity.html"), self.test_config)
+
+        # THEN
+        self.assertEqual(0.00, balance)
+        self.assertEqual(15, len(activity))
+        self.assertEqual(15, len(parsed_activity))
+
+    @responses.activate
+    @patch("amazonorders.gift_cards.datetime", wraps=datetime)
+    def test_get_gift_cards_page_limit_and_cursor(self, mock_today):
+        # GIVEN
+        mock_today.date.today.return_value = datetime.date(2026, 5, 15)
+        self.amazon_session.is_authenticated = True
+        resp1 = self.given_gift_card_page_exists("gift-card-balance-activity.html")
+        resp2 = self.given_gift_card_page_exists("gift-card-balance-activity-page-2.html")
+        resp3 = self.given_gift_card_page_exists("gift-card-balance-activity-last-page.html")
+
+        # WHEN
+        first_page = self.amazon_gift_cards.get_gift_cards_page(days=4000, limit=1)
+        next_page = self.amazon_gift_cards.get_gift_cards_page(cursor=first_page.cursor)
+
+        # THEN
+        self.assertEqual(0.00, first_page.balance)
+        self.assertEqual(15, len(first_page.items))
+        self.assertTrue(first_page.has_more)
+        self.assertIn("next=", first_page.cursor["next_page_url"])
+        self.assertEqual("2015-06-02", first_page.cursor["min_date"])
+        self.assertEqual(26, len(next_page.items))
+        self.assertIsNotNone(next_page.balance)
+        self.assertFalse(next_page.has_more)
+        self.assertIsNone(next_page.cursor)
+        self.assertEqual(1, resp1.call_count)
+        self.assertEqual(1, resp2.call_count)
+        self.assertEqual(1, resp3.call_count)
+
+    def test_get_gift_cards_page_rejects_cursor_on_another_site(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_gift_cards.get_gift_cards_page(cursor={"next_page_url": "https://evil.example/gc/balance",
+                                                               "min_date": "2026-01-01"})
+
+        # THEN
+        self.assertEqual("The cursor's next page is not on this Amazon site.", str(cm.exception))
+
+    def test_parse_gift_cards_balance(self):
+        # GIVEN
+        html = self.read_gift_card_page("gift-card-balance-activity.html")
+
+        # WHEN
+        gift_cards = AmazonGiftCards.parse_gift_cards(html, self.test_config)
+
+        # THEN
+        self.assertEqual(0.00, gift_cards.balance)
+        self.assertEqual(15, len(gift_cards.items))
+        self.assertIsNone(gift_cards.cursor)
+        self.assertEqual({"balance", "items", "cursor", "has_more"}, set(gift_cards.to_dict()))
+
+    def test_parse_gift_cards_redemptions(self):
         # GIVEN
         html = self.read_gift_card_page("gift-card-balance-activity-page-2.html")
 
         # WHEN
-        activity = AmazonGiftCards.parse_gift_card_activity(html, self.test_config)
+        activity = AmazonGiftCards.parse_gift_cards(html, self.test_config).items
 
         # THEN
         self.assertEqual(15, len(activity))
@@ -270,12 +326,12 @@ class TestGiftCards(UnitTestCase):
         self.assertIsNone(entry.order_details_link)
         self.assertEqual("D01-1004551-2009102", activity[1].order_number)
 
-    def test_parse_gift_card_activity_legacy_order_numbers(self):
+    def test_parse_gift_cards_legacy_order_numbers(self):
         # GIVEN
         html = self.read_gift_card_page("gift-card-balance-activity-last-page.html")
 
         # WHEN
-        activity = AmazonGiftCards.parse_gift_card_activity(html, self.test_config)
+        activity = AmazonGiftCards.parse_gift_cards(html, self.test_config).items
 
         # THEN
         self.assertEqual(11, len(activity))
@@ -283,12 +339,12 @@ class TestGiftCards(UnitTestCase):
                          [entry.order_number for entry in activity[6:10]])
         self.assertIn("orderID=4000-100001-2000001", activity[6].order_details_link)
 
-    def test_parse_gift_card_activity_closing_balances_chain(self):
+    def test_parse_gift_cards_closing_balances_chain(self):
         # GIVEN
         html = self.read_gift_card_page("gift-card-balance-activity.html")
 
         # WHEN
-        activity = AmazonGiftCards.parse_gift_card_activity(html, self.test_config)
+        activity = AmazonGiftCards.parse_gift_cards(html, self.test_config).items
 
         # THEN
         for newer, older in zip(activity, activity[1:]):

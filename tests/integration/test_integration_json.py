@@ -4,9 +4,9 @@ __license__ = "MIT"
 import json
 import os
 import sys
-import unittest
 from datetime import datetime
 
+import pytest
 from parameterized import parameterized
 
 from tests.integrationtestcase import IntegrationTestCase
@@ -38,9 +38,12 @@ if os.environ.get("AMAZON_INTEGRATION_TEST_JSON"):
         env_json_data.append((f"env_var_test_{i}", test))
         i += 1
 
+skip_unless_json = pytest.mark.skipif(
+    not os.environ.get("AMAZON_INTEGRATION_TEST_JSON"),
+    reason="AMAZON_INTEGRATION_TEST_JSON is not set")
 
-@unittest.skipIf(not os.environ.get("AMAZON_INTEGRATION_TEST_JSON"),
-                 "AMAZON_INTEGRATION_TEST_JSON is not set")
+
+@skip_unless_json
 class TestIntegrationJSON(IntegrationTestCase):
     """
     The two JSON files committed to "private-resources" are provided as examples of the syntax. Any other

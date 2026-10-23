@@ -87,6 +87,8 @@ class Constants:
     INVOICE_PDFS_URL = f"{BASE_URL}{INVOICE_PDFS_ROUTE}"
     INVOICE_PDFS_ORDER_ID_QUERY_PARAM = "orderId"
     INVOICE_PDF_CONTENT_TYPE = "application/pdf"
+    INVOICE_HTML_FORMAT = "html"
+    INVOICE_PDF_FORMAT = "pdf"
     ORDER_SEARCH_ROUTE = "/your-orders/search"
     ORDER_SEARCH_URL = f"{BASE_URL}{ORDER_SEARCH_ROUTE}"
     ORDER_SEARCH_QUERY_PARAM = "search"

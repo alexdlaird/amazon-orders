@@ -3,7 +3,8 @@ __license__ = "MIT"
 
 import datetime
 import logging
-from typing import Callable, List, Optional, Tuple
+import warnings
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from bs4 import BeautifulSoup, Tag
 
@@ -11,9 +12,42 @@ from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.gift_card_activity import GiftCardActivity
 from amazonorders.exception import AmazonOrdersError
+from amazonorders.paging import PagedResults
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
+
+
+class GiftCards(PagedResults[GiftCardActivity]):
+    """
+    The Amazon Gift Card balance, with a batch of its activity and the cursor to fetch the next batch, from
+    :func:`~amazonorders.gift_cards.AmazonGiftCards.get_gift_cards` or
+    :func:`~amazonorders.gift_cards.AmazonGiftCards.get_gift_cards_page`.
+    """
+
+    def __init__(self,
+                 items: List[GiftCardActivity],
+                 cursor: Optional[Dict[str, Any]],
+                 balance: Optional[float]) -> None:
+        super().__init__(items, cursor)
+
+        #: The current Gift Card balance, or ``None`` if Amazon didn't show one.
+        self.balance: Optional[float] = balance
+
+    def to_dict(self,
+                exclude_none: bool = False) -> Dict[str, Any]:
+        """
+        Serialize the Gift Cards to a ``dict`` of primitives, suitable for JSON, as
+        :func:`~amazonorders.paging.PagedResults.to_dict` does, with the ``balance``.
+
+        :param exclude_none: Passed to each GiftCardActivity's ``to_dict``, and leaves out a ``None`` balance.
+        :return: The ``balance``, ``items``, ``cursor``, and ``has_more``.
+        """
+        serialized = super().to_dict(exclude_none=exclude_none)
+        if exclude_none and self.balance is None:
+            return serialized
+
+        return {"balance": self.balance, **serialized}
 
 
 class AmazonGiftCards:
@@ -42,48 +76,30 @@ class AmazonGiftCards:
             logger.setLevel(logging.DEBUG)
 
     @classmethod
-    def parse_gift_card_activity(cls,
-                                 html: str,
-                                 config: AmazonOrdersConfig) -> List[GiftCardActivity]:
+    def parse_gift_cards(cls,
+                         html: str,
+                         config: AmazonOrdersConfig) -> GiftCards:
         """
-        Parse an already-fetched Amazon Gift Card balance page into its GiftCardActivity, without a session
-        driving the fetch. Only the GiftCardActivity on the given page is returned; paging is a fetch concern.
+        Parse an already-fetched Amazon Gift Card balance page into its balance and GiftCardActivity, without a
+        session driving the fetch. Only the GiftCardActivity on the given page is returned; paging is a fetch concern.
 
         :param html: The Gift Card balance page HTML to parse.
         :param config: The config providing the selectors used for parsing.
-        :return: A list of the parsed GiftCardActivity, newest first.
+        :return: The Gift Card balance and the page's GiftCardActivity, newest first.
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
         activity, _ = cls._parse_gift_card_activity_page(parsed, config)
 
-        return activity
+        return GiftCards(activity, None, cls._parse_gift_card_balance(parsed, config))
 
-    def get_balance(self) -> float:
+    def get_gift_cards(self,
+                       days: int = 365,
+                       next_page_url: Optional[str] = None,
+                       keep_paging: bool = True,
+                       progress: Optional[Callable[[int], None]] = None) -> GiftCards:
         """
-        Get the current Amazon Gift Card balance.
-
-        :return: The Gift Card balance.
-        """
-        if not self.amazon_session.is_authenticated:
-            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
-
-        page_response = self.amazon_session.get(self.config.constants.GIFT_CARD_BALANCE_URL)
-        self.amazon_session.check_response(page_response)
-
-        balance_tag = util.select_one(page_response.parsed, self.config.selectors.GIFT_CARD_BALANCE_SELECTOR)
-        balance = self.config.constants.parse_currency(balance_tag.text) if balance_tag else None
-        if balance is None:
-            raise AmazonOrdersError("Could not parse Gift Card balance. Check if Amazon changed the HTML.")
-
-        return balance
-
-    def get_gift_card_activity(self,
-                               days: int = 365,
-                               next_page_url: Optional[str] = None,
-                               keep_paging: bool = True,
-                               progress: Optional[Callable[[int], None]] = None) -> List[GiftCardActivity]:
-        """
-        Get Amazon Gift Card activity for a given number of days.
+        Get the Amazon Gift Card balance, and its activity for a given number of days. Both are on the same page, so
+        ``days=0`` gets the balance (and only today's activity) in one request.
 
         :param days: The number of days worth of Gift Card activity to get.
         :param next_page_url: If a call to this method previously errored out, passing the exception's
@@ -92,34 +108,134 @@ class AmazonGiftCards:
         :param keep_paging: ``False`` if only one page should be fetched.
         :param progress: Called after each page of activity is fetched, with the number of GiftCardActivity
             entries found so far.
-        :return: A list of the requested GiftCardActivity, newest first.
+        :return: The Gift Card balance and the requested GiftCardActivity, newest first.
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
-        url = next_page_url or self.config.constants.GIFT_CARD_BALANCE_URL
         min_date = datetime.date.today() - datetime.timedelta(days=days)
+        url = next_page_url or self.config.constants.GIFT_CARD_BALANCE_URL
+        activity, balance, _ = self._collect_gift_cards(url, min_date, keep_paging, None, progress)
 
+        return GiftCards(activity, None, balance)
+
+    def get_gift_cards_page(self,
+                            days: int = 365,
+                            limit: Optional[int] = None,
+                            cursor: Optional[Dict[str, Any]] = None,
+                            progress: Optional[Callable[[int], None]] = None) -> GiftCards:
+        """
+        Get the Amazon Gift Card balance, and a batch of its activity for a given number of days, with a cursor to
+        fetch the next batch.
+
+        :param days: The number of days worth of Gift Card activity to get. Ignored when ``cursor`` is given.
+        :param limit: Stop fetching activity pages once at least this many GiftCardActivity entries are collected.
+            Whole pages are fetched, so the batch can hold up to a page more than ``limit``. ``None`` fetches every
+            page.
+        :param cursor: The :attr:`~amazonorders.paging.PagedResults.cursor` of the previous batch, to fetch the
+            next one. The ``days`` window it was fetched with carries over.
+        :param progress: Called after each page of activity is fetched, with the number of GiftCardActivity
+            entries found so far in this batch.
+        :return: The Gift Card balance, the batch of GiftCardActivity, and the cursor for the next one.
+        """
+        if not self.amazon_session.is_authenticated:
+            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
+
+        if cursor:
+            url = util.resolve_site_url(cursor["next_page_url"], self.config.constants.BASE_URL)
+            if not url:
+                raise AmazonOrdersError("The cursor's next page is not on this Amazon site.")
+            min_date = datetime.date.fromisoformat(cursor["min_date"])
+        else:
+            url = self.config.constants.GIFT_CARD_BALANCE_URL
+            min_date = datetime.date.today() - datetime.timedelta(days=days)
+
+        activity, balance, next_page_url = self._collect_gift_cards(url, min_date, True, limit, progress)
+        next_cursor = {
+            "next_page_url": next_page_url,
+            "min_date": min_date.isoformat(),
+        } if next_page_url else None
+
+        return GiftCards(activity, next_cursor, balance)
+
+    def get_balance(self) -> float:
+        """
+        Deprecated, use :func:`get_gift_cards` instead. To be removed in 5.0.
+        """
+        warnings.warn("get_balance() is deprecated and will be removed in 5.0. Use get_gift_cards() instead.",
+                      DeprecationWarning, stacklevel=2)
+        balance = self.get_gift_cards(days=0, keep_paging=False).balance
+        if balance is None:
+            raise AmazonOrdersError("Could not parse Gift Card balance. Check if Amazon changed the HTML.")
+
+        return balance
+
+    def get_gift_card_activity(self,
+                               *args: Any,
+                               **kwargs: Any) -> List[GiftCardActivity]:
+        """
+        Deprecated, use :func:`get_gift_cards` instead. To be removed in 5.0.
+        """
+        warnings.warn("get_gift_card_activity() is deprecated and will be removed in 5.0. Use get_gift_cards() "
+                      "instead.", DeprecationWarning, stacklevel=2)
+        return self.get_gift_cards(*args, **kwargs).items
+
+    @classmethod
+    def parse_gift_card_activity(cls,
+                                 *args: Any,
+                                 **kwargs: Any) -> List[GiftCardActivity]:
+        """
+        Deprecated, use :func:`parse_gift_cards` instead. To be removed in 5.0.
+        """
+        warnings.warn("parse_gift_card_activity() is deprecated and will be removed in 5.0. Use parse_gift_cards() "
+                      "instead.", DeprecationWarning, stacklevel=2)
+        return cls.parse_gift_cards(*args, **kwargs).items
+
+    def _collect_gift_cards(self,
+                            url: Optional[str],
+                            min_date: datetime.date,
+                            keep_paging: bool,
+                            limit: Optional[int],
+                            progress: Optional[Callable[[int], None]]
+                            ) -> Tuple[List[GiftCardActivity], Optional[float], Optional[str]]:
+        """
+        Fetch Gift Card balance pages until the activity ends, an entry is older than ``min_date``, ``keep_paging``
+        is ``False`` after the first page, or at least ``limit`` entries are collected.
+
+        :return: The GiftCardActivity, the balance from the first page fetched, and the next page's URL (``None`` if
+            there is none).
+        """
+        balance: Optional[float] = None
         activity: List[GiftCardActivity] = []
-        while url:
+        first_page = True
+        while url and (first_page or (keep_paging and (limit is None or len(activity) < limit))):
             page_response = self.amazon_session.get(url)
             self.amazon_session.check_response(page_response, meta={"next_page_url": url})
 
-            loaded_activity, next_page_url = self._parse_gift_card_activity_page(page_response.parsed, self.config)
+            if first_page:
+                balance = self._parse_gift_card_balance(page_response.parsed, self.config)
+                first_page = False
+
+            loaded_activity, url = self._parse_gift_card_activity_page(page_response.parsed, self.config)
 
             for entry in loaded_activity:
                 if entry.activity_date is None or entry.activity_date >= min_date:
                     activity.append(entry)
                 else:
-                    next_page_url = None
+                    url = None
                     break
 
             if progress:
                 progress(len(activity))
 
-            url = next_page_url if keep_paging else None
+        return activity, balance, url
 
-        return activity
+    @staticmethod
+    def _parse_gift_card_balance(parsed: Tag,
+                                 config: AmazonOrdersConfig) -> Optional[float]:
+        balance_tag = util.select_one(parsed, config.selectors.GIFT_CARD_BALANCE_SELECTOR)
+
+        return config.constants.parse_currency(balance_tag.text) if balance_tag else None
 
     @classmethod
     def _parse_gift_card_activity_page(cls,
