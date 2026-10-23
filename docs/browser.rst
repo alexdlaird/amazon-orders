@@ -98,6 +98,25 @@ cannot solve them. Two options are available:
   token or Puzzle — all without additional configuration. ``PlaywrightJSAuthForm`` is only needed here for
   Akamai's interstitial, since the WAF solver handles the JS bot-detection page on its own.
 
+Customizing the Sign-In
+-----------------------
+
+To customize the sign-in, subclass :class:`~amazonorders.contrib.browser.playwright.PlaywrightBrowserLogin` and
+override its hooks, like ``on_sign_in_page()`` and ``wait_for_sign_in()``. Set ``headless`` to ``True`` if no browser
+window is needed.
+
+.. code-block:: python
+
+    from amazonorders.contrib.browser.playwright import PlaywrightBrowserLogin
+
+
+    class MyBrowserLogin(PlaywrightBrowserLogin):
+        def on_sign_in_page(self, context, page):
+            ...
+
+        def wait_for_sign_in(self, context, page, timeout):
+            ...
+
 If a supported extra isn't working for you, please
 `open an issue <https://github.com/alexdlaird/amazon-orders/issues/new?assignees=&labels=bug&projects=&template=bug-report.yml>`_
 or a `pull request <https://github.com/alexdlaird/amazon-orders/compare>`_.

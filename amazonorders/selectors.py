@@ -1,6 +1,7 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import re
 from typing import Any, Callable, Dict, Optional, Tuple
 
 
@@ -126,7 +127,6 @@ class Selectors:
     # CSS selectors for Amazon Household family members
     ##########################################################################
 
-    #: The Order history's "My Orders" / "<name>'s Orders" dropdown; the account's own entry has an empty value
     FAMILY_MEMBER_ENTITY_SELECTOR = ["select#family-member-filter option[value]:not([value=''])",
                                      "select[name='familyMemberId'] option[value]:not([value=''])"]
     FAMILY_MEMBER_ID_ATTR = "value"
@@ -185,7 +185,6 @@ class Selectors:
         Selector("div.yohtmlc-shipment-status-primaryText", text_contains=whole_foods_text),
         "img.ufpo-itemListWidget-image"
     ], "ORDER_WHOLE_FOODS_TEXT")
-    # Selectors defined here mean the Order will not have parsable totals
     ORDER_SKIP_TOTALS = SelectorsFromText(lambda cancelled_text, service_cancelled_text: [
         # Identifies a cancelled order on the history page
         Selector("div.yohtmlc-shipment-status-primaryText", cancelled_text),
@@ -204,12 +203,14 @@ class Selectors:
     # CSS selectors for Item fields
     #####################################
 
-    # Last entry matches WFM in-store line items
     FIELD_ITEM_IMG_LINK_SELECTOR = ["a img",
+                                    # WFM in-store line items
                                     "img.ufpo-itemListWidget-image"]
     FIELD_ITEM_QUANTITY_SELECTOR = [".od-item-view-qty",
                                     "span.item-view-qty",
-                                    "span.product-image__qty"]
+                                    "span.product-image__qty",
+                                    # Order search results
+                                    ".hzsearch-item-view-qty"]
     # WFM items render "Qty: N" or "Qty: 0.31 lb"; extracted in Item._parse_quantity
     FIELD_ITEM_WHOLE_FOODS_QUANTITY_SELECTOR = ["span.a-size-small"]
     FIELD_ITEM_WHOLE_FOODS_QUANTITY_REGEX = r"^Qty:\s*{count}$"
@@ -218,13 +219,17 @@ class Selectors:
                                  "div.a-column.a-span10 > a",
                                  # ASINLESS WFM items render the title in a span rather than a link
                                  "div.a-column.a-span10 > span",
-                                 ".yo-enhanced-title a"]
+                                 ".yo-enhanced-title a",
+                                 # Order search results
+                                 "div.a-col-right a > p"]
     FIELD_ITEM_LINK_SELECTOR = ["[data-component='itemTitle'] a",
                                 ".yohtmlc-item a",
                                 "a:has(> .yohtmlc-product-title)",
                                 ".yohtmlc-product-title a",
                                 "div.a-column.a-span10 > a",
-                                ".yo-enhanced-title a"]
+                                ".yo-enhanced-title a",
+                                # Order search results
+                                "div.a-col-right a:has(> p)"]
     FIELD_ITEM_TAG_ITERATOR_SELECTOR = [".yohtmlc-item div"]
     FIELD_ITEM_CONDITION_PREFIX = "Condition:"
     FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice'] .a-text-price :not(.a-offscreen)",
@@ -245,7 +250,9 @@ class Selectors:
                                          # ".order-header__header-link-list-item:first-of-type a"
                                          # WFM receipt and FOPO orders link to dedicated pages, not standard endpoint
                                          "a[href*='/wholefoodsmarket/receipts/order/']",
-                                         "a[href*='/fopo/order-details']"]
+                                         "a[href*='/fopo/order-details']",
+                                         # Order search results
+                                         "div.a-col-right > div.a-row > a[href*='/your-orders/order-details']"]
     FIELD_ORDER_NUMBER_SELECTOR = ["[data-component='orderId']",
                                    "[data-component='briefOrderInfo'] div.a-column",
                                    ".order-date-invoice-item :is(bdi, span)[dir='ltr']",
@@ -256,7 +263,6 @@ class Selectors:
                                         "div.order-header div.a-col-left .a-span9",
                                         "#wfm-grand-total-amount"]
     FIELD_ORDER_GRAND_TOTAL_PREFIX = "total"
-    # WFM in-store (FOPO) details page amounts
     FIELD_ORDER_WHOLE_FOODS_SUBTOTAL_SELECTOR = "#wfm-subtotal-amount"
     FIELD_ORDER_WHOLE_FOODS_TAX_SELECTOR = "#wfm-tax-total-amount"
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_METHOD_SELECTOR = "#wfm-0-card-brand"
@@ -290,8 +296,10 @@ class Selectors:
     FIELD_ORDER_COUPON_SAVINGS_LABELS = ["coupon"]
     FIELD_ORDER_REWARD_POINTS_LABELS = ["reward"]
     FIELD_ORDER_SUBSCRIPTION_DISCOUNT_LABELS = ["subscribe", "subscription"]
-    FIELD_ORDER_TOTAL_BEFORE_TAX_LABELS = ["before tax"]
-    FIELD_ORDER_ESTIMATED_TAX_LABELS = ["estimated tax", "tax collected", "estimated vat"]
+    # Some sites (e.g. amazon.de and amazon.es in English) label it "Total before VAT"
+    FIELD_ORDER_TOTAL_BEFORE_TAX_LABELS = ["before tax", "before vat"]
+    # Some sites (e.g. amazon.es in English) label it "VAT" alone, which "Total before VAT" also contains
+    FIELD_ORDER_ESTIMATED_TAX_LABELS = ["estimated tax", "tax collected", "estimated vat", re.compile(r"^\s*vat\b")]
     FIELD_ORDER_REFUND_TOTAL_LABELS = ["refund total"]
     FIELD_ORDER_MULTIBUY_DISCOUNT_LABELS = ["multibuy discount"]
     FIELD_ORDER_AMAZON_DISCOUNT_LABELS = ["amazon discount"]
@@ -332,8 +340,8 @@ class Selectors:
     FIELD_RECIPIENT_ADDRESS2_SELECTOR = "li.displayAddressAddressLine2"
     FIELD_RECIPIENT_ADDRESS_CITY_STATE_POSTAL_SELECTOR = "li.displayAddressCityStateOrRegionPostalCode"
     FIELD_RECIPIENT_ADDRESS_COUNTRY_SELECTOR = "li.displayAddressCountryName"
-    #: The address lines that follow the Recipient's name in an unclassed list.
-    FIELD_RECIPIENT_ADDRESS_LINES_SELECTOR = "ul > li:not(:first-child)"
+    FIELD_RECIPIENT_ADDRESS_LINES_SELECTOR = ["ul > li:not(:first-child)",
+                                              "div.a-popover-preload div.a-row:not(:first-child)"]
     #: Separates the parts of an address Amazon renders inline (e.g. ``", Musterstraße 1 , 10115"``), but not a
     #: comma within a line (e.g. ``"Chicago, IL 60007"``).
     FIELD_RECIPIENT_ADDRESS_INLINE_SEPARATOR_REGEX = r"(?:^|\s),\s*"
@@ -374,6 +382,17 @@ class Selectors:
                                    "a[href*='/documents/download/']"]
     #: Matched case-insensitively in a document's name, e.g. "Credit note 1", to tell a credit note from an invoice.
     FIELD_INVOICE_PDF_CREDIT_NOTE_TEXT = "Credit note"
+
+    #####################################
+    # CSS selectors for Order search results
+    #####################################
+
+    #: The Order search page's results. Present with no result rows when nothing matches.
+    ORDER_SEARCH_RESULTS_SELECTOR = "div.hzsearch-content-container"
+    ORDER_SEARCH_RESULT_SELECTOR = "div.a-fixed-left-grid"
+
+    FIELD_ORDER_SEARCH_RESULT_DATE_SELECTOR = "div.a-col-right span"
+    FIELD_ORDER_SEARCH_RESULT_DATE_PREFIX = "Ordered on"
 
     #####################################
     # CSS selectors for Prime payment fields

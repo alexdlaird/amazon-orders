@@ -87,6 +87,10 @@ class Constants:
     INVOICE_PDFS_URL = f"{BASE_URL}{INVOICE_PDFS_ROUTE}"
     INVOICE_PDFS_ORDER_ID_QUERY_PARAM = "orderId"
     INVOICE_PDF_CONTENT_TYPE = "application/pdf"
+    ORDER_SEARCH_ROUTE = "/your-orders/search"
+    ORDER_SEARCH_URL = f"{BASE_URL}{ORDER_SEARCH_ROUTE}"
+    ORDER_SEARCH_QUERY_PARAM = "search"
+    ORDER_SEARCH_PAGE_QUERY_PARAM = "page"
 
     ##########################################################################
     # URLs for Prime
@@ -183,7 +187,6 @@ class Constants:
     CURRENCY_SYMBOL = "$"
     #: ``CURRENCY_SYMBOL`` for each site by the TLD that follows ``amazon.``, taking precedence over its region data.
     REGION_CURRENCY_OVERRIDES: Dict[str, str] = {}
-    #: Currency symbols :func:`format_currency` renders without decimals.
     ZERO_DECIMAL_CURRENCY_SYMBOLS: List[str] = ["¥", "￥"]
     CURRENCY_FORMAT = "{symbol}{amount}"
     CURRENCY_FREE_TEXT = "free"
@@ -386,6 +389,7 @@ class Constants:
         self.ORDER_INVOICE_URL = f"{base_url}/gp/css/summary/print.html"
         self.TRACKING_URL = f"{base_url}{self.TRACKING_ROUTE}"
         self.INVOICE_PDFS_URL = f"{base_url}{self.INVOICE_PDFS_ROUTE}"
+        self.ORDER_SEARCH_URL = f"{base_url}{self.ORDER_SEARCH_ROUTE}"
         self.PRIME_PAYMENTS_URL = f"{base_url}{self.PRIME_PAYMENTS_ROUTE}"
         self.TRANSACTION_HISTORY_URL = f"{base_url}{self.TRANSACTION_HISTORY_ROUTE}"
         self.TRANSACTION_DATA_URL = f"{base_url}{self.TRANSACTION_DATA_ROUTE}"

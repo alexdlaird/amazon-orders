@@ -60,7 +60,7 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==4.10.*``, not ``==4.10.0``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==4.11.*``, not ``==4.11.0``)
 to ensure you always get the latest stable release.
 
 Basic Usage
@@ -111,14 +111,14 @@ You can also run any command available to the main Python interface from the com
     amazon-orders history --year 2023
     amazon-orders history --last-30-days
     amazon-orders history --last-3-months
+    amazon-orders search "coffee"
 
 Output Formats
 --------------
 
-The ``history``, ``order``, ``invoice-pdfs``, ``transactions``, ``order-transactions``, ``gift-card-activity``,
-``family-members``, and ``prime-payments`` commands accept ``--output``, which renders Orders, Invoice PDFs,
-Transactions, Gift Card activity, Amazon Household members, and Prime payments as ``text`` (the default), ``json``,
-``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout`` captures only the data.
+Commands that return Orders, Transactions, and other entities accept ``--output``, which renders them as ``text``
+(the default), ``json``, ``yaml``, or ``csv``. Progress messages are written to ``stderr``, so redirecting ``stdout``
+captures only the data.
 
 .. code:: sh
 
