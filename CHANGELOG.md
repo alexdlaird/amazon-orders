@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/4.10.0...HEAD)
 
+### Added
+
+- `AmazonOrders.search_orders()`, `search_orders_page()`, `parse_order_search()`, the `OrderSearchResult` entity, and the `search` CLI command (with `--single-page`), to search every year of the Order history (by product title, Order number, address, or recipient) as the search box on Your Orders does. Each result holds the matching `Item`, built with `item_class`, and pages like the Order history: `keep_paging` and `progress`, or batches with a `limit` and `cursor`.
+
 ### Fixed
 
 - Order history and Gift Card activity stop paging at a next-page link to another site, instead of following it.

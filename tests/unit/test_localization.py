@@ -33,7 +33,7 @@ _PLUMBING_LITERALS = {
     "formattedAmount", "formattedDate", "hasMore", "headers", "href", "http", "https://", "ie", "img", "index",
     "inlineContent", "input",
     "input[name='", "lastDigits", "lastEvaluatedKey", "lastEvaluatedPageKey", "locale", "method",
-    "min_date", "name", "nav-item-signout", "next_page_data", "next_page_url", "not solved", "orderData",
+    "min_date", "name", "nav-item-signout", "next_page", "next_page_data", "next_page_url", "not solved", "orderData",
     "orderDetailsUrl", "orderDisplayString", "order_filter", "order_id", "otpCode", "otpDeviceContext",
     "otp_secret_key", "pageProps", "params", "parsed", "password", "path", "paymentMethodDisplayStringData",
     "paymentMethodName", "paymentMethodNumber", "playwright", "ppw-widgetState", "props", "r", "rememberDevice",
