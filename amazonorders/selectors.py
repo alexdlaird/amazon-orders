@@ -127,8 +127,6 @@ class Selectors:
     # CSS selectors for Amazon Household family members
     ##########################################################################
 
-    #: The Order history's household member filter, without its "Entire family" and "You" options. Amazon's earlier
-    #: "My Orders" / "<name>'s Orders" dropdown is kept as a fallback.
     FAMILY_MEMBER_ENTITY_SELECTOR = ["select#household-filter option[value]:not([value=''], [value='self'])",
                                      "select[name='householdMembers'] option[value]:not([value=''], [value='self'])",
                                      "select#family-member-filter option[value]:not([value=''])",
