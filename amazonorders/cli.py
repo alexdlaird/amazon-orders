@@ -722,7 +722,7 @@ Gift Cards, with {days} days of activity
 @amazon_orders_cli.command(short_help="Check if a persisted session exists.")
 @click.pass_context
 @click.option("--verify", is_flag=True, default=False,
-              help="Also ask Amazon whether it still accepts the persisted session, since its cookies outlive it.")
+              help="Also ask Amazon whether it still accepts the persisted session.")
 def check_session(ctx: Context, **kwargs: Any) -> None:
     """
     Check if a persisted session exists, meaning commands can be called without needing to provide credentials.
