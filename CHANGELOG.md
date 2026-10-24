@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- `get_family_members()` and `family_member_id` use Amazon's new `householdMembers` Order history filter, which replaced `familyMemberId`, so a household member's Orders are returned again, not the account's own. An account in an Amazon Household gets the whole household's Orders by default, so pass `family_member_id="self"` for only its own.
+- `get_family_members()` and `family_member_id` use Amazon's new `householdMembers` Order history filter, which replaced `familyMemberId`.
 
 ## [5.1.0](https://github.com/alexdlaird/amazon-orders/compare/5.0.0...5.1.0) - 2026-10-24
 

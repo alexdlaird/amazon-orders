@@ -1853,7 +1853,7 @@ class TestOrders(UnitTestCase):
         # WHEN
         members = self.amazon_orders.get_family_members()
 
-        # THEN - "Entire family" and "You" aren't members, and the IDs are the filter's values
+        # THEN
         self.assertEqual(1, resp.call_count)
         self.assertEqual([("AAAAAAAAAAEXAMPLETOKENJANExxxxxxxxxxxxxxxxxxxx", "Jane Doe"),
                           ("AAAAAAAAAAEXAMPLETOKENJOHNxxxxxxxxxxxxxxxxxxxx", "John Doe")],
