@@ -297,6 +297,35 @@ class AmazonSession:
                 return False
         return True
 
+    def check_session(self,
+                      verify: bool = False) -> bool:
+        """
+        Check if a persisted session exists, meaning requests can be made without needing to provide credentials.
+
+        A session's cookies outlive it, so pass ``verify`` to also ask Amazon whether it still accepts the session.
+        This requests the Order history and checks it with :func:`check_response`.
+
+        :param verify: ``True`` to also ask Amazon whether it still accepts the persisted session.
+        :return: ``True`` if a persisted session exists and, with ``verify``, Amazon accepts it. ``False`` if none
+            exists or, with ``verify``, Amazon redirected to login, so the session needs to sign in again.
+        :raises AmazonOrdersError: With ``verify``, if Amazon's response wasn't ``ok``, which says nothing about the
+            session.
+        """
+        if not self.auth_cookies_stored():
+            return False
+        if not verify:
+            return True
+
+        logger.debug("Asking Amazon whether it still accepts the persisted session ...")
+
+        orders_response = self.get(self.config.constants.ORDER_HISTORY_URL)
+        try:
+            self.check_response(orders_response)
+        except AmazonOrdersAuthRedirectError:
+            return False
+
+        return True
+
     def login(self) -> None:
         """
         Execute an Amazon login process. This will include the sign-in page, and may also include OTP (if 2FA is
