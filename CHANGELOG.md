@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.0.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.1.0...HEAD)
+
+## [5.1.0](https://github.com/alexdlaird/amazon-orders/compare/5.0.0...5.1.0) - 2026-10-24
+
+### Added
+
+- `AmazonSession.check_session(verify=True)` and `check-session --verify`, to ask Amazon whether it still accepts the persisted session.
 
 ## [5.0.0](https://github.com/alexdlaird/amazon-orders/compare/4.12.0...5.0.0) - 2026-10-23
 
