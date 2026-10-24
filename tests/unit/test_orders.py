@@ -1799,8 +1799,20 @@ class TestOrders(UnitTestCase):
         self.assertEqual(1, resp.call_count)
         request_url = resp.calls[0].request.url
         self.assertIn(f"timeFilter=year-{year}", request_url)
-        self.assertIn("familyMemberId=A1EXAMPLETEEN1", request_url)
+        self.assertIn("householdMembers=A1EXAMPLETEEN1", request_url)
         self.assertEqual(10, len(orders))
+
+    @responses.activate
+    def test_get_orders_with_family_member_id_self(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_any_order_history_exists("order-history-2018-0.html")
+
+        # WHEN
+        self.amazon_orders.get_orders(year=2018, family_member_id="self", keep_paging=False)
+
+        # THEN
+        self.assertIn("householdMembers=self", resp.calls[0].request.url)
 
     @responses.activate
     def test_get_orders_page_cursor_keeps_family_member_id(self):
@@ -1816,7 +1828,7 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assertEqual("A1EXAMPLETEEN1", page.cursor["family_member_id"])
-        self.assertTrue(all("familyMemberId=A1EXAMPLETEEN1" in call.request.url for call in resp.calls))
+        self.assertTrue(all("householdMembers=A1EXAMPLETEEN1" in call.request.url for call in resp.calls))
 
     @responses.activate
     def test_get_family_members(self):
@@ -1830,6 +1842,21 @@ class TestOrders(UnitTestCase):
         # THEN
         self.assertEqual(1, resp.call_count)
         self.assertEqual([("A1EXAMPLETEEN1", "Jane Doe"), ("A2EXAMPLETEEN2", "John Doe")],
+                         [(member.id, member.name) for member in members])
+
+    @responses.activate
+    def test_get_family_members_household_filter(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_family_members_page_exists("order-history-household-members-snippet.html")
+
+        # WHEN
+        members = self.amazon_orders.get_family_members()
+
+        # THEN - "Entire family" and "You" aren't members, and the IDs are the filter's values
+        self.assertEqual(1, resp.call_count)
+        self.assertEqual([("AAAAAAAAAAEXAMPLETOKENJANExxxxxxxxxxxxxxxxxxxx", "Jane Doe"),
+                          ("AAAAAAAAAAEXAMPLETOKENJOHNxxxxxxxxxxxxxxxxxxxx", "John Doe")],
                          [(member.id, member.name) for member in members])
 
     def test_parse_family_members_strips_nul_byte(self):

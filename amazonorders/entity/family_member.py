@@ -24,7 +24,7 @@ class FamilyMember(Parsable):
                  config: AmazonOrdersConfig) -> None:
         super().__init__(parsed, config)
 
-        #: The FamilyMember ID, Amazon's ``familyMemberId``.
+        #: The FamilyMember ID, the value Amazon's household member filter (``householdMembers``) takes.
         self.id: Optional[str] = self.safe_parse(self._parse_id)
         #: The FamilyMember name.
         self.name: Optional[str] = self.safe_parse(self._parse_name)

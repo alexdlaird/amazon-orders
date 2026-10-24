@@ -395,7 +395,7 @@ class TestCli(UnitTestCase):
         self.assertEqual(0, response.exit_code)
         self.assert_login_responses_success()
         self.assertEqual(1, resp.call_count)
-        self.assertIn("familyMemberId=A1EXAMPLETEEN1", resp.calls[0].request.url)
+        self.assertIn("householdMembers=A1EXAMPLETEEN1", resp.calls[0].request.url)
 
     @responses.activate
     def test_family_members_command(self):
