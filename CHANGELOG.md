@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.1.0...HEAD)
 
+### Fixed
+
+- `get_family_members()` and `family_member_id` use Amazon's new `householdMembers` Order history filter, which replaced `familyMemberId`.
+
 ## [5.1.0](https://github.com/alexdlaird/amazon-orders/compare/5.0.0...5.1.0) - 2026-10-24
 
 ### Added

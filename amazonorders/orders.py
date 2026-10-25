@@ -477,7 +477,8 @@ class AmazonOrders:
             from the count Amazon shows on the history page. The total is ``None`` if Amazon doesn't show one, or if
             ``order_filter`` is provided, since Amazon's count may not reflect it.
         :param family_member_id: The ID of an Amazon Household member whose Orders to get, such as a linked Teen
-            account, from :func:`get_family_members`.
+            account, from :func:`get_family_members`. An account in an Amazon Household gets the whole household's
+            Orders by default; pass ``"self"`` for only its own.
         :return: A list of the requested Orders.
         """
         if not self.amazon_session.is_authenticated:
