@@ -5,6 +5,7 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
+import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, quote, urlencode, urlsplit
 
@@ -22,6 +23,38 @@ from amazonorders.paging import PagedResults
 from amazonorders.session import AmazonSession
 
 logger = logging.getLogger(__name__)
+
+
+class Orders(PagedResults[Order]):
+    """
+    A batch of the Amazon Order history, with the Amazon Household members whose Orders the account can view and the
+    cursor to fetch the next batch, from :func:`~amazonorders.orders.AmazonOrders.get_orders_page`.
+    """
+
+    def __init__(self,
+                 items: List[Order],
+                 cursor: Optional[Dict[str, Any]],
+                 household_members: List[FamilyMember]) -> None:
+        super().__init__(items, cursor)
+
+        #: The Amazon Household members whose Orders the account can view, such as linked Teen accounts, from the
+        #: Order history's member filter. Pass a member's :attr:`~amazonorders.entity.family_member.FamilyMember.id`
+        #: as ``family_member_id`` to get their Orders. Empty if the account has none.
+        self.household_members: List[FamilyMember] = household_members
+
+    def to_dict(self,
+                exclude_none: bool = False) -> Dict[str, Any]:
+        """
+        Serialize the batch to a ``dict`` of primitives, suitable for JSON, as
+        :func:`~amazonorders.paging.PagedResults.to_dict` does, with the ``household_members``.
+
+        :param exclude_none: Passed to each Order's and FamilyMember's ``to_dict``.
+        :return: The ``household_members``, ``items``, ``cursor``, and ``has_more``.
+        """
+        return {
+            "household_members": [member.to_dict(exclude_none=exclude_none) for member in self.household_members],
+            **super().to_dict(exclude_none=exclude_none),
+        }
 
 
 class AmazonOrders:
@@ -105,7 +138,8 @@ class AmazonOrders:
                              config: AmazonOrdersConfig) -> List[FamilyMember]:
         """
         Parse the Amazon Household members from an already-fetched Order history page, without a session driving
-        the fetch. Useful for parsing HTML obtained elsewhere and for network-free testing.
+        the fetch, as :attr:`~amazonorders.orders.Orders.household_members` holds them. Useful for parsing HTML
+        obtained elsewhere and for network-free testing.
 
         :param html: The Order history page HTML to parse.
         :param config: The config providing the selectors used for parsing.
@@ -253,13 +287,13 @@ class AmazonOrders:
 
     def get_family_members(self) -> List[FamilyMember]:
         """
-        Get the members of the Amazon Household whose Orders this account can view, such as linked Teen accounts,
-        from the Order history's member filter. Pass a member's
-        :attr:`~amazonorders.entity.family_member.FamilyMember.id` as ``family_member_id`` to
-        :func:`get_orders` to get their Orders.
+        Deprecated, use :attr:`~amazonorders.orders.Orders.household_members` from :func:`get_orders_page`
+        instead. To be removed in 6.0.
 
         :return: The FamilyMembers, or an empty list if the account has none.
         """
+        warnings.warn("get_family_members() is deprecated and will be removed in 6.0. Use get_orders_page(), whose "
+                      "household_members lists them, instead.", DeprecationWarning, stacklevel=2)
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
 
@@ -477,8 +511,8 @@ class AmazonOrders:
             from the count Amazon shows on the history page. The total is ``None`` if Amazon doesn't show one, or if
             ``order_filter`` is provided, since Amazon's count may not reflect it.
         :param family_member_id: The ID of an Amazon Household member whose Orders to get, such as a linked Teen
-            account, from :func:`get_family_members`. An account in an Amazon Household gets the whole household's
-            Orders by default; pass ``"self"`` for only its own.
+            account, from :attr:`~amazonorders.orders.Orders.household_members`. An account in an Amazon
+            Household gets the whole household's Orders by default; pass ``"self"`` for only its own.
         :return: A list of the requested Orders.
         """
         if not self.amazon_session.is_authenticated:
@@ -487,10 +521,10 @@ class AmazonOrders:
         next_page = self._order_history_url(year, start_index, time_filter, order_filter, family_member_id)
         current_index = int(start_index) if start_index else 0
 
-        orders, _, _ = asyncio.run(self._build_orders_async(next_page, keep_paging, full_details, current_index,
-                                                            progress=progress,
-                                                            progress_with_total=progress_with_total,
-                                                            total_known=not order_filter))
+        orders, _, _, _ = asyncio.run(self._build_orders_async(next_page, keep_paging, full_details, current_index,
+                                                               progress=progress,
+                                                               progress_with_total=progress_with_total,
+                                                               total_known=not order_filter))
         return orders
 
     def get_orders_page(self,
@@ -504,10 +538,11 @@ class AmazonOrders:
                         progress: Optional[Callable[[int], None]] = None,
                         progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
                         family_member_id: Optional[str] = None
-                        ) -> PagedResults[Order]:
+                        ) -> Orders:
         """
-        Get a batch of the Amazon Order history for a given time period, with a cursor to fetch the next batch.
-        Takes the same filters as :func:`get_orders`.
+        Get a batch of the Amazon Order history for a given time period, with the Amazon Household members whose
+        Orders the account can view and a cursor to fetch the next batch. Takes the same filters as
+        :func:`get_orders`.
 
         :param year: The year for which to get history. Ignored if ``time_filter`` or ``cursor`` is provided.
             Defaults to the current year if neither ``year`` nor ``time_filter`` is specified.
@@ -529,7 +564,7 @@ class AmazonOrders:
             batch, as in :func:`get_orders`, and at most ``limit`` until the batch ends.
         :param family_member_id: The ID of an Amazon Household member whose Orders to get, as in
             :func:`get_orders`. Ignored if ``cursor`` is provided.
-        :return: The batch of Orders, and the cursor for the next one.
+        :return: The batch of Orders, the Amazon Household members, and the cursor for the next one.
         """
         if not self.amazon_session.is_authenticated:
             raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
@@ -546,7 +581,7 @@ class AmazonOrders:
                                                            family_member_id)
         current_index = int(start_index) if start_index else 0
 
-        orders, next_page, current_index = asyncio.run(
+        orders, next_page, current_index, household_members = asyncio.run(
             self._build_orders_async(next_page, True, full_details, current_index, limit, progress,
                                      progress_with_total, not order_filter))
         next_cursor = {
@@ -556,7 +591,7 @@ class AmazonOrders:
             **({"family_member_id": family_member_id} if family_member_id else {}),
         } if next_page else None
 
-        return PagedResults(orders, next_cursor)
+        return Orders(orders, next_cursor, household_members)
 
     def _history_filter_value(self,
                               year: Optional[int],
@@ -873,13 +908,16 @@ class AmazonOrders:
                                   progress: Optional[Callable[[int], None]] = None,
                                   progress_with_total: Optional[Callable[[int, Optional[int]], None]] = None,
                                   total_known: bool = False
-                                  ) -> Tuple[List[Order], Optional[str], int]:
+                                  ) -> Tuple[List[Order], Optional[str], int, List[FamilyMember]]:
         order_builds: List[Tuple[Tag, int]] = []
+        household_members: List[FamilyMember] = []
         start_index = current_index
         orders_before_start_on_page = current_index % self.config.constants.ORDER_HISTORY_PAGE_SIZE
 
         while next_page and (limit is None or len(order_builds) < limit):
             page_response = self._fetch_orders_page(next_page, current_index)
+            if not household_members:
+                household_members = self._parse_family_members(page_response.parsed, self.config)
 
             order_tags = self._parse_orders(page_response.parsed, self.config,
                                             current_index - orders_before_start_on_page)
@@ -917,7 +955,7 @@ class AmazonOrders:
                                                          bool(next_page)))
 
         if not order_builds:
-            return [], next_page, current_index
+            return [], next_page, current_index, household_members
 
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.config.thread_pool_size) as pool:
@@ -928,7 +966,7 @@ class AmazonOrders:
             except BaseException:
                 pool.shutdown(cancel_futures=True)
                 raise
-        return orders, next_page, current_index
+        return orders, next_page, current_index, household_members
 
     @staticmethod
     def _expected_total(order_count: Optional[int],

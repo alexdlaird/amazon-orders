@@ -396,13 +396,14 @@ class TestCli(UnitTestCase):
         self.assert_login_responses_success()
         self.assertEqual(1, resp.call_count)
         self.assertIn("householdMembers=A1EXAMPLETEEN1", resp.calls[0].request.url)
+        self.assertNotIn("Amazon Household members", response.output)
 
     @responses.activate
-    def test_family_members_command(self):
+    def test_orders_command_lists_household_members(self):
         # GIVEN
         self.given_unauthenticated_home_page()
         self.given_login_responses_success()
-        resp = self.given_family_members_page_exists("order-history-family-members-snippet.html")
+        self.given_any_order_history_exists("order-history-entire-family-snippet.html")
 
         # WHEN
         response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
@@ -410,10 +411,35 @@ class TestCli(UnitTestCase):
                                                                      "--config-path", self.test_config.config_path,
                                                                      "--username", "some-username@gmail.com",
                                                                      "--password", "some-password",
-                                                                     "family-members", "--output", "json"])
+                                                                     "orders", "--year", "2026", "--output", "json"])
 
         # THEN
         self.assertEqual(0, response.exit_code)
+        self.assertEqual(3, len(json.loads(response.stdout)))
+        self.assertIn("Amazon Household members, for --family-member-id:", response.stderr)
+        self.assertIn("Family Member: Jane Doe\n  ID: AAAAAAAAAAEXAMPLETOKENJANExxxxxxxxxxxxxxxxxxxx", response.stderr)
+        self.assertIn("Family Member: John Doe\n  ID: AAAAAAAAAAEXAMPLETOKENJOHNxxxxxxxxxxxxxxxxxxxx", response.stderr)
+
+    @responses.activate
+    def test_deprecated_family_members_command(self):
+        # GIVEN
+        self.given_unauthenticated_home_page()
+        self.given_login_responses_success()
+        resp = self.given_family_members_page_exists("order-history-family-members-snippet.html")
+
+        # WHEN
+        with self.assertWarns(DeprecationWarning):
+            response = self.given_runner_with_split_streams().invoke(amazon_orders_cli,
+                                                                     [
+                                                                         "--config-path",
+                                                                         self.test_config.config_path,
+                                                                         "--username", "some-username@gmail.com",
+                                                                         "--password", "some-password",
+                                                                         "family-members", "--output", "json"])
+
+        # THEN
+        self.assertEqual(0, response.exit_code)
+        self.assertIn("deprecated", response.stderr)
         self.assert_login_responses_success()
         self.assertEqual(1, resp.call_count)
         members = json.loads(response.stdout)
@@ -421,7 +447,7 @@ class TestCli(UnitTestCase):
                          members)
 
     @responses.activate
-    def test_family_members_command_error(self):
+    def test_deprecated_family_members_command_error(self):
         # GIVEN
         self.given_unauthenticated_home_page()
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
@@ -456,7 +482,7 @@ class TestCli(UnitTestCase):
         self.assertIn("Error from Amazon: There was a problem. Your password is incorrect.", response.output)
 
     @responses.activate
-    def test_family_members_command_session_expired(self):
+    def test_deprecated_family_members_command_session_expired(self):
         # GIVEN
         self.given_persisted_session_exists()
         self.given_unauthenticated_home_page()
@@ -464,11 +490,12 @@ class TestCli(UnitTestCase):
         auth_redirect_response = self.given_authenticated_url_redirects_to_login()
 
         # WHEN
-        response = self.runner.invoke(amazon_orders_cli,
-                                      [
-                                          "--config-path", self.test_config.config_path,
-                                          "family-members"
-                                      ])
+        with self.assertWarns(DeprecationWarning):
+            response = self.runner.invoke(amazon_orders_cli,
+                                          [
+                                              "--config-path", self.test_config.config_path,
+                                              "family-members"
+                                          ])
 
         # THEN
         self.assertEqual(0, response.exit_code)

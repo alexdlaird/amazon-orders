@@ -484,7 +484,8 @@ class TestOrders(UnitTestCase):
         page_dict = page.to_dict(exclude_none=True)
 
         # THEN
-        self.assertEqual({"items", "cursor", "has_more"}, set(page_dict.keys()))
+        self.assertEqual({"household_members", "items", "cursor", "has_more"}, set(page_dict.keys()))
+        self.assertEqual([], page_dict["household_members"])
         self.assertEqual(10, len(page_dict["items"]))
         self.assertEqual(page.items[0].to_dict(exclude_none=True), page_dict["items"][0])
         self.assertEqual(page.cursor, page_dict["cursor"])
@@ -980,18 +981,6 @@ class TestOrders(UnitTestCase):
                          [order.items[0].title for order in orders])
         self.assertEqual(["B0EXAMPLE1", "B0EXAMPLE2", "B0EXAMPLE3"], [order.items[0].asin for order in orders])
         self.assert_orders_list_index(orders)
-
-    def test_parse_family_members_entire_family(self):
-        # GIVEN
-        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-entire-family-snippet.html"), "r",
-                  encoding="utf-8") as f:
-            html = f.read()
-
-        # WHEN
-        members = AmazonOrders.parse_family_members(html, self.test_config)
-
-        # THEN
-        self.assertEqual(["Jane Doe", "John Doe"], [member.name for member in members])
 
     def test_parse_order_details(self):
         # GIVEN
@@ -1865,13 +1854,32 @@ class TestOrders(UnitTestCase):
         self.assertTrue(all("householdMembers=A1EXAMPLETEEN1" in call.request.url for call in resp.calls))
 
     @responses.activate
-    def test_get_family_members(self):
+    def test_get_orders_page_household_members(self):
+        # GIVEN
+        self.amazon_session.is_authenticated = True
+        resp = self.given_any_order_history_exists("order-history-entire-family-snippet.html")
+
+        # WHEN
+        page = self.amazon_orders.get_orders_page(year=2026)
+
+        # THEN
+        self.assertEqual(1, resp.call_count)
+        self.assertEqual(3, len(page.items))
+        self.assertEqual([("AAAAAAAAAAEXAMPLETOKENJANExxxxxxxxxxxxxxxxxxxx", "Jane Doe"),
+                          ("AAAAAAAAAAEXAMPLETOKENJOHNxxxxxxxxxxxxxxxxxxxx", "John Doe")],
+                         [(member.id, member.name) for member in page.household_members])
+        self.assertEqual([member.to_dict() for member in page.household_members],
+                         page.to_dict()["household_members"])
+
+    @responses.activate
+    def test_deprecated_get_family_members(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         resp = self.given_family_members_page_exists("order-history-family-members-snippet.html")
 
         # WHEN
-        members = self.amazon_orders.get_family_members()
+        with self.assertWarns(DeprecationWarning):
+            members = self.amazon_orders.get_family_members()
 
         # THEN
         self.assertEqual(1, resp.call_count)
@@ -1879,13 +1887,14 @@ class TestOrders(UnitTestCase):
                          [(member.id, member.name) for member in members])
 
     @responses.activate
-    def test_get_family_members_household_filter(self):
+    def test_deprecated_get_family_members_household_filter(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         resp = self.given_family_members_page_exists("order-history-household-members-snippet.html")
 
         # WHEN
-        members = self.amazon_orders.get_family_members()
+        with self.assertWarns(DeprecationWarning):
+            members = self.amazon_orders.get_family_members()
 
         # THEN
         self.assertEqual(1, resp.call_count)
@@ -1906,19 +1915,20 @@ class TestOrders(UnitTestCase):
         self.assertEqual(["Jane Doe", "John Doe"], [member.name for member in members])
 
     @responses.activate
-    def test_get_family_members_none(self):
+    def test_deprecated_get_family_members_none(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
         self.given_family_members_page_exists("order-history-2018-0.html")
 
         # WHEN
-        members = self.amazon_orders.get_family_members()
+        with self.assertWarns(DeprecationWarning):
+            members = self.amazon_orders.get_family_members()
 
         # THEN
         self.assertEqual([], members)
 
-    def test_get_family_members_unauthenticated(self):
-        with self.assertRaises(AmazonOrdersError):
+    def test_deprecated_get_family_members_unauthenticated(self):
+        with self.assertRaises(AmazonOrdersError), self.assertWarns(DeprecationWarning):
             self.amazon_orders.get_family_members()
 
     @responses.activate
