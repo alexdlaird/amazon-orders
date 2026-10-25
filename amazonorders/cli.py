@@ -308,8 +308,8 @@ def amazon_orders_cli(ctx: Context,
               help="The order type filter to use, e.g. digital-orders for Kindle and other digital purchases, "
                    "which the default history doesn't include.")
 @click.option("--family-member-id", "family_member_id", default=None,
-              help="Get the Orders of this Amazon Household member, such as a linked Teen account, instead. "
-                   "See the family-members command for IDs.")
+              help="Get the Orders of this Amazon Household member, such as a linked Teen account, instead, or use "
+                   "self for only your own Orders. The members' IDs are listed after the Orders.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
 def orders(ctx: Context,
@@ -367,21 +367,26 @@ Order History for {filter_description}{optional_start_index}{optional_full_detai
 
         start_time = time.time()
         with ProgressSpinner("Orders", ctx.obj["show_progress"]) as progress:
-            order_list = amazon_orders.get_orders(year=year,
-                                                  start_index=start_index,
-                                                  full_details=full_details,
-                                                  keep_paging=not single_page,
-                                                  time_filter=time_filter,
-                                                  order_filter=order_filter,
-                                                  family_member_id=family_member_id,
-                                                  progress_with_total=progress)
+            orders_page = amazon_orders.get_orders_page(year=year,
+                                                        start_index=start_index,
+                                                        full_details=full_details,
+                                                        time_filter=time_filter,
+                                                        order_filter=order_filter,
+                                                        limit=1 if single_page else None,
+                                                        family_member_id=family_member_id,
+                                                        progress_with_total=progress)
         end_time = time.time()
+        order_list = orders_page.items
 
-        click.echo(config.output_cls(config).format(order_list, output))
+        formatter = config.output_cls(config)
+        click.echo(formatter.format(order_list, output))
 
         click.echo(
             "... {total} Orders parsed in {time} seconds.\n".format(total=len(order_list),
                                                                     time=int(end_time - start_time)), err=True)
+        if orders_page.household_members:
+            click.echo("Amazon Household members, for --family-member-id:\n\n{members}".format(
+                members=formatter.format(orders_page.household_members, "text")), err=True)
     except AmazonOrdersAuthRedirectError:
         IOClick.echo_session_expired()
     except AmazonOrdersError as e:
@@ -632,13 +637,13 @@ Transaction History for {days} days
         ctx.fail(str(e))
 
 
-@amazon_orders_cli.command("family-members")
+@amazon_orders_cli.command("family-members", hidden=True, deprecated=True)
 @click.pass_context
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
 def family_members(ctx: Context, **kwargs: Any) -> None:
     """
-    Get the Amazon Household members whose Orders this account can view, such as linked Teen accounts.
+    Deprecated, use orders instead, which lists the Amazon Household members after the Orders.
     """
     amazon_session = ctx.obj["amazon_session"]
 

@@ -182,15 +182,30 @@ class TestIntegrationGeneric(IntegrationTestCase):
         self.assertIn(order_id.encode(), content)
 
     @skip_unless_family_members
-    def test_get_family_members(self):
+    def test_get_orders_page_household_members(self):
         # WHEN
-        members = self.amazon_orders.get_family_members()
+        page = self.amazon_orders.get_orders_page(year=self.year, limit=1)
 
         # THEN
-        self.assertGreaterEqual(len(members), 1)
-        for member in members:
+        self.assertGreaterEqual(len(page.household_members), 1)
+        for member in page.household_members:
             self.assertIsNotNone(member.id)
             self.assertIsNotNone(member.name)
+
+    @skip_unless_family_members
+    def test_get_orders_family_member_id_splits_household(self):
+        # GIVEN
+        member = self.amazon_orders.get_orders_page(year=self.year, limit=1).household_members[0]
+
+        # WHEN
+        household = {order.order_number for order in self.amazon_orders.get_orders(year=self.year)}
+        own = {order.order_number for order in self.amazon_orders.get_orders(year=self.year, family_member_id="self")}
+        members = {order.order_number
+                   for order in self.amazon_orders.get_orders(year=self.year, family_member_id=member.id)}
+
+        # THEN
+        self.assertTrue(own.isdisjoint(members))
+        self.assertLessEqual(own | members, household)
 
     def test_get_gift_cards(self):
         # WHEN

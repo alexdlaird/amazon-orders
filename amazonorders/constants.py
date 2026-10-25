@@ -67,7 +67,7 @@ class Constants:
     ORDER_INVOICE_URL = f"{BASE_URL}/gp/css/summary/print.html"
     HISTORY_FILTER_QUERY_PARAM = "timeFilter"
     ORDER_FILTER_QUERY_PARAM = "orderFilter"
-    FAMILY_MEMBER_QUERY_PARAM = "familyMemberId"
+    FAMILY_MEMBER_QUERY_PARAM = "householdMembers"
     HISTORY_PAGE_QUERY_PARAM = "page"
     HISTORY_START_INDEX_QUERY_PARAM = "startIndex"
     # Amazon's no-JavaScript fallback, which renders encrypted Order cards readable

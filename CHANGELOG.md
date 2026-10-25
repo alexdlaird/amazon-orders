@@ -4,7 +4,26 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.1.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.2.0...HEAD)
+
+## [5.2.0](https://github.com/alexdlaird/amazon-orders/compare/5.1.0...5.2.0) - 2026-10-25
+
+### Added
+
+- `Orders`, which `get_orders_page()` now returns, with `household_members`: the Amazon Household members whose Orders the account can view, read from the same page, to pass as `family_member_id`. The `orders` command lists them after the Orders.
+
+### Changed
+
+- An account in an Amazon Household gets the whole household's Orders by default, as Amazon's Order history now does. Pass `family_member_id="self"` (or `--family-member-id self`) for only the account's own.
+
+### Deprecated
+
+- `AmazonOrders.get_family_members()`, use `get_orders_page()`'s `household_members`.
+- The `family-members` command, use `orders`, which lists the Amazon Household members after the Orders.
+
+### Fixed
+
+- `get_family_members()` and `family_member_id` use Amazon's new `householdMembers` Order history filter, which replaced `familyMemberId`.
 
 ## [5.1.0](https://github.com/alexdlaird/amazon-orders/compare/5.0.0...5.1.0) - 2026-10-24
 
