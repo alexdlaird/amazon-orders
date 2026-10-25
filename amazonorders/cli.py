@@ -309,7 +309,7 @@ def amazon_orders_cli(ctx: Context,
                    "which the default history doesn't include.")
 @click.option("--family-member-id", "family_member_id", default=None,
               help="Get the Orders of this Amazon Household member, such as a linked Teen account, instead. "
-                   "See the family-members command for IDs.")
+                   "See the family-members command for IDs, or use self for only your own Orders.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
 def orders(ctx: Context,

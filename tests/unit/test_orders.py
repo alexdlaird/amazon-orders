@@ -959,6 +959,40 @@ class TestOrders(UnitTestCase):
         self.assertEqual(3, orders[3].index)
         self.assert_orders_list_index(orders)
 
+    def test_parse_orders_entire_family(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-entire-family-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        orders = AmazonOrders.parse_orders(html, self.test_config)
+
+        # THEN
+        self.assertEqual(["111-0000001-0000001", "111-0000002-0000002", "112-0000003-0000003"],
+                         [order.order_number for order in orders])
+        self.assertEqual([date(2026, 3, 14), date(2026, 3, 10), date(2026, 3, 12)],
+                         [order.order_placed_date for order in orders])
+        self.assertEqual([12.34, 23.45, 34.56], [order.grand_total for order in orders])
+        self.assertEqual(["Example Floor Cleaner Refill, 64oz (Pack of 2)",
+                          "Example Forehead Thermometer, Non-Contact",
+                          "Example Replacement Straws, 4 Pack"],
+                         [order.items[0].title for order in orders])
+        self.assertEqual(["B0EXAMPLE1", "B0EXAMPLE2", "B0EXAMPLE3"], [order.items[0].asin for order in orders])
+        self.assert_orders_list_index(orders)
+
+    def test_parse_family_members_entire_family(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-entire-family-snippet.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        members = AmazonOrders.parse_family_members(html, self.test_config)
+
+        # THEN
+        self.assertEqual(["Jane Doe", "John Doe"], [member.name for member in members])
+
     def test_parse_order_details(self):
         # GIVEN
         order_id = "112-9685975-5907428"
