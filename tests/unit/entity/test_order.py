@@ -11,6 +11,7 @@ from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersEntityError
+from amazonorders.orders import AmazonOrders
 from tests.unittestcase import UnitTestCase
 
 
@@ -292,6 +293,49 @@ class TestOrder(UnitTestCase):
         self.assertIsNone(order.recipient)
         mock_logger.warning.assert_called_once()
         self.assertIn("Order.recipient could not be parsed", mock_logger.warning.call_args[0][0])
+
+    def test_clone_keeps_the_parse_failures_of_the_fields_it_supplies(self):
+        # GIVEN
+        def _parse_grand_total(order):
+            raise ValueError("unexpected markup")
+
+        history_order = self.given_history_order(_parse_grand_total)
+
+        # WHEN
+        order = Order(self.given_order_details_tag(), self.test_config, full_details=True, clone=history_order)
+
+        # THEN
+        self.assertIsNone(order.grand_total)
+        self.assertEqual(["grand_total"], order.parse_failures)
+        self.assertIsNot(history_order.parse_failures, order.parse_failures)
+
+    def test_clone_parse_failure_cleared_when_the_details_page_parses_it(self):
+        # GIVEN
+        def _parse_payment_method_last_4(order):
+            raise ValueError("unexpected markup")
+
+        history_order = self.given_history_order(_parse_payment_method_last_4)
+
+        # WHEN
+        order = Order(self.given_order_details_tag(), self.test_config, full_details=True, clone=history_order)
+
+        # THEN
+        self.assertEqual(["payment_method_last_4"], history_order.parse_failures)
+        self.assertIsNotNone(order.payment_method_last_4)
+        self.assertEqual([], order.parse_failures)
+
+    def given_history_order(self, failing_parse_function):
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
+                  encoding="utf-8") as f:
+            with patch.object(Order, failing_parse_function.__name__, failing_parse_function):
+                with self.assertLogs("amazonorders.entity.parsable", level="WARNING"):
+                    return AmazonOrders.parse_orders(f.read(), self.test_config)[3]
+
+    def given_order_details_tag(self):
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-112-0399923-3070642.html"), "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+        return util.select_one(parsed, self.test_config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
 
     def given_order_subscriptions_and_reward_points(self):
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-subscriptions-and-reward-points-snippet.html"),
