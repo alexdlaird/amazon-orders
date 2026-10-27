@@ -39,7 +39,7 @@ class Order(Parsable):
         super().__init__(parsed, config)
 
         if clone:
-            # The fields copied from the clone keep its parse failures, and those parsed again replace theirs
+            # Fields copied from the clone keep its failures; fields parsed again here clear their own
             self.parse_failures = list(clone.parse_failures)
 
         #: If the Orders full details were populated from its details page.
