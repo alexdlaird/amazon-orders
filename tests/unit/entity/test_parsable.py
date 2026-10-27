@@ -58,6 +58,48 @@ class TestItem(UnitTestCase):
         self.assertEqual(2, len(logs.records))
         self.assertIn("`deep` could not be parsed", logs.output[0])
         self.assertIn("`wrong_shape` could not be parsed", logs.output[1])
+        self.assertEqual(["deep", "wrong_shape"], parsable.parse_failures)
+
+    def test_safe_simple_parse_failure_names_the_selector(self):
+        # GIVEN
+        parsable = Parsable(BeautifulSoup("<span class='total'>$1.00</span>", self.test_config.bs4_parser),
+                            self.test_config)
+
+        class Unparseable:
+            def __init__(self, tag, config):
+                raise ValueError("unexpected markup")
+
+        # WHEN
+        with self.assertLogs("amazonorders.entity.parsable", level="WARNING") as logs:
+            value = parsable.safe_simple_parse(selector=["span.missing", "span.total"], wrap_tag=Unparseable)
+
+        # THEN
+        self.assertIsNone(value)
+        self.assertIn("`span.missing, span.total` could not be parsed", logs.output[0])
+        self.assertEqual(["span.missing, span.total"], parsable.parse_failures)
+
+    def test_parse_failure_listed_once_until_the_field_parses(self):
+        # GIVEN
+        parsable = Parsable(BeautifulSoup("<html />", self.test_config.bs4_parser), self.test_config)
+        results = [ValueError("unexpected markup"), ValueError("unexpected markup"), 1.0]
+
+        def _parse_total():
+            result = results.pop(0)
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+        # WHEN
+        with self.assertLogs("amazonorders.entity.parsable", level="WARNING"):
+            parsable.safe_parse(_parse_total)
+            parsable.safe_parse(_parse_total)
+        failures = list(parsable.parse_failures)
+        total = parsable.safe_parse(_parse_total)
+
+        # THEN
+        self.assertEqual(["total"], failures)
+        self.assertEqual(1.0, total)
+        self.assertEqual([], parsable.parse_failures)
 
     def test_safe_parse_propagates_library_errors(self):
         # GIVEN
@@ -120,6 +162,7 @@ class TestItem(UnitTestCase):
         # THEN
         self.assertNotIn("parsed", serialized)
         self.assertNotIn("config", serialized)
+        self.assertNotIn("parse_failures", serialized)
         self.assertEqual("112-0399923-3070642", serialized["order_number"])
         self.assertEqual(json.loads(json.dumps(serialized)), serialized)
 

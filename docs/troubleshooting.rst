@@ -170,6 +170,9 @@ contributing it! Fields are populated by simple ``_parse()`` methods on the enti
 utilize :class:`~amazonorders.entity.parsable.Parsable`'s :func:`~amazonorders.entity.parsable.Parsable.simple_parse`
 function, which just needs a selector.
 
+To tell a field that broke from one the page doesn't have, check the entity's
+:attr:`~amazonorders.entity.parsable.Parsable.parse_failures`, which lists the fields that could not be parsed.
+
 If you can't fetch the field's value with just a selector, implementing a new ``_parse()`` function on the
 entity will give you a lot more flexibility.
 
