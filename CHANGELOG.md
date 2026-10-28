@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `parse_failures` on every entity, the fields that failed to parse and were left `None`, to tell them apart from fields that are `None` by design.
+- `Item.subscription_frequency`, the Subscribe & Save delivery frequency of an Item (e.g. "Every 2 months"), `None` if the Item is not part of a subscription, from the Order details and the Order history.
 
 ### Changed
 
