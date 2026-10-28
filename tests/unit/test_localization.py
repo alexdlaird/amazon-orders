@@ -106,6 +106,7 @@ class TestLocalization(UnitTestCase):
             "Grand Total:": "Nostrud:",
             "Refund Total": "Exercitation",
             "Sold by:": "Ullamco:",
+            "Auto-delivered:": "Proident:",
             "Return window closed on": "Commodo consequat",
             "ending in": "mollit anim",
         })
@@ -133,7 +134,8 @@ class TestLocalization(UnitTestCase):
         html = self.given_resource("orders", "order-history-2018-0.html")
         lorem_html = re.sub(r"^(\s*)Total$", r"\1Officia", html, flags=re.MULTILINE)
         lorem_html = re.sub(r"^(\s*)Order #$", r"\1Deserunt", lorem_html, flags=re.MULTILINE)
-        lorem_html = self._translate(lorem_html, {"Return window closed on": "Commodo consequat"})
+        lorem_html = self._translate(lorem_html, {"Return window closed on": "Commodo consequat",
+                                                  "Auto-delivered:": "Proident:"})
 
         # WHEN
         orders = AmazonOrders.parse_orders(lorem_html, self.example_config)

@@ -14,6 +14,7 @@ _DATE_RE = re.compile(r"(\d{1,2})\s+(" + "|".join(_MONTHS) + r")\s+(\d{4})", re.
 class Selectors(selectors.Selectors):
     FIELD_ITEM_WHOLE_FOODS_QUANTITY_REGEX = r"^Occaecat:\s*{count}$"
     FIELD_ITEM_CONDITION_PREFIX = "Excepteur:"
+    FIELD_ITEM_SUBSCRIPTION_FREQUENCY_PREFIX = "Proident:"
     FIELD_ITEM_SELLER_TEXT = "Ullamco:"
     FIELD_ITEM_RETURN_TEXT = "Commodo"
     FIELD_ORDER_GRAND_TOTAL_PREFIX = "Officia"

@@ -960,6 +960,20 @@ class TestOrders(UnitTestCase):
         self.assertEqual(3, orders[3].index)
         self.assert_orders_list_index(orders)
 
+    def test_parse_orders_subscription_frequency(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2020-40.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read()
+
+        # WHEN
+        orders = AmazonOrders.parse_orders(html, self.test_config)
+
+        # THEN
+        self.assertEqual([[None], [None], ["Every 3 months"], ["Every 5 months"], ["Every 2 months"],
+                          ["Every 3 months"], [None, None], [None], [None], ["Every 1 month"]],
+                         [[item.subscription_frequency for item in order.items] for order in orders])
+
     def test_parse_orders_entire_family(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-entire-family-snippet.html"), "r",

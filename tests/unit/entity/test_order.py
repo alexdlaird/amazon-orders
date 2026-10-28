@@ -78,6 +78,20 @@ class TestOrder(UnitTestCase):
         self.assertEqual(order.subscription_discount, -0.78)
         self.assertEqual(order.reward_points, -5.98)
 
+    def test_order_subscription_frequency(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-114-8722141-6545058.html"),
+                  "r",
+                  encoding="utf-8") as f:
+            parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
+
+        # WHEN
+        order = Order(parsed, self.test_config, full_details=True)
+
+        # THEN
+        self.assertEqual(-2.17, order.subscription_discount)
+        self.assertEqual(["Every 6 months"], [item.subscription_frequency for item in order.items])
+
     def test_order_regex_label_skips_rows_containing_it_in_a_longer_label(self):
         # GIVEN
         self.test_config.selectors.FIELD_ORDER_TOTAL_BEFORE_TAX_LABELS = [re.compile(r"\btotal")]
