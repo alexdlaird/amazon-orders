@@ -1,4 +1,4 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
-__version__ = "5.2.1"
+__version__ = "5.2.2"
 __muppets__ = 42
