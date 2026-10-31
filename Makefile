@@ -1,4 +1,4 @@
-.PHONY: all install nopyc clean test test-integration test-integration-sites download-integration-output generate-region-data docs check local validate-release upload install-waf install-browser
+.PHONY: all install nopyc clean test test-integration test-integration-sites download-integration-output generate-region-data docs check local validate-release bump-version upload install-waf install-browser
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -108,6 +108,11 @@ validate-release:
 	@if [[ "${VERSION}" == "" ]]; then echo "VERSION is not set" & exit 1 ; fi
 
 	@if [[ $$(grep "__version__ = \"${VERSION}\"" amazonorders/__init__.py) == "" ]] ; then echo "Version not bumped in amazonorders/__init__.py" & exit 1 ; fi
+	@if [[ $$(grep -F "==$$(echo "${VERSION}" | cut -d. -f1-2).*" README.md) == "" ]] ; then echo "README.md wildcard pin not bumped" & exit 1 ; fi
+
+bump-version:
+	@if [[ "${VERSION}" == "" ]]; then echo "VERSION is not set" & exit 1 ; fi
+
 	@bash .github/scripts/bump-wildcard-pins.sh "${VERSION}" docs/index.rst README.md SECURITY.md
 
 upload: local

@@ -23,7 +23,7 @@ _PARSING_MODULES = (sorted(glob.glob(os.path.join(_PACKAGE_DIR, "entity", "*.py"
 _MESSAGE_CALLS = {"debug", "info", "warning", "warn", "error", "exception", "critical", "echo", "prompt", "input"}
 _DISPLAY_METHODS = {"__repr__", "__str__"}
 _PLUMBING_LITERALS = {
-    "", "\n", "\x00", " ", " ****", " - ", " - (redirected) ", "&", "']", ".", "/",
+    "", "\n", "\x00", " ", " ****", " - ", " - (redirected) ", "&", "']", ", ", ".", "/",
     "a", "balance",
     "/(?:dp|gp/product|product)/([A-Z0-9]{10})(?:[/?]|$)", ": ", "://", "=", "?", "?transactionTag=",
     ".cookies-", ".tmp", "Accept", "Content-Type", "GET", "GetTransactions", "POST",
@@ -37,9 +37,10 @@ _PLUMBING_LITERALS = {
     "input[name='", "lastDigits", "lastEvaluatedKey", "lastEvaluatedPageKey", "locale", "method",
     "min_date", "name", "nav-item-signout", "next_page", "next_page_data", "next_page_url", "not solved", "orderData",
     "orderDetailsUrl", "orderDisplayString", "order_filter", "order_id", "otpCode", "otpDeviceContext",
-    "otp_secret_key", "pageProps", "params", "parsed", "password", "path", "paymentMethodDisplayStringData",
-    "paymentMethodName", "paymentMethodNumber", "playwright", "ppw-widgetState", "props", "r", "rememberDevice",
-    "request", "secure", "simple_parse", "src", "start_index", "state", "statementDescriptor", "time_filter",
+    "otp_secret_key", "pageProps", "params", "parse_failures", "parsed", "password", "path",
+    "paymentMethodDisplayStringData", "paymentMethodName", "paymentMethodNumber", "playwright", "ppw-widgetState",
+    "props", "r", "rememberDevice", "request", "secure", "selector", "simple_parse", "src", "start_index", "state",
+    "statementDescriptor", "time_filter",
     "timeout", "token", "transactionList", "transactionResponseState", "transactionsList", "type", "username", "utf-8",
     "value", "visibleTransactionResponse", "w", "widgetName", "www.", "x-amzn-upx-token", "{page_name}_{index}.html",
     "{url}/{path}", "{url}?{query_param}={filter_value}{optional_order_filter}{optional_family_member}{optional_page}",

@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.2.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.2.1...HEAD)
+
+## [5.2.1](https://github.com/alexdlaird/amazon-orders/compare/5.2.0...5.2.1) - 2026-10-31
+
+### Added
+
+- `parse_failures` on every entity, the fields that failed to parse and were left `None`, to tell them apart from fields that are `None` by design.
+
+### Changed
+
+- `safe_simple_parse()`'s warning names the selector that failed, instead of `simple_parse`.
 
 ## [5.2.0](https://github.com/alexdlaird/amazon-orders/compare/5.1.0...5.2.0) - 2026-10-25
 

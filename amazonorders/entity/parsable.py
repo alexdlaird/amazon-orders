@@ -3,7 +3,7 @@ __license__ = "MIT"
 
 import logging
 from datetime import date
-from typing import Any, Callable, Dict, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 from bs4 import Tag
 
@@ -12,6 +12,17 @@ from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.exception import AmazonOrdersEntityError, AmazonOrdersError
 
 logger = logging.getLogger(__name__)
+
+
+def _field_name(parse_function: Callable[..., Any],
+                kwargs: Dict[str, Any]) -> str:
+    """
+    The name a field's parse failure is logged and recorded under: the field, or for ``simple_parse`` its selector.
+    """
+    if parse_function.__name__ != "simple_parse":
+        return parse_function.__name__.split("_parse_")[1]
+    selector = kwargs.get("selector", "")
+    return selector if isinstance(selector, str) else ", ".join(selector)
 
 
 class Parsable:
@@ -27,6 +38,9 @@ class Parsable:
         self.parsed: Tag = parsed
         #: The config to use.
         self.config: AmazonOrdersConfig = config
+        #: The fields :func:`safe_parse` could not parse and left ``None`` (the selector, for
+        #: :func:`safe_simple_parse`), so a failed field can be told apart from one that is ``None`` by design.
+        self.parse_failures: List[str] = []
 
     def __getstate__(self) -> Dict:
         state = self.__dict__.copy()
@@ -38,7 +52,7 @@ class Parsable:
         """
         Serialize the entity to a ``dict`` of primitives, suitable for JSON, YAML, or CSV output.
         Nested entities and lists of them are converted recursively, dates become ISO 8601 strings,
-        and the parsed ``Tag`` and the config are omitted.
+        and the parsed ``Tag``, the config, and ``parse_failures`` are omitted.
 
         :param exclude_none: Leave out fields whose value is ``None``, in nested entities too. Only ``None`` is left
             out: ``False``, ``0``, and empty lists are values.
@@ -46,7 +60,7 @@ class Parsable:
         """
         serialized: Dict[str, Any] = {}
         for field, value in vars(self).items():
-            if field in ["parsed", "config"] or (exclude_none and value is None):
+            if field in ["parsed", "config", "parse_failures"] or (exclude_none and value is None):
                 continue
 
             if isinstance(value, Parsable):
@@ -66,7 +80,8 @@ class Parsable:
                    **kwargs: Any) -> Any:
         """
         Execute the given parse function on a field, handling any common parse exceptions and passing
-        them as warnings to the logger (suppressing them as exceptions).
+        them as warnings to the logger (suppressing them as exceptions). A field that fails is listed in
+        :attr:`parse_failures` until it parses.
 
         :param parse_function: The parse function to attempt safe execution.
         :param kwargs: The ``kwargs`` will be passed to ``parse_function``.
@@ -76,18 +91,22 @@ class Parsable:
             raise AmazonOrdersError("The name of the \"parse_function\" passed to this method must start with "
                                     "\"_parse_\".")
 
+        field = _field_name(parse_function, kwargs)
         try:
-            return parse_function(**kwargs)
+            value = parse_function(**kwargs)
         except (AttributeError, IndexError, ValueError, TypeError, RecursionError):
-            function = "simple_parse"
-            if parse_function.__name__ != function:
-                function = parse_function.__name__.split("_parse_")[1]
             logger.warning(
-                "When building {name}, `{function}` "
+                "When building {name}, `{field}` "
                 "could not be parsed.".format(name=self.__class__.__name__,
-                                              function=function),
+                                              field=field),
                 exc_info=True)
+            if field not in self.parse_failures:
+                self.parse_failures.append(field)
             return None
+
+        if field in self.parse_failures:
+            self.parse_failures.remove(field)
+        return value
 
     def simple_parse(self,
                      selector: Union[str, list],
