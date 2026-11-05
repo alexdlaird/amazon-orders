@@ -232,6 +232,74 @@ class TestOffSiteRequests(UnitTestCase):
         # THEN
         self.assertEqual(0, len(responses.calls))
 
+    @responses.activate
+    def test_same_site_redirect_to_http_is_refused(self):
+        # GIVEN
+        responses.add(responses.GET, f"{self.base_url}/a", status=302, headers={"Location": "http://www.amazon.com/b"})
+        plain = responses.add(responses.GET, "http://www.amazon.com/b", body="<html></html>", status=200)
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_session.get(f"{self.base_url}/a")
+
+        # THEN
+        self.assertIn("not https", str(cm.exception))
+        self.assertEqual(0, plain.call_count)
+
+    @responses.activate
+    def test_allow_off_site_redirect_to_http_is_refused(self):
+        # GIVEN
+        responses.add(responses.GET, S3_PDF_URL, status=302, headers={"Location": "http://s3.amazonaws.com/x.pdf"})
+        plain = responses.add(responses.GET, "http://s3.amazonaws.com/x.pdf", body=b"%PDF-1.4", status=200)
+
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.amazon_session.get(S3_PDF_URL, binary=True, allow_off_site=True)
+
+        # THEN
+        self.assertIn("not https", str(cm.exception))
+        self.assertEqual(0, plain.call_count)
+
+    @responses.activate
+    def test_allow_off_site_follows_https_redirect_without_cookies(self):
+        # GIVEN
+        responses.add(responses.GET, S3_PDF_URL, status=302, headers={"Location": "https://cdn.example/x.pdf"})
+        responses.add(responses.GET, "https://cdn.example/x.pdf", body=b"%PDF-1.4", status=200)
+
+        # WHEN
+        response = self.amazon_session.get(S3_PDF_URL, binary=True, allow_off_site=True)
+
+        # THEN
+        self.assertEqual(b"%PDF-1.4", response.response.content)
+        for call in responses.calls:
+            self.assertNotIn("Cookie", call.request.headers)
+
+    def test_off_site_session_keeps_connection_settings_but_no_cookies(self):
+        # GIVEN
+        session = self.amazon_session.session
+        session.proxies = {"https": "http://proxy.example:3128"}
+        session.verify = "/some/ca-bundle.pem"
+        session.cert = "/some/client.pem"
+        session.trust_env = False
+        custom_adapter = MagicMock()
+        session.mount("https://s3.amazonaws.com", custom_adapter)
+        hook = MagicMock()
+        session.hooks["response"].append(hook)
+
+        # WHEN
+        off_site_session = self.amazon_session._create_off_site_session()
+
+        # THEN
+        self.assertEqual({"https": "http://proxy.example:3128"}, off_site_session.proxies)
+        self.assertEqual("/some/ca-bundle.pem", off_site_session.verify)
+        self.assertEqual("/some/client.pem", off_site_session.cert)
+        self.assertFalse(off_site_session.trust_env)
+        self.assertIs(custom_adapter, off_site_session.get_adapter(S3_PDF_URL))
+        self.assertIn(hook, off_site_session.hooks["response"])
+        self.assertEqual(0, len(off_site_session.cookies))
+        self.assertNotIn("Cookie", off_site_session.headers)
+        self.assertIsNot(session.proxies, off_site_session.proxies)
+
 
 class TestAuthFormsStayOnSite(UnitTestCase):
     @responses.activate
@@ -320,6 +388,13 @@ class TestInvoicesStayOnSite(UnitTestCase):
         self.assertFalse(self.amazon_orders._is_whole_foods_details_url(
             f"{self.test_config.constants.BASE_URL}/x?next=/fopo/order-details"))
 
+    def test_whole_foods_details_url_allows_path_prefix(self):
+        base_url = self.test_config.constants.BASE_URL
+        for url in [f"{base_url}/-/es/fopo/order-details?orderId=1",
+                    f"{base_url}/gp/wholefoodsmarket/receipts/order/1"]:
+            with self.subTest(url=url):
+                self.assertTrue(self.amazon_orders._is_whole_foods_details_url(url))
+
 
 @unittest.skipIf(sys.platform == "win32", reason="Windows does not support POSIX file permissions")
 class TestOwnerOnlyFiles(UnitTestCase):
@@ -385,3 +460,62 @@ class TestOwnerOnlyFiles(UnitTestCase):
             self.assertEqual(0o600, os.stat(os.path.join(self.test_output_dir, name)).st_mode & 0o777)
         with open(os.path.join(self.test_output_dir, "snap.png"), "rb") as f:
             self.assertEqual(b"png", f.read())
+
+    def test_playwright_debug_snapshot_overwrite_is_owner_only(self):
+        # GIVEN
+        os.makedirs(self.test_output_dir, exist_ok=True)
+        for name in ("snap.html", "snap.png"):
+            path = os.path.join(self.test_output_dir, name)
+            with open(path, "w") as f:
+                f.write("old")
+            os.chmod(path, 0o644)
+        form = PlaywrightAcicForm(self.test_config)
+        page = MagicMock(content=MagicMock(return_value="<html/>"), screenshot=MagicMock(return_value=b"png"),
+                         url="https://www.amazon.com/x")
+
+        # WHEN
+        form._save_debug_snapshot(page, self.test_output_dir, "snap")
+
+        # THEN
+        for name in ("snap.html", "snap.png"):
+            self.assertEqual(0o600, os.stat(os.path.join(self.test_output_dir, name)).st_mode & 0o777)
+
+    def test_open_owner_only_makes_existing_file_owner_only(self):
+        # GIVEN
+        os.makedirs(self.test_output_dir, exist_ok=True)
+        path = os.path.join(self.test_output_dir, "page.html")
+        with open(path, "w") as f:
+            f.write("old")
+        os.chmod(path, 0o644)
+
+        # WHEN
+        with util.open_owner_only(path, "w", encoding="utf-8") as f:
+            f.write("new")
+
+        # THEN
+        self.assertEqual(0o600, os.stat(path).st_mode & 0o777)
+        with open(path, "r") as f:
+            self.assertEqual("new", f.read())
+
+    @unittest.skipIf(sys.platform == "win32", "Creating symlinks needs extra privileges on Windows")
+    def test_save_writes_through_symlinked_config(self):
+        # GIVEN
+        target_dir = os.path.join(conf.DEFAULT_CONFIG_DIR, "dotfiles")
+        os.makedirs(target_dir)
+        target_path = os.path.join(target_dir, "config.yml")
+        with open(target_path, "w") as f:
+            f.write("{}")
+        link_path = os.path.join(conf.DEFAULT_CONFIG_DIR, "config.yml")
+        os.symlink(target_path, link_path)
+        config = AmazonOrdersConfig(config_path=link_path,
+                                    data={"output_dir": self.test_output_dir,
+                                          "cookie_jar_path": self.test_cookie_jar_path})
+
+        # WHEN
+        config.save()
+
+        # THEN
+        self.assertTrue(os.path.islink(link_path))
+        with open(target_path, "r") as f:
+            self.assertEqual(self.test_output_dir, yaml.safe_load(f)["output_dir"])
+        self.assertEqual(0o600, os.stat(target_path).st_mode & 0o777)

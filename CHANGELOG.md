@@ -8,10 +8,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Security
 
-- The Amazon session's cookies are only sent to the configured Amazon site. `AmazonSession.request()` refuses a URL on another site unless `allow_off_site=True`, which requests it over `https` with none of the session's cookies (as `download_invoice()` does for an invoice PDF Amazon serves from S3), and a redirect to another site is followed without cookies, or refused if it would re-send the request's data. The `Host` header is no longer pinned in `BASE_HEADERS`, since `requests` matched cookies against it rather than the URL.
+- The Amazon session's cookies are only sent to the configured Amazon site. `AmazonSession.request()` refuses a URL on another site unless `allow_off_site=True`, which requests it over `https`, redirects included, with none of the session's cookies but the session's proxy, CA bundle and adapters (as `download_invoice()` does for an invoice PDF Amazon serves from S3), and a redirect to another site is followed without cookies, or refused if it would re-send the request's data or isn't `https`. The `Host` header is no longer pinned in `BASE_HEADERS`, since `requests` matched cookies against it rather than the URL.
 - `domain` (and `--domain`, `AMAZON_DOMAIN`) must be an Amazon site in `REGION_SITES`, over `https`. Anything else raises `AmazonOrdersError`, instead of the account's credentials being sent there.
-- `config.yml` is written atomically and readable only by its owner (`0600`), like `cookies.json`, and the config directory is created owner-only (`0700`).
-- Pages and screenshots written in `debug` mode are readable only by their owner (`0600`), in an `output_dir` created owner-only (`0700`).
+- `config.yml` is written atomically and readable only by its owner (`0600`), like `cookies.json`, and the config directory is created owner-only (`0700`). A symlinked `config.yml` is written through to its target.
+- Pages and screenshots written in `debug` mode are readable only by their owner (`0600`), including files that already existed, in an `output_dir` created owner-only (`0700`).
 
 ### Changed
 

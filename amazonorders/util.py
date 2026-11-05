@@ -284,12 +284,13 @@ def write_owner_only(path: str, content: str, prefix: str) -> None:
     """
     Write ``content`` to ``path`` atomically, readable by its owner alone (mode ``0600``): it's written to a temp
     file beside it, then moved into place, so a reader never sees a partial file. The directory is created,
-    owner-only (``0700``), if it doesn't exist.
+    owner-only (``0700``), if it doesn't exist. If ``path`` is a symlink, its target is written, and the link kept.
 
     :param path: The file to write.
     :param content: The text to write.
     :param prefix: The prefix of the temp file's name.
     """
+    path = os.path.realpath(path)
     directory = os.path.dirname(path) or "."
     os.makedirs(directory, mode=0o700, exist_ok=True)
     file_descriptor, temp_path = tempfile.mkstemp(dir=directory, prefix=prefix, suffix=".tmp")
@@ -304,12 +305,20 @@ def write_owner_only(path: str, content: str, prefix: str) -> None:
 
 
 def _owner_only_opener(path: str, flags: int) -> int:
-    return os.open(path, flags, 0o600)
+    file_descriptor = os.open(path, flags, 0o600)
+    # The mode above only applies when the file is created, so an existing file is made owner-only, too
+    if hasattr(os, "fchmod"):
+        try:
+            os.fchmod(file_descriptor, 0o600)
+        except BaseException:
+            os.close(file_descriptor)
+            raise
+    return file_descriptor
 
 
 def open_owner_only(path: str, mode: str = "w", **kwargs: Any) -> IO[Any]:
     """
-    Open ``path`` for writing, creating it readable by its owner alone (mode ``0600``).
+    Open ``path`` for writing, readable by its owner alone (mode ``0600``), whether it's created or already exists.
 
     :param path: The file to open.
     :param mode: The mode to open it in.

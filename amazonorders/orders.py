@@ -1028,8 +1028,10 @@ class AmazonOrders:
 
     def _is_whole_foods_details_url(self,
                                     url: str) -> bool:
+        # Matched against the path alone, not the query string, but anywhere in it, since Amazon can add a prefix
+        # like the /-/es/ language prefix, as the selectors that flag Whole Foods orders allow
         path = urlsplit(url).path
-        return any(path.startswith(route) for route in self.config.constants.WHOLE_FOODS_DETAILS_ROUTES)
+        return any(route in path for route in self.config.constants.WHOLE_FOODS_DETAILS_ROUTES)
 
     def _get_whole_foods_order(self,
                                details_response: util.AmazonSessionResponse,

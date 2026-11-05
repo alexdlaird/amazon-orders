@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import time
+from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse, urlsplit
 
@@ -26,11 +27,28 @@ logger = logging.getLogger(__name__)
 _OFF_SITE_STRIPPED_HEADERS = ("Cookie", "Origin", "Referer", "Authorization")
 
 
-class AmazonSiteSession(Session):
+class _HttpsOnlySession(Session):
+    """
+    A :class:`requests.Session` that refuses to follow a redirect to a URL that isn't ``https``.
+    """
+
+    def rebuild_auth(self,
+                     prepared_request: PreparedRequest,
+                     response: Response) -> None:
+        # Called by resolve_redirects for each hop, after its cookies are prepared and before it is sent
+        super().rebuild_auth(prepared_request, response)
+
+        url = prepared_request.url or ""
+        if urlsplit(url).scheme != "https":
+            raise AmazonOrdersError(f"{response.url} redirected to {url}, which is not https, so it was not "
+                                    "followed.")
+
+
+class AmazonSiteSession(_HttpsOnlySession):
     """
     A :class:`requests.Session` that keeps the Amazon session on its site: when a redirect leaves the site, the hop is
     sent without cookies (or ``Origin``/``Referer``), and a redirect that would re-send a request's data to another
-    site is refused.
+    site, or that isn't ``https``, is refused.
     """
 
     def __init__(self,
@@ -42,7 +60,6 @@ class AmazonSiteSession(Session):
     def rebuild_auth(self,
                      prepared_request: PreparedRequest,
                      response: Response) -> None:
-        # Called by resolve_redirects for each hop, after its cookies are prepared and before it is sent
         super().rebuild_auth(prepared_request, response)
 
         url = prepared_request.url or ""
@@ -240,8 +257,8 @@ class AmazonSession:
         :param binary: ``True`` if the response is a file, like a PDF, rather than a page. It is not parsed as HTML,
             and ``debug`` mode doesn't write it to a page file.
         :param allow_off_site: ``True`` to allow a URL on another site, like an invoice PDF Amazon serves from S3.
-            It's requested over ``https`` only, with none of the session's cookies. By default, a URL that isn't on
-            the Amazon site raises :class:`~amazonorders.exception.AmazonOrdersError`.
+            It's requested over ``https`` only, redirects included, with none of the session's cookies. By default, a
+            URL that isn't on the Amazon site raises :class:`~amazonorders.exception.AmazonOrdersError`.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`requests.request`.
         :return: The response from the executed request.
         :raises AmazonOrdersError: If ``url`` isn't on the Amazon site, and ``allow_off_site`` isn't ``True``.
@@ -277,9 +294,7 @@ class AmazonSession:
 
         try:
             if off_site:
-                # A throwaway session, so none of the Amazon session's cookies are sent, and none it sets are kept
-                with requests.Session() as off_site_session:
-                    response = off_site_session.request(method, url, **kwargs)
+                response = self._create_off_site_session().request(method, url, **kwargs)
             else:
                 response = self.session.request(method, url, **kwargs)
         except (requests.ConnectionError, requests.Timeout) as e:
@@ -318,6 +333,20 @@ class AmazonSession:
                     html_file.write(amazon_session_response.response.text)
 
         return amazon_session_response
+
+    def _create_off_site_session(self) -> Session:
+        # A throwaway session, so none of the Amazon session's cookies, headers or auth are sent, and no cookies it
+        # sets are kept. It connects as the configured session does, so a proxy, CA bundle or adapter still applies.
+        # It isn't closed, since its adapters are the configured session's.
+        off_site_session = _HttpsOnlySession()
+        off_site_session.proxies = dict(self.session.proxies)
+        off_site_session.verify = self.session.verify
+        off_site_session.cert = self.session.cert
+        off_site_session.trust_env = self.session.trust_env
+        off_site_session.max_redirects = self.session.max_redirects
+        off_site_session.hooks = {event: list(hooks) for event, hooks in self.session.hooks.items()}
+        off_site_session.adapters = OrderedDict(self.session.adapters)
+        return off_site_session
 
     def get(self,
             url: str,
