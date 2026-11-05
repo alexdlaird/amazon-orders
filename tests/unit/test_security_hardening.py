@@ -190,7 +190,7 @@ class TestOffSiteRequests(UnitTestCase):
 
         # WHEN
         with self.assertRaises(AmazonOrdersError):
-            self.amazon_session.post(f"{self.base_url}/ap/signin", data={"password": "some-password"})
+            self.amazon_session.post(f"{self.base_url}/ap/signin", data={"some-field": "some-value"})
 
         # THEN
         self.assertEqual(0, evil.call_count)

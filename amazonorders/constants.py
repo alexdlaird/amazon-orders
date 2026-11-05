@@ -457,31 +457,43 @@ class Constants:
         :return: The site's base URL.
         :raises AmazonOrdersError: If ``value`` isn't an Amazon site over ``https``.
         """
-        if not isinstance(value, str) or not value.strip():
-            raise AmazonOrdersError(f"Config value for \"domain\" must be an Amazon site, like amazon.com, "
-                                    f"not {value!r}.")
-
-        normalized = value.strip().rstrip("/")
-        if "://" not in normalized:
-            normalized = f"https://{normalized}" if normalized.lower().startswith("www.") \
-                else f"https://www.{normalized}"
-
-        try:
-            parts = urlsplit(normalized)
-            host = (parts.hostname or "").lower()
-            valid = (parts.scheme == "https" and
-                     parts.username is None and parts.password is None and
-                     parts.port is None and
-                     not parts.path and not parts.query and not parts.fragment and
-                     parts.netloc.lower() == host and
-                     host.startswith(("amazon.", "www.amazon.")) and
-                     Constants._tld(f"https://{host}") in REGION_SITES)
-        except ValueError:
-            valid = False
-
-        if not valid:
+        host = Constants._amazon_site_host(Constants._domain_to_url(value))
+        if host is None:
             raise AmazonOrdersError(f"Config value for \"domain\" must be an Amazon site over https, like amazon.com "
                                     f"or https://www.amazon.co.uk, not {value!r}. Supported sites: "
                                     f"{', '.join(f'amazon.{tld}' for tld in sorted(REGION_SITES))}.")
 
         return f"https://{host}"
+
+    @staticmethod
+    def _domain_to_url(value: object) -> str:
+        # A bare domain (e.g. amazon.de) gets https:// and www. added, a full URL is left as is
+        if not isinstance(value, str) or not value.strip():
+            raise AmazonOrdersError(f"Config value for \"domain\" must be an Amazon site, like amazon.com, "
+                                    f"not {value!r}.")
+
+        url = value.strip().rstrip("/")
+        if "://" in url:
+            return url
+        prefix = "https://" if url.lower().startswith("www.") else "https://www."
+        return f"{prefix}{url}"
+
+    @staticmethod
+    def _amazon_site_host(url: str) -> Optional[str]:
+        # The host, if the URL is nothing but an Amazon site in REGION_SITES over https, or else None
+        try:
+            parts = urlsplit(url)
+            host = (parts.hostname or "").lower()
+            checks = (parts.scheme == "https",
+                      parts.username is None,
+                      parts.password is None,
+                      parts.port is None,
+                      not parts.path,
+                      not parts.query,
+                      not parts.fragment,
+                      parts.netloc.lower() == host,
+                      host.startswith(("amazon.", "www.amazon.")),
+                      Constants._tld(f"https://{host}") in REGION_SITES)
+        except ValueError:
+            return None
+        return host if all(checks) else None
