@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   prereq:
@@ -88,48 +89,23 @@ jobs:
           path: dist/
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@aef6c9b6e301dc803e1bc9133e9ce67ae9b0906b # v1.14.3
+        uses: pypa/gh-action-pypi-publish@release/v1
 
-  release:
+  finish:
     needs: [prereq, publish]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.RELEASE_BOT_APP_ID }}
-          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
-
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          REPO_SLUG: alexdlaird/amazon-orders
-          VERSION: ${{ needs.prereq.outputs.version }}
-          SHA: ${{ needs.prereq.outputs.squash_commit_sha }}
-          RELEASE_NOTES: ${{ needs.prereq.outputs.release_notes }}
-        run: |
-          gh release create "$VERSION" \
-            --repo "$REPO_SLUG" \
-            --target "$SHA" \
-            --title "$VERSION" \
-            --notes "$RELEASE_NOTES"
-
-  cleanup:
-    needs: [prereq, release]
     if: always() && needs.prereq.result == 'success'
-    uses: alexdlaird/.github/.github/workflows/release-cleanup.yml@main
+    uses: alexdlaird/.github/.github/workflows/release-finish.yml@main
     with:
-      skip_ci: ${{ needs.release.result == 'success' }}
+      shipped: ${{ needs.publish.result == 'success' }}
+      version: ${{ needs.prereq.outputs.version }}
+      squash_commit_sha: ${{ needs.prereq.outputs.squash_commit_sha }}
+      squash_boundary_sha: ${{ needs.prereq.outputs.squash_boundary_sha }}
+      build_run_id: ${{ needs.prereq.outputs.build_run_id }}
+      version_file: 'amazonorders/__init__.py'
+      version_pattern: 's/^__version__ = ".*"/__version__ = "${VERSION}"/'
+      repo_slug: alexdlaird/amazon-orders
+      github_release: true
+      github_release_notes: ${{ needs.prereq.outputs.release_notes }}
     secrets:
       bot_app_id: ${{ secrets.RELEASE_BOT_APP_ID }}
       bot_private_key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
-
-  bump:
-    needs: [release, cleanup]
-    if: always() && needs.release.result == 'success'
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      bump_type: next
-    secrets: inherit

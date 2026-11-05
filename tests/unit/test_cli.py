@@ -89,9 +89,9 @@ class TestCli(UnitTestCase):
                                   ["--config-path", self.test_config.config_path, "login", "--browser"],
                                   input=input)
 
-    @patch("amazonorders.cli.sys")
-    @patch("amazonorders.cli.PlaywrightBrowserLauncher")
-    @patch("amazonorders.cli.PlaywrightBrowserLogin")
+    @patch("amazonauth.cli.sys")
+    @patch("amazonauth.cli.PlaywrightBrowserLauncher")
+    @patch("amazonauth.cli.PlaywrightBrowserLogin")
     def test_login_with_browser_downloads_chosen_browser_and_retries(self, mock_browser_login, mock_launcher,
                                                                      mock_sys):
         # GIVEN
@@ -110,9 +110,9 @@ class TestCli(UnitTestCase):
         self.assertIn("Config \"browser\" updated to \"firefox\"", response.output)
         self.assertEqual(2, mock_browser_login.return_value.login.call_count)
 
-    @patch("amazonorders.cli.sys")
-    @patch("amazonorders.cli.PlaywrightBrowserLauncher")
-    @patch("amazonorders.cli.PlaywrightBrowserLogin")
+    @patch("amazonauth.cli.sys")
+    @patch("amazonauth.cli.PlaywrightBrowserLauncher")
+    @patch("amazonauth.cli.PlaywrightBrowserLogin")
     def test_login_with_browser_enter_downloads_default_browser(self, mock_browser_login, mock_launcher, mock_sys):
         # GIVEN
         mock_sys.stdin.isatty.return_value = True
@@ -127,9 +127,9 @@ class TestCli(UnitTestCase):
         self.assertIn("--> Choose a browser to download [1]: 1\n", response.output)
         mock_launcher.return_value.install.assert_called_once_with("chromium")
 
-    @patch("amazonorders.cli.sys")
-    @patch("amazonorders.cli.PlaywrightBrowserLauncher")
-    @patch("amazonorders.cli.PlaywrightBrowserLogin")
+    @patch("amazonauth.cli.sys")
+    @patch("amazonauth.cli.PlaywrightBrowserLauncher")
+    @patch("amazonauth.cli.PlaywrightBrowserLogin")
     def test_login_with_browser_confirms_single_browser_type(self, mock_browser_login, mock_launcher, mock_sys):
         # GIVEN
         mock_sys.stdin.isatty.return_value = True
@@ -145,9 +145,9 @@ class TestCli(UnitTestCase):
         mock_launcher.return_value.install.assert_called_once_with("firefox")
         self.assertNotIn("Config \"browser\" updated", response.output)
 
-    @patch("amazonorders.cli.sys")
-    @patch("amazonorders.cli.PlaywrightBrowserLauncher")
-    @patch("amazonorders.cli.PlaywrightBrowserLogin")
+    @patch("amazonauth.cli.sys")
+    @patch("amazonauth.cli.PlaywrightBrowserLauncher")
+    @patch("amazonauth.cli.PlaywrightBrowserLogin")
     def test_login_with_browser_declined_download_fails(self, mock_browser_login, mock_launcher, mock_sys):
         # GIVEN
         mock_sys.stdin.isatty.return_value = True
@@ -161,8 +161,8 @@ class TestCli(UnitTestCase):
         self.assertIn("Not installed.", response.output)
         mock_launcher.return_value.install.assert_not_called()
 
-    @patch("amazonorders.cli.PlaywrightBrowserLauncher")
-    @patch("amazonorders.cli.PlaywrightBrowserLogin")
+    @patch("amazonauth.cli.PlaywrightBrowserLauncher")
+    @patch("amazonauth.cli.PlaywrightBrowserLogin")
     def test_login_with_browser_without_terminal_does_not_prompt(self, mock_browser_login, mock_launcher):
         # GIVEN
         self.given_browser_not_installed(mock_browser_login, ["chromium", "firefox", "webkit"])

@@ -1,21 +1,24 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
-from typing import Any, Dict, Optional, Union
+from amazonauth.exception import (
+    AmazonAuthBrowserNotInstalledError as AmazonOrdersBrowserNotInstalledError,
+    AmazonAuthError as AmazonOrdersError,
+    AmazonAuthRedirectError as AmazonOrdersAuthRedirectError,
+    AmazonAuthSignInError as AmazonOrdersAuthError,
+    AmazonAuthWafSolverError as AmazonOrdersWafSolverError,
+)
 
-
-class AmazonOrdersError(Exception):
-    """
-    Raised when a general ``amazon-orders`` error has occurred.
-    """
-
-    def __init__(self,
-                 error: Union[str, BaseException],
-                 meta: Optional[Dict[str, Any]] = None) -> None:
-        super(AmazonOrdersError, self).__init__(error)
-
-        #: Metadata for context around the error was raised.
-        self.meta: Optional[Dict[str, Any]] = meta
+__all__ = [
+    "AmazonOrdersError",
+    "AmazonOrdersNotFoundError",
+    "AmazonOrdersUnavailableError",
+    "AmazonOrdersAuthError",
+    "AmazonOrdersAuthRedirectError",
+    "AmazonOrdersEntityError",
+    "AmazonOrdersWafSolverError",
+    "AmazonOrdersBrowserNotInstalledError",
+]
 
 
 class AmazonOrdersNotFoundError(AmazonOrdersError):
@@ -34,40 +37,8 @@ class AmazonOrdersUnavailableError(AmazonOrdersError):
     pass
 
 
-class AmazonOrdersAuthError(AmazonOrdersError):
-    """
-    Raised when an ``amazon-orders`` authentication error has occurred.
-    """
-    pass
-
-
-class AmazonOrdersAuthRedirectError(AmazonOrdersAuthError):
-    """
-    Raised when an ``amazon-orders`` session that was previously authenticated redirects to login, indicating the
-    likely need to reauthenticate.
-    """
-    pass
-
-
 class AmazonOrdersEntityError(AmazonOrdersError):
     """
     Raised when an ``amazon-orders`` entity parsing error has occurred.
-    """
-    pass
-
-
-class AmazonOrdersWafSolverError(AmazonOrdersError):
-    """
-    Raised when a third-party WAF solver fails (e.g. its balance ran out, its API key was rejected, or the service
-    is down), rather than Amazon rejecting a solved challenge. ``meta["provider"]`` is the solver's name, and
-    ``meta["provider_error"]`` is the error it gave.
-    """
-    pass
-
-
-class AmazonOrdersBrowserNotInstalledError(AmazonOrdersError):
-    """
-    Raised when no browser is installed to sign in with. ``meta["browser_types"]`` lists the Playwright browser types
-    that can be installed in its place, the default first.
     """
     pass

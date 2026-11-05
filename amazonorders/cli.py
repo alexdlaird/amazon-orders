@@ -11,26 +11,23 @@ import re
 import sys
 import threading
 import time
-from typing import Any, List, Optional, Set, Tuple
+from typing import Any, Optional, Set, Tuple
 
 import click
 from click.core import Context
 
+from amazonauth import cli as amazonauth_cli
+from amazonauth.cli import CliAuth, check_session, login, logout
+
 from amazonorders import __version__, util
 from amazonorders.conf import AmazonOrdersConfig
-from amazonorders.contrib.browser.playwright import PlaywrightBrowserLauncher, PlaywrightBrowserLogin
 from amazonorders.entity.invoice import Invoice
-from amazonorders.exception import (
-    AmazonOrdersAuthError,
-    AmazonOrdersAuthRedirectError,
-    AmazonOrdersBrowserNotInstalledError,
-    AmazonOrdersError,
-)
+from amazonorders.exception import AmazonOrdersAuthRedirectError, AmazonOrdersError
 from amazonorders.gift_cards import AmazonGiftCards
 from amazonorders.orders import AmazonOrders
 from amazonorders.output import OutputFormatter
 from amazonorders.prime import AmazonPrime
-from amazonorders.session import AmazonSession, IODefault
+from amazonorders.session import AmazonSession
 from amazonorders.transactions import AmazonTransactions
 
 logger = logging.getLogger("amazonorders")
@@ -39,51 +36,6 @@ banner_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                            "banner.txt")
 with open(banner_path) as f:
     banner = f.read()
-
-
-class IOClick(IODefault):
-    def echo(self,
-             msg: str,
-             fg: Optional[str] = None,
-             **kwargs: Any) -> None:
-        click.secho(msg, fg=fg)
-
-    def prompt(self,
-               msg: str,
-               type: Optional[Any] = None,
-               **kwargs: Any) -> Any:
-        for choice in kwargs.get("choices", []):
-            self.echo(choice, **kwargs)
-
-        return click.prompt(f"--> {msg}", type=type)
-
-    @staticmethod
-    def prompt_for_choice(msg: str,
-                          choices: List[str]) -> str:
-        for number, choice in enumerate(choices, start=1):
-            click.echo(f"{number}: {choice}")
-        click.echo(f"--> {msg} [1]: ", nl=False)
-
-        while True:
-            key = click.getchar()
-            if key in ("\r", "\n"):
-                number = 1
-            elif key.isdigit() and 1 <= int(key) <= len(choices):
-                number = int(key)
-            else:
-                continue
-
-            click.echo(number)
-            return choices[number - 1]
-
-    @staticmethod
-    def print_banner() -> None:
-        click.echo(banner.format(version=__version__), err=True)
-
-    @staticmethod
-    def echo_session_expired() -> None:
-        click.echo("... Amazon redirected to login, so it wants the persisted session's sign-in confirmed. Call the "
-                   "`login` command to sign in again, or `login --browser` to log in on Amazon's own page.\n")
 
 
 class ProgressSpinner:
@@ -146,65 +98,10 @@ class ProgressSpinner:
         self._line_length = max(self._line_length, len(line))
 
 
-class CliAuth:
-    def __init__(self,
-                 amazon_session: AmazonSession) -> None:
-        self.amazon_session: AmazonSession = amazon_session
-
-    def authenticate(self,
-                     retries: int = 0) -> None:
-        amazon_session = self.amazon_session
-        try:
-            if amazon_session.auth_cookies_stored():
-                if amazon_session.username or amazon_session.password:
-                    click.echo(
-                        "Info: The given username and password are being ignored because a previous session still "
-                        "exists. To reauthenticate, call the `login` command.\n")
-            else:
-                if not amazon_session.username:
-                    amazon_session.username = click.prompt("Username")
-                if not amazon_session.password:
-                    amazon_session.password = click.prompt("Password", hide_input=True)
-                    click.echo("")
-
-            amazon_session.login()
-        except AmazonOrdersAuthError as e:
-            if retries < amazon_session.config.max_auth_retries:
-                if amazon_session.username:
-                    click.secho(str(f"{e}\n"), fg="red")
-                    click.echo(
-                        f"Info: Authenticating '{amazon_session.username}' failed. If using 2FA, wait a minute "
-                        "before retrying with a new OTP.\n")
-
-                amazon_session.password = None
-
-                self.authenticate(retries=retries + 1)
-            else:
-                raise e
-
-    def authenticate_with_browser(self) -> None:
-        browser_login = PlaywrightBrowserLogin(self.amazon_session)
-        try:
-            browser_login.login()
-        except AmazonOrdersBrowserNotInstalledError as e:
-            if not sys.stdin.isatty():
-                raise
-
-            browser_types = (e.meta or {})["browser_types"]
-            if len(browser_types) == 1:
-                click.echo(f"Info: {browser_types[0]} isn't installed.\n")
-                if not click.confirm(f"--> Download {browser_types[0]} now?", default=True):
-                    raise
-                browser_type = browser_types[0]
-            else:
-                click.echo("Info: No default browser was found, so one to sign in with needs to be downloaded.\n")
-                browser_type = IOClick.prompt_for_choice("Choose a browser to download", browser_types)
-
-            browser_selected = PlaywrightBrowserLauncher(self.amazon_session.config).install(browser_type)
-            click.echo("")
-            if browser_selected:
-                click.echo(f"Info: Config \"browser\" updated to \"{browser_type}\".\n")
-            browser_login.login()
+class IOClick(amazonauth_cli.IOClick):
+    @staticmethod
+    def print_banner() -> None:
+        click.echo(banner.format(version=__version__), err=True)
 
 
 @click.group()
@@ -249,8 +146,9 @@ def amazon_orders_cli(ctx: Context,
             ctx.obj[key] = value
 
     if kwargs["debug"]:
-        logger.setLevel(logging.DEBUG)
-        logger.addHandler(logging.StreamHandler())
+        for debug_logger in (logger, logging.getLogger("amazonauth")):
+            debug_logger.setLevel(logging.DEBUG)
+            debug_logger.addHandler(logging.StreamHandler())
 
     ctx.obj["show_progress"] = (kwargs["progress"] if kwargs["progress"] is not None
                                 else _is_interactive_terminal() and not kwargs["debug"])
@@ -724,69 +622,9 @@ Gift Cards, with {days} days of activity
         ctx.fail(str(e))
 
 
-@amazon_orders_cli.command(short_help="Check if a persisted session exists.")
-@click.pass_context
-@click.option("--verify", is_flag=True, default=False,
-              help="Also ask Amazon whether it still accepts the persisted session.")
-def check_session(ctx: Context, **kwargs: Any) -> None:
-    """
-    Check if a persisted session exists, meaning commands can be called without needing to provide credentials.
-    """
-    amazon_session = ctx.obj["amazon_session"]
-
-    try:
-        if amazon_session.check_session(verify=kwargs["verify"]):
-            if kwargs["verify"]:
-                click.echo("Info: A persisted session exists, and Amazon accepts it.\n")
-            else:
-                click.echo("Info: A persisted session exists.\n")
-        elif amazon_session.auth_cookies_stored():
-            click.echo("Info: A persisted session exists, but Amazon no longer accepts it.\n")
-            IOClick.echo_session_expired()
-        else:
-            click.echo("Info: No persisted session exists.\n")
-    except AmazonOrdersError as e:
-        logger.debug("An error occurred.", exc_info=True)
-        ctx.fail(str(e))
-
-
-@amazon_orders_cli.command()
-@click.pass_context
-@click.option("--browser", is_flag=True, default=False,
-              help="Sign in with a browser window, so amazon-orders never needs to store your credentials. "
-                   "Requires the browser extra.")
-def login(ctx: Context, **kwargs: Any) -> None:
-    """
-    Log in to establish an Amazon session and cookies.
-    """
-    amazon_session = ctx.obj["amazon_session"]
-
-    try:
-        if amazon_session.auth_cookies_stored():
-            click.echo("Info: Logging out of the persisted session first, so this login starts fresh.\n")
-            amazon_session.logout()
-
-        if kwargs["browser"]:
-            CliAuth(amazon_session).authenticate_with_browser()
-        else:
-            CliAuth(amazon_session).authenticate()
-    except AmazonOrdersError as e:
-        logger.debug("An error occurred.", exc_info=True)
-        ctx.fail(str(e))
-
-    click.echo("Info: Successfully logged in to Amazon, session persisted.\n")
-
-
-@amazon_orders_cli.command()
-@click.pass_context
-def logout(ctx: Context) -> None:
-    """
-    Log out of existing Amazon sessions and clear cookies.
-    """
-    amazon_session = ctx.obj["amazon_session"]
-    amazon_session.logout()
-
-    click.echo("Info: Successfully logged out of Amazon.\n")
+amazon_orders_cli.add_command(check_session)
+amazon_orders_cli.add_command(login)
+amazon_orders_cli.add_command(logout)
 
 
 @amazon_orders_cli.command()

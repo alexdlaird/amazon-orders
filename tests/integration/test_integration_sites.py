@@ -38,8 +38,9 @@ class TestIntegrationSites(TestCase):
     """
     Signed-out checks that ``amazon-orders`` gets English pages from every site its region data says offers them, so
     a best-effort site's drift is caught nightly. The region data itself is generated from Amazon's own pages by
-    ``make generate-region-data``; these check that requesting pages the way ``amazon-orders`` does still works. Each
-    site's page is requested with a non-English ``Accept-Language``, so English pages prove its language cookie works.
+    ``amazon-auth``'s ``make generate-region-data``; these check that requesting pages the way ``amazon-orders``
+    does still works. Each site's page is requested with a non-English ``Accept-Language``, so English pages prove
+    its language cookie works.
 
     A blocked or failed request (a robot page, a 5xx, or a timeout) is retried once, then skipped as inconclusive, so
     only a definite mismatch fails.

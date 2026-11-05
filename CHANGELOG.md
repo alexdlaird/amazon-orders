@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.2.1...HEAD)
 
+### Changed
+
+- Sign-in now builds on [`amazon-auth`](https://github.com/alexdlaird/amazon-auth), which `amazon-orders` depends on: `AmazonSession`, the sign-in forms, the WAF challenge solvers, browser sign-in, the exceptions, config, constants, selectors and region data. Every import, name, extra, CLI command, config key and environment variable keeps working.
+- Log messages from that code come from `amazonauth` loggers (e.g. `amazonauth.session`), which `--debug` also shows, and tracebacks name `amazon-auth`'s classes (e.g. `AmazonAuthError`, which `AmazonOrdersError` is). Messages naming a class path give its `amazonauth` one (e.g. `amazonauth.contrib.browser.playwright.PlaywrightJSAuthForm`); the `amazonorders` path still works in `auth_forms_classes`.
+
 ## [5.2.1](https://github.com/alexdlaird/amazon-orders/compare/5.2.0...5.2.1) - 2026-10-31
 
 ### Added

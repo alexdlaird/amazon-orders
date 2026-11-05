@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.abspath(".."))
 # These imports must happen after adding to sys.path so docs build is consistent across environments
 from docutils import nodes
 from docutils.statemachine import StringList
+from sphinx.ext import intersphinx
 from sphinx.util.docutils import SphinxDirective
 
 from amazonorders import __version__
@@ -236,6 +237,7 @@ nitpick_ignore = [
 ]
 
 intersphinx_mapping = {
+    "amazonauth": ("https://amazon-auth.readthedocs.io/en/latest/", None),
     "click": ("https://click.palletsprojects.com/en/latest", None),
     "requests": ("https://requests.readthedocs.io/en/latest/", None),
     "beautifulsoup4": ("https://www.crummy.com/software/BeautifulSoup/bs4/doc/", None),
@@ -265,6 +267,18 @@ class SupportedSitesDirective(SphinxDirective):
         return container.children
 
 
+def _resolve_amazon_auth_methods(app, env, node, contnode):
+    """
+    ``:func:`` names methods here, as it does in ``amazon-auth``. Sphinx resolves that within a project, but
+    intersphinx matches roles strictly, so retry an unresolved ``amazon-auth`` ``:func:`` as ``:meth:``.
+    """
+    if (node.get("refdomain") == "py" and node.get("reftype") == "func" and
+            node.get("reftarget", "").startswith("amazonauth.")):
+        node["reftype"] = "meth"
+        return intersphinx.missing_reference(app, env, node, contnode)
+    return None
+
+
 def _canonicalize_root_page(app, pagename, templatename, context, doctree):
     if pagename == app.config.root_doc:
         context["pageurl"] = app.config.html_baseurl
@@ -282,5 +296,6 @@ def _canonicalize_root_in_sitemap(app, exception):
 
 def setup(app):
     app.add_directive("supported-sites", SupportedSitesDirective)
+    app.connect("missing-reference", _resolve_amazon_auth_methods)
     app.connect("html-page-context", _canonicalize_root_page)
     app.connect("build-finished", _canonicalize_root_in_sitemap, priority=900)
