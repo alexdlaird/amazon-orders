@@ -220,8 +220,8 @@ class CliAuth:
 @click.option("--output-dir",
               help="The directory where any output files should be produced, passing this overrides config value.")
 @click.option("--domain",
-              help="The Amazon domain to target (e.g. amazon.com, amazon.co.uk, amazon.com.au). "
-                   "Defaults to amazon.com.")
+              help="The Amazon domain to target (e.g. amazon.com, amazon.co.uk, amazon.com.au). It must be an "
+                   "Amazon site, over https. Defaults to amazon.com.")
 @click.option("--progress/--no-progress", default=None,
               help="Show a running count while fetching. Defaults to showing it only in an interactive terminal, "
                    "and not with --debug.")

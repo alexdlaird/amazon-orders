@@ -5,10 +5,11 @@ import logging
 import re
 from datetime import date
 from typing import Dict, List, Optional, Union
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode, urlparse, urlsplit
 
 from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
+from amazonorders.exception import AmazonOrdersError
 from amazonorders.region_data import REGION_SITES
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class Constants:
 
         config = AmazonOrdersConfig(data={"constants_class": "my_module.MyConstants"})
 
-    URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are derived from the active
+    URLs and the URL-shaped headers (``Origin``, ``Referer``) are derived from the active
     Amazon domain. ``REQUEST_COOKIES``, ``Accept-Language``, ``CURRENCY_SYMBOL``, the sign-in
     ``openid.assoc_handle``, and ``COOKIES_SET_WHEN_AUTHENTICATED`` are adjusted for known Amazon sites
     (each only when a subclass has not overridden it). The domain is resolved in this precedence order:
@@ -128,7 +129,6 @@ class Constants:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",  # noqa: E501
         "Accept-Encoding": "gzip, deflate, br, zstd",
         "Accept-Language": "en-US,en;q=0.9",
-        "Host": urlparse(BASE_URL).netloc,
         "Origin": BASE_URL,
         "Referer": f"{SIGN_IN_URL}?{urlencode(SIGN_IN_QUERY_PARAMS)}",
         "Sec-Ch-Ua": '"Chromium";v="149", "Google Chrome";v="149", "Not.A/Brand";v="24"',
@@ -361,10 +361,11 @@ class Constants:
         Override the URL-derived attributes for the given Amazon domain, and the values that depend on which Amazon
         site it is, from its region data: the sign-in ``openid.assoc_handle`` (Amazon rejects a sign-in, with HTTP 404,
         whose handle doesn't match the site), ``Accept-Language``, ``CURRENCY_SYMBOL``, and
-        ``COOKIES_SET_WHEN_AUTHENTICATED``. Each is applied only when a subclass hasn't overridden it, and a site that
-        isn't known keeps the defaults.
+        ``COOKIES_SET_WHEN_AUTHENTICATED``. Each is applied only when a subclass hasn't overridden it.
 
-        :param domain: The Amazon domain (e.g. ``amazon.com.au``) or full URL (e.g. ``https://www.amazon.com.au``).
+        :param domain: The Amazon domain (e.g. ``amazon.com.au``) or full URL (e.g. ``https://www.amazon.com.au``),
+            which must be an Amazon site in :data:`~amazonorders.region_data.REGION_SITES`, over ``https``.
+        :raises AmazonOrdersError: If ``domain`` isn't an Amazon site over ``https``.
         """
         base_url = self._normalize_base_url(domain)
         tld = self._tld(base_url)
@@ -398,7 +399,7 @@ class Constants:
 
         headers = dict(vars(self).get("BASE_HEADERS", type(self).BASE_HEADERS))
         headers["Origin"] = base_url
-        headers["Host"] = urlparse(base_url).netloc
+        headers.pop("Host", None)
         headers["Referer"] = f"{sign_in_url}?{urlencode(sign_in_query_params)}"
         if site and site.english_locale and self._requests_default_language():
             headers["Accept-Language"] = self._english_accept_language(site.english_locale, headers["Accept-Language"])
@@ -446,10 +447,41 @@ class Constants:
         return host[len("amazon."):] if host.startswith("amazon.") else ""
 
     @staticmethod
-    def _normalize_base_url(value: str) -> str:
-        value = value.strip().rstrip("/")
-        if value.startswith(("http://", "https://")):
-            return value
-        if value.startswith("www."):
-            return f"https://{value}"
-        return f"https://www.{value}"
+    def _normalize_base_url(value: object) -> str:
+        """
+        Build the base URL for a ``domain``, which must be an Amazon site in
+        :data:`~amazonorders.region_data.REGION_SITES`, over ``https``. Anything else is refused, since the account's
+        credentials are posted to it.
+
+        :param value: The Amazon domain (e.g. ``amazon.de``) or full URL (e.g. ``https://www.amazon.de``).
+        :return: The site's base URL.
+        :raises AmazonOrdersError: If ``value`` isn't an Amazon site over ``https``.
+        """
+        if not isinstance(value, str) or not value.strip():
+            raise AmazonOrdersError(f"Config value for \"domain\" must be an Amazon site, like amazon.com, "
+                                    f"not {value!r}.")
+
+        normalized = value.strip().rstrip("/")
+        if "://" not in normalized:
+            normalized = f"https://{normalized}" if normalized.lower().startswith("www.") \
+                else f"https://www.{normalized}"
+
+        try:
+            parts = urlsplit(normalized)
+            host = (parts.hostname or "").lower()
+            valid = (parts.scheme == "https" and
+                     parts.username is None and parts.password is None and
+                     parts.port is None and
+                     not parts.path and not parts.query and not parts.fragment and
+                     parts.netloc.lower() == host and
+                     host.startswith(("amazon.", "www.amazon.")) and
+                     Constants._tld(f"https://{host}") in REGION_SITES)
+        except ValueError:
+            valid = False
+
+        if not valid:
+            raise AmazonOrdersError(f"Config value for \"domain\" must be an Amazon site over https, like amazon.com "
+                                    f"or https://www.amazon.co.uk, not {value!r}. Supported sites: "
+                                    f"{', '.join(f'amazon.{tld}' for tld in sorted(REGION_SITES))}.")
+
+        return f"https://{host}"

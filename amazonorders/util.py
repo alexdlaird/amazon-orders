@@ -6,9 +6,10 @@ import logging
 import os
 import re
 import sys
+import tempfile
 import unicodedata
 from datetime import date, datetime
-from typing import Iterable, List, Union, Optional, Callable, Any
+from typing import IO, Iterable, List, Union, Optional, Callable, Any
 from urllib.parse import SplitResult, parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
 from bs4 import Tag, BeautifulSoup
@@ -264,6 +265,60 @@ def _is_same_site_url(url: SplitResult, base_url: SplitResult) -> bool:
             _effective_port(url) == _effective_port(base_url))
 
 
+def is_site_url(url: str, base_url: str) -> bool:
+    """
+    Check whether ``url`` is an absolute URL on the same Amazon site as ``base_url`` (with or without ``www.``), over
+    the same scheme, so the session's cookies may be sent to it.
+
+    :param url: The absolute URL.
+    :param base_url: The Amazon site's base URL.
+    :return: Whether the URL is on the Amazon site. A malformed URL isn't.
+    """
+    try:
+        return _is_same_site_url(urlsplit(url), urlsplit(base_url))
+    except ValueError:
+        return False
+
+
+def write_owner_only(path: str, content: str, prefix: str) -> None:
+    """
+    Write ``content`` to ``path`` atomically, readable by its owner alone (mode ``0600``): it's written to a temp
+    file beside it, then moved into place, so a reader never sees a partial file. The directory is created,
+    owner-only (``0700``), if it doesn't exist.
+
+    :param path: The file to write.
+    :param content: The text to write.
+    :param prefix: The prefix of the temp file's name.
+    """
+    directory = os.path.dirname(path) or "."
+    os.makedirs(directory, mode=0o700, exist_ok=True)
+    file_descriptor, temp_path = tempfile.mkstemp(dir=directory, prefix=prefix, suffix=".tmp")
+    try:
+        with os.fdopen(file_descriptor, "w", encoding="utf-8") as f:
+            f.write(content)
+        os.chmod(temp_path, 0o600)
+        os.replace(temp_path, path)
+    except BaseException:
+        os.remove(temp_path)
+        raise
+
+
+def _owner_only_opener(path: str, flags: int) -> int:
+    return os.open(path, flags, 0o600)
+
+
+def open_owner_only(path: str, mode: str = "w", **kwargs: Any) -> IO[Any]:
+    """
+    Open ``path`` for writing, creating it readable by its owner alone (mode ``0600``).
+
+    :param path: The file to open.
+    :param mode: The mode to open it in.
+    :param kwargs: Remaining ``kwargs`` will be passed to :func:`open`.
+    :return: The open file.
+    """
+    return open(path, mode, opener=_owner_only_opener, **kwargs)
+
+
 def resolve_site_url(url: str, base_url: str) -> Optional[str]:
     """
     Resolve a link found on a page against ``base_url``, but only if it stays on the same Amazon site (with or
@@ -275,7 +330,7 @@ def resolve_site_url(url: str, base_url: str) -> Optional[str]:
     """
     try:
         resolved_url = urljoin(base_url, url)
-        same_site = _is_same_site_url(urlsplit(resolved_url), urlsplit(base_url))
+        same_site = is_site_url(resolved_url, base_url)
     except ValueError:
         same_site = False
 

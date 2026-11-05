@@ -466,7 +466,8 @@ class AmazonOrders:
 
             return html_response.response.content
 
-        pdf_response = self.amazon_session.get(invoice.link, binary=True)
+        # Amazon serves some invoice PDFs from another site, like S3, which is fetched without the session's cookies
+        pdf_response = self.amazon_session.get(invoice.link, binary=True, allow_off_site=True)
         self.amazon_session.check_response(pdf_response)
 
         content_type = pdf_response.response.headers.get("Content-Type", "")
@@ -1004,8 +1005,9 @@ class AmazonOrders:
 
         if full_details:
             if order.is_whole_foods:
-                link = order.order_details_link or ""
-                if self._is_whole_foods_details_url(link):
+                link = util.resolve_site_url(order.order_details_link, self.config.constants.BASE_URL) \
+                    if order.order_details_link else None
+                if link and self._is_whole_foods_details_url(link):
                     details_response = self.amazon_session.get(link)
                     self.amazon_session.check_response(details_response, meta={"index": order.index})
                     order = self._get_whole_foods_order(details_response, order_number=order.order_number,
@@ -1026,7 +1028,8 @@ class AmazonOrders:
 
     def _is_whole_foods_details_url(self,
                                     url: str) -> bool:
-        return any(route in url for route in self.config.constants.WHOLE_FOODS_DETAILS_ROUTES)
+        path = urlsplit(url).path
+        return any(path.startswith(route) for route in self.config.constants.WHOLE_FOODS_DETAILS_ROUTES)
 
     def _get_whole_foods_order(self,
                                details_response: util.AmazonSessionResponse,

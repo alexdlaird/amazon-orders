@@ -25,7 +25,7 @@ from amazonorders.exception import (
     AmazonOrdersWafSolverError,
 )
 from amazonorders.forms import AuthForm
-from amazonorders.util import AmazonSessionResponse, has_display
+from amazonorders.util import AmazonSessionResponse, has_display, open_owner_only
 
 if TYPE_CHECKING:
     from amazonorders.contrib.waf.base import AwsWafForm
@@ -357,10 +357,12 @@ class PlaywrightAuthForm(AuthForm):
         if not output_dir:
             return
         try:
-            os.makedirs(output_dir, exist_ok=True)
-            page.screenshot(path=os.path.join(output_dir, f"{name}.png"))
-            with open(os.path.join(output_dir, f"{name}.html"), "w", encoding="utf-8") as f:
+            # Snapshots can hold the account's personal data, so they're readable by their owner alone
+            os.makedirs(output_dir, mode=0o700, exist_ok=True)
+            with open_owner_only(os.path.join(output_dir, f"{name}.html"), "w", encoding="utf-8") as f:
                 f.write(page.content())
+            with open_owner_only(os.path.join(output_dir, f"{name}.png"), "wb") as png_file:
+                png_file.write(page.screenshot())
             logger.debug(f"Debug snapshot saved: {name} (url={page.url})")
         except Exception:
             logger.debug(f"Debug snapshot failed to save: {name}", exc_info=True)
