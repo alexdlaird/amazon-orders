@@ -387,9 +387,19 @@ class AmazonOrdersConfig:
         so URL-derived attributes and region-sensitive headers reflect the change.
 
         :param domain: The Amazon domain (e.g. ``amazon.com.au``) or full URL.
+        :raises AmazonOrdersError: If ``domain`` isn't an Amazon site over ``https``, leaving the domain unchanged.
         """
+        missing = object()
+        previous = self._data.get("domain", missing)
         self._data["domain"] = domain
-        self.constants = self._instantiate_constants()
+        try:
+            self.constants = self._instantiate_constants()
+        except Exception:
+            if previous is missing:
+                self._data.pop("domain", None)
+            else:
+                self._data["domain"] = previous
+            raise
 
     @property
     def site(self) -> str:
@@ -481,9 +491,7 @@ class AmazonOrdersConfig:
         Persist the current state of this config object to the config file.
         """
         with config_file_lock:
-            os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
+            logger.debug(f"Saving config to {self.config_path} ...")
 
-            with open(self.config_path, "w") as config_file:
-                logger.debug(f"Saving config to {self.config_path} ...")
-
-                yaml.dump(self._data, config_file)
+            # The config can hold the account's password and OTP secret, so it's readable by its owner alone
+            util.write_owner_only(self.config_path, yaml.dump(self._data), prefix=".config-")

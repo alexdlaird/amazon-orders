@@ -151,7 +151,8 @@ class AuthForm(ABC):
             captcha_response = None
 
         if not captcha_response or captcha_response.lower() == "not solved":
-            img_response = self.amazon_session.session.get(url)
+            # Captcha images are served from S3, so they're fetched without the Amazon session's cookies
+            img_response = self.amazon_session.get(url, binary=True, allow_off_site=True).response
             img = Image.open(BytesIO(img_response.content))
             img.show()
 
@@ -176,18 +177,24 @@ class AuthForm(ABC):
 
         action = self.form.get("action")
         if not action:
-            return last_response.url
-
-        action = str(action)
-        if not action.startswith("http"):
-            if action.startswith("/"):
-                parsed_url = urlparse(last_response.url)
-                return f"{parsed_url.scheme}://{parsed_url.netloc}{action}"
-            else:
-                return "{url}/{path}".format(url="/".join(last_response.url.split("/")[:-1]),
-                                             path=action)
+            url = last_response.url
         else:
-            return action
+            action = str(action)
+            if not action.startswith("http"):
+                if action.startswith("/"):
+                    parsed_url = urlparse(last_response.url)
+                    url = f"{parsed_url.scheme}://{parsed_url.netloc}{action}"
+                else:
+                    url = "{url}/{path}".format(url="/".join(last_response.url.split("/")[:-1]),
+                                                path=action)
+            else:
+                url = action
+
+        # The form can carry the account's credentials, so it's only submitted to the Amazon site
+        if not util.is_site_url(url, self.config.constants.BASE_URL):
+            raise AmazonOrdersAuthError(f"The sign-in form posts to another site, {url}, so it was not submitted.")
+
+        return url
 
     def _handle_errors(self, form_response: AmazonSessionResponse) -> None:
         if not self.amazon_session:
@@ -327,6 +334,8 @@ class PasskeyForm(AuthForm):
             )  # pragma: no cover
 
         url = urljoin(last_response.url, str(self.password_challenge_link["href"]))
+        if not util.is_site_url(url, self.config.constants.BASE_URL):
+            raise AmazonOrdersAuthError(f"The passkey page links to another site, {url}, so it was not followed.")
         password_response = self.amazon_session.get(url, persist_cookies=True)
 
         self._handle_errors(password_response)

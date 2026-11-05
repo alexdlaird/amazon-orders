@@ -4,23 +4,76 @@ __license__ = "MIT"
 import json
 import logging
 import os
-import tempfile
 import time
+from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Union
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlsplit
 
 import requests
 import requests.adapters
-from requests import Response, Session
+from requests import PreparedRequest, Response, Session
 from requests.utils import dict_from_cookiejar
 
 from amazonorders.conf import AmazonOrdersConfig, cookies_file_lock, debug_output_file_lock
 from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersAuthRedirectError
 from amazonorders.forms import (AuthForm, AcicAuthBlocker, CaptchaForm, JSAuthBlocker, MfaDeviceSelectForm, MfaForm,
                                 SignInForm, ClaimForm, IntentForm, PasskeyForm)
-from amazonorders.util import AmazonSessionResponse, load_class, select_one
+from amazonorders.util import AmazonSessionResponse, is_site_url, load_class, open_owner_only, select_one, \
+    write_owner_only
 
 logger = logging.getLogger(__name__)
+
+#: Headers that identify the Amazon session or the page a request came from, which aren't sent to another site.
+_OFF_SITE_STRIPPED_HEADERS = ("Cookie", "Origin", "Referer", "Authorization")
+
+
+class _HttpsOnlySession(Session):
+    """
+    A :class:`requests.Session` that refuses to follow a redirect to a URL that isn't ``https``.
+    """
+
+    def rebuild_auth(self,
+                     prepared_request: PreparedRequest,
+                     response: Response) -> None:
+        # Called by resolve_redirects for each hop, after its cookies are prepared and before it is sent
+        super().rebuild_auth(prepared_request, response)
+
+        url = prepared_request.url or ""
+        if urlsplit(url).scheme != "https":
+            raise AmazonOrdersError(f"{response.url} redirected to {url}, which is not https, so it was not "
+                                    "followed.")
+
+
+class AmazonSiteSession(_HttpsOnlySession):
+    """
+    A :class:`requests.Session` that keeps the Amazon session on its site: when a redirect leaves the site, the hop is
+    sent without cookies (or ``Origin``/``Referer``), and a redirect that would re-send a request's data to another
+    site, or that isn't ``https``, is refused.
+    """
+
+    def __init__(self,
+                 base_url: str) -> None:
+        super().__init__()
+        #: The Amazon site's base URL.
+        self.base_url = base_url
+
+    def rebuild_auth(self,
+                     prepared_request: PreparedRequest,
+                     response: Response) -> None:
+        super().rebuild_auth(prepared_request, response)
+
+        url = prepared_request.url or ""
+        if is_site_url(url, self.base_url):
+            return
+
+        if prepared_request.body is not None:
+            raise AmazonOrdersError(f"Amazon redirected {response.url} to another site, {url}, with the request's "
+                                    "data, so it was not followed.")
+
+        logger.warning(f"Amazon redirected {response.url} to another site, {url}, so the session's cookies were "
+                       "not sent with it.")
+        for header in _OFF_SITE_STRIPPED_HEADERS:
+            prepared_request.headers.pop(header, None)
 
 
 class IODefault:
@@ -140,7 +193,7 @@ class AmazonSession:
         self._cookie_jar_mtime: Optional[float] = None
 
         with cookies_file_lock:
-            os.makedirs(os.path.dirname(self.config.cookie_jar_path), exist_ok=True)
+            os.makedirs(os.path.dirname(self.config.cookie_jar_path), mode=0o700, exist_ok=True)
 
             if os.path.exists(self.config.cookie_jar_path):
                 with open(self.config.cookie_jar_path, "r", encoding="utf-8") as f:
@@ -191,6 +244,7 @@ class AmazonSession:
                 url: str,
                 persist_cookies: Optional[bool] = None,
                 binary: bool = False,
+                allow_off_site: bool = False,
                 **kwargs: Any) -> AmazonSessionResponse:
         """
         Execute the request against Amazon with base headers, parsing and storing the response.
@@ -202,10 +256,32 @@ class AmazonSession:
             saved the file since this session did, so a stale session can't overwrite a newer sign-in.
         :param binary: ``True`` if the response is a file, like a PDF, rather than a page. It is not parsed as HTML,
             and ``debug`` mode doesn't write it to a page file.
+        :param allow_off_site: ``True`` to allow a URL on another site, like an invoice PDF Amazon serves from S3.
+            It's requested over ``https`` only, redirects included, with none of the session's cookies. By default, a
+            URL that isn't on the Amazon site raises :class:`~amazonorders.exception.AmazonOrdersError`.
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`requests.request`.
         :return: The response from the executed request.
+        :raises AmazonOrdersError: If ``url`` isn't on the Amazon site, and ``allow_off_site`` isn't ``True``.
         """
-        kwargs["headers"] = {**self.config.constants.BASE_HEADERS, **(kwargs.get("headers") or {})}
+        headers = {**self.config.constants.BASE_HEADERS, **(kwargs.get("headers") or {})}
+        # requests matches cookies against a Host header rather than the URL, so a pinned Host would send the site's
+        # cookies to any host. requests derives it from the URL instead.
+        headers.pop("Host", None)
+
+        base_url = self.config.constants.BASE_URL
+        if isinstance(self.session, AmazonSiteSession):
+            # Follow the config, should its domain have changed since the session was created
+            self.session.base_url = base_url
+        off_site = not is_site_url(url, base_url)
+        if off_site:
+            if not allow_off_site:
+                raise AmazonOrdersError(f"The URL {url} is not on {base_url}, so it was not requested with the Amazon "
+                                        "session.")
+            if urlsplit(url).scheme != "https":
+                raise AmazonOrdersError(f"The URL {url} is not https, so it was not requested.")
+            for header in _OFF_SITE_STRIPPED_HEADERS:
+                headers.pop(header, None)
+        kwargs["headers"] = headers
 
         if self.debug:
             logger.debug(f"{method} request: {url}")
@@ -217,7 +293,10 @@ class AmazonSession:
         cookie_jar_data = self._cookie_jar_data()
 
         try:
-            response = self.session.request(method, url, **kwargs)
+            if off_site:
+                response = self._create_off_site_session().request(method, url, **kwargs)
+            else:
+                response = self.session.request(method, url, **kwargs)
         except (requests.ConnectionError, requests.Timeout) as e:
             raise AmazonOrdersError(f"The page {url} returned no response: {e}. Amazon had an issue on their end, "
                                     "or may be temporarily blocking your requests. Wait a bit before trying "
@@ -244,15 +323,30 @@ class AmazonSession:
             logger.debug(f"Response: {amazon_session_response.response.status_code}{url_str}")
 
             if not binary:
-                os.makedirs(self.config.output_dir, exist_ok=True)
+                # Pages can hold the account's personal data, so they're readable by their owner alone
+                os.makedirs(self.config.output_dir, mode=0o700, exist_ok=True)
                 page_name = self._get_page_from_url(self.config.output_dir, amazon_session_response.response.url)
-                with open(os.path.join(self.config.output_dir, page_name), "w",
-                          encoding="utf-8") as html_file:
+                with open_owner_only(os.path.join(self.config.output_dir, page_name), "w",
+                                     encoding="utf-8") as html_file:
                     logger.debug(
                         f"Response written to file: {html_file.name}")
                     html_file.write(amazon_session_response.response.text)
 
         return amazon_session_response
+
+    def _create_off_site_session(self) -> Session:
+        # A throwaway session, so none of the Amazon session's cookies, headers or auth are sent, and no cookies it
+        # sets are kept. It connects as the configured session does, so a proxy, CA bundle or adapter still applies.
+        # It isn't closed, since its adapters are the configured session's.
+        off_site_session = _HttpsOnlySession()
+        off_site_session.proxies = dict(self.session.proxies)
+        off_site_session.verify = self.session.verify
+        off_site_session.cert = self.session.cert
+        off_site_session.trust_env = self.session.trust_env
+        off_site_session.max_redirects = self.session.max_redirects
+        off_site_session.hooks = {event: list(hooks) for event, hooks in self.session.hooks.items()}
+        off_site_session.adapters = OrderedDict(self.session.adapters)
+        return off_site_session
 
     def get(self,
             url: str,
@@ -442,16 +536,7 @@ class AmazonSession:
         return domain == self.config.site or domain.endswith(f".{self.config.site}")
 
     def _write_cookie_jar(self) -> None:
-        file_descriptor, temp_path = tempfile.mkstemp(dir=os.path.dirname(self.config.cookie_jar_path),
-                                                      prefix=".cookies-", suffix=".tmp")
-        try:
-            with os.fdopen(file_descriptor, "w", encoding="utf-8") as f:
-                f.write(json.dumps(self._cookie_jar_data()))
-            os.chmod(temp_path, 0o600)
-            os.replace(temp_path, self.config.cookie_jar_path)
-        except BaseException:
-            os.remove(temp_path)
-            raise
+        write_owner_only(self.config.cookie_jar_path, json.dumps(self._cookie_jar_data()), prefix=".cookies-")
         self._cookie_jar_mtime = self._read_cookie_jar_mtime()
 
     def _read_cookie_jar_mtime(self) -> Optional[float]:
@@ -534,7 +619,7 @@ class AmazonSession:
         raise AmazonOrdersAuthError(error_msg)
 
     def _create_session(self) -> Session:
-        session = Session()
+        session = AmazonSiteSession(self.config.constants.BASE_URL)
         adapter = requests.adapters.HTTPAdapter(pool_connections=self.config.connection_pool_size,
                                                 pool_maxsize=self.config.connection_pool_size)
         session.mount('https://', adapter)
