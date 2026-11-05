@@ -1,4 +1,4 @@
-.PHONY: all install nopyc clean test test-integration test-integration-sites download-integration-output generate-region-data docs check local validate-release bump-version upload install-waf install-browser
+.PHONY: all install nopyc clean test test-integration test-integration-sites download-integration-output generate-region-data docs check local validate-release bump-version install-waf install-browser
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -115,9 +115,3 @@ bump-version:
 
 	@bash .github/scripts/bump-wildcard-pins.sh "${VERSION}" docs/index.rst README.md SECURITY.md
 
-upload: local
-	@( \
-        $(PYTHON_BIN) -m pip install --upgrade twine && \
-		$(PYTHON_BIN) -m build && \
-		$(PYTHON_BIN) -m twine upload dist/*; \
-	)
