@@ -24,7 +24,7 @@ class Constants:
 
         config = AmazonOrdersConfig(data={"constants_class": "my_module.MyConstants"})
 
-    URLs and the URL-shaped headers (``Origin``, ``Host``, ``Referer``) are derived from the active
+    URLs and the URL-shaped headers (``Origin``, ``Referer``) are derived from the active
     Amazon domain. ``REQUEST_COOKIES``, ``Accept-Language``, ``CURRENCY_SYMBOL``, the sign-in
     ``openid.assoc_handle``, and ``COOKIES_SET_WHEN_AUTHENTICATED`` are adjusted for known Amazon sites
     (each only when a subclass has not overridden it). The domain is resolved in this precedence order:
@@ -128,7 +128,6 @@ class Constants:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",  # noqa: E501
         "Accept-Encoding": "gzip, deflate, br, zstd",
         "Accept-Language": "en-US,en;q=0.9",
-        "Host": urlparse(BASE_URL).netloc,
         "Origin": BASE_URL,
         "Referer": f"{SIGN_IN_URL}?{urlencode(SIGN_IN_QUERY_PARAMS)}",
         "Sec-Ch-Ua": '"Chromium";v="149", "Google Chrome";v="149", "Not.A/Brand";v="24"',
@@ -398,7 +397,6 @@ class Constants:
 
         headers = dict(vars(self).get("BASE_HEADERS", type(self).BASE_HEADERS))
         headers["Origin"] = base_url
-        headers["Host"] = urlparse(base_url).netloc
         headers["Referer"] = f"{sign_in_url}?{urlencode(sign_in_query_params)}"
         if site and site.english_locale and self._requests_default_language():
             headers["Accept-Language"] = self._english_accept_language(site.english_locale, headers["Accept-Language"])
