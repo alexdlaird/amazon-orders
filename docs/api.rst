@@ -226,7 +226,7 @@ Exceptions
     .. py:attribute:: meta
         :type: Optional[Dict[str, Any]]
 
-        Metadata for context around the error was raised.
+        Metadata for context around the error that was raised.
 
 .. py:exception:: AmazonOrdersAuthError(error, meta=None)
     :module: amazonorders.exception

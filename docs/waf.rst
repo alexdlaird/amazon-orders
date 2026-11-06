@@ -10,7 +10,7 @@ automatically.
 .. note::
 
     For the legacy OCR-based image Captcha, see the ``[captcha]`` extra in :doc:`troubleshooting`. WAF
-    challenges and image Captchas are distinct mechanisms — this page covers the JavaScript-based WAF
+    challenges and image Captchas are distinct mechanisms; this page covers the JavaScript-based WAF
     flow only.
 
     Amazon's ACIC challenge (``/ax/aaut/verify/ap/challenge``) may embed a WAF token challenge, a
