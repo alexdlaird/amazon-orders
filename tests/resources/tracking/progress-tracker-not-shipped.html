@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!-- Layout of Amazon's package tracking page (/progress-tracker/package) for a shipment that has
+     not shipped yet: the delivery, address and order info cards sit in the page's top area, and
+     #mainContent-container holds only related products. Personal and identifying values replaced
+     with fake ones. -->
+<html><body>
+<div class="a-row" id="pageContainer-inner">
+ <div id="topContent-container">
+  <section class="pt-card pt-delivery-card-primary">
+   <div class="pt-card-top">
+    <h1>We will email you as soon as this order ships</h1>
+   </div>
+   <div class="pt-card-bottom">
+    <div class="a-box a-box-info pt-delivery-card-message">If you need to change or cancel this order before it ships,
+     go to <a href="/orders">Your Orders</a>.</div>
+   </div>
+  </section>
+  <section class="pt-card">
+   <h2>Delivery Info</h2>
+   <div class="pt-card-body">Arriving once it ships</div>
+  </section>
+  <section class="pt-card">
+   <h2>Address Info</h2>
+   <div class="pt-card-body">Jane Doe, 123 Main St, Anytown, WA 98000</div>
+  </section>
+  <section class="pt-card">
+   <h2>Order Info</h2>
+   <div class="pt-card-body">Order # 112-0000000-0000000</div>
+  </section>
+ </div>
+ <div id="mainContent-container">
+  <h2>Products related to items in your shipment</h2>
+ </div>
+</div>
+</body></html>
