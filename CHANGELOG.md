@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.2.1...HEAD)
 
+### Fixed
+
+- `Order.order_placed_date` is parsed on a Whole Foods Market in-store purchase's details page, from its status line (the store's local date).
+
 ## [5.2.1](https://github.com/alexdlaird/amazon-orders/compare/5.2.0...5.2.1) - 2026-10-31
 
 ### Added

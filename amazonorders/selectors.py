@@ -269,10 +269,15 @@ class Selectors:
     FIELD_ORDER_WHOLE_FOODS_TAX_SELECTOR = "#wfm-tax-total-amount"
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_METHOD_SELECTOR = "#wfm-0-card-brand"
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR = "#wfm-0-card-tail"
-    FIELD_ORDER_PLACED_DATE_SELECTOR = ["[data-component='orderDate']",
-                                        "span.order-date-invoice-item",
-                                        "[data-component='briefOrderInfo'] div.a-column",
-                                        "div:is(.a-span3, .a-span12)"]
+    FIELD_ORDER_WHOLE_FOODS_PURCHASED_TEXT = "Purchased on"
+    FIELD_ORDER_PLACED_DATE_SELECTOR = SelectorsFromText(lambda purchased_text: [
+        # WFM in-store details page, the store's local date (its in-store summary shows the UTC date)
+        f"#ufpo-order-status-secondary:-soup-contains(\"{purchased_text}\")",
+        "[data-component='orderDate']",
+        "span.order-date-invoice-item",
+        "[data-component='briefOrderInfo'] div.a-column",
+        "div:is(.a-span3, .a-span12)"
+    ], "FIELD_ORDER_WHOLE_FOODS_PURCHASED_TEXT")
     FIELD_ORDER_PLACED_DATE_SUFFIX = "Order #"
     # When a Gift Card was used alongside a card, prefer the card (the instrument with a number), like its last 4 are
     FIELD_ORDER_PAYMENT_METHOD_SELECTOR = ["[data-testid='payment-instrument']:has([data-testid='payment-instrument-"

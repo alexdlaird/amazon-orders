@@ -205,6 +205,17 @@ class TestLocalization(UnitTestCase):
         with self.assertRaises(AmazonOrdersError):
             AmazonOrders.parse_order_details(self._translate(details_html, phrases), self.test_config)
 
+    def test_example_language_package_parses_translated_whole_foods_in_store_order_placed_date(self):
+        # GIVEN
+        html = self.given_resource("orders", "order-details-fopo-147-7999693-6862434.html")
+        lorem_html = self._translate(html, {"Purchased on": "Ad minim veniam"})
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(lorem_html, self.example_config, order_number="147-7999693-6862434")
+
+        # THEN
+        self.assertEqual(datetime.date(2024, 2, 17), order.order_placed_date)
+
     def test_example_language_package_parses_translated_store_and_whole_foods_orders(self):
         # GIVEN
         store_html = self.given_resource("orders", "order-history-amazon-store.html")
