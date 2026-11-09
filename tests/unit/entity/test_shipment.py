@@ -21,7 +21,7 @@ class TestShipment(UnitTestCase):
         html = self.given_order_details_html()
 
         # WHEN
-        order = AmazonOrders.parse_order_details(html, self.test_config, order_number="112-5234348-8033063")
+        order = AmazonOrders.parse_order(html, self.test_config, order_number="112-5234348-8033063")
 
         # THEN
         self.assertEqual(1, len(order.shipments))
@@ -38,7 +38,7 @@ class TestShipment(UnitTestCase):
                         "With its Track package link removed, the Shipment should still have its cancel-items link")
 
         # WHEN
-        order = AmazonOrders.parse_order_details(str(parsed), self.test_config, order_number="112-5234348-8033063")
+        order = AmazonOrders.parse_order(str(parsed), self.test_config, order_number="112-5234348-8033063")
 
         # THEN
         self.assertIsNone(order.shipments[0].tracking_link)

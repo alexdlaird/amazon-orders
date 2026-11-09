@@ -114,10 +114,10 @@ class TestLocalization(UnitTestCase):
         example_constants_class = type(self.example_config.constants)
         with patch.object(example_constants_class, "parse_count", autospec=True,
                           side_effect=example_constants_class.parse_count) as parse_count:
-            order = AmazonOrders.parse_order_details(lorem_html, self.example_config)
+            order = AmazonOrders.parse_order(lorem_html, self.example_config)
 
         # THEN
-        expected = AmazonOrders.parse_order_details(html, self.test_config)
+        expected = AmazonOrders.parse_order(html, self.test_config)
         self.assertEqual(expected.to_dict(), order.to_dict())
         self.assertEqual(-5.98, order.reward_points)
         self.assertEqual(-2.99, order.free_shipping)
@@ -126,7 +126,7 @@ class TestLocalization(UnitTestCase):
         self.assertEqual("LUMlNlZE", order.items[0].seller.name)
         self.assertTrue(parse_count.called)
         with self.assertRaises(AmazonOrdersError):
-            AmazonOrders.parse_order_details(lorem_html, self.test_config)
+            AmazonOrders.parse_order(lorem_html, self.test_config)
 
     def test_example_language_package_parses_translated_order_history(self):
         # GIVEN
@@ -195,7 +195,7 @@ class TestLocalization(UnitTestCase):
 
         # WHEN
         orders = AmazonOrders.parse_orders(self._translate(history_html, phrases), self.example_config)
-        order = AmazonOrders.parse_order_details(self._translate(details_html, phrases), self.example_config)
+        order = AmazonOrders.parse_order(self._translate(details_html, phrases), self.example_config)
 
         # THEN
         expected_orders = AmazonOrders.parse_orders(history_html, self.test_config)
@@ -203,7 +203,7 @@ class TestLocalization(UnitTestCase):
         self.assertTrue(orders[0].cancelled)
         self.assertTrue(order.cancelled)
         with self.assertRaises(AmazonOrdersError):
-            AmazonOrders.parse_order_details(self._translate(details_html, phrases), self.test_config)
+            AmazonOrders.parse_order(self._translate(details_html, phrases), self.test_config)
 
     def test_example_language_package_parses_translated_whole_foods_in_store_order_placed_date(self):
         # GIVEN
@@ -211,7 +211,7 @@ class TestLocalization(UnitTestCase):
         lorem_html = self._translate(html, {"Purchased on": "Ad minim veniam"})
 
         # WHEN
-        order = AmazonOrders.parse_order_details(lorem_html, self.example_config, order_number="147-7999693-6862434")
+        order = AmazonOrders.parse_order(lorem_html, self.example_config, order_number="147-7999693-6862434")
 
         # THEN
         self.assertEqual(datetime.date(2024, 2, 17), order.order_placed_date)

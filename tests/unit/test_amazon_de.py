@@ -277,7 +277,7 @@ class TestAmazonDe(UnitTestCase):
                                          self.de_config)
 
     def given_order_details(self, order_number):
-        return AmazonOrders.parse_order_details(
+        return AmazonOrders.parse_order(
             self.given_resource("orders", "de", f"order-details-{order_number}.html"), self.de_config)
 
     def given_transactions_html(self):

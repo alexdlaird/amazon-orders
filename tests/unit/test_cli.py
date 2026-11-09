@@ -1240,7 +1240,7 @@ class TestCli(UnitTestCase):
         self.assertIn("Could not parse Gift Card activity.", response.output)
 
     @responses.activate
-    def test_order_transactions_command(self):
+    def test_transactions_command_order_id(self):
         # GIVEN
         order_id = "123-4567890-1234567"
         self.given_unauthenticated_home_page()
@@ -1261,7 +1261,7 @@ class TestCli(UnitTestCase):
                 "--config-path", self.test_config.config_path,
                 "--username", "some-username@gmail.com",
                 "--password", "some-password",
-                "order-transactions", order_id,
+                "transactions", "--order-id", order_id,
             ],
         )
 
@@ -1415,7 +1415,7 @@ class TestCli(UnitTestCase):
         self.assertIn("Error from Amazon: There was a problem. Your password is incorrect.", response.output)
 
     @responses.activate
-    def test_order_transactions_command_error(self):
+    def test_transactions_command_order_id_error(self):
         # GIVEN
         self.given_unauthenticated_home_page()
         with open(os.path.join(self.RESOURCES_DIR, "auth", "signin.html"), "r", encoding="utf-8") as f:
@@ -1440,7 +1440,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "order-transactions", "1234-fake-id"
+                                          "transactions", "--order-id", "1234-fake-id"
                                       ])
 
         # THEN

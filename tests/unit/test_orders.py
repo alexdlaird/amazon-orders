@@ -729,7 +729,7 @@ class TestOrders(UnitTestCase):
 
             # WHEN
             order_number = re.search(r"\d{3}-\d{7}-\d{7}", resource).group(0)
-            order = AmazonOrders.parse_order_details(html, self.test_config, order_number=order_number)
+            order = AmazonOrders.parse_order(html, self.test_config, order_number=order_number)
 
             # THEN
             self.assertTrue(order.is_whole_foods)
@@ -744,7 +744,7 @@ class TestOrders(UnitTestCase):
                                     "Delivered Saturday, February 17, 2024")
 
         # WHEN
-        order = AmazonOrders.parse_order_details(html, self.test_config, order_number="147-7999693-6862434")
+        order = AmazonOrders.parse_order(html, self.test_config, order_number="147-7999693-6862434")
 
         # THEN
         self.assertNotEqual(date(2024, 2, 17), order.order_placed_date)
@@ -1057,7 +1057,7 @@ class TestOrders(UnitTestCase):
             html = f.read()
 
         # WHEN
-        order = AmazonOrders.parse_order_details(html, self.test_config)
+        order = AmazonOrders.parse_order(html, self.test_config)
 
         # THEN
         self.assert_order_112_9685975_5907428_multiple_items_shipments_sellers(order, True)
@@ -1069,7 +1069,7 @@ class TestOrders(UnitTestCase):
             html = f.read()
 
         # WHEN
-        order = AmazonOrders.parse_order_details(html, self.test_config)
+        order = AmazonOrders.parse_order(html, self.test_config)
 
         # THEN
         self.assertTrue(order.cancelled)
@@ -1088,7 +1088,7 @@ class TestOrders(UnitTestCase):
             html = f.read()
 
         # WHEN
-        order = AmazonOrders.parse_order_details(html, self.test_config)
+        order = AmazonOrders.parse_order(html, self.test_config)
 
         # THEN
         self.assertTrue(order.cancelled)
@@ -1105,7 +1105,7 @@ class TestOrders(UnitTestCase):
             html = f.read().replace(self.DELIVERED_HEADING, "<span>Cancelled</span>", 1)
 
         # WHEN
-        order = AmazonOrders.parse_order_details(html, self.test_config)
+        order = AmazonOrders.parse_order(html, self.test_config)
 
         # THEN
         self.assertFalse(order.cancelled)
@@ -1120,7 +1120,7 @@ class TestOrders(UnitTestCase):
             html = f.read().replace(self.DELIVERED_HEADING, "<span>Cancelled</span>")
 
         # WHEN
-        order = AmazonOrders.parse_order_details(html, self.test_config)
+        order = AmazonOrders.parse_order(html, self.test_config)
 
         # THEN
         self.assertTrue(order.cancelled)
@@ -1129,7 +1129,7 @@ class TestOrders(UnitTestCase):
     def test_parse_order_details_unparseable(self):
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
-            AmazonOrders.parse_order_details("<html></html>", self.test_config)
+            AmazonOrders.parse_order("<html></html>", self.test_config)
 
         # THEN
         self.assertIn("Could not parse Order details", str(cm.exception))
@@ -1276,7 +1276,7 @@ class TestOrders(UnitTestCase):
             html = f.read().replace(order_id, "")
 
         # WHEN
-        order = AmazonOrders.parse_order_details(html, self.test_config, order_number=order_id)
+        order = AmazonOrders.parse_order(html, self.test_config, order_number=order_id)
 
         # THEN
         self.assertEqual(order_id, order.order_number)

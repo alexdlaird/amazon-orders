@@ -120,5 +120,5 @@ class TestAmazonEs(UnitTestCase):
                                          self.es_config)
 
     def given_order_details(self, order_number):
-        return AmazonOrders.parse_order_details(
+        return AmazonOrders.parse_order(
             self.given_resource("orders", "es", f"order-details-{order_number}.html"), self.es_config)

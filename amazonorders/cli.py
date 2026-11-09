@@ -375,45 +375,6 @@ def invoices(ctx: Context,
         ctx.fail(str(e))
 
 
-@amazon_orders_cli.command("order-transactions")
-@click.pass_context
-@click.argument("order_id")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
-              help="The output format. Defaults to text.")
-def order_transactions(ctx: Context,
-                       order_id: str,
-                       **kwargs: Any) -> None:
-    """
-    Get the Transactions for a given Amazon Order ID.
-    """
-    amazon_session = ctx.obj["amazon_session"]
-
-    try:
-        CliAuth(amazon_session).authenticate()
-
-        config = ctx.obj["conf"]
-        amazon_transactions = AmazonTransactions(amazon_session,
-                                                 config=config)
-
-        output = kwargs["output"]
-
-        start_time = time.time()
-        with ProgressSpinner("Transactions", ctx.obj["show_progress"]) as progress:
-            order_transaction_list = amazon_transactions.get_transactions(order_id=order_id, progress=progress)
-        end_time = time.time()
-
-        click.echo(config.output_cls(config).format(order_transaction_list, output))
-
-        click.echo(
-            "... {total} Transactions parsed in {time} seconds.\n".format(total=len(order_transaction_list),
-                                                                          time=int(end_time - start_time)), err=True)
-    except AmazonOrdersAuthRedirectError:
-        IOClick.echo_session_expired()
-    except AmazonOrdersError as e:
-        logger.debug("An error occurred.", exc_info=True)
-        ctx.fail(str(e))
-
-
 @amazon_orders_cli.command("search-orders")
 @click.pass_context
 @click.argument("query")
@@ -491,12 +452,14 @@ def prime_payments(ctx: Context, **kwargs: Any) -> None:
 @amazon_orders_cli.command()
 @click.pass_context
 @click.option("--days", default=365,
-              help="The number of days of Transactions to get.")
+              help="The number of days of Transactions to get. Ignored with --order-id.")
+@click.option("--order-id",
+              help="Get only the Transactions for this Amazon Order ID.")
 @click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
               help="The output format. Defaults to text.")
 def transactions(ctx: Context, **kwargs: Any) -> None:
     """
-    Get Amazon Transaction history for a given number of days.
+    Get Amazon Transaction history for a given number of days, or for a single Order.
     """
     amazon_session = ctx.obj["amazon_session"]
 
@@ -504,14 +467,16 @@ def transactions(ctx: Context, **kwargs: Any) -> None:
         CliAuth(amazon_session).authenticate()
 
         days = kwargs["days"]
+        order_id = kwargs["order_id"]
         output = kwargs["output"]
 
+        title = f"Transactions for Order {order_id}" if order_id else f"Transaction History for {days} days"
         click.echo(
             """-----------------------------------------------------------------------
-Transaction History for {days} days
------------------------------------------------------------------------\n""".format(days=days), err=True
+{title}
+-----------------------------------------------------------------------\n""".format(title=title), err=True
         )
-        if not ctx.obj["show_progress"]:
+        if not ctx.obj["show_progress"] and not order_id:
             click.echo("Info: Fetching Transaction history, this might take a minute ...", err=True)
 
         config = ctx.obj["conf"]
@@ -520,7 +485,7 @@ Transaction History for {days} days
 
         start_time = time.time()
         with ProgressSpinner("Transactions", ctx.obj["show_progress"]) as progress:
-            transaction_list = amazon_transactions.get_transactions(days=days, progress=progress)
+            transaction_list = amazon_transactions.get_transactions(days=days, order_id=order_id, progress=progress)
         end_time = time.time()
 
         click.echo(config.output_cls(config).format(transaction_list, output))
@@ -533,6 +498,20 @@ Transaction History for {days} days
     except AmazonOrdersError as e:
         logger.debug("An error occurred.", exc_info=True)
         ctx.fail(str(e))
+
+
+@amazon_orders_cli.command("order-transactions", hidden=True, deprecated=True)
+@click.pass_context
+@click.argument("order_id")
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+              help="The output format. Defaults to text.")
+def order_transactions(ctx: Context,
+                       order_id: str,
+                       **kwargs: Any) -> None:
+    """
+    Deprecated, use transactions --order-id instead.
+    """
+    ctx.invoke(transactions, order_id=order_id, output=kwargs["output"])
 
 
 @amazon_orders_cli.command("family-members", hidden=True, deprecated=True)
