@@ -113,10 +113,10 @@ class AmazonOrders:
         return [config.order_cls(tag, config, index=start_index + i) for i, tag in enumerate(order_tags)]
 
     @classmethod
-    def parse_order_details(cls,
-                            html: str,
-                            config: AmazonOrdersConfig,
-                            order_number: Optional[str] = None) -> Order:
+    def parse_order(cls,
+                    html: str,
+                    config: AmazonOrdersConfig,
+                    order_number: Optional[str] = None) -> Order:
         """
         Parse an already-fetched Amazon Order details page into an Order, without a session driving the
         fetch. Useful for parsing HTML obtained elsewhere and for network-free testing.
@@ -134,6 +134,23 @@ class AmazonOrders:
         return order
 
     @classmethod
+    def parse_order_details(cls,
+                            html: str,
+                            config: AmazonOrdersConfig,
+                            order_number: Optional[str] = None) -> Order:
+        """
+        Deprecated, use :func:`parse_order` instead. To be removed in 6.0.
+
+        :param html: The Order details page HTML to parse.
+        :param config: The config providing the selectors and entity classes used for parsing.
+        :param order_number: The Order ID the page was fetched for.
+        :return: The parsed Order.
+        """
+        warnings.warn("parse_order_details() is deprecated and will be removed in 6.0. Use parse_order() instead.",
+                      DeprecationWarning, stacklevel=2)
+        return cls.parse_order(html, config, order_number=order_number)
+
+    @classmethod
     def parse_family_members(cls,
                              html: str,
                              config: AmazonOrdersConfig) -> List[FamilyMember]:
@@ -149,9 +166,9 @@ class AmazonOrders:
         return cls._parse_family_members(BeautifulSoup(html, config.bs4_parser), config)
 
     @classmethod
-    def parse_order_search(cls,
-                           html: str,
-                           config: AmazonOrdersConfig) -> List[OrderSearchResult]:
+    def parse_search_orders(cls,
+                            html: str,
+                            config: AmazonOrdersConfig) -> List[OrderSearchResult]:
         """
         Parse an already-fetched Order search page into its OrderSearchResults, without a session driving the
         fetch. Useful for parsing HTML obtained elsewhere and for network-free testing.
@@ -161,6 +178,21 @@ class AmazonOrders:
         :return: The parsed OrderSearchResults, or an empty list if nothing matched.
         """
         return cls._parse_order_search(BeautifulSoup(html, config.bs4_parser), config)
+
+    @classmethod
+    def parse_order_search(cls,
+                           html: str,
+                           config: AmazonOrdersConfig) -> List[OrderSearchResult]:
+        """
+        Deprecated, use :func:`parse_search_orders` instead. To be removed in 6.0.
+
+        :param html: The Order search page HTML to parse.
+        :param config: The config providing the selectors used for parsing.
+        :return: The parsed OrderSearchResults.
+        """
+        warnings.warn("parse_order_search() is deprecated and will be removed in 6.0. Use parse_search_orders() "
+                      "instead.", DeprecationWarning, stacklevel=2)
+        return cls.parse_search_orders(html, config)
 
     def get_order(self,
                   order_id: str,

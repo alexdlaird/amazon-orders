@@ -8,6 +8,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [5.3.1](https://github.com/alexdlaird/amazon-orders/compare/5.3.0...5.3.1) - 2026-11-09
 
+### Deprecated
+
+- `AmazonOrders.parse_order_details()` and `parse_order_search()`, renamed to `parse_order()` and `parse_search_orders()`.
+- The `order-transactions` command, use `transactions --order-id`.
+
 ### Fixed
 
 - Bug fixes and stability improvements.
@@ -22,8 +27,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Deprecated
 
-- `amazonorders.forms`, `amazonorders.contrib`, `amazonorders.region_data`, and `amazonorders.session.IODefault`, use their `amazonauth` equivalents. To be removed in 6.0.
-- `amazonorders.util`'s `AmazonSessionResponse`, `cleanup_html_text`, `has_display`, `load_class`, `select`, and `select_one`, and `amazonorders.selectors`' `Selector` and `SelectorsFromText`, use `amazonauth.util` and `amazonauth.selectors`. To be removed in 6.0.
+- `amazonorders.forms`, `amazonorders.contrib`, `amazonorders.region_data`, and `amazonorders.session.IODefault`, use their `amazonauth` equivalents.
+- `amazonorders.util`'s `AmazonSessionResponse`, `cleanup_html_text`, `has_display`, `load_class`, `select`, and `select_one`, and `amazonorders.selectors`' `Selector` and `SelectorsFromText`, use `amazonauth.util` and `amazonauth.selectors`.
 
 ### Fixed
 

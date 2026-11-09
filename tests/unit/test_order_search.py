@@ -301,8 +301,8 @@ class TestOrderSearch(UnitTestCase):
 
     def test_parse_order_search(self):
         # WHEN
-        results = AmazonOrders.parse_order_search(self.read_resource("orders", "order-search-page-2.html"),
-                                                  self.test_config)
+        results = AmazonOrders.parse_search_orders(self.read_resource("orders", "order-search-page-2.html"),
+                                                   self.test_config)
 
         # THEN
         self.assertEqual(7, len(results))
@@ -314,8 +314,8 @@ class TestOrderSearch(UnitTestCase):
         self.test_config.item_cls = SearchItem
 
         # WHEN
-        results = AmazonOrders.parse_order_search(self.read_resource("orders", "order-search.html"),
-                                                  self.test_config)
+        results = AmazonOrders.parse_search_orders(self.read_resource("orders", "order-search.html"),
+                                                   self.test_config)
 
         # THEN
         self.assertIsInstance(results[0].item, SearchItem)
@@ -329,7 +329,7 @@ class TestOrderSearch(UnitTestCase):
         html = html.replace("Ordered on September 18, 2025", "Nulla pariatur 18 quis 2025")
 
         # WHEN
-        results = AmazonOrders.parse_order_search(html, config)
+        results = AmazonOrders.parse_search_orders(html, config)
 
         # THEN
         self.assertEqual(datetime.date(2025, 9, 18), results[0].order_placed_date)
@@ -342,7 +342,7 @@ class TestOrderSearch(UnitTestCase):
 
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
-            AmazonOrders.parse_order_search(html, self.test_config)
+            AmazonOrders.parse_search_orders(html, self.test_config)
 
         # THEN
         self.assertIn("OrderSearchResult.order_number could not be parsed, but it's required.", str(cm.exception))
@@ -352,7 +352,7 @@ class TestOrderSearch(UnitTestCase):
 
         # WHEN
         with self.assertLogs("amazonorders.entity.order_search_result", level="WARNING"):
-            results = AmazonOrders.parse_order_search(html, self.test_config)
+            results = AmazonOrders.parse_search_orders(html, self.test_config)
 
         # THEN
         self.assertIsNone(results[2].order_number)
@@ -365,7 +365,7 @@ class TestOrderSearch(UnitTestCase):
         html = self.read_resource("orders", "order-search.html").replace("/dp/B000000003?", "/your-orders/orders?")
 
         # WHEN
-        results = AmazonOrders.parse_order_search(html, self.test_config)
+        results = AmazonOrders.parse_search_orders(html, self.test_config)
 
         # THEN
         self.assertEqual("Example Yoga Mat, 6 mm", results[2].item.title)
@@ -377,7 +377,7 @@ class TestOrderSearch(UnitTestCase):
     def test_parse_order_search_unknown_page(self):
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
-            AmazonOrders.parse_order_search("<html><body><p>Something else</p></body></html>", self.test_config)
+            AmazonOrders.parse_search_orders("<html><body><p>Something else</p></body></html>", self.test_config)
 
         # THEN
         self.assertEqual("Could not parse Order search results. Check if Amazon changed the HTML.",
