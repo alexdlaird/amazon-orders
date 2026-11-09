@@ -1005,8 +1005,9 @@ class AmazonOrders:
 
         if full_details:
             if order.is_whole_foods:
-                link = order.order_details_link or ""
-                if self._is_whole_foods_details_url(link):
+                link = (util.resolve_site_url(order.order_details_link, self.config.constants.BASE_URL)
+                        if order.order_details_link else None)
+                if link and self._is_whole_foods_details_url(link):
                     details_response = self.amazon_session.get(link)
                     self.amazon_session.check_response(details_response, meta={"index": order.index})
                     order = self._get_whole_foods_order(details_response, order_number=order.order_number,
@@ -1027,7 +1028,9 @@ class AmazonOrders:
 
     def _is_whole_foods_details_url(self,
                                     url: str) -> bool:
-        return any(route in url for route in self.config.constants.WHOLE_FOODS_DETAILS_ROUTES)
+        """Whether the URL's path is a Whole Foods Market Order details page."""
+        path = urlsplit(url).path
+        return any(route in path for route in self.config.constants.WHOLE_FOODS_DETAILS_ROUTES)
 
     def _get_whole_foods_order(self,
                                details_response: AmazonSessionResponse,

@@ -7,7 +7,7 @@ import os
 import re
 import unittest
 from datetime import date
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import requests
 import responses
@@ -681,6 +681,44 @@ class TestOrders(UnitTestCase):
         self.assertTrue(fopo_order.is_whole_foods)
         self.assertIsNotNone(fopo_order.grand_total)
         self.assertEqual(0, len(fopo_order.items))
+
+    @responses.activate
+    def test_whole_foods_details_link_to_another_site_is_not_fetched(self):
+        # GIVEN
+        order = MagicMock(is_whole_foods=True, order_details_link="https://other.example/fopo/order-details",
+                          order_number="123-0000000-0000000")
+        self.test_config.order_cls = MagicMock(return_value=order)
+
+        # WHEN
+        with self.assertLogs("amazonorders", level="WARNING"):
+            result = self.amazon_orders._build_order(MagicMock(), full_details=True, current_index=0)
+
+        # THEN
+        self.assertIs(order, result)
+        self.assertEqual(0, len(responses.calls))
+
+    def test_whole_foods_details_url_matches_path_only(self):
+        # GIVEN
+        base_url = self.test_config.constants.BASE_URL
+
+        # WHEN
+        in_path = self.amazon_orders._is_whole_foods_details_url(f"{base_url}/fopo/order-details?orderId=1")
+        in_query = self.amazon_orders._is_whole_foods_details_url(f"{base_url}/x?next=/fopo/order-details")
+
+        # THEN
+        self.assertTrue(in_path)
+        self.assertFalse(in_query)
+
+    def test_whole_foods_details_url_allows_path_prefix(self):
+        base_url = self.test_config.constants.BASE_URL
+        for url in [f"{base_url}/-/es/fopo/order-details?orderId=1",
+                    f"{base_url}/gp/wholefoodsmarket/receipts/order/1"]:
+            with self.subTest(url=url):
+                # WHEN
+                matched = self.amazon_orders._is_whole_foods_details_url(url)
+
+                # THEN
+                self.assertTrue(matched)
 
     def test_parse_order_details_whole_foods_in_store_order_placed_date(self):
         # GIVEN
