@@ -6,9 +6,9 @@ import json
 import logging
 from typing import Callable, Dict, List, Optional, Tuple, Any
 
+from amazonauth.util import select, select_one
 from bs4 import BeautifulSoup, Tag
 
-from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.transaction import Transaction
 from amazonorders.exception import AmazonOrdersEntityError, AmazonOrdersError
@@ -70,14 +70,14 @@ class TransactionsPage:
             last page).
         :raises AmazonOrdersError: If the page could not be parsed.
         """
-        form_tag = util.select_one(parsed, self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
+        form_tag = select_one(parsed, self.config.selectors.TRANSACTION_HISTORY_FORM_SELECTOR)
 
         if not form_tag:
-            data_tag = util.select_one(parsed, self.config.selectors.TRANSACTION_HISTORY_DATA_SELECTOR)
+            data_tag = select_one(parsed, self.config.selectors.TRANSACTION_HISTORY_DATA_SELECTOR)
             if data_tag:
                 return self._parse_transaction_data_tag(data_tag)
 
-            container_tag = util.select_one(parsed, self.config.selectors.TRANSACTION_HISTORY_CONTAINER_SELECTOR)
+            container_tag = select_one(parsed, self.config.selectors.TRANSACTION_HISTORY_CONTAINER_SELECTOR)
             if container_tag and self.config.selectors.TRANSACTION_HISTORY_EMPTY_TEXT in container_tag.text:
                 return [], None
 
@@ -188,9 +188,9 @@ class TransactionsPage:
                                     form_tag: Tag) -> Tuple[List[Transaction], Optional[Dict[str, Any]]]:
         config = self.config
         transactions = []
-        date_container_tags = util.select(form_tag, config.selectors.TRANSACTION_DATE_CONTAINERS_SELECTOR)
+        date_container_tags = select(form_tag, config.selectors.TRANSACTION_DATE_CONTAINERS_SELECTOR)
         for date_container_tag in date_container_tags:
-            date_tag = util.select_one(date_container_tag, config.selectors.FIELD_TRANSACTION_COMPLETED_DATE_SELECTOR)
+            date_tag = select_one(date_container_tag, config.selectors.FIELD_TRANSACTION_COMPLETED_DATE_SELECTOR)
             if not date_tag:
                 logger.warning("Could not find date tag in Transaction form.")
                 continue
@@ -212,14 +212,14 @@ class TransactionsPage:
                 logger.warning("Could not find Transactions container tag in Transaction form.")
                 continue
 
-            transaction_tags = util.select(transactions_container_tag, config.selectors.TRANSACTIONS_SELECTOR)
+            transaction_tags = select(transactions_container_tag, config.selectors.TRANSACTIONS_SELECTOR)
             for transaction_tag in transaction_tags:
                 transaction = config.transaction_cls(transaction_tag, config, date)
                 transactions.append(transaction)
 
-        form_state_input = util.select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_STATE_SELECTOR)
-        form_ie_input = util.select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_IE_SELECTOR)
-        next_page_input = util.select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_SELECTOR)
+        form_state_input = select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_STATE_SELECTOR)
+        form_ie_input = select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_IE_SELECTOR)
+        next_page_input = select_one(form_tag, config.selectors.TRANSACTIONS_NEXT_PAGE_INPUT_SELECTOR)
         if not next_page_input or not form_state_input or not form_ie_input:
             return transactions, None
 

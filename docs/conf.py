@@ -245,6 +245,15 @@ intersphinx_mapping = {
 }
 
 
+# Package names linking to their docs, styled as code (RST can't nest code in a link), e.g. ``|amazon-auth|_``
+rst_epilog = """
+.. |amazon-auth| replace:: ``amazon-auth``
+.. _amazon-auth: https://amazon-auth.readthedocs.io
+.. |amazon-orders-mcp| replace:: ``amazon-orders-mcp``
+.. _amazon-orders-mcp: https://github.com/alexdlaird/amazon-orders-mcp#readme
+"""
+
+
 # -- Generated content -------------------------------------------------------
 
 class SupportedSitesDirective(SphinxDirective):

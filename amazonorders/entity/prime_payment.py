@@ -5,13 +5,13 @@ import logging
 from datetime import date
 from typing import Optional, Union
 
+from amazonauth.selectors import Selector
+from amazonauth.util import select_one
 from bs4 import Tag
 
-from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
 from amazonorders.exception import AmazonOrdersEntityError
-from amazonorders.selectors import Selector
 
 logger = logging.getLogger(__name__)
 
@@ -53,14 +53,14 @@ class PrimePayment(Parsable):
 
     def _parse_labeled_row(self,
                            label_selector: Selector) -> Optional[Tag]:
-        label_tag = util.select_one(self.parsed, label_selector)
+        label_tag = select_one(self.parsed, label_selector)
 
         return label_tag.parent if label_tag else None
 
     def _parse_labeled_value(self,
                              label_selector: Selector) -> Optional[str]:
         row_tag = self._parse_labeled_row(label_selector)
-        value_tag = util.select_one(row_tag, self.config.selectors.FIELD_PRIME_PAYMENT_VALUE_SELECTOR) \
+        value_tag = select_one(row_tag, self.config.selectors.FIELD_PRIME_PAYMENT_VALUE_SELECTOR) \
             if row_tag else None
 
         return value_tag.text.strip() if value_tag else None
@@ -102,7 +102,7 @@ class PrimePayment(Parsable):
 
     def _parse_receipt_link(self) -> Optional[str]:
         row_tag = self._parse_labeled_row(self.config.selectors.FIELD_PRIME_PAYMENT_RECEIPTS_LABEL_SELECTOR)
-        link_tag = util.select_one(row_tag, self.config.selectors.FIELD_PRIME_PAYMENT_RECEIPT_LINK_SELECTOR) \
+        link_tag = select_one(row_tag, self.config.selectors.FIELD_PRIME_PAYMENT_RECEIPT_LINK_SELECTOR) \
             if row_tag else None
 
         return self.with_base_url(str(link_tag["href"])) if link_tag else None

@@ -5,7 +5,7 @@ Solving WAF Challenges
 Amazon may present an AWS WAF (Web Application Firewall) JavaScript challenge during sign-in. A third-party solver
 service, through an opt-in extra, clears it automatically.
 
-WAF solving is part of `amazon-auth <https://amazon-auth.readthedocs.io>`_, the authentication package
+WAF solving is part of |amazon-auth|_, the authentication package
 ``amazon-orders`` is built on. This page covers getting started from ``amazon-orders``; :doc:`amazonauth:waf` in its
 docs covers how the challenge works, combining a solver with :doc:`browser automation <browser>`, and writing your own
 solver.

@@ -1,7 +1,9 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
-from amazonorders.selectors import Selector, Selectors
+from amazonauth.selectors import Selector
+
+from amazonorders.selectors import Selectors
 from tests.unittestcase import UnitTestCase
 
 

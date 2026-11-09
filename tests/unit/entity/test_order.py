@@ -5,9 +5,9 @@ import os
 import re
 from unittest.mock import patch
 
+from amazonauth.util import select_one
 from bs4 import BeautifulSoup
 
-from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.order import Order
 from amazonorders.exception import AmazonOrdersEntityError
@@ -41,7 +41,7 @@ class TestOrder(UnitTestCase):
                   "r",
                   encoding="utf-8") as f:
             parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
-        tag = util.select_one(parsed, self.test_config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+        tag = select_one(parsed, self.test_config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
 
         # WHEN
         order = Order(tag, self.test_config, full_details=True)
@@ -249,7 +249,7 @@ class TestOrder(UnitTestCase):
                   "r",
                   encoding="utf-8") as f:
             parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
-        tag = util.select_one(parsed, self.test_config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+        tag = select_one(parsed, self.test_config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
 
         # WHEN
         order = Order(tag, self.test_config, full_details=True)
@@ -335,7 +335,7 @@ class TestOrder(UnitTestCase):
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-112-0399923-3070642.html"), "r",
                   encoding="utf-8") as f:
             parsed = BeautifulSoup(f.read(), self.test_config.bs4_parser)
-        return util.select_one(parsed, self.test_config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+        return select_one(parsed, self.test_config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
 
     def given_order_subscriptions_and_reward_points(self):
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-subscriptions-and-reward-points-snippet.html"),

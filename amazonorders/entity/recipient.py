@@ -5,9 +5,9 @@ import logging
 import re
 from typing import List, Optional
 
+from amazonauth.util import select
 from bs4 import Tag
 
-from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
 
@@ -55,7 +55,7 @@ class Recipient(Parsable):
 
     def _parse_address_lines(self) -> Optional[str]:
         lines: List[str] = []
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_RECIPIENT_ADDRESS_LINES_SELECTOR):
+        for tag in select(self.parsed, self.config.selectors.FIELD_RECIPIENT_ADDRESS_LINES_SELECTOR):
             # A list item may hold several lines, separated by <br> or, when Amazon renders the address inline, by
             # commas
             for line in tag.get_text("\n").split("\n"):

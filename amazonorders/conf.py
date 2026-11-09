@@ -14,8 +14,8 @@ from amazonauth.conf import (
     cookies_file_lock,
     debug_output_file_lock,
 )
+from amazonauth.util import load_class
 
-from amazonorders import util
 from amazonorders.exception import AmazonOrdersError
 
 logger = logging.getLogger(__name__)
@@ -55,8 +55,8 @@ class AmazonOrdersConfig(AmazonAuthConfig):
 
         domain: amazon.co.uk
         auth_forms_classes:
-          - amazonorders.contrib.browser.playwright.PlaywrightAcicForm
-          - amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm
+          - amazonauth.contrib.browser.playwright.PlaywrightAcicForm
+          - amazonauth.contrib.browser.playwright.PlaywrightJSAuthForm
 
     A value can also be persisted from the command line with ``amazon-orders update-config <key> <value>``.
 
@@ -148,7 +148,7 @@ class AmazonOrdersConfig(AmazonAuthConfig):
             class_path = self._class_path(key)
             class_split = class_path.split(".")
             try:
-                self._resolved_classes[key] = util.load_class(class_split[:-1], class_split[-1])
+                self._resolved_classes[key] = load_class(class_split[:-1], class_split[-1])
             except (AttributeError, ImportError) as e:
                 raise AmazonOrdersError(f"Could not resolve \"{key}\" ({class_path}): {e}") from e
 
@@ -187,7 +187,7 @@ class AmazonOrdersConfig(AmazonAuthConfig):
             return class_path
 
         class_split = class_path.split(".")
-        default_class: Any = util.load_class(class_split[:-1], class_split[-1])
+        default_class: Any = load_class(class_split[:-1], class_split[-1])
         if (not isinstance(package_class, type) or package_class is default_class or
                 not issubclass(package_class, default_class)):
             logger.warning(f"\"language_package\" ({language_package}) defines {class_name}, but it isn't a subclass "

@@ -45,10 +45,11 @@ Authentication
 --------------
 
 Sign-in, and the challenges Amazon may present during it, are handled by
-`amazon-auth <https://amazon-auth.readthedocs.io>`_, which ``amazon-orders`` builds on. If you're having trouble
+|amazon-auth|_, which ``amazon-orders`` builds on. If you're having trouble
 signing in, see its :doc:`troubleshooting <amazonauth:troubleshooting>`: :ref:`amazonauth:login-challenges` covers the
 opt-in extras that handle Amazon's challenges, and it also covers what to do when sign-in reaches a page it doesn't
-recognize. Sign-in bugs and pull requests belong in `amazon-auth <https://github.com/alexdlaird/amazon-auth/issues>`_.
+recognize. Sign-in bugs and pull requests belong in |amazon-auth|_'s
+`issues <https://github.com/alexdlaird/amazon-auth/issues>`_.
 
 Slow Parsing / Malformed Data
 -----------------------------

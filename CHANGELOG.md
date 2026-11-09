@@ -12,6 +12,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Log messages from that code come from `amazonauth` loggers (e.g. `amazonauth.session`), which `--debug` also shows, and tracebacks name `amazon-auth`'s classes (e.g. `AmazonAuthError`, which `AmazonOrdersError` is). Messages naming a class path give its `amazonauth` one (e.g. `amazonauth.contrib.browser.playwright.PlaywrightJSAuthForm`); the `amazonorders` path still works in `auth_forms_classes`.
 - Documentation improvements.
 
+### Deprecated
+
+- `amazonorders.forms`, `amazonorders.contrib`, `amazonorders.region_data`, and `amazonorders.session.IODefault`, use their `amazonauth` equivalents. To be removed in 6.0.
+- `amazonorders.util`'s `AmazonSessionResponse`, `cleanup_html_text`, `has_display`, `load_class`, `select`, and `select_one`, and `amazonorders.selectors`' `Selector` and `SelectorsFromText`, use `amazonauth.util` and `amazonauth.selectors`. To be removed in 6.0.
+
+### Fixed
+
+- Bug fixes and stability improvements.
+
 ## [5.2.2](https://github.com/alexdlaird/amazon-orders/compare/5.2.1...5.2.2) - 2026-11-09
 
 ### Fixed

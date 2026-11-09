@@ -7,9 +7,9 @@ from datetime import date
 from typing import Dict, List, Optional, Union
 
 from amazonauth.constants import AuthConstants
+from amazonauth.region_data import REGION_SITES
 
 from amazonorders import util
-from amazonorders.region_data import REGION_SITES
 
 logger = logging.getLogger(__name__)
 

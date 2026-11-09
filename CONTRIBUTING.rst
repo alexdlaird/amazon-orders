@@ -2,8 +2,8 @@ Contributing
 ============
 
 If you find issues, `report them on GitHub <https://github.com/alexdlaird/amazon-orders/issues>`_. Signing in to Amazon
-(OTP and MFA, challenges, browser sign-in, and the session) is handled by
-`amazon-auth <https://github.com/alexdlaird/amazon-auth>`_, so issues and pull requests for it belong there.
+(OTP and MFA, challenges, browser sign-in, and the session) is handled by ``amazon-auth``
+(`on GitHub <https://github.com/alexdlaird/amazon-auth>`_), so issues and pull requests for it belong there.
 
 If you would like to contribute to the code, the process is pretty simple:
 

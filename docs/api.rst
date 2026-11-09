@@ -40,7 +40,8 @@ Main Interface
 Session Management
 ------------------
 
-Sign-in is `amazon-auth <https://amazon-auth.readthedocs.io>`_'s; these are its classes, re-exported under their ``amazonorders`` names (see :doc:`amazonauth:api`).
+Sign-in is |amazon-auth|_'s. :class:`~amazonorders.session.AmazonSession` is its session, building an
+:class:`~amazonorders.conf.AmazonOrdersConfig` when no ``config`` is given (see :doc:`amazonauth:api`).
 
 .. automodule:: amazonorders.session
     :members:
@@ -50,46 +51,10 @@ Sign-in is `amazon-auth <https://amazon-auth.readthedocs.io>`_'s; these are its 
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: amazonorders.forms
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-Challenge Solvers
------------------
-
-These are `amazon-auth <https://amazon-auth.readthedocs.io>`_'s challenge solvers, re-exported under their ``amazonorders`` names (see :doc:`amazonauth:api`).
-
-.. automodule:: amazonorders.contrib.waf.base
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: amazonorders.contrib.waf.capsolver
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: amazonorders.contrib.waf.anticaptcha
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: amazonorders.contrib.waf.twocaptcha
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: amazonorders.contrib.browser.playwright
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
+.. deprecated:: 5.3.0
+    ``amazonorders.forms``, ``amazonorders.contrib``, ``amazonorders.region_data``, and
+    ``amazonorders.session.IODefault`` will be removed in 6.0. Use ``amazonauth.forms``, ``amazonauth.contrib``,
+    ``amazonauth.region_data``, and ``amazonauth.session.IODefault`` instead.
 
 Configuration
 -------------
@@ -278,17 +243,7 @@ Utility Functions
     :undoc-members:
     :show-inheritance:
 
-.. autoclass:: amazonorders.util.AmazonSessionResponse
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. autofunction:: amazonorders.util.cleanup_html_text
-
-.. autofunction:: amazonorders.util.has_display
-
-.. autofunction:: amazonorders.util.load_class
-
-.. autofunction:: amazonorders.util.select
-
-.. autofunction:: amazonorders.util.select_one
+.. deprecated:: 5.3.0
+    ``amazonorders.util``'s ``AmazonSessionResponse``, ``cleanup_html_text``, ``has_display``, ``load_class``,
+    ``select``, and ``select_one``, and ``amazonorders.selectors``' ``Selector`` and ``SelectorsFromText``, will be
+    removed in 6.0. Use ``amazonauth.util`` and ``amazonauth.selectors`` instead.

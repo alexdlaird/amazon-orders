@@ -6,7 +6,7 @@ Amazon sometimes presents JavaScript-based challenges during sign-in that can't 
 alone. The ``browser`` extra handles these with a browser, and also lets you sign in on Amazon's own page (see
 :ref:`Secure Sign-In <secure-sign-in>`).
 
-Browser automation is part of `amazon-auth <https://amazon-auth.readthedocs.io>`_, the authentication package
+Browser automation is part of |amazon-auth|_, the authentication package
 ``amazon-orders`` is built on. This page covers getting started from ``amazon-orders``; :doc:`amazonauth:browser` in
 its docs covers each challenge, choosing a browser, and customizing the sign-in.
 

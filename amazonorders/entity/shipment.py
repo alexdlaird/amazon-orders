@@ -5,9 +5,9 @@ import logging
 from typing import List, Optional, TypeVar
 from urllib.parse import parse_qs, urlparse
 
+from amazonauth.util import select
 from bs4 import Tag
 
-from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.item import Item
 from amazonorders.entity.parsable import Parsable
@@ -66,7 +66,7 @@ class Shipment(Parsable):
             return []
 
         items: List[Item] = [self.config.item_cls(x, self.config)
-                             for x in util.select(self.parsed,
-                                                  self.config.selectors.ITEM_ENTITY_SELECTOR)]
+                             for x in select(self.parsed,
+                                             self.config.selectors.ITEM_ENTITY_SELECTOR)]
         items.sort()
         return items

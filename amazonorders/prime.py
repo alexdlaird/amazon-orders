@@ -4,9 +4,9 @@ __license__ = "MIT"
 import logging
 from typing import List, Optional
 
+from amazonauth.util import select, select_one
 from bs4 import BeautifulSoup, Tag
 
-from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.prime_payment import PrimePayment
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersUnavailableError
@@ -77,7 +77,7 @@ class AmazonPrime:
         page_response = self.amazon_session.get(self.config.constants.PRIME_PAYMENTS_URL)
         self.amazon_session.check_response(page_response)
 
-        error_tag = util.select_one(page_response.parsed, self.config.selectors.PRIME_PAYMENTS_ERROR_SELECTOR)
+        error_tag = select_one(page_response.parsed, self.config.selectors.PRIME_PAYMENTS_ERROR_SELECTOR)
         if error_tag:
             amazon_message = " ".join(error_tag.get_text(" ").split())
             raise AmazonOrdersUnavailableError(f"Amazon could not load the Prime payment history. Amazon had an issue "
@@ -98,10 +98,10 @@ class AmazonPrime:
         :param config: The config providing the selectors.
         :return: The page's PrimePayments, or an empty list when the payment history has none.
         """
-        widget_tag = util.select_one(parsed, config.selectors.PRIME_PAYMENTS_WIDGET_SELECTOR)
+        widget_tag = select_one(parsed, config.selectors.PRIME_PAYMENTS_WIDGET_SELECTOR)
 
         if not widget_tag:
             raise AmazonOrdersError("Could not parse Prime payments. Check if Amazon changed the HTML.")
 
         return [PrimePayment(payment_tag, config)
-                for payment_tag in util.select(widget_tag, config.selectors.PRIME_PAYMENT_SELECTOR)]
+                for payment_tag in select(widget_tag, config.selectors.PRIME_PAYMENT_SELECTOR)]

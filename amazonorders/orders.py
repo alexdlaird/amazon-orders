@@ -9,6 +9,7 @@ import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, quote, urlencode, urlsplit
 
+from amazonauth.util import AmazonSessionResponse, select, select_one
 from bs4 import BeautifulSoup, Tag
 
 from amazonorders import util
@@ -218,7 +219,7 @@ class AmazonOrders:
         :param error_selector: The selector for Amazon's error container.
         :return: The error container's text with whitespace collapsed, or ``None`` if the page is not an error page.
         """
-        error_tag = util.select_one(parsed, error_selector)
+        error_tag = select_one(parsed, error_selector)
 
         return " ".join(error_tag.get_text(" ").split()) if error_tag else None
 
@@ -472,7 +473,7 @@ class AmazonOrders:
         content_type = pdf_response.response.headers.get("Content-Type", "")
         if self.config.constants.INVOICE_PDF_CONTENT_TYPE not in content_type:
             self.amazon_session.check_response(
-                util.AmazonSessionResponse(pdf_response.response, self.config.bs4_parser))
+                AmazonSessionResponse(pdf_response.response, self.config.bs4_parser))
             raise AmazonOrdersError(f"Invoice \"{invoice.name}\" of Order {invoice.order_number} returned "
                                     f"Content-Type \"{content_type}\", not a PDF.")
 
@@ -656,18 +657,18 @@ class AmazonOrders:
     def _parse_family_members(parsed: Tag,
                               config: AmazonOrdersConfig) -> List[FamilyMember]:
         members = [FamilyMember(tag, config)
-                   for tag in util.select(parsed, config.selectors.FAMILY_MEMBER_ENTITY_SELECTOR)]
+                   for tag in select(parsed, config.selectors.FAMILY_MEMBER_ENTITY_SELECTOR)]
         return [member for member in members if member.id]
 
     @staticmethod
     def _parse_order_search(parsed: Tag,
                             config: AmazonOrdersConfig) -> List[OrderSearchResult]:
-        results_tag = util.select_one(parsed, config.selectors.ORDER_SEARCH_RESULTS_SELECTOR)
+        results_tag = select_one(parsed, config.selectors.ORDER_SEARCH_RESULTS_SELECTOR)
         if not results_tag:
             raise AmazonOrdersError("Could not parse Order search results. Check if Amazon changed the HTML.")
 
         return [OrderSearchResult(tag, config)
-                for tag in util.select(results_tag, config.selectors.ORDER_SEARCH_RESULT_SELECTOR)]
+                for tag in select(results_tag, config.selectors.ORDER_SEARCH_RESULT_SELECTOR)]
 
     def _order_search_url(self,
                           query: Optional[str]) -> str:
@@ -713,7 +714,7 @@ class AmazonOrders:
         :func:`~amazonorders.util.resolve_site_url`) that comes after ``current_page``. Pages are numbered and
         fetched in order, so a next link to a page that isn't after the current one is to a page already fetched.
         """
-        next_page_tag = util.select_one(parsed, self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
+        next_page_tag = select_one(parsed, self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
         if not next_page_tag or not next_page_tag.get("href"):
             return None
 
@@ -757,10 +758,10 @@ class AmazonOrders:
         :param config: The config providing the selectors.
         :return: ``True`` if the card is encrypted.
         """
-        if not util.select_one(order_tag, config.selectors.ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR):
+        if not select_one(order_tag, config.selectors.ORDER_HISTORY_CSD_ENCRYPTED_SELECTOR):
             return False
 
-        order_number_tag = util.select_one(order_tag, config.selectors.FIELD_ORDER_NUMBER_SELECTOR)
+        order_number_tag = select_one(order_tag, config.selectors.FIELD_ORDER_NUMBER_SELECTOR)
 
         return not (order_number_tag and order_number_tag.get_text(strip=True))
 
@@ -776,7 +777,7 @@ class AmazonOrders:
         :return: ``True`` if any Order card on the page is encrypted.
         """
         return any(cls._is_csd_encrypted(order_tag, config)
-                   for order_tag in util.select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR))
+                   for order_tag in select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR))
 
     @classmethod
     def _parse_orders(cls,
@@ -792,7 +793,7 @@ class AmazonOrders:
         :param start_index: The index of the first Order on the page within its window.
         :return: The Order card tags, or an empty list when the count confirms the window is spent.
         """
-        order_tags = util.select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
+        order_tags = select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
 
         if any(cls._is_csd_encrypted(order_tag, config) for order_tag in order_tags):
             raise AmazonOrdersError("Could not parse Order history. Amazon served the page with its Order cards "
@@ -800,7 +801,7 @@ class AmazonOrders:
 
         if not order_tags:
             order_count = cls._parse_order_count(
-                util.select_one(parsed, config.selectors.ORDER_HISTORY_COUNT_SELECTOR), config)
+                select_one(parsed, config.selectors.ORDER_HISTORY_COUNT_SELECTOR), config)
 
             if order_count is None or order_count > start_index:
                 raise AmazonOrdersError("Could not parse Order history. Check if Amazon changed the HTML.")
@@ -821,7 +822,7 @@ class AmazonOrders:
         :param clone: A partially populated version of the Order, if one was already fetched.
         :return: The parsed Order, or ``None`` if the details entity was not on the page.
         """
-        order_details_tag = util.select_one(parsed, config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
+        order_details_tag = select_one(parsed, config.selectors.ORDER_DETAILS_ENTITY_SELECTOR)
 
         if not order_details_tag:
             return None
@@ -839,7 +840,7 @@ class AmazonOrders:
         :param config: The config providing the selectors.
         :return: The parsed Tracking, or ``None`` if the page is not a package tracking page.
         """
-        tracking_tag = util.select_one(parsed, config.selectors.TRACKING_ENTITY_SELECTOR)
+        tracking_tag = select_one(parsed, config.selectors.TRACKING_ENTITY_SELECTOR)
 
         if not tracking_tag:
             return None
@@ -858,17 +859,17 @@ class AmazonOrders:
         :param order_number: The Order number the invoice list belongs to.
         :return: The parsed Invoices.
         """
-        summary_tag = util.select_one(parsed, config.selectors.INVOICE_ORDER_SUMMARY_ENTITY_SELECTOR)
+        summary_tag = select_one(parsed, config.selectors.INVOICE_ORDER_SUMMARY_ENTITY_SELECTOR)
         summaries = ([Invoice(summary_tag, config, order_number=order_number,
                               format=config.constants.INVOICE_HTML_FORMAT)] if summary_tag else [])
 
         return summaries + [Invoice(invoice_tag, config, order_number=order_number,
                                     format=config.constants.INVOICE_PDF_FORMAT)
-                            for invoice_tag in util.select(parsed, config.selectors.INVOICE_PDF_ENTITY_SELECTOR)]
+                            for invoice_tag in select(parsed, config.selectors.INVOICE_PDF_ENTITY_SELECTOR)]
 
     def _fetch_orders_page(self,
                            url: str,
-                           index: int) -> util.AmazonSessionResponse:
+                           index: int) -> AmazonSessionResponse:
         """
         Fetch an Order history page, re-requesting it once as Amazon's no-JavaScript fallback (``disableCsd=no-js``)
         if its Order cards were served encrypted.
@@ -934,8 +935,8 @@ class AmazonOrders:
 
             next_page = None
             if keep_paging:
-                next_page_tag = util.select_one(page_response.parsed,
-                                                self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
+                next_page_tag = select_one(page_response.parsed,
+                                           self.config.selectors.NEXT_PAGE_LINK_SELECTOR)
                 if next_page_tag:
                     next_page = util.resolve_site_url(str(next_page_tag["href"]),
                                                       self.config.constants.BASE_URL)
@@ -948,7 +949,7 @@ class AmazonOrders:
                 progress(len(order_builds))
             if progress_with_total:
                 order_count = self._parse_order_count(
-                    util.select_one(page_response.parsed, self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR),
+                    select_one(page_response.parsed, self.config.selectors.ORDER_HISTORY_COUNT_SELECTOR),
                     self.config) if total_known else None
                 progress_with_total(len(order_builds),
                                     self._expected_total(order_count, start_index, len(order_builds), limit,
@@ -1013,7 +1014,7 @@ class AmazonOrders:
                 else:
                     logger.warning(f"Order {order.order_number} is a Whole Foods Market order whose details "
                                    f"page could not be located, so it was left partially populated.")
-            elif len(util.select(order.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
+            elif len(select(order.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
                 logger.warning(f"Order {order.order_number} was partially populated, "
                                f"since it is an unsupported Order type.")
             elif not order.order_number:
@@ -1029,7 +1030,7 @@ class AmazonOrders:
         return any(route in url for route in self.config.constants.WHOLE_FOODS_DETAILS_ROUTES)
 
     def _get_whole_foods_order(self,
-                               details_response: util.AmazonSessionResponse,
+                               details_response: AmazonSessionResponse,
                                order_number: Optional[str] = None,
                                clone: Optional[Order] = None) -> Order:
         """Builds an Order from an already-fetched Whole Foods Market details page response."""

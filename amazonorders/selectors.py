@@ -2,12 +2,13 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import re
+import warnings
+from typing import Any
 
-from amazonauth.selectors import AuthSelectors, Selector, SelectorsFromText
+from amazonauth import selectors as amazonauth_selectors
+from amazonauth.selectors import AuthSelectors
 
 __all__ = [
-    "Selector",
-    "SelectorsFromText",
     "Selectors",
 ]
 
@@ -89,34 +90,34 @@ class Selectors(AuthSelectors):
     ORDER_SERVICE_CANCELLED_TEXT = "Service cancelled"
     # Selectors defined here mean we don't have a reliable way to parse all details in an Order, so Items and
     # Shipments will be skipped
-    ORDER_SKIP_ITEMS = SelectorsFromText(lambda physical_store_text: [
+    ORDER_SKIP_ITEMS = amazonauth_selectors.SelectorsFromText(lambda physical_store_text: [
         # Identifies an Amazon Fresh order (also matched by WFM in-store; distinguished via ORDER_WHOLE_FOODS)
         ".brand-info-box .brand-logo img",
         # Identifies a Whole Foods Market receipt order
         "a.yohtmlc-order-details-link[href^='/wholefoodsmarket']",
         # Identifies an order from a physical Amazon store
-        Selector("div.yohtmlc-shipment-status-primaryText", physical_store_text)
+        amazonauth_selectors.Selector("div.yohtmlc-shipment-status-primaryText", physical_store_text)
     ], "ORDER_PHYSICAL_STORE_TEXT")
     # Selectors identifying a Whole Foods Market purchase. Unlike ORDER_SKIP_ITEMS entries, WFM orders
     # expose a grand_total (and often item_count) on the history page, so those fields are populated.
-    ORDER_WHOLE_FOODS = SelectorsFromText(lambda whole_foods_text: [
+    ORDER_WHOLE_FOODS = amazonauth_selectors.SelectorsFromText(lambda whole_foods_text: [
         "a[href*='/wholefoodsmarket/receipts/order/']",
         "a[href*='/fopo/order-details']",
-        Selector("div.yohtmlc-shipment-status-primaryText", text_contains=whole_foods_text),
+        amazonauth_selectors.Selector("div.yohtmlc-shipment-status-primaryText", text_contains=whole_foods_text),
         "img.ufpo-itemListWidget-image"
     ], "ORDER_WHOLE_FOODS_TEXT")
-    ORDER_SKIP_TOTALS = SelectorsFromText(lambda cancelled_text, service_cancelled_text: [
+    ORDER_SKIP_TOTALS = amazonauth_selectors.SelectorsFromText(lambda cancelled_text, service_cancelled_text: [
         # Identifies a cancelled order on the history page
-        Selector("div.yohtmlc-shipment-status-primaryText", cancelled_text),
+        amazonauth_selectors.Selector("div.yohtmlc-shipment-status-primaryText", cancelled_text),
         # Identifies a cancelled service order (e.g. an installation) on the history page
-        Selector("div.yohtmlc-shipment-status-primaryText", service_cancelled_text),
+        amazonauth_selectors.Selector("div.yohtmlc-shipment-status-primaryText", service_cancelled_text),
         # Identifies a cancelled order on the details page
-        Selector("h4.a-alert-heading", text_contains=cancelled_text)
+        amazonauth_selectors.Selector("h4.a-alert-heading", text_contains=cancelled_text)
     ], "ORDER_CANCELLED_TEXT", "ORDER_SERVICE_CANCELLED_TEXT")
     ORDER_SHIPMENT_STATUS_SELECTOR = "h4.od-status-message"
-    ORDER_SHIPMENT_CANCELLED_SELECTOR = SelectorsFromText(
-        lambda shipment_status_selector, cancelled_text: Selector(shipment_status_selector,
-                                                                  text_contains=cancelled_text),
+    ORDER_SHIPMENT_CANCELLED_SELECTOR = amazonauth_selectors.SelectorsFromText(
+        lambda shipment_status_selector, cancelled_text: amazonauth_selectors.Selector(shipment_status_selector,
+                                                                                       text_contains=cancelled_text),
         "ORDER_SHIPMENT_STATUS_SELECTOR", "ORDER_CANCELLED_TEXT")
 
     #####################################
@@ -188,7 +189,7 @@ class Selectors(AuthSelectors):
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_METHOD_SELECTOR = "#wfm-0-card-brand"
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR = "#wfm-0-card-tail"
     FIELD_ORDER_WHOLE_FOODS_PURCHASED_TEXT = "Purchased on"
-    FIELD_ORDER_PLACED_DATE_SELECTOR = SelectorsFromText(lambda purchased_text: [
+    FIELD_ORDER_PLACED_DATE_SELECTOR = amazonauth_selectors.SelectorsFromText(lambda purchased_text: [
         # WFM in-store details page, the store's local date (its in-store summary shows the UTC date)
         f"#ufpo-order-status-secondary:-soup-contains(\"{purchased_text}\")",
         "[data-component='orderDate']",
@@ -341,14 +342,14 @@ class Selectors(AuthSelectors):
     FIELD_PRIME_PAYMENT_TOTAL_TEXT = "Total"
     FIELD_PRIME_PAYMENT_ORDER_NUMBER_TEXT = "Order Number"
     FIELD_PRIME_PAYMENT_RECEIPTS_TEXT = "Receipts"
-    FIELD_PRIME_PAYMENT_TOTAL_LABEL_SELECTOR = SelectorsFromText(
-        lambda label_selector, total_text: Selector(label_selector, total_text),
+    FIELD_PRIME_PAYMENT_TOTAL_LABEL_SELECTOR = amazonauth_selectors.SelectorsFromText(
+        lambda label_selector, total_text: amazonauth_selectors.Selector(label_selector, total_text),
         "FIELD_PRIME_PAYMENT_LABEL_SELECTOR", "FIELD_PRIME_PAYMENT_TOTAL_TEXT")
-    FIELD_PRIME_PAYMENT_ORDER_NUMBER_LABEL_SELECTOR = SelectorsFromText(
-        lambda label_selector, order_number_text: Selector(label_selector, order_number_text),
+    FIELD_PRIME_PAYMENT_ORDER_NUMBER_LABEL_SELECTOR = amazonauth_selectors.SelectorsFromText(
+        lambda label_selector, order_number_text: amazonauth_selectors.Selector(label_selector, order_number_text),
         "FIELD_PRIME_PAYMENT_LABEL_SELECTOR", "FIELD_PRIME_PAYMENT_ORDER_NUMBER_TEXT")
-    FIELD_PRIME_PAYMENT_RECEIPTS_LABEL_SELECTOR = SelectorsFromText(
-        lambda label_selector, receipts_text: Selector(label_selector, receipts_text),
+    FIELD_PRIME_PAYMENT_RECEIPTS_LABEL_SELECTOR = amazonauth_selectors.SelectorsFromText(
+        lambda label_selector, receipts_text: amazonauth_selectors.Selector(label_selector, receipts_text),
         "FIELD_PRIME_PAYMENT_LABEL_SELECTOR", "FIELD_PRIME_PAYMENT_RECEIPTS_TEXT")
     FIELD_PRIME_PAYMENT_VALUE_SELECTOR = "p"
     FIELD_PRIME_PAYMENT_RECEIPT_LINK_SELECTOR = "a[href]"
@@ -397,3 +398,11 @@ class Selectors(AuthSelectors):
     FIELD_GIFT_CARD_ACTIVITY_CLOSING_BALANCE_SELECTOR = "td:nth-of-type(4)"
     FIELD_GIFT_CARD_ACTIVITY_ORDER_NUMBER_SELECTOR = "td:nth-of-type(2) a.a-link-normal span"
     FIELD_GIFT_CARD_ACTIVITY_ORDER_LINK_SELECTOR = "td:nth-of-type(2) a.a-link-normal"
+
+
+def __getattr__(name: str) -> Any:
+    if name in ("Selector", "SelectorsFromText"):
+        warnings.warn(f"amazonorders.selectors.{name} is deprecated and will be removed in 6.0. Use "
+                      f"amazonauth.selectors.{name} instead.", DeprecationWarning, stacklevel=2)
+        return getattr(amazonauth_selectors, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

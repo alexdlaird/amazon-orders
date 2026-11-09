@@ -42,7 +42,7 @@ Amazon Orders - A Python library (and CLI) for Amazon order history, line items,
       :target: https://github.com/alexdlaird/amazon-orders
 
 ``amazon-orders`` is an unofficial library that provides a Python API (and CLI) for Amazon order history, line items, and transactions.
-Signing in to Amazon is handled by `amazon-auth <https://amazon-auth.readthedocs.io>`_, the authentication package
+Signing in to Amazon is handled by |amazon-auth|_, the authentication package
 ``amazon-orders`` is built on.
 
 .. note::
@@ -191,7 +191,7 @@ browser opens on Amazon's password or passkey step. The browser never fills in y
 Handling Challenges
 -------------------
 
-Amazon's sign-in challenges are handled by `amazon-auth <https://amazon-auth.readthedocs.io>`_, which
+Amazon's sign-in challenges are handled by |amazon-auth|_, which
 ``amazon-orders`` builds on, through opt-in extras.
 
 To enable **WAF auto-solve** via a third-party integration, install with the relevant extra:
@@ -242,7 +242,7 @@ AI Assistants
 
 An AI assistant has two ways to use ``amazon-orders``. One that runs commands uses the CLI or the library directly, just
 as shown above. Any MCP client gets the same as tools through
-`amazon-orders-mcp <https://github.com/alexdlaird/amazon-orders-mcp#readme>`_, a server built on ``amazon-orders``.
+|amazon-orders-mcp|_, a server built on ``amazon-orders``.
 See its README for setup.
 
 The server signs you in with a browser, so it needs a display. Without one, use the CLI or library with

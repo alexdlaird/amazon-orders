@@ -5,9 +5,9 @@ import logging
 import re
 from typing import Optional
 
+from amazonauth.util import select_one
 from bs4 import Tag
 
-from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
 
@@ -39,7 +39,7 @@ class Tracking(Parsable):
         return f"Tracking: {self.carrier} {self.tracking_number}"
 
     def _parse_tracking_number(self) -> Optional[str]:
-        tag = util.select_one(self.parsed, self.config.selectors.FIELD_TRACKING_NUMBER_SELECTOR)
+        tag = select_one(self.parsed, self.config.selectors.FIELD_TRACKING_NUMBER_SELECTOR)
         if not tag:
             return None
 

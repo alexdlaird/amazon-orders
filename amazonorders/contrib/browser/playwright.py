@@ -1,6 +1,8 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
+import warnings
+
 from amazonauth.contrib.browser.playwright import (
     BODY_TEXT_LENGTH_JS,
     PlaywrightAcicForm,
@@ -26,3 +28,6 @@ __all__ = [
     "PlaywrightManualWafForm",
     "PlaywrightBrowserLogin",
 ]
+
+warnings.warn("amazonorders.contrib.browser.playwright is deprecated and will be removed in 6.0. Use "
+              "amazonauth.contrib.browser.playwright instead.", DeprecationWarning, stacklevel=2)

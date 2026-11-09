@@ -7,6 +7,7 @@ import re
 from datetime import date
 from typing import Any, List, Optional, TypeVar, Union
 
+from amazonauth.util import select, select_one
 from bs4 import BeautifulSoup, Tag
 
 from amazonorders import util
@@ -60,7 +61,7 @@ class Order(Parsable):
         #: order). Unlike other unsupported order types, these expose a :attr:`grand_total` and (often) an
         #: :attr:`item_count` on the history page, so those fields are populated.
         self.is_whole_foods: bool = clone.is_whole_foods if clone else bool(
-            self.parsed and util.select(self.parsed, self.config.selectors.ORDER_WHOLE_FOODS))
+            self.parsed and select(self.parsed, self.config.selectors.ORDER_WHOLE_FOODS))
 
         #: The Order Shipments.
         self.shipments: List[Shipment] = clone.shipments if clone else self._parse_shipments()
@@ -157,22 +158,22 @@ class Order(Parsable):
         return f"Order #{self.order_number}: {self.items}"
 
     def _parse_shipments(self) -> List[Shipment]:
-        if not self.parsed or len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
+        if not self.parsed or len(select(self.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
             return []
 
         shipments: List[Shipment] = [self.config.shipment_cls(x, self.config)
-                                     for x in util.select(self.parsed,
-                                                          self.config.selectors.SHIPMENT_ENTITY_SELECTOR)]
+                                     for x in select(self.parsed,
+                                                     self.config.selectors.SHIPMENT_ENTITY_SELECTOR)]
         shipments.sort()
         return shipments
 
     def _parse_items(self) -> List[Item]:
-        if not self.parsed or len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
+        if not self.parsed or len(select(self.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
             return []
 
         items: List[Item] = [self.config.item_cls(x, self.config)
-                             for x in util.select(self.parsed,
-                                                  self.config.selectors.ITEM_ENTITY_SELECTOR)]
+                             for x in select(self.parsed,
+                                             self.config.selectors.ITEM_ENTITY_SELECTOR)]
         items.sort()
         return items
 
@@ -180,7 +181,7 @@ class Order(Parsable):
                             required: bool) -> Optional[str]:
         selectors = self.config.selectors.FIELD_ORDER_NUMBER_SELECTOR
         for selector in [selectors] if isinstance(selectors, str) else selectors:
-            tag = util.select_one(self.parsed, selector)
+            tag = select_one(self.parsed, selector)
             order_number = self.config.constants.parse_order_number(tag.text) if tag else None
             if order_number:
                 return order_number
@@ -204,11 +205,11 @@ class Order(Parsable):
         if not self.parsed:
             return False
 
-        if util.select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS):
+        if select(self.parsed, self.config.selectors.ORDER_SKIP_TOTALS):
             return True
 
-        statuses = util.select(self.parsed, self.config.selectors.ORDER_SHIPMENT_STATUS_SELECTOR)
-        cancelled_statuses = util.select(self.parsed, self.config.selectors.ORDER_SHIPMENT_CANCELLED_SELECTOR)
+        statuses = select(self.parsed, self.config.selectors.ORDER_SHIPMENT_STATUS_SELECTOR)
+        cancelled_statuses = select(self.parsed, self.config.selectors.ORDER_SHIPMENT_CANCELLED_SELECTOR)
 
         return bool(statuses) and len(cancelled_statuses) == len(statuses)
 
@@ -219,7 +220,7 @@ class Order(Parsable):
 
         # Skip totals parsing for unsupported order types (Amazon Fresh, physical stores). Whole Foods Market
         # orders also match ORDER_SKIP_ITEMS, but they expose a grand total on the history page, so parse it.
-        if not self.is_whole_foods and len(util.select(self.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
+        if not self.is_whole_foods and len(select(self.parsed, self.config.selectors.ORDER_SKIP_ITEMS)) > 0:
             return None
 
         value = self.simple_parse(self.config.selectors.FIELD_ORDER_GRAND_TOTAL_SELECTOR)
@@ -251,7 +252,7 @@ class Order(Parsable):
         if self.is_whole_foods:
             return self.safe_simple_parse(
                 selector=self.config.selectors.FIELD_ORDER_WHOLE_FOODS_PAYMENT_METHOD_SELECTOR)
-        tag = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR)
+        tag = select_one(self.parsed, self.config.selectors.FIELD_ORDER_PAYMENT_METHOD_SELECTOR)
         if tag is None:
             return None
         alt = tag.attrs.get("alt")
@@ -271,7 +272,7 @@ class Order(Parsable):
     def _parse_masked_digits(self,
                              selector: Union[str, list],
                              pattern: str) -> Optional[str]:
-        for tag in util.select(self.parsed, selector):
+        for tag in select(self.parsed, selector):
             match = re.search(pattern, tag.text)
             if match:
                 return match.group(1)
@@ -296,7 +297,7 @@ class Order(Parsable):
         return self._parse_labeled_currency(self.config.selectors.FIELD_ORDER_ESTIMATED_TAX_LABELS)
 
     def _parse_item_count(self) -> Optional[int]:
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_ITEM_COUNT_SELECTOR):
+        for tag in select(self.parsed, self.config.selectors.FIELD_ORDER_ITEM_COUNT_SELECTOR):
             item_count = self.config.constants.parse_count(tag.text,
                                                            self.config.selectors.FIELD_ORDER_ITEM_COUNT_REGEX)
             if item_count is not None:
@@ -306,13 +307,13 @@ class Order(Parsable):
 
     def _parse_recipient(self) -> Optional[Recipient]:
         # At least for now, we don't populate Recipient data for digital orders
-        if util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_GIFT_CARD_INSTANCE_SELECTOR):
+        if select_one(self.parsed, self.config.selectors.FIELD_ORDER_GIFT_CARD_INSTANCE_SELECTOR):
             return None
 
-        value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_SELECTOR)
+        value = select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_SELECTOR)
 
         if not value:
-            value = util.select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
+            value = select_one(self.parsed, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_1_SELECTOR)
 
             if value:
                 data_popover = json.loads(str(value.get("data-a-popover", "{}")))
@@ -321,8 +322,8 @@ class Order(Parsable):
                     value = BeautifulSoup(inline_content, self.config.bs4_parser)
 
         if not value:
-            ship_to_tag = util.select_one(self.parsed,
-                                          self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
+            ship_to_tag = select_one(self.parsed,
+                                     self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
 
             if not ship_to_tag:
                 ship_to_tag = self._parse_enclosing_ship_to()
@@ -351,27 +352,27 @@ class Order(Parsable):
 
         # A container wrapping every Order on the page would give back whichever address Amazon rendered first
         # TODO: capture a page that renders the shipping address outside the Order, to verify this path
-        if len(util.select(parsed_parent, self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)) > 1:
+        if len(select(parsed_parent, self.config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)) > 1:
             logger.debug(f"Order {self.order_number} shipping address could not be attributed to it, "
                          f"so Recipient was left unpopulated.")
 
             return None
 
-        return util.select_one(parsed_parent, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
+        return select_one(parsed_parent, self.config.selectors.FIELD_ORDER_ADDRESS_FALLBACK_2_SELECTOR)
 
     def _parse_currency(self,
                         contains: Union[str, "re.Pattern[str]"],
                         combine_multiple: bool = False) -> Optional[float]:
         value = None
 
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
+        for tag in select(self.parsed, self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_ITERATOR_SELECTOR):
             row_text = tag.text.lower()
             label_matches = (bool(contains.search(row_text)) if isinstance(contains, re.Pattern)
                              else contains in row_text)
             if (label_matches and
-                    not util.select_one(tag,
-                                        self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_POPOVER_PRELOAD_SELECTOR)):
-                inner_tag = util.select_one(tag, self.config.selectors.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
+                    not select_one(tag,
+                                   self.config.selectors.FIELD_ORDER_SUBTOTALS_TAG_POPOVER_PRELOAD_SELECTOR)):
+                inner_tag = select_one(tag, self.config.selectors.FIELD_ORDER_SUBTOTALS_INNER_TAG_SELECTOR)
                 if inner_tag:
                     currency = self.to_currency(inner_tag.text)
                     if currency is not None:
