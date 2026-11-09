@@ -3,13 +3,10 @@ __license__ = "MIT"
 
 import os
 import time
-from unittest import mock
 
 import pytest
 
-from amazonorders.conf import AmazonOrdersConfig
-from amazonorders.exception import AmazonOrdersAuthError, AmazonOrdersError, AmazonOrdersNotFoundError, \
-    AmazonOrdersAuthRedirectError
+from amazonorders.exception import AmazonOrdersAuthRedirectError, AmazonOrdersNotFoundError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.integrationtestcase import IntegrationTestCase
@@ -43,12 +40,6 @@ class TestIntegrationAuth(IntegrationTestCase):
     def tearDown(self):
         print(f"... sleeping {self.teardown_sleep_time} seconds to slow down between auth tests ...")
         time.sleep(self.teardown_sleep_time)
-
-    def given_config_reading_environment(self):
-        return AmazonOrdersConfig(data={
-            "output_dir": self.test_config.output_dir,
-            "cookie_jar_path": self.test_config.cookie_jar_path
-        })
 
     def given_stale_auth_cookies(self, amazon_session):
         stale_cookie_names = set()
@@ -96,52 +87,3 @@ class TestIntegrationAuth(IntegrationTestCase):
         self.assertTrue(amazon_session.auth_cookies_stored())
         with self.assertRaises(AmazonOrdersNotFoundError):
             amazon_orders.get_order(order_id="1234-fake-id")
-
-    def test_logout(self):
-        # GIVEN
-        amazon_session = AmazonSession(debug=self.debug,
-                                       config=self.test_config)
-        amazon_session.login()
-        old_session = amazon_session.session
-        time.sleep(1)
-
-        # WHEN
-        amazon_session.logout()
-
-        # THEN
-        self.assertFalse(amazon_session.is_authenticated)
-        self.assertFalse(amazon_session.auth_cookies_stored())
-        self.assertNotEqual(old_session, amazon_session.session)
-
-    def test_login_no_account(self):
-        with mock.patch.dict(os.environ, {"AMAZON_USERNAME": "08511698-9ff5-fake@gmail.com"}):
-            # GIVEN
-            amazon_session = AmazonSession(debug=self.debug,
-                                           config=self.given_config_reading_environment())
-
-            # WHEN
-            with self.assertRaises(AmazonOrdersAuthError) as cm:
-                amazon_session.login()
-
-            # THEN
-            self.assertFalse(amazon_session.is_authenticated)
-            self.assertIn("Looks like you're new to Amazon", str(cm.exception))
-
-    @skip_unless_lockout_risk_allowed
-    def test_login_wrong_password(self):
-        with mock.patch.dict(os.environ, {"AMAZON_PASSWORD": "invalid-password"}):
-            # GIVEN
-            amazon_session = AmazonSession(debug=self.debug,
-                                           config=self.given_config_reading_environment())
-
-            # WHEN
-            with self.assertRaises(AmazonOrdersError) as cm:
-                amazon_session.login()
-
-            # THEN
-            self.assertFalse(amazon_session.is_authenticated)
-            if isinstance(cm.exception, AmazonOrdersAuthError):
-                self.assertIn("Error from Amazon:", str(cm.exception))
-                self.assertIn("password", str(cm.exception))
-            else:
-                self.assertIn("CaptchaForm", str(cm.exception))

@@ -132,7 +132,7 @@ some_custom_config: {custom_config}
 
     def test_unavailable_bs4_parser_falls_back_to_html_parser(self):
         # GIVEN / WHEN
-        with self.assertLogs("amazonorders.conf", level="DEBUG") as logs:
+        with self.assertLogs("amazonauth.conf", level="DEBUG") as logs:
             config = AmazonOrdersConfig(data={
                 "bs4_parser": "this-parser-does-not-exist"
             })
@@ -291,6 +291,18 @@ some_custom_config: {custom_config}
         with open(config_path, "w") as f:
             f.write(contents)
         return config_path
+
+    def test_amazon_auth_default_class_paths_count_as_unset(self):
+        # GIVEN
+        config_path = self.given_config_file("constants_class: amazonauth.constants.AuthConstants\n"
+                                             "selectors_class: amazonauth.selectors.AuthSelectors\n")
+
+        # WHEN
+        config = AmazonOrdersConfig(config_path=config_path)
+
+        # THEN
+        self.assertIs(Constants, type(config.constants))
+        self.assertIs(Selectors, type(config.selectors))
 
     def test_environment_variable_sets_config_value_as_yaml(self):
         # GIVEN / WHEN

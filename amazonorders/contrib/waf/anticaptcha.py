@@ -1,69 +1,15 @@
 __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
-from typing import Any, Dict
+import warnings
 
-from amazonorders.contrib.waf.base import AwsWafForm
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersWafSolverError
+from amazonauth.contrib.waf.anticaptcha import (
+    AntiCaptchaWafForm,
+)
 
+__all__ = [
+    "AntiCaptchaWafForm",
+]
 
-class AntiCaptchaWafForm(AwsWafForm):
-    """
-    Solves AWS WAF JavaScript challenges via `Anti-Captcha
-    <https://anti-captcha.com>`_'s ``AmazonTaskProxyless`` task.
-
-    Reads the API key from the ``ANTICAPTCHA_API_KEY`` environment variable.
-    Requires the ``anticaptchaofficial`` Python package:
-    ``pip install amazon-orders[anticaptcha]``.
-    """
-
-    API_KEY_ENV_VAR = "ANTICAPTCHA_API_KEY"
-    PROVIDER_NAME = "Anti-Captcha"
-
-    def solve_token(self,
-                    url: str,
-                    goku: Dict[str, Any],
-                    challenge_script: str) -> str:
-        """
-        Solve the AWS WAF challenge via Anti-Captcha's ``AmazonTaskProxyless``
-        task type and return the ``aws-waf-token`` cookie value.
-
-        :param url: The URL of the WAF-challenged page.
-        :param goku: The parsed ``window.gokuProps`` payload.
-        :param challenge_script: The ``src`` of the AWS WAF ``challenge.js`` script tag.
-        :return: The ``aws-waf-token`` cookie value.
-        :raises AmazonOrdersError: if the ``anticaptchaofficial`` package is
-            not installed.
-        :raises AmazonOrdersWafSolverError: if Anti-Captcha fails, or returns no token.
-        """
-        try:
-            from anticaptchaofficial.amazonproxyless import amazonProxyless
-        except ImportError as e:
-            raise AmazonOrdersError(
-                "AntiCaptchaWafForm requires the [anticaptcha] extra. "
-                "Install it with: `pip install amazon-orders[anticaptcha]`"
-            ) from e
-
-        solver = amazonProxyless()
-        solver.set_key(self.api_key)
-        solver.set_website_url(url)
-        solver.set_website_key(goku["key"])
-        solver.set_iv(goku["iv"])
-        solver.set_context(goku["context"])
-        solver.set_challenge_script(challenge_script)
-
-        try:
-            token = solver.solve_and_return_solution()
-        except Exception as e:
-            raise AmazonOrdersWafSolverError(
-                f"Anti-Captcha could not solve the AWS WAF challenge: {e}",
-                meta={"provider": self.PROVIDER_NAME, "provider_error": str(e)}
-            ) from e
-
-        if not token:
-            error_code = getattr(solver, "error_code", None) or "unknown error"
-            raise AmazonOrdersWafSolverError(
-                f"Anti-Captcha could not solve the AWS WAF challenge: {error_code}",
-                meta={"provider": self.PROVIDER_NAME, "provider_error": error_code}
-            )
-        return token
+warnings.warn("amazonorders.contrib.waf.anticaptcha is deprecated and will be removed in 6.0. Use "
+              "amazonauth.contrib.waf.anticaptcha instead.", DeprecationWarning, stacklevel=2)

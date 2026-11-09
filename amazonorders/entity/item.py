@@ -6,9 +6,9 @@ import re
 from datetime import date
 from typing import Optional, TypeVar
 
+from amazonauth.util import select
 from bs4 import Tag
 
-from amazonorders import util
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.seller import Seller
@@ -84,14 +84,14 @@ class Item(Parsable):
         return match.group(1) if match else None
 
     def _parse_quantity(self) -> Optional[int]:
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ITEM_QUANTITY_SELECTOR):
+        for tag in select(self.parsed, self.config.selectors.FIELD_ITEM_QUANTITY_SELECTOR):
             quantity = self.config.constants.parse_count(tag.text, r"^\s*{count}\s*$")
             if quantity is not None:
                 return quantity
 
         # Whole Foods Market line items render quantity as "Qty: 1" (a whole count) or "Qty: 0.31 lb"
         # (sold by weight, which has no integer quantity).
-        for tag in util.select(self.parsed, self.config.selectors.FIELD_ITEM_WHOLE_FOODS_QUANTITY_SELECTOR):
+        for tag in select(self.parsed, self.config.selectors.FIELD_ITEM_WHOLE_FOODS_QUANTITY_SELECTOR):
             quantity = self.config.constants.parse_count(tag.get_text(strip=True),
                                                          self.config.selectors.FIELD_ITEM_WHOLE_FOODS_QUANTITY_REGEX)
             if quantity is not None:

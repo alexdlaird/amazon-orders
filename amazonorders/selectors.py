@@ -2,60 +2,18 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import re
-from typing import Any, Callable, Dict, Optional, Tuple
+import warnings
+from typing import Any
+
+from amazonauth import selectors as amazonauth_selectors
+from amazonauth.selectors import AuthSelectors
+
+__all__ = [
+    "Selectors",
+]
 
 
-class Selector:
-    """
-    Can be used to extend the definition of a CSS selector, allowing for programmatic inspection
-    of the selections results before determining if selector matches.
-    """
-
-    def __init__(self,
-                 css_selector: str,
-                 text: Optional[str] = None,
-                 text_contains: Optional[str] = None) -> None:
-        #: The CSS selector.
-        self.css_selector: str = css_selector
-        #: The text within the tag that must match exactly (after stripping).
-        self.text: Optional[str] = text
-        #: A substring within the tag's text that must be present (case-insensitive). Evaluated only when
-        #: :attr:`text` is not set.
-        self.text_contains: Optional[str] = text_contains
-
-
-class SelectorsFromText:
-    """
-    Builds a selector, or a list of selectors, from page text attributes of the :class:`Selectors` class it's set on,
-    so a subclass that changes the text gets selectors that match it. Selectors built from the same text are shared.
-
-    .. code-block:: python
-
-        ORDER_SKIP_TOTALS = SelectorsFromText(lambda cancelled_text: [
-            Selector("h4.a-alert-heading", text_contains=cancelled_text)
-        ], "ORDER_CANCELLED_TEXT")
-    """
-
-    def __init__(self,
-                 build: Callable[..., Any],
-                 *attribute_names: str) -> None:
-        #: Builds the selector(s), given the values of :attr:`attribute_names`.
-        self.build: Callable[..., Any] = build
-        #: The names of the :class:`Selectors` attributes the selector(s) are built from.
-        self.attribute_names: Tuple[str, ...] = attribute_names
-        self._built: Dict[Tuple[Any, ...], Any] = {}
-
-    def __get__(self,
-                instance: Optional["Selectors"],
-                owner: type) -> Any:
-        values = tuple(getattr(owner, name) for name in self.attribute_names)
-        if values not in self._built:
-            self._built[values] = self.build(*values)
-
-        return self._built[values]
-
-
-class Selectors:
+class Selectors(AuthSelectors):
     """
     A class containing CSS selectors, and the page text they match or extract a value from. Extend and
     override with ``selectors_class`` in the config:
@@ -77,45 +35,6 @@ class Selectors:
     Some selectors are built from page text, such as :attr:`ORDER_SKIP_TOTALS` from :attr:`ORDER_CANCELLED_TEXT`.
     A subclass that changes the text gets them rebuilt from it, unless it sets the selector itself.
     """
-
-    ##########################################################################
-    # CSS selectors for Pages
-    ##########################################################################
-
-    BAD_INDEX_SELECTOR = "html.a-tablet"
-
-    ##########################################################################
-    # CSS selectors for AuthForms
-    ##########################################################################
-
-    ACIC_CHALLENGE_SELECTOR = "#aa-challenge-page-captcha-container"
-    ACIC_VISUAL_CAPTCHA_MODAL_SELECTOR = ".amzn-captcha-modal"
-    ACIC_VISUAL_CAPTCHA_CANVAS_SELECTOR = ".amzn-captcha-modal canvas"
-    ACIC_VISUAL_CAPTCHA_QUESTION_SELECTOR = ".amzn-captcha-modal em"
-    ACIC_VISUAL_CAPTCHA_VERIFY_SELECTOR = "#amzn-btn-verify-internal"
-    AWS_WAF_CHALLENGE_SCRIPT_SELECTOR = 'script[src*="awswaf.com"]'
-
-    SIGN_IN_FORM_SELECTOR = "form[name='signIn']"
-    NAV_GREETING_SELECTOR = "#nav-link-accountList-nav-line-1"
-    SIGN_IN_EMAIL_INPUT_SELECTOR = "input[name='email']"
-    CLAIM_FORM_SELECTOR = ["form[name='signIn'].auth-validate-form", "form#unified-password-form"]
-    INTENT_FORM_SELECTOR = ["form#intent-confirmation-form",
-                            "form:has(input[name='OTPChallengeOptions'])"]
-    INTENT_MESSAGE_SELECTOR = ["div#intent-confirmation-container",
-                               "form:has(input[name='OTPChallengeOptions']) > h2"]
-    MFA_DEVICE_SELECT_FORM_SELECTOR = "form#auth-select-device-form"
-    PASSKEY_FORM_SELECTOR = "form#unified-passkey-form"
-    PASSKEY_PASSWORD_CHALLENGE_LINK_SELECTOR = "a[href*='selectedChallengeType=password']"
-    MFA_DEVICE_SELECT_INPUT_SELECTOR = "input[name='otpDeviceContext']"
-    MFA_DEVICE_SELECT_INPUT_SELECTOR_VALUE = "value"
-    MFA_DEVICE_SELECT_LABEL_SELECTOR = "span.a-label.a-radio-label"
-    MFA_FORM_SELECTOR = ["form#auth-mfa-form", "form#unified-otp-form"]
-    CAPTCHA_1_FORM_SELECTOR = "form.cvf-widget-form-captcha"
-    CAPTCHA_2_FORM_SELECTOR = ["form:has(input[id^='captchacharacters'])", "form[action$='validateCaptcha']"]
-    CAPTCHA_OTP_FORM_SELECTOR = "form#verification-code-form"
-    DEFAULT_ERROR_TAG_SELECTOR = "div#auth-error-message-box:not(.aok-hidden *)"
-    CAPTCHA_1_ERROR_SELECTOR = "div.cvf-widget-alert"
-    CAPTCHA_2_ERROR_SELECTOR = "div.a-alert-info"
 
     ##########################################################################
     # CSS selectors for pagination
@@ -171,34 +90,34 @@ class Selectors:
     ORDER_SERVICE_CANCELLED_TEXT = "Service cancelled"
     # Selectors defined here mean we don't have a reliable way to parse all details in an Order, so Items and
     # Shipments will be skipped
-    ORDER_SKIP_ITEMS = SelectorsFromText(lambda physical_store_text: [
+    ORDER_SKIP_ITEMS = amazonauth_selectors.SelectorsFromText(lambda physical_store_text: [
         # Identifies an Amazon Fresh order (also matched by WFM in-store; distinguished via ORDER_WHOLE_FOODS)
         ".brand-info-box .brand-logo img",
         # Identifies a Whole Foods Market receipt order
         "a.yohtmlc-order-details-link[href^='/wholefoodsmarket']",
         # Identifies an order from a physical Amazon store
-        Selector("div.yohtmlc-shipment-status-primaryText", physical_store_text)
+        amazonauth_selectors.Selector("div.yohtmlc-shipment-status-primaryText", physical_store_text)
     ], "ORDER_PHYSICAL_STORE_TEXT")
     # Selectors identifying a Whole Foods Market purchase. Unlike ORDER_SKIP_ITEMS entries, WFM orders
     # expose a grand_total (and often item_count) on the history page, so those fields are populated.
-    ORDER_WHOLE_FOODS = SelectorsFromText(lambda whole_foods_text: [
+    ORDER_WHOLE_FOODS = amazonauth_selectors.SelectorsFromText(lambda whole_foods_text: [
         "a[href*='/wholefoodsmarket/receipts/order/']",
         "a[href*='/fopo/order-details']",
-        Selector("div.yohtmlc-shipment-status-primaryText", text_contains=whole_foods_text),
+        amazonauth_selectors.Selector("div.yohtmlc-shipment-status-primaryText", text_contains=whole_foods_text),
         "img.ufpo-itemListWidget-image"
     ], "ORDER_WHOLE_FOODS_TEXT")
-    ORDER_SKIP_TOTALS = SelectorsFromText(lambda cancelled_text, service_cancelled_text: [
+    ORDER_SKIP_TOTALS = amazonauth_selectors.SelectorsFromText(lambda cancelled_text, service_cancelled_text: [
         # Identifies a cancelled order on the history page
-        Selector("div.yohtmlc-shipment-status-primaryText", cancelled_text),
+        amazonauth_selectors.Selector("div.yohtmlc-shipment-status-primaryText", cancelled_text),
         # Identifies a cancelled service order (e.g. an installation) on the history page
-        Selector("div.yohtmlc-shipment-status-primaryText", service_cancelled_text),
+        amazonauth_selectors.Selector("div.yohtmlc-shipment-status-primaryText", service_cancelled_text),
         # Identifies a cancelled order on the details page
-        Selector("h4.a-alert-heading", text_contains=cancelled_text)
+        amazonauth_selectors.Selector("h4.a-alert-heading", text_contains=cancelled_text)
     ], "ORDER_CANCELLED_TEXT", "ORDER_SERVICE_CANCELLED_TEXT")
     ORDER_SHIPMENT_STATUS_SELECTOR = "h4.od-status-message"
-    ORDER_SHIPMENT_CANCELLED_SELECTOR = SelectorsFromText(
-        lambda shipment_status_selector, cancelled_text: Selector(shipment_status_selector,
-                                                                  text_contains=cancelled_text),
+    ORDER_SHIPMENT_CANCELLED_SELECTOR = amazonauth_selectors.SelectorsFromText(
+        lambda shipment_status_selector, cancelled_text: amazonauth_selectors.Selector(shipment_status_selector,
+                                                                                       text_contains=cancelled_text),
         "ORDER_SHIPMENT_STATUS_SELECTOR", "ORDER_CANCELLED_TEXT")
 
     #####################################
@@ -270,7 +189,7 @@ class Selectors:
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_METHOD_SELECTOR = "#wfm-0-card-brand"
     FIELD_ORDER_WHOLE_FOODS_PAYMENT_LAST_4_SELECTOR = "#wfm-0-card-tail"
     FIELD_ORDER_WHOLE_FOODS_PURCHASED_TEXT = "Purchased on"
-    FIELD_ORDER_PLACED_DATE_SELECTOR = SelectorsFromText(lambda purchased_text: [
+    FIELD_ORDER_PLACED_DATE_SELECTOR = amazonauth_selectors.SelectorsFromText(lambda purchased_text: [
         # WFM in-store details page, the store's local date (its in-store summary shows the UTC date)
         f"#ufpo-order-status-secondary:-soup-contains(\"{purchased_text}\")",
         "[data-component='orderDate']",
@@ -423,14 +342,14 @@ class Selectors:
     FIELD_PRIME_PAYMENT_TOTAL_TEXT = "Total"
     FIELD_PRIME_PAYMENT_ORDER_NUMBER_TEXT = "Order Number"
     FIELD_PRIME_PAYMENT_RECEIPTS_TEXT = "Receipts"
-    FIELD_PRIME_PAYMENT_TOTAL_LABEL_SELECTOR = SelectorsFromText(
-        lambda label_selector, total_text: Selector(label_selector, total_text),
+    FIELD_PRIME_PAYMENT_TOTAL_LABEL_SELECTOR = amazonauth_selectors.SelectorsFromText(
+        lambda label_selector, total_text: amazonauth_selectors.Selector(label_selector, total_text),
         "FIELD_PRIME_PAYMENT_LABEL_SELECTOR", "FIELD_PRIME_PAYMENT_TOTAL_TEXT")
-    FIELD_PRIME_PAYMENT_ORDER_NUMBER_LABEL_SELECTOR = SelectorsFromText(
-        lambda label_selector, order_number_text: Selector(label_selector, order_number_text),
+    FIELD_PRIME_PAYMENT_ORDER_NUMBER_LABEL_SELECTOR = amazonauth_selectors.SelectorsFromText(
+        lambda label_selector, order_number_text: amazonauth_selectors.Selector(label_selector, order_number_text),
         "FIELD_PRIME_PAYMENT_LABEL_SELECTOR", "FIELD_PRIME_PAYMENT_ORDER_NUMBER_TEXT")
-    FIELD_PRIME_PAYMENT_RECEIPTS_LABEL_SELECTOR = SelectorsFromText(
-        lambda label_selector, receipts_text: Selector(label_selector, receipts_text),
+    FIELD_PRIME_PAYMENT_RECEIPTS_LABEL_SELECTOR = amazonauth_selectors.SelectorsFromText(
+        lambda label_selector, receipts_text: amazonauth_selectors.Selector(label_selector, receipts_text),
         "FIELD_PRIME_PAYMENT_LABEL_SELECTOR", "FIELD_PRIME_PAYMENT_RECEIPTS_TEXT")
     FIELD_PRIME_PAYMENT_VALUE_SELECTOR = "p"
     FIELD_PRIME_PAYMENT_RECEIPT_LINK_SELECTOR = "a[href]"
@@ -479,3 +398,11 @@ class Selectors:
     FIELD_GIFT_CARD_ACTIVITY_CLOSING_BALANCE_SELECTOR = "td:nth-of-type(4)"
     FIELD_GIFT_CARD_ACTIVITY_ORDER_NUMBER_SELECTOR = "td:nth-of-type(2) a.a-link-normal span"
     FIELD_GIFT_CARD_ACTIVITY_ORDER_LINK_SELECTOR = "td:nth-of-type(2) a.a-link-normal"
+
+
+def __getattr__(name: str) -> Any:
+    if name in ("Selector", "SelectorsFromText"):
+        warnings.warn(f"amazonorders.selectors.{name} is deprecated and will be removed in 6.0. Use "
+                      f"amazonauth.selectors.{name} instead.", DeprecationWarning, stacklevel=2)
+        return getattr(amazonauth_selectors, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

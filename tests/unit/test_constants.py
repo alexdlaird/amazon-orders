@@ -4,9 +4,11 @@ __license__ = "MIT"
 import os
 from unittest.mock import patch
 
+from amazonauth.region_data import REGION_SITES
+
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.constants import Constants
-from amazonorders.region_data import REGION_SITES
+from amazonorders.exception import AmazonOrdersError
 from tests.unittestcase import UnitTestCase
 
 
@@ -202,14 +204,13 @@ class TestConstants(UnitTestCase):
         self.assertEqual(Constants.BASE_HEADERS["Referer"], config.constants.BASE_HEADERS["Referer"])
         self.assertEqual(["x-main"], config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
 
-    def test_domain_unknown_tld_keeps_default_sign_in_and_session_values(self):
-        # GIVEN / WHEN
-        config = AmazonOrdersConfig(data={"domain": "amazon.example"})
+    def test_domain_that_is_not_an_amazon_site_raises(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            AmazonOrdersConfig(data={"domain": "amazon.example"})
 
         # THEN
-        self.assertEqual("usflex", config.constants.SIGN_IN_QUERY_PARAMS["openid.assoc_handle"])
-        self.assertEqual(["x-main"], config.constants.COOKIES_SET_WHEN_AUTHENTICATED)
-        self.assertEqual({}, config.constants.REQUEST_COOKIES)
+        self.assertIn("The domain \"amazon.example\" isn't an Amazon site.", str(cm.exception))
 
     def test_domain_sets_region_language_cookie(self):
         for tld, site in REGION_SITES.items():

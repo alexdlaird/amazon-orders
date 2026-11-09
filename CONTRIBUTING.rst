@@ -1,7 +1,9 @@
 Contributing
 ============
 
-If you find issues, `report them on GitHub <https://github.com/alexdlaird/amazon-orders/issues>`_.
+If you find issues, `report them on GitHub <https://github.com/alexdlaird/amazon-orders/issues>`_. Signing in to Amazon
+(OTP and MFA, challenges, browser sign-in, and the session) is handled by ``amazon-auth``
+(`on GitHub <https://github.com/alexdlaird/amazon-auth>`_), so issues and pull requests for it belong there.
 
 If you would like to contribute to the code, the process is pretty simple:
 
@@ -10,7 +12,7 @@ If you would like to contribute to the code, the process is pretty simple:
 3. Write a test that plainly validates the changes made.
 4. Build and test locally with ``make local``, ``make test``, and ``make test-integration``.
 5. Ensure no linting errors were introduced by running ``make check``.
-6. Submit a `pull requests <https://help.github.com/en/articles/creating-a-pull-request-from-a-fork>`_ to get the changes merged.
+6. Submit a `pull request <https://help.github.com/en/articles/creating-a-pull-request-from-a-fork>`_ to get the changes merged.
 
 Languages other than English plug in through separately published language packages, so pull requests
 that add a language here won't be accepted. See `Language Packages

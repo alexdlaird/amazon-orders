@@ -5,7 +5,7 @@ Language Packages
 ``amazon-orders`` reads Amazon's pages in English. Many Amazon sites can serve their pages in English, whatever
 language they default to, so support for a site comes in three tiers:
 
-- **amazon.com** — validated by a nightly integration run against the live site.
+- **amazon.com**: validated by a nightly integration run against the live site.
 - **Any other Amazon site that offers English** (e.g. amazon.co.uk, or amazon.de): no
   language package needed, just set ``domain`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>` (or pass ``--domain`` on the CLI). Supported on a
   best-effort basis.
@@ -123,41 +123,41 @@ complete example, have a look at
 which overrides every word and parse method below, and is tested against real pages with their English replaced by
 placeholder text.
 
-- **Words** — attributes on :class:`~amazonorders.selectors.Selectors`, alongside the selector each is used with
+- **Words**: attributes on :class:`~amazonorders.selectors.Selectors`, alongside the selector each is used with
   (CSS selectors can be overridden here too, if the site's markup is different). The suffix of an attribute's name
   says how it's used:
 
-    - ``_LABELS`` — lists matched, in order, against an Order's lowercase subtotal rows. A label is a substring
+    - ``_LABELS``: lists matched, in order, against an Order's lowercase subtotal rows. A label is a substring
       of the row, or a compiled regex for a label that's also part of a longer one (e.g. ``re.compile(r"\btotal")``
       matches "total" but not "subtotal"). A row's text can start with whitespace, so anchor a regex with
       ``^\s*`` rather than ``^``
-    - ``_PREFIX`` and ``_SUFFIX`` — split off the selected value
-    - ``_TEXT`` — contained in the selected value (or, for an Order status shown on its own, equal to it)
-    - ``_REGEX`` — extracts from the selected value, where a ``{count}`` placeholder matches a whole number
+    - ``_PREFIX`` and ``_SUFFIX``: split off the selected value
+    - ``_TEXT``: contained in the selected value (or, for an Order status shown on its own, equal to it)
+    - ``_REGEX``: extracts from the selected value, where a ``{count}`` placeholder matches a whole number
 
-- **Formats** — methods on :class:`~amazonorders.constants.Constants`:
+- **Formats**: methods on :class:`~amazonorders.constants.Constants`:
   :func:`~amazonorders.constants.Constants.parse_currency`, :func:`~amazonorders.constants.Constants.parse_date`,
   :func:`~amazonorders.constants.Constants.parse_count`, and
   :func:`~amazonorders.constants.Constants.parse_order_number`, and
   :func:`~amazonorders.constants.Constants.format_currency` for output. Currency and number parsing already accept
   either decimal mark, so only override these for formats the defaults can't parse (e.g. month names in another
   language).
-- **Request headers** — set ``BASE_HEADERS`` on :class:`~amazonorders.constants.Constants`, for instance to ask for
+- **Request headers**: set ``BASE_HEADERS`` on :class:`~amazonorders.constants.Constants`, for instance to ask for
   the site's language with ``Accept-Language``
   (``BASE_HEADERS = {**constants.Constants.BASE_HEADERS, "Accept-Language": "<LANGUAGE>"}``). A header set here isn't
   replaced by the ``browser`` option.
-- **Request cookies** — set ``REQUEST_COOKIES`` on :class:`~amazonorders.constants.Constants` to the cookie that
+- **Request cookies**: set ``REQUEST_COOKIES`` on :class:`~amazonorders.constants.Constants` to the cookie that
   picks the site's page language. On a site that offers English, ``amazon-orders`` sets that cookie to English unless
   ``REQUEST_COOKIES`` or ``Accept-Language`` is overridden, so a package reading another language there should set it
   to that language (e.g.
   ``REQUEST_COOKIES = {"lc-acbde": "de_DE"}`` on amazon.de, or ``{"lc-main": "es_US"}`` on amazon.com). These are sent
   with every request to the active domain, replacing any cookie of the same name Amazon set.
-- **Transactions page** — if the site builds this page differently (for instance, rendering it from embedded data or
+- **Transactions page**: if the site builds this page differently (for instance, rendering it from embedded data or
   loading more pages from an API), subclass :class:`~amazonorders.transactions.TransactionsPage` and override
   :func:`~amazonorders.transactions.TransactionsPage.get_page` and
   :func:`~amazonorders.transactions.TransactionsPage.parse_page`. For a page that renders its Transactions as data
   rather than HTML, build each with :func:`~amazonorders.entity.transaction.Transaction.from_fields`.
-- **Entities** — :class:`~amazonorders.entity.order.Order`, :class:`~amazonorders.entity.shipment.Shipment`,
+- **Entities**: :class:`~amazonorders.entity.order.Order`, :class:`~amazonorders.entity.shipment.Shipment`,
   :class:`~amazonorders.entity.item.Item`, and :class:`~amazonorders.entity.transaction.Transaction` can be subclassed
   for anything the above doesn't cover. Their ``_parse_*``
   methods are private, though, so an override of one isn't covered under `Compatibility`_.

@@ -16,6 +16,7 @@ dependencies = [
     "PyYAML>=6.0.3",
     "python-dateutil>=2.9.0.post0",
     "pyotp>=2.9",
+    "amazon-auth>=0.2.2,<0.3",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -37,22 +38,22 @@ classifiers = [
 
 [project.optional-dependencies]
 browser = [
-    "playwright>=1.47.0",
+    "amazon-auth[browser]",
 ]
 capsolver = [
-    "capsolver",
+    "amazon-auth[capsolver]",
 ]
 anticaptcha = [
-    "anticaptchaofficial",
+    "amazon-auth[anticaptcha]",
 ]
 2captcha = [
-    "2captcha-python",
+    "amazon-auth[2captcha]",
 ]
 lxml = [
     "lxml",
 ]
 captcha = [
-    "amazoncaptcha>=0.4",
+    "amazon-auth[captcha]",
 ]
 dev = [
     "pytest",
@@ -88,6 +89,7 @@ amazon-orders = "amazonorders.cli:amazon_orders_cli"
 Changelog = "https://github.com/alexdlaird/amazon-orders/blob/main/CHANGELOG.md"
 Documentation = "https://amazon-orders.readthedocs.io"
 Sponsor = "https://github.com/sponsors/alexdlaird"
+"Authentication (amazon-auth)" = "https://github.com/alexdlaird/amazon-auth"
 "Source Code" = "https://github.com/alexdlaird/amazon-orders"
 
 [tool.setuptools]

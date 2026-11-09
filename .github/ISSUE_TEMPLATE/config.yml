@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Sign-In Issues
+    url: https://github.com/alexdlaird/amazon-auth/issues/new/choose
+    about: Signing in to Amazon is handled by amazon-auth, the authentication package amazon-orders is built on.
   - name: Community Support
     url: https://github.com/alexdlaird/amazon-orders/discussions
     about: Please put integration questions and suggestions here.

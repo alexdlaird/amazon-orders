@@ -5,6 +5,7 @@ import datetime
 import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from amazonauth.util import select, select_one
 from bs4 import BeautifulSoup, Tag
 
 from amazonorders import util
@@ -195,7 +196,7 @@ class AmazonGiftCards:
     @staticmethod
     def _parse_gift_card_balance(parsed: Tag,
                                  config: AmazonOrdersConfig) -> Optional[float]:
-        balance_tag = util.select_one(parsed, config.selectors.GIFT_CARD_BALANCE_SELECTOR)
+        balance_tag = select_one(parsed, config.selectors.GIFT_CARD_BALANCE_SELECTOR)
 
         return config.constants.parse_currency(balance_tag.text) if balance_tag else None
 
@@ -210,20 +211,20 @@ class AmazonGiftCards:
         :param config: The config providing the selectors.
         :return: The page's GiftCardActivity, and the next page's URL or ``None`` on the last page.
         """
-        table_tag = util.select_one(parsed, config.selectors.GIFT_CARD_ACTIVITY_TABLE_SELECTOR)
+        table_tag = select_one(parsed, config.selectors.GIFT_CARD_ACTIVITY_TABLE_SELECTOR)
 
         if not table_tag:
             # A balance with no table is an account that has no Gift Card activity
-            if util.select_one(parsed, config.selectors.GIFT_CARD_BALANCE_SELECTOR):
+            if select_one(parsed, config.selectors.GIFT_CARD_BALANCE_SELECTOR):
                 return [], None
 
             raise AmazonOrdersError("Could not parse Gift Card activity. Check if Amazon changed the HTML.")
 
         activity = [GiftCardActivity(row_tag, config)
-                    for row_tag in util.select(table_tag, config.selectors.GIFT_CARD_ACTIVITY_SELECTOR)]
+                    for row_tag in select(table_tag, config.selectors.GIFT_CARD_ACTIVITY_SELECTOR)]
 
         next_page_url = None
-        next_page_link = util.select_one(parsed, config.selectors.GIFT_CARD_ACTIVITY_NEXT_PAGE_LINK_SELECTOR)
+        next_page_link = select_one(parsed, config.selectors.GIFT_CARD_ACTIVITY_NEXT_PAGE_LINK_SELECTOR)
         if next_page_link and next_page_link.get("href"):
             next_page_url = util.resolve_site_url(str(next_page_link["href"]), config.constants.BASE_URL)
 
