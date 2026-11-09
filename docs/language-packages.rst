@@ -30,8 +30,9 @@ These sites are supported on a best-effort basis, alongside amazon.com. This lis
 
 .. supported-sites::
 
-If a site that offers English isn't listed, or doesn't work with ``domain``, please `open an issue`_, ideally with an
-anonymized page from the site attached, or see `Adding a Site`_.
+``domain`` only accepts one of Amazon's own sites, since the account's credentials are sent to it. If a site that
+offers English isn't listed, or doesn't work with ``domain``, please `open an issue`_, ideally with an anonymized page
+from the site attached, or see `Adding a Site`_.
 
 Available Language Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
