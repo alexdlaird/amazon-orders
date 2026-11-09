@@ -7,6 +7,11 @@ body:
 - type: markdown
   attributes:
     value: |
+      **Signing in?** Sign-in, OTP and MFA, challenges (WAF, Captcha, ACIC), browser sign-in, and the session are handled by [`amazon-auth`](https://github.com/alexdlaird/amazon-auth), the authentication package `amazon-orders` is built on. Please [open those there](https://github.com/alexdlaird/amazon-auth/issues/new/choose).
+
+- type: markdown
+  attributes:
+    value: |
       Consider [supporting the project](https://github.com/sponsors/alexdlaird) ❤ to have your request prioritized.
 
 - type: checkboxes
@@ -15,6 +20,8 @@ body:
     label: Acknowledgements
     options:
     - label: I have written a descriptive issue title
+      required: true
+    - label: This isn't about signing in, which [`amazon-auth`](https://github.com/alexdlaird/amazon-auth) handles
       required: true
     - label: I have searched [`amazon-orders`'s documentation](https://amazon-orders.readthedocs.io/) to see if the feature is already supported
       required: true

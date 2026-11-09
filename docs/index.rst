@@ -42,6 +42,8 @@ Amazon Orders - A Python library (and CLI) for Amazon order history, line items,
       :target: https://github.com/alexdlaird/amazon-orders
 
 ``amazon-orders`` is an unofficial library that provides a Python API (and CLI) for Amazon order history, line items, and transactions.
+Signing in to Amazon is handled by `amazon-auth <https://amazon-auth.readthedocs.io>`_, the authentication package
+``amazon-orders`` is built on.
 
 .. note::
 
@@ -166,7 +168,7 @@ The session is persisted, so neither the CLI nor the Python API needs credential
     amazon_session = AmazonSession()
     amazon_session.login()
 
-This requires a display and the ``browser`` extra (see :ref:`Browser Automation <browser-installation>` to install it).
+This requires a display and the ``browser`` extra (``pip install amazon-orders[browser]``, see :doc:`browser`).
 
 .. _automating-authentication:
 
@@ -189,6 +191,9 @@ browser opens on Amazon's password or passkey step. The browser never fills in y
 Handling Challenges
 -------------------
 
+Amazon's sign-in challenges are handled by `amazon-auth <https://amazon-auth.readthedocs.io>`_, which
+``amazon-orders`` builds on, through opt-in extras.
+
 To enable **WAF auto-solve** via a third-party integration, install with the relevant extra:
 
 .. code:: sh
@@ -197,7 +202,7 @@ To enable **WAF auto-solve** via a third-party integration, install with the rel
     pip install amazon-orders[anticaptcha]
     pip install amazon-orders[2captcha]
 
-See :doc:`waf` for details.
+See :doc:`waf` for setup.
 
 To enable **browser-based challenge handling** (ACIC and JavaScript bot-detection pages) via
 a headless browser, install with the ``browser`` extra:
@@ -206,7 +211,7 @@ a headless browser, install with the ``browser`` extra:
 
     pip install amazon-orders[browser]
 
-See :doc:`browser` for details.
+See :doc:`browser` for setup.
 
 For **legacy Captcha auto-solve** on Python <=3.12, install with ``captcha`` extra:
 
@@ -214,7 +219,7 @@ For **legacy Captcha auto-solve** on Python <=3.12, install with ``captcha`` ext
 
     pip install amazon-orders[captcha]
 
-See :ref:`Login Challenges <login-challenges>` for details.
+See :ref:`amazonauth:login-challenges` for details.
 
 Languages and Regions
 ---------------------

@@ -40,6 +40,8 @@ Main Interface
 Session Management
 ------------------
 
+Sign-in is `amazon-auth <https://amazon-auth.readthedocs.io>`_'s; these are its classes, re-exported under their ``amazonorders`` names (see :doc:`amazonauth:api`).
+
 .. automodule:: amazonorders.session
     :members:
     :imported-members:
@@ -56,6 +58,8 @@ Session Management
 
 Challenge Solvers
 -----------------
+
+These are `amazon-auth <https://amazon-auth.readthedocs.io>`_'s challenge solvers, re-exported under their ``amazonorders`` names (see :doc:`amazonauth:api`).
 
 .. automodule:: amazonorders.contrib.waf.base
     :members:

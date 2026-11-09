@@ -89,6 +89,7 @@ amazon-orders = "amazonorders.cli:amazon_orders_cli"
 Changelog = "https://github.com/alexdlaird/amazon-orders/blob/main/CHANGELOG.md"
 Documentation = "https://amazon-orders.readthedocs.io"
 Sponsor = "https://github.com/sponsors/alexdlaird"
+"Authentication (amazon-auth)" = "https://github.com/alexdlaird/amazon-auth"
 "Source Code" = "https://github.com/alexdlaird/amazon-orders"
 
 [tool.setuptools]
