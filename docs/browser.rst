@@ -3,7 +3,7 @@ Browser Automation
 ====================
 
 Amazon sometimes presents JavaScript-based challenges during login that cannot be solved
-by sending HTTP requests alone — the page requires a real browser to execute its scripts. The
+by sending HTTP requests alone, since the page requires a real browser to execute its scripts. The
 ``[browser]`` extra handles these challenges by running a headless browser and bridging the
 resulting session back into ``amazon-orders``.
 
@@ -16,16 +16,16 @@ resulting session back into ``amazon-orders``.
 
 Three challenge types are covered:
 
-- **ACIC** (Amazon Challenge and Identity Component) — the ``#aa-challenge-page-captcha-container``
+- **ACIC** (Amazon Challenge and Identity Component): the ``#aa-challenge-page-captcha-container``
   challenge page. Amazon may embed a WAF token challenge, a visual grid Puzzle (e.g. "Choose all the
   buckets"), or both. These can be solved automatically when a WAF solver extra is also configured,
   or handled manually (see below).
-- **JS bot detection** — the ``"verify that you're not a robot / Enable JavaScript"`` page, and Akamai Bot
+- **JS bot detection**: the ``"verify that you're not a robot / Enable JavaScript"`` page, and Akamai Bot
   Manager's interstitial, a blank page that verifies the browser and then reloads, which Amazon sometimes serves in
   place of a page. :class:`~amazonorders.contrib.browser.playwright.PlaywrightJSAuthForm` is a best-effort handler
   for these; effectiveness depends on whether the challenge resolves in a real browser without a
   visual puzzle.
-- **AWS WAF (manual)** (Web Application Firewall) — :class:`~amazonorders.contrib.browser.playwright.PlaywrightManualWafForm` opens a visible browser
+- **AWS WAF (manual)** (Web Application Firewall): :class:`~amazonorders.contrib.browser.playwright.PlaywrightManualWafForm` opens a visible browser
   window for you to solve the challenge yourself, suitable when a display is available.
 
 .. _browser-installation:
@@ -76,7 +76,7 @@ browser window, lets you solve the WAF challenge yourself, and automatically har
 resulting cookies once the browser navigates away from the challenge page.
 
 Because it requires a display and a user at the keyboard, it is intended for local/interactive
-use only — not headless environments.
+use only, not headless environments.
 
 Add ``amazonorders.contrib.browser.playwright.PlaywrightManualWafForm`` to ``auth_forms_classes`` in the
 :class:`config <amazonorders.conf.AmazonOrdersConfig>`. It can be combined with other forms, for example after
@@ -85,17 +85,17 @@ Add ``amazonorders.contrib.browser.playwright.PlaywrightManualWafForm`` to ``aut
 Combining with a WAF Solver
 ---------------------------
 
-Amazon sometimes embeds challenges inside the ACIC page — either a WAF token challenge, a visual
+Amazon sometimes embeds challenges inside the ACIC page: either a WAF token challenge, a visual
 grid Puzzle (e.g. "Choose all the buckets"), or both. When this happens, the headless browser alone
 cannot solve them. Two options are available:
 
-- **Manual** — register ``PlaywrightManualWafForm`` alongside ``PlaywrightAcicForm``. The ACIC
-  browser itself opens visibly and hands the embedded challenge — whether a WAF token challenge or
-  a visual grid Puzzle — to you to solve yourself. No WAF solver extra is required.
+- **Manual**: register ``PlaywrightManualWafForm`` alongside ``PlaywrightAcicForm``. The ACIC
+  browser itself opens visibly and hands the embedded challenge (whether a WAF token challenge or
+  a visual grid Puzzle) to you to solve yourself. No WAF solver extra is required.
 
-- **Automated** — register a :doc:`WAF solver extra <waf>` alongside ``PlaywrightAcicForm``.
-  ``PlaywrightAcicForm`` will detect and solve embedded challenges automatically — whether WAF
-  token or Puzzle — all without additional configuration. ``PlaywrightJSAuthForm`` is only needed here for
+- **Automated**: register a :doc:`WAF solver extra <waf>` alongside ``PlaywrightAcicForm``.
+  ``PlaywrightAcicForm`` will detect and solve embedded challenges automatically (whether WAF
+  token or Puzzle), all without additional configuration. ``PlaywrightJSAuthForm`` is only needed here for
   Akamai's interstitial, since the WAF solver handles the JS bot-detection page on its own.
 
 Customizing the Sign-In

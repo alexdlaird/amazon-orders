@@ -47,17 +47,17 @@ Login Challenges
 Amazon may present JavaScript-based challenges during login that ``amazon-orders`` cannot solve via
 HTTP requests alone. Several opt-in extras address these:
 
-- **AWS WAF JavaScript challenge** — a ``[capsolver]``, ``[anticaptcha]``, or ``[2captcha]`` extra
+- **AWS WAF JavaScript challenge**: a ``[capsolver]``, ``[anticaptcha]``, or ``[2captcha]`` extra
   solves this automatically via a third-party API. See :doc:`waf` for setup.
-- **AWS WAF JavaScript challenge (manual)** — the ``[browser]`` extra opens a visible browser
+- **AWS WAF JavaScript challenge (manual)**: the ``[browser]`` extra opens a visible browser
   window for you to solve the challenge yourself. Suitable when a display is available and you
   are able to handle the challenge interactively. See :ref:`manual-waf-solving` in :doc:`browser` for setup.
 - **ACIC challenge** (``/ax/aaut/verify/ap/challenge``) or **JS bot-detection page**, including Akamai Bot
-  Manager's interstitial (a blank page that verifies the browser and then reloads) — the
+  Manager's interstitial (a blank page that verifies the browser and then reloads): the
   ``[browser]`` extra handles these by running a headless browser. When the
   ACIC page also embeds a WAF challenge, a configured WAF solver extra solves it automatically as
   part of the same flow. See :doc:`browser` for setup.
-- **Legacy text-based Captcha** — the ``[captcha]`` extra auto-solves via
+- **Legacy text-based Captcha**: the ``[captcha]`` extra auto-solves via
   `amazoncaptcha <https://pypi.org/project/amazoncaptcha/>`_ (Python <=3.12 only;
   incompatible with Python 3.13+). Falls back to manual entry without this extra.
 

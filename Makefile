@@ -1,4 +1,4 @@
-.PHONY: all install nopyc clean test test-integration test-integration-sites download-integration-output generate-region-data docs check local validate-release bump-version install-waf install-browser
+.PHONY: all install nopyc clean test test-integration download-integration-output docs check local validate-release bump-version install-waf install-browser
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN ?= python
@@ -56,14 +56,7 @@ test-integration: install
 	@( \
 		source $(PROJECT_VENV)/bin/activate; \
 		python -m pip install ".[dev,integration]"; \
-		pytest -v --ignore=tests/unit --ignore=tests/integration/test_integration_sites.py -o junit_suite_name=integration --reruns ${INTEGRATION_TEST_RERUN} --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY} $(if $(filter true,${INTEGRATION_TEST_FAIL_FAST}),-x) ${PYTEST_EXTRA_ARGS}; \
-	)
-
-test-integration-sites: install
-	@( \
-		source $(PROJECT_VENV)/bin/activate; \
-		python -m pip install ".[dev,integration]"; \
-		pytest -v -rs tests/integration/test_integration_sites.py -o junit_suite_name=integration-sites ${PYTEST_EXTRA_ARGS}; \
+		pytest -v --ignore=tests/unit -o junit_suite_name=integration --reruns ${INTEGRATION_TEST_RERUN} --reruns-delay ${INTEGRATION_TEST_RERUN_DELAY} $(if $(filter true,${INTEGRATION_TEST_FAIL_FAST}),-x) ${PYTEST_EXTRA_ARGS}; \
 	)
 
 download-integration-output:
@@ -73,12 +66,6 @@ download-integration-output:
 		age -d -i $(SSH_KEY) $(INTEGRATION_OUTPUT_DIR)/integration-test-output.tar.gz.age | tar xzf - -C $(INTEGRATION_OUTPUT_DIR) && \
 		rm $(INTEGRATION_OUTPUT_DIR)/integration-test-output.tar.gz.age && \
 		echo "Integration test output from run $(INTEGRATION_RUN_ID) is in $(INTEGRATION_OUTPUT_DIR)"; \
-	)
-
-generate-region-data: install
-	@( \
-		source $(PROJECT_VENV)/bin/activate; \
-		python scripts/generate-region-data.py; \
 	)
 
 docs: install
