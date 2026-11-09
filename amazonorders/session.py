@@ -205,7 +205,8 @@ class AmazonSession:
         :param kwargs: Remaining ``kwargs`` will be passed to :func:`requests.request`.
         :return: The response from the executed request.
         """
-        kwargs["headers"] = {**self.config.constants.BASE_HEADERS, **(kwargs.get("headers") or {})}
+        headers = {**self.config.constants.BASE_HEADERS, **(kwargs.get("headers") or {})}
+        kwargs["headers"] = {name: value for name, value in headers.items() if name.lower() != "host"}
 
         if self.debug:
             logger.debug(f"{method} request: {url}")

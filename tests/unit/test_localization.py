@@ -31,8 +31,8 @@ _PLUMBING_LITERALS = {
     "action", "alt", "application/json", "choices", "config", "cvf_captcha_input", "data", "data-a-popover",
     "deviceId", "displayResponse", "domain", "email", "exclusiveStartKey", "expires", "family_member_id",
     "field-keywords",
-    "formattedAmount", "formattedDate", "hasMore", "headers", "household_members", "href", "http", "https://", "ie",
-    "img", "index",
+    "formattedAmount", "formattedDate", "hasMore", "headers", "host", "household_members", "href", "http", "https://",
+    "ie", "img", "index",
     "inlineContent", "input",
     "input[name='", "lastDigits", "lastEvaluatedKey", "lastEvaluatedPageKey", "locale", "method",
     "min_date", "name", "nav-item-signout", "next_page", "next_page_data", "next_page_url", "not solved", "orderData",
@@ -204,6 +204,17 @@ class TestLocalization(UnitTestCase):
         self.assertTrue(order.cancelled)
         with self.assertRaises(AmazonOrdersError):
             AmazonOrders.parse_order_details(self._translate(details_html, phrases), self.test_config)
+
+    def test_example_language_package_parses_translated_whole_foods_in_store_order_placed_date(self):
+        # GIVEN
+        html = self.given_resource("orders", "order-details-fopo-147-7999693-6862434.html")
+        lorem_html = self._translate(html, {"Purchased on": "Ad minim veniam"})
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(lorem_html, self.example_config, order_number="147-7999693-6862434")
+
+        # THEN
+        self.assertEqual(datetime.date(2024, 2, 17), order.order_placed_date)
 
     def test_example_language_package_parses_translated_store_and_whole_foods_orders(self):
         # GIVEN

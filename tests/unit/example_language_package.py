@@ -48,6 +48,7 @@ class Selectors(selectors.Selectors):
     FIELD_PRIME_PAYMENT_RECEIPTS_TEXT = "Cupidatat"
     ORDER_PHYSICAL_STORE_TEXT = "Sint culpa"
     ORDER_WHOLE_FOODS_TEXT = "Anim id est"
+    FIELD_ORDER_WHOLE_FOODS_PURCHASED_TEXT = "Ad minim veniam"
     ORDER_CANCELLED_TEXT = "Velit"
     ORDER_SERVICE_CANCELLED_TEXT = "Esse velit"
     FIELD_RECIPIENT_ADDRESS_INLINE_SEPARATOR_REGEX = r"(?:^|\s);\s*"

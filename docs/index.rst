@@ -26,18 +26,20 @@ Amazon Orders - A Python library (and CLI) for Amazon order history, line items,
 
 |
 
-.. image:: https://img.shields.io/pypi/v/amazon-orders
-   :target: https://pypi.org/project/amazon-orders
-.. image:: https://img.shields.io/pypi/pyversions/amazon-orders.svg
-   :target: https://pypi.org/project/amazon-orders
-.. image:: https://img.shields.io/codecov/c/github/alexdlaird/amazon-orders
-   :target: https://codecov.io/gh/alexdlaird/amazon-orders
-.. image:: https://img.shields.io/github/actions/workflow/status/alexdlaird/amazon-orders/build.yml
-   :target: https://github.com/alexdlaird/amazon-orders/actions/workflows/build.yml
-.. image:: https://img.shields.io/readthedocs/amazon-orders
-   :target: https://amazon-orders.readthedocs.io
-.. image:: https://img.shields.io/github/license/alexdlaird/amazon-orders
-   :target: https://github.com/alexdlaird/amazon-orders
+.. only:: builder_html
+
+   .. image:: https://img.shields.io/pypi/v/amazon-orders
+      :target: https://pypi.org/project/amazon-orders
+   .. image:: https://img.shields.io/pypi/pyversions/amazon-orders.svg
+      :target: https://pypi.org/project/amazon-orders
+   .. image:: https://img.shields.io/codecov/c/github/alexdlaird/amazon-orders
+      :target: https://codecov.io/gh/alexdlaird/amazon-orders
+   .. image:: https://img.shields.io/github/actions/workflow/status/alexdlaird/amazon-orders/build.yml
+      :target: https://github.com/alexdlaird/amazon-orders/actions/workflows/build.yml
+   .. image:: https://img.shields.io/readthedocs/amazon-orders
+      :target: https://amazon-orders.readthedocs.io
+   .. image:: https://img.shields.io/github/license/alexdlaird/amazon-orders
+      :target: https://github.com/alexdlaird/amazon-orders
 
 ``amazon-orders`` is an unofficial library that provides a Python API (and CLI) for Amazon order history, line items, and transactions.
 
