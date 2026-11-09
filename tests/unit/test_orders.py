@@ -682,6 +682,35 @@ class TestOrders(UnitTestCase):
         self.assertIsNotNone(fopo_order.grand_total)
         self.assertEqual(0, len(fopo_order.items))
 
+    def test_parse_order_details_whole_foods_in_store_order_placed_date(self):
+        # GIVEN
+        for resource, placed in [("order-details-fopo-147-7999693-6862434.html", date(2024, 2, 17)),
+                                 ("order-details-fopo-113-4055495-4107437.html", date(2025, 10, 5))]:
+            with open(os.path.join(self.RESOURCES_DIR, "orders", resource), "r", encoding="utf-8") as f:
+                html = f.read()
+
+            # WHEN
+            order_number = re.search(r"\d{3}-\d{7}-\d{7}", resource).group(0)
+            order = AmazonOrders.parse_order_details(html, self.test_config, order_number=order_number)
+
+            # THEN
+            self.assertTrue(order.is_whole_foods)
+            self.assertEqual(placed, order.order_placed_date, resource)
+            self.assertNotIn("order_placed_date", order.parse_failures, resource)
+
+    def test_parse_order_details_whole_foods_status_line_other_than_purchased_is_not_a_date(self):
+        # GIVEN
+        with open(os.path.join(self.RESOURCES_DIR, "orders", "order-details-fopo-147-7999693-6862434.html"), "r",
+                  encoding="utf-8") as f:
+            html = f.read().replace("Purchased on Saturday, February 17, 2024",
+                                    "Delivered Saturday, February 17, 2024")
+
+        # WHEN
+        order = AmazonOrders.parse_order_details(html, self.test_config, order_number="147-7999693-6862434")
+
+        # THEN
+        self.assertNotEqual(date(2024, 2, 17), order.order_placed_date)
+
     @responses.activate
     def test_get_orders_full_details_whole_foods_without_details_link(self):
         # GIVEN a Whole Foods order identified by its shipment text but with no linkable details page

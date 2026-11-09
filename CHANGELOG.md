@@ -6,9 +6,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.2.1...HEAD)
 
+### Fixed
+
+- `parse_tracking()` parses the tracking page of a shipment that has not shipped yet, instead of raising.
+- `Order.order_placed_date` is parsed on a Whole Foods Market in-store purchase's details page.
+- `Tracking.carrier` is documented as `None` when the page names no carrier.
+
 ### Security
 
-- Requests no longer send a pinned `Host` header, which made `requests` match cookies against Amazon's host instead of the URL's, so Amazon session cookies were sent to any host requested, including through an off-site redirect.
+- The `Host` header is no longer pinned, which sent Amazon's session cookies to any host requested, including through an off-site redirect.
 
 ## [5.2.1](https://github.com/alexdlaird/amazon-orders/compare/5.2.0...5.2.1) - 2026-10-31
 

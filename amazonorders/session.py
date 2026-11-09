@@ -206,7 +206,6 @@ class AmazonSession:
         :return: The response from the executed request.
         """
         headers = {**self.config.constants.BASE_HEADERS, **(kwargs.get("headers") or {})}
-        # requests matches cookies against an explicit Host header (in any case), not the URL, so never send one
         kwargs["headers"] = {name: value for name, value in headers.items() if name.lower() != "host"}
 
         if self.debug:

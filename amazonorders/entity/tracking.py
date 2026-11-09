@@ -26,7 +26,7 @@ class Tracking(Parsable):
                  config: AmazonOrdersConfig) -> None:
         super().__init__(parsed, config)
 
-        #: The carrier name, e.g. ``UPS``, or ``Amazon`` for Amazon's own delivery network.
+        #: The carrier the page names, e.g. ``UPS``, or ``None`` when it names none (the "Delivery Info" layout).
         self.carrier: Optional[str] = self.safe_parse(self._parse_carrier)
         #: The carrier's tracking number, e.g. ``1Z999AA10123456784`` or ``TBA000000000000``. Always a ``str``,
         #: since many (e.g. USPS) are all digits and may have leading zeros.
