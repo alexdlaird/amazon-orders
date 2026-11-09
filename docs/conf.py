@@ -20,9 +20,10 @@ from docutils.statemachine import StringList
 from sphinx.ext import intersphinx
 from sphinx.util.docutils import SphinxDirective
 
+from amazonauth.region_data import REGION_SITES
+
 from amazonorders import __version__
 from amazonorders.constants import Constants
-from amazonorders.region_data import REGION_SITES
 
 # -- Project information -----------------------------------------------------
 
