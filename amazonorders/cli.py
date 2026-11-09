@@ -500,53 +500,6 @@ def transactions(ctx: Context, **kwargs: Any) -> None:
         ctx.fail(str(e))
 
 
-@amazon_orders_cli.command("order-transactions", hidden=True, deprecated=True)
-@click.pass_context
-@click.argument("order_id")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
-              help="The output format. Defaults to text.")
-def order_transactions(ctx: Context,
-                       order_id: str,
-                       **kwargs: Any) -> None:
-    """
-    Deprecated, use transactions --order-id instead.
-    """
-    ctx.invoke(transactions, order_id=order_id, output=kwargs["output"])
-
-
-@amazon_orders_cli.command("family-members", hidden=True, deprecated=True)
-@click.pass_context
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
-              help="The output format. Defaults to text.")
-def family_members(ctx: Context, **kwargs: Any) -> None:
-    """
-    Deprecated, use orders instead, which lists the Amazon Household members after the Orders.
-    """
-    amazon_session = ctx.obj["amazon_session"]
-
-    try:
-        CliAuth(amazon_session).authenticate()
-
-        config = ctx.obj["conf"]
-        amazon_orders = AmazonOrders(amazon_session,
-                                     config=config)
-
-        start_time = time.time()
-        members = amazon_orders.get_family_members()
-        end_time = time.time()
-
-        click.echo(config.output_cls(config).format(members, kwargs["output"]))
-
-        click.echo(
-            "... {total} Amazon Household members parsed in {time} seconds.\n".format(
-                total=len(members), time=int(end_time - start_time)), err=True)
-    except AmazonOrdersAuthRedirectError:
-        IOClick.echo_session_expired()
-    except AmazonOrdersError as e:
-        logger.debug("An error occurred.", exc_info=True)
-        ctx.fail(str(e))
-
-
 @amazon_orders_cli.command()
 @click.pass_context
 @click.option("--days", default=365,

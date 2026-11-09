@@ -6,10 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.3.0...HEAD)
 
-### Deprecated
+### Removed
 
-- `AmazonOrders.parse_order_details()` and `parse_order_search()`, renamed to `parse_order()` and `parse_search_orders()`.
-- The `order-transactions` command, use `transactions --order-id`.
+- The deprecated `AmazonOrders.parse_order_details()` and `parse_order_search()`, use `parse_order()` and `parse_search_orders()`.
+- The deprecated `order-transactions` command, use `transactions --order-id`.
+- The deprecated `AmazonOrders.get_family_members()` and `family-members` command, use `get_orders_page()`'s `household_members` and `orders`.
+- The deprecated `amazonorders.forms`, `amazonorders.contrib`, `amazonorders.region_data`, and `amazonorders.session.IODefault`, use their `amazonauth` equivalents.
+- The deprecated `amazonorders.util` `AmazonSessionResponse`, `cleanup_html_text`, `has_display`, `load_class`, `select`, and `select_one`, and `amazonorders.selectors` `Selector` and `SelectorsFromText`, use `amazonauth.util` and `amazonauth.selectors`.
 
 ### Fixed
 

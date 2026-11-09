@@ -5,7 +5,6 @@ import asyncio
 import concurrent.futures
 import datetime
 import logging
-import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, quote, urlencode, urlsplit
 
@@ -134,23 +133,6 @@ class AmazonOrders:
         return order
 
     @classmethod
-    def parse_order_details(cls,
-                            html: str,
-                            config: AmazonOrdersConfig,
-                            order_number: Optional[str] = None) -> Order:
-        """
-        Deprecated, use :func:`parse_order` instead. To be removed in 6.0.
-
-        :param html: The Order details page HTML to parse.
-        :param config: The config providing the selectors and entity classes used for parsing.
-        :param order_number: The Order ID the page was fetched for.
-        :return: The parsed Order.
-        """
-        warnings.warn("parse_order_details() is deprecated and will be removed in 6.0. Use parse_order() instead.",
-                      DeprecationWarning, stacklevel=2)
-        return cls.parse_order(html, config, order_number=order_number)
-
-    @classmethod
     def parse_family_members(cls,
                              html: str,
                              config: AmazonOrdersConfig) -> List[FamilyMember]:
@@ -178,21 +160,6 @@ class AmazonOrders:
         :return: The parsed OrderSearchResults, or an empty list if nothing matched.
         """
         return cls._parse_order_search(BeautifulSoup(html, config.bs4_parser), config)
-
-    @classmethod
-    def parse_order_search(cls,
-                           html: str,
-                           config: AmazonOrdersConfig) -> List[OrderSearchResult]:
-        """
-        Deprecated, use :func:`parse_search_orders` instead. To be removed in 6.0.
-
-        :param html: The Order search page HTML to parse.
-        :param config: The config providing the selectors used for parsing.
-        :return: The parsed OrderSearchResults.
-        """
-        warnings.warn("parse_order_search() is deprecated and will be removed in 6.0. Use parse_search_orders() "
-                      "instead.", DeprecationWarning, stacklevel=2)
-        return cls.parse_search_orders(html, config)
 
     def get_order(self,
                   order_id: str,
@@ -317,23 +284,6 @@ class AmazonOrders:
             raise AmazonOrdersError(f"Could not parse package tracking for Shipment {shipment_id} of Order "
                                     f"{order_id}. Check if Amazon changed the HTML.")
         return tracking
-
-    def get_family_members(self) -> List[FamilyMember]:
-        """
-        Deprecated, use :attr:`~amazonorders.orders.Orders.household_members` from :func:`get_orders_page`
-        instead. To be removed in 6.0.
-
-        :return: The FamilyMembers, or an empty list if the account has none.
-        """
-        warnings.warn("get_family_members() is deprecated and will be removed in 6.0. Use get_orders_page(), whose "
-                      "household_members lists them, instead.", DeprecationWarning, stacklevel=2)
-        if not self.amazon_session.is_authenticated:
-            raise AmazonOrdersError("Call AmazonSession.login() to authenticate first.")
-
-        page_response = self.amazon_session.get(self.config.constants.ORDER_HISTORY_URL)
-        self.amazon_session.check_response(page_response)
-
-        return self._parse_family_members(page_response.parsed, self.config)
 
     def search_orders(self,
                       query: str,
