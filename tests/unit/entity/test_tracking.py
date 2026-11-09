@@ -44,6 +44,17 @@ class TestTracking(UnitTestCase):
         self.assertIsNone(tracking.carrier)
         self.assertIsNone(tracking.tracking_number)
 
+    def test_parse_tracking_not_shipped_page(self):
+        # GIVEN
+        html = self.given_tracking_page("progress-tracker-not-shipped.html")
+
+        # WHEN
+        tracking = AmazonOrders.parse_tracking(html, self.test_config)
+
+        # THEN
+        self.assertIsNone(tracking.carrier)
+        self.assertIsNone(tracking.tracking_number)
+
     def test_parse_tracking_to_dict(self):
         # WHEN
         tracking = AmazonOrders.parse_tracking(self.given_tracking_page("progress-tracker-ups.html"), self.test_config)
