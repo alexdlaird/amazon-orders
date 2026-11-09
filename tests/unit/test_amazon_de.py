@@ -4,7 +4,6 @@ __license__ = "MIT"
 import datetime
 import json
 import logging
-import os
 from unittest.mock import patch
 
 import responses
@@ -267,10 +266,6 @@ class TestAmazonDe(UnitTestCase):
             "domain": "amazon.de",
             **data,
         })
-
-    def given_resource(self, *path):
-        with open(os.path.join(self.RESOURCES_DIR, *path), "r", encoding="utf-8") as f:
-            return f.read()
 
     def given_order_history(self, name):
         return AmazonOrders.parse_orders(self.given_resource("orders", "de", f"order-history-{name}.html"),

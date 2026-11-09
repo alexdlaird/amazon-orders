@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import datetime
-import os
 import re
 
 import responses
@@ -35,18 +34,14 @@ class TestOrderSearch(UnitTestCase):
 
         self.amazon_orders = AmazonOrders(self.amazon_session)
 
-    def read_resource(self, *path):
-        with open(os.path.join(self.RESOURCES_DIR, *path), "r", encoding="utf-8") as f:
-            return f.read()
-
     def given_search_page_exists(self, html=None, rsps=responses):
         return rsps.add(responses.GET, self.test_config.constants.ORDER_SEARCH_URL,
-                        body=html or self.read_resource("orders", "order-search.html"), status=200,
+                        body=html or self.given_resource("orders", "order-search.html"), status=200,
                         match=[query_param_matcher({"search": "example"})])
 
     def given_search_page_2_exists(self, html=None, rsps=responses):
         return rsps.add(responses.GET, self.test_config.constants.ORDER_SEARCH_URL,
-                        body=html or self.read_resource("orders", "order-search-page-2.html"), status=200,
+                        body=html or self.given_resource("orders", "order-search-page-2.html"), status=200,
                         match=[query_param_matcher({"page": "2", "search": "example",
                                                     "ref_": "ppx_hzsearch_pagination_dt_b_pg_1"})])
 
@@ -137,7 +132,7 @@ class TestOrderSearch(UnitTestCase):
     def test_search_orders_no_results(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        self.given_search_page_exists(self.read_resource("orders", "order-search-no-results.html"))
+        self.given_search_page_exists(self.given_resource("orders", "order-search-no-results.html"))
 
         # WHEN
         results = self.amazon_orders.search_orders("example")
@@ -149,7 +144,7 @@ class TestOrderSearch(UnitTestCase):
     def test_search_orders_stops_on_page_with_no_results(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        parsed = BeautifulSoup(self.read_resource("orders", "order-search.html"), "html.parser")
+        parsed = BeautifulSoup(self.given_resource("orders", "order-search.html"), "html.parser")
         for tag in parsed.select("div.a-fixed-left-grid"):
             tag.decompose()
         first_page = self.given_search_page_exists(str(parsed))
@@ -172,7 +167,7 @@ class TestOrderSearch(UnitTestCase):
                 next_html = (f'<li class="a-last"><a href="/your-orders/search?page={page}&amp;search=example&amp;'
                              f'ref_=ppx_hzsearch_pagination_dt_b_pg_2">Next</a></li>')
                 second_page = self.given_search_page_2_exists(
-                    self.read_resource("orders", "order-search-page-2.html").replace(LAST_PAGE_NEXT_HTML, next_html),
+                    self.given_resource("orders", "order-search-page-2.html").replace(LAST_PAGE_NEXT_HTML, next_html),
                     rsps)
 
                 # WHEN
@@ -192,7 +187,7 @@ class TestOrderSearch(UnitTestCase):
             with self.subTest(href=href), responses.RequestsMock() as rsps:
                 # GIVEN
                 self.amazon_session.is_authenticated = True
-                self.given_search_page_exists(self.read_resource("orders", "order-search.html")
+                self.given_search_page_exists(self.given_resource("orders", "order-search.html")
                                               .replace(f'<li class="a-last"><a href="{PAGE_2_HREF}">',
                                                        f'<li class="a-last"><a href="{href}">'), rsps)
 
@@ -269,7 +264,7 @@ class TestOrderSearch(UnitTestCase):
         amazon_session = AmazonSession("some-username@gmail.com", "some-password", config=config)
         amazon_session.is_authenticated = True
         resp = responses.add(responses.GET, "https://www.amazon.de/your-orders/search",
-                             body=self.read_resource("orders", "de", "order-search.html"), status=200,
+                             body=self.given_resource("orders", "de", "order-search.html"), status=200,
                              match=[query_param_matcher({"search": "example"})])
 
         # WHEN
@@ -289,7 +284,7 @@ class TestOrderSearch(UnitTestCase):
     def test_search_orders_session_expires(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        self.given_search_page_exists(self.read_resource("auth", "signin.html"))
+        self.given_search_page_exists(self.given_resource("auth", "signin.html"))
         self.given_logout_response_success()
 
         # WHEN
@@ -301,7 +296,7 @@ class TestOrderSearch(UnitTestCase):
 
     def test_parse_order_search(self):
         # WHEN
-        results = AmazonOrders.parse_search_orders(self.read_resource("orders", "order-search-page-2.html"),
+        results = AmazonOrders.parse_search_orders(self.given_resource("orders", "order-search-page-2.html"),
                                                    self.test_config)
 
         # THEN
@@ -314,7 +309,7 @@ class TestOrderSearch(UnitTestCase):
         self.test_config.item_cls = SearchItem
 
         # WHEN
-        results = AmazonOrders.parse_search_orders(self.read_resource("orders", "order-search.html"),
+        results = AmazonOrders.parse_search_orders(self.given_resource("orders", "order-search.html"),
                                                    self.test_config)
 
         # THEN
@@ -325,7 +320,7 @@ class TestOrderSearch(UnitTestCase):
         # GIVEN
         config = AmazonOrdersConfig(config_path=self.test_config.config_path,
                                     data={"language_package": "tests.unit.example_language_package"})
-        html = self.read_resource("orders", "order-search.html")
+        html = self.given_resource("orders", "order-search.html")
         html = html.replace("Ordered on September 18, 2025", "Nulla pariatur 18 quis 2025")
 
         # WHEN
@@ -338,7 +333,7 @@ class TestOrderSearch(UnitTestCase):
         # GIVEN
         html = re.sub(r'<a [^>]*href="/your-orders/order-details\?orderID=112-0000000-0000002[^"]*"[^>]*>',
                       '<a class="a-link-normal" href="/your-orders/orders">',
-                      self.read_resource("orders", "order-search.html"))
+                      self.given_resource("orders", "order-search.html"))
 
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
@@ -362,7 +357,7 @@ class TestOrderSearch(UnitTestCase):
 
     def test_parse_order_search_result_without_product_page(self):
         # GIVEN
-        html = self.read_resource("orders", "order-search.html").replace("/dp/B000000003?", "/your-orders/orders?")
+        html = self.given_resource("orders", "order-search.html").replace("/dp/B000000003?", "/your-orders/orders?")
 
         # WHEN
         results = AmazonOrders.parse_search_orders(html, self.test_config)

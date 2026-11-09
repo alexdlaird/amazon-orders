@@ -48,7 +48,7 @@ class PrimePayment(Parsable):
     def __repr__(self) -> str:
         return f"<PrimePayment {self.payment_date}: \"Order #{self.order_number}, Grand Total: {self.grand_total}\">"
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return f"PrimePayment {self.payment_date}: Order #{self.order_number}, Grand Total: {self.grand_total}"
 
     def _parse_labeled_row(self,

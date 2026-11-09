@@ -254,10 +254,6 @@ class TestLocalization(UnitTestCase):
         self.assertIsNone(self.test_config.constants.parse_currency("Nulla"))
         self.assertEqual(0.0, self.test_config.constants.parse_currency("FREE"))
 
-    def given_resource(self, *path):
-        with open(os.path.join(self.RESOURCES_DIR, *path), "r", encoding="utf-8") as f:
-            return f.read()
-
     def _to_lorem_dates(self, html):
         months = "|".join(sorted(_ENGLISH_TO_LOREM_MONTHS, key=len, reverse=True))
         return re.sub(r"\b(" + months + r")\.? (\d{1,2}), (\d{4})",

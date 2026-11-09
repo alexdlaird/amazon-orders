@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import datetime
-import os
 
 import responses
 from bs4 import BeautifulSoup
@@ -31,10 +30,6 @@ class TestPrime(UnitTestCase):
             status=200,
         )
 
-    def read_resource(self, *path):
-        with open(os.path.join(self.RESOURCES_DIR, *path), "r", encoding="utf-8") as f:
-            return f.read()
-
     def test_get_prime_payments_unauthenticated(self):
         # WHEN
         with self.assertRaises(AmazonOrdersError) as cm:
@@ -47,7 +42,7 @@ class TestPrime(UnitTestCase):
     def test_get_prime_payments_session_expires(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        auth_redirect_response = self.given_prime_payments_page_exists(self.read_resource("auth", "signin.html"))
+        auth_redirect_response = self.given_prime_payments_page_exists(self.given_resource("auth", "signin.html"))
         signout_response = self.given_logout_response_success()
 
         # WHEN
@@ -64,7 +59,7 @@ class TestPrime(UnitTestCase):
     def test_get_prime_payments(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        resp = self.given_prime_payments_page_exists(self.read_resource("prime", "prime-payments.html"))
+        resp = self.given_prime_payments_page_exists(self.given_resource("prime", "prime-payments.html"))
 
         # WHEN
         payments = self.amazon_prime.get_prime_payments()
@@ -88,7 +83,7 @@ class TestPrime(UnitTestCase):
     def test_get_prime_payments_error_page(self):
         # GIVEN
         self.amazon_session.is_authenticated = True
-        resp = self.given_prime_payments_page_exists(self.read_resource("prime", "prime-payments-error.html"))
+        resp = self.given_prime_payments_page_exists(self.given_resource("prime", "prime-payments-error.html"))
 
         # WHEN
         with self.assertRaises(AmazonOrdersUnavailableError) as cm:
@@ -104,7 +99,7 @@ class TestPrime(UnitTestCase):
 
     def test_parse_prime_payments(self):
         # WHEN
-        payments = AmazonPrime.parse_prime_payments(self.read_resource("prime", "prime-payments.html"),
+        payments = AmazonPrime.parse_prime_payments(self.given_resource("prime", "prime-payments.html"),
                                                     self.test_config)
 
         # THEN
@@ -115,7 +110,7 @@ class TestPrime(UnitTestCase):
 
     def test_parse_prime_payments_no_payments(self):
         # GIVEN
-        parsed = BeautifulSoup(self.read_resource("prime", "prime-payments.html"), self.test_config.bs4_parser)
+        parsed = BeautifulSoup(self.given_resource("prime", "prime-payments.html"), self.test_config.bs4_parser)
         for card_tag in parsed.select(self.test_config.selectors.PRIME_PAYMENT_SELECTOR):
             card_tag.decompose()
         html = str(parsed)
@@ -131,7 +126,7 @@ class TestPrime(UnitTestCase):
             with self.subTest(path=path):
                 # WHEN
                 with self.assertRaises(AmazonOrdersError) as cm:
-                    AmazonPrime.parse_prime_payments(self.read_resource(*path), self.test_config)
+                    AmazonPrime.parse_prime_payments(self.given_resource(*path), self.test_config)
 
                 # THEN
                 self.assertEqual("Could not parse Prime payments. Check if Amazon changed the HTML.",
