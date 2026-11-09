@@ -253,6 +253,53 @@ class TestSession(UnitTestCase):
         # THEN
         self.assertEqual("lc-main=en_US", responses.calls[0].request.headers["Cookie"])
 
+    @responses.activate
+    def test_session_cookie_sent_to_amazon(self):
+        # GIVEN
+        self.amazon_session.session.cookies.set("session-token", "some-token", domain=".amazon.com", path="/")
+        url = f"{self.test_config.constants.BASE_URL}/some/page"
+        responses.add(responses.GET, url, body="<html></html>", status=200)
+
+        # WHEN
+        self.amazon_session.get(url)
+
+        # THEN
+        self.assertNotIn("Host", responses.calls[0].request.headers)
+        self.assertIn("session-token=some-token", responses.calls[0].request.headers["Cookie"])
+
+    @responses.activate
+    def test_session_cookie_not_sent_on_off_site_redirect(self):
+        # GIVEN
+        self.amazon_session.session.cookies.set("session-token", "some-token", domain=".amazon.com", path="/")
+        url = f"{self.test_config.constants.BASE_URL}/some/page"
+        off_site_url = "https://evil.example/x"
+        responses.add(responses.GET, url, status=302, headers={"Location": off_site_url})
+        responses.add(responses.GET, off_site_url, body="<html></html>", status=200)
+
+        # WHEN
+        self.amazon_session.get(url)
+
+        # THEN
+        self.assertIn("session-token=some-token", responses.calls[0].request.headers["Cookie"])
+        self.assertEqual(off_site_url, responses.calls[1].request.url)
+        self.assertNotIn("Cookie", responses.calls[1].request.headers)
+
+    @responses.activate
+    def test_caller_host_header_does_not_send_session_cookie_off_site(self):
+        # GIVEN
+        self.amazon_session.session.cookies.set("session-token", "some-token", domain=".amazon.com", path="/")
+        off_site_url = "https://evil.example/x"
+        responses.add(responses.GET, off_site_url, body="<html></html>", status=200)
+
+        for host_header in ("Host", "host", "HOST"):
+            with self.subTest(host_header=host_header):
+                # WHEN
+                self.amazon_session.get(off_site_url, headers={host_header: "www.amazon.com"})
+
+                # THEN
+                self.assertNotIn("Host", responses.calls[-1].request.headers)
+                self.assertNotIn("Cookie", responses.calls[-1].request.headers)
+
     def test_legacy_cookie_jar_loads_with_site_domain(self):
         # GIVEN
         self.given_persisted_session_exists()

@@ -92,6 +92,17 @@ class TestConstants(UnitTestCase):
         self.assertEqual(self._CHROMIUM_UA, config.constants.BASE_HEADERS["User-Agent"])
         self.assertIn("Sec-Ch-Ua", config.constants.BASE_HEADERS)
 
+    def test_base_headers_have_no_host(self):
+        # GIVEN / WHEN
+        constants = Constants()
+        uk_constants = AmazonOrdersConfig(data={"domain": "amazon.co.uk"}).constants
+
+        # THEN
+        self.assertNotIn("Host", Constants.BASE_HEADERS)
+        self.assertNotIn("Host", constants.BASE_HEADERS)
+        self.assertNotIn("Host", uk_constants.BASE_HEADERS)
+        self.assertEqual("https://www.amazon.co.uk", uk_constants.BASE_HEADERS["Origin"])
+
     def test_domain_and_chromium_preset_combined(self):
         # GIVEN / WHEN
         config = AmazonOrdersConfig(data={
