@@ -38,5 +38,6 @@ To have challenges handled with a headless browser, add the browser forms to ``a
       - amazonauth.contrib.browser.playwright.PlaywrightJSAuthForm
 
 ``PlaywrightAcicForm`` handles Amazon's ACIC challenge page, and ``PlaywrightJSAuthForm`` its JavaScript bot-detection
-page. To solve an AWS WAF challenge yourself in a visible browser window instead of with a :doc:`WAF solver <waf>`,
-also add ``amazonauth.contrib.browser.playwright.PlaywrightManualWafForm`` (see :ref:`amazonauth:manual-waf-solving`).
+page. To solve an AWS WAF challenge yourself in a visible browser window, also add
+``amazonauth.contrib.browser.playwright.PlaywrightManualWafForm``. Alongside a :doc:`WAF solver <waf>`, a challenge
+goes to each in the order they're listed, until one handles it (see :ref:`amazonauth:manual-waf-solving`).

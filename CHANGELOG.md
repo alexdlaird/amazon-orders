@@ -6,9 +6,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.3.1...HEAD)
 
+### Added
+
+- `AmazonOrdersChallengeUnsolvedError`, raised when a sign-in challenge form can't handle the challenge it was given, so the next one registered for it is tried.
+
 ### Changed
 
 - Documentation improvements.
+
+### Fixed
+
+- Bug fixes and stability improvements.
 
 ## [5.3.1](https://github.com/alexdlaird/amazon-orders/compare/5.3.0...5.3.1) - 2026-11-09
 

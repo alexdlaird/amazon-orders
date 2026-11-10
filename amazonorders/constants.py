@@ -224,8 +224,8 @@ class Constants(AuthConstants):
         site = REGION_SITES.get(tld)
         return cls.REGION_CURRENCY_OVERRIDES.get(tld) or (site.currency_symbol if site else None)
 
-    def _apply_domain(self,
-                      domain: str) -> None:
+    def apply_domain(self,
+                     domain: str) -> None:
         """
         Override the URL-derived attributes for the given Amazon domain, on top of the sign-in and session values the
         base class applies, and ``CURRENCY_SYMBOL`` from its region data. ``CURRENCY_SYMBOL`` is applied only when a
@@ -233,7 +233,7 @@ class Constants(AuthConstants):
 
         :param domain: The Amazon domain (e.g. ``amazon.com.au``) or full URL (e.g. ``https://www.amazon.com.au``).
         """
-        super()._apply_domain(domain)
+        super().apply_domain(domain)
 
         base_url = self._normalize_base_url(domain)
         tld = self._tld(base_url)

@@ -97,8 +97,7 @@ class AmazonOrders:
         confirms the window is empty at ``start_index``; otherwise it raises, since that is a page
         that failed to render.
 
-        A page Amazon served with its content encrypted (which can happen to fetches made outside the
-        library's session) raises rather than being parsed as empty cards.
+        A page whose Orders can't be read raises rather than being parsed as empty Orders.
 
         :param html: The Order history page HTML to parse.
         :param config: The config providing the selectors and entity classes used for parsing.
@@ -524,7 +523,7 @@ class AmazonOrders:
         """
         Get the Amazon Order history for a given time period.
 
-        :param year: The year for which to get history. Ignored if ``time_filter`` is provided.
+        :param year: The year for which to get history. Only one of ``year`` or ``time_filter`` may be given.
             Defaults to the current year if neither ``year`` nor ``time_filter`` is specified.
         :param start_index: The index of the Order from which to start fetching in the history. See
             :attr:`~amazonorders.entity.order.Order.index` to correlate, or if a call to this method previously errored
@@ -534,8 +533,8 @@ class AmazonOrders:
             request per Order.
         :param keep_paging: ``False`` if only one page should be fetched.
         :param time_filter: The time filter to use. Supported values are ``"last30"`` (last 30 days),
-            ``"months-3"`` (past 3 months), or ``"year-YYYY"`` (specific year). If provided, this takes
-            precedence over the ``year`` parameter.
+            ``"months-3"`` (past 3 months), or ``"year-YYYY"`` (specific year). Only one of ``year`` or
+            ``time_filter`` may be given.
         :param order_filter: The order type filter to use, e.g. ``"digital-orders"`` for Kindle and other digital
             purchases, which the default history doesn't include. If provided, appended alongside the time filter.
         :param progress: Called after each page of history is fetched, with the number of Orders found so far
@@ -577,8 +576,9 @@ class AmazonOrders:
         Orders the account can view and a cursor to fetch the next batch. Takes the same filters as
         :func:`get_orders`.
 
-        :param year: The year for which to get history. Ignored if ``time_filter`` or ``cursor`` is provided.
-            Defaults to the current year if neither ``year`` nor ``time_filter`` is specified.
+        :param year: The year for which to get history. Only one of ``year`` or ``time_filter`` may be given, and
+            it's ignored if ``cursor`` is provided. Defaults to the current year if neither ``year`` nor
+            ``time_filter`` is specified.
         :param start_index: The index of the Order from which to start fetching in the history. Ignored if
             ``cursor`` is provided.
         :param full_details: Get the full details for each Order in the batch. This will execute an additional

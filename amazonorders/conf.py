@@ -69,7 +69,7 @@ class AmazonOrdersConfig(AmazonAuthConfig):
     value of a key with a default is read as YAML, as it would be in the config file, and any other value is used
     as-is. Environment variables are never persisted to the config file.
 
-    Default values provisioned with the config can be found
+    Its default values, on top of :class:`~amazonauth.conf.AmazonAuthConfig`'s, can be found
     `here <https://amazon-orders.readthedocs.io/_modules/amazonorders/conf.html#AmazonOrdersConfig>`_.
     """
 

@@ -107,7 +107,7 @@ what fields are only populated with full details.
 Command Line Usage
 ------------------
 
-You can also run any command available to the main Python interface from the command line:
+You can also run most of the main Python interface from the command line:
 
 .. code:: sh
 
@@ -254,11 +254,6 @@ Known Limitations
 -----------------
 
 - Amazon Business accounts are not supported
-- Device not remembered for OTP
-    - Amazon will sometimes re-prompt for OTP even when a device has been remembered.
-    - The recommended workaround for this is persisting the :attr:`~amazonorders.session.AmazonSession.otp_secret_key`
-      in the config or the environment so that re-prompts are auto-solved.
-    - See `issue #55 <https://github.com/alexdlaird/amazon-orders/issues/55>`_ for more details.
 
 Dive Deeper
 ===========

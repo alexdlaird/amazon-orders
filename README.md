@@ -68,7 +68,7 @@ populated with full details.
 
 ### Command Line Usage
 
-You can also run any command available to the main Python interface from the command line:
+You can also run most of the main Python interface from the command line:
 
 ```sh
 amazon-orders login

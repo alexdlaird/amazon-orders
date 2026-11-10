@@ -57,7 +57,7 @@ class Order(Parsable):
         #: details page may be ``None`` because Amazon stops rendering them.
         self.cancelled: bool = clone.cancelled if clone else self._parse_cancelled()
 
-        #: ``True`` if this is a Whole Foods Market purchase (an in-store/FOPO purchase or a Whole Foods receipt
+        #: ``True`` if this is a Whole Foods Market purchase (an in-store purchase or a Whole Foods receipt
         #: order). Unlike other unsupported order types, these expose a :attr:`grand_total` and (often) an
         #: :attr:`item_count` on the history page, so those fields are populated.
         self.is_whole_foods: bool = clone.is_whole_foods if clone else bool(
