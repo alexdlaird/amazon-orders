@@ -107,7 +107,7 @@ what fields are only populated with full details.
 Command Line Usage
 ------------------
 
-You can also run any command available to the main Python interface from the command line:
+You can also run most of the main Python interface from the command line:
 
 .. code:: sh
 
@@ -243,9 +243,9 @@ AI Assistants
 An AI assistant has two ways to use ``amazon-orders``. One that runs commands uses the CLI or the library directly, just
 as shown above. Any MCP client gets the same as tools through
 |amazon-orders-mcp|_, a server built on ``amazon-orders``.
-See its README for setup.
+See its documentation for setup.
 
-The server signs you in with a browser, so it needs a display. Without one, use the CLI or library with
+The server signs you in with a browser. Without a display, sign in with the CLI first, or use the library with
 :ref:`Automating Authentication <automating-authentication>`.
 
 .. _known-limitations:
@@ -254,11 +254,6 @@ Known Limitations
 -----------------
 
 - Amazon Business accounts are not supported
-- Device not remembered for OTP
-    - Amazon will sometimes re-prompt for OTP even when a device has been remembered.
-    - The recommended workaround for this is persisting the :attr:`~amazonorders.session.AmazonSession.otp_secret_key`
-      in the config or the environment so that re-prompts are auto-solved.
-    - See `issue #55 <https://github.com/alexdlaird/amazon-orders/issues/55>`_ for more details.
 
 Dive Deeper
 ===========

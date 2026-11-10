@@ -20,7 +20,7 @@ from amazonorders.entity.order import Order
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.prime_payment import PrimePayment
 from amazonorders.entity.transaction import Transaction
-from amazonorders.exception import AmazonOrdersBrowserNotInstalledError
+from amazonorders.exception import AmazonOrdersBrowserNotInstalledError, AmazonOrdersError
 from amazonorders.output import OutputFormatter
 from tests.unittestcase import UnitTestCase
 
@@ -1657,6 +1657,14 @@ class TestOutputFormatter(UnitTestCase):
         self.assertEqual([], yaml.safe_load(self.given_formatter().format([], "yaml")))
         self.assertEqual("", self.given_formatter().format([], "csv"))
         self.assertEqual("", self.given_formatter().format([], "text"))
+
+    def test_format_unknown_format(self):
+        # WHEN
+        with self.assertRaises(AmazonOrdersError) as cm:
+            self.given_formatter().format([], "xml")
+
+        # THEN
+        self.assertIn("\"xml\" isn't an output format", str(cm.exception))
 
     def test_format_json_serializes_any_entity(self):
         # WHEN

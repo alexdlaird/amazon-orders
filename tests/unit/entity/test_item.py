@@ -117,3 +117,70 @@ class TestItem(UnitTestCase):
 
         # THEN
         self.assertEqual(1000, item.quantity)
+
+    def test_subscription_frequency(self):
+        # GIVEN
+        html = """
+<div class="a-fixed-left-grid-col a-col-right">
+<div class="" data-component="itemTitle">
+    <a class="a-link-normal" href="/dp/B001PN4Z7A?ref_=ppx_hzod_title_dt_b_fed_asin_title_0_0">Item Title</a>
+</div>
+<div class="" data-component="quantity">
+</div>
+<div class="" data-component="deliveryFrequency">
+    <span class="a-size-small a-color-secondary">
+        Auto-delivered: Every 6 months
+    </span>
+</div>
+</div>
+"""
+        parsed = BeautifulSoup(html, self.test_config.bs4_parser)
+
+        # WHEN
+        item = Item(parsed, self.test_config)
+
+        # THEN
+        self.assertEqual(item.subscription_frequency, "Every 6 months")
+
+    def test_subscription_frequency_legacy_layout(self):
+        # GIVEN
+        html = """
+<div class="a-fixed-left-grid-col yohtmlc-item a-col-right" style="padding-left:1.5%;float:left;">
+<div class="a-row">
+<a class="a-link-normal" href="/gp/product/B0018CJYCO/ref=ppx_od_dt_b_asin_title_s00?ie=UTF8&amp;psc=1">
+        Item Title
+    </a>
+</div>
+<div class="a-row">
+<span class="a-size-small a-color-secondary">
+    Auto-delivered: Every 3 months
+</span>
+</div>
+</div>
+"""
+        parsed = BeautifulSoup(html, self.test_config.bs4_parser)
+
+        # WHEN
+        item = Item(parsed, self.test_config)
+
+        # THEN
+        self.assertEqual(item.subscription_frequency, "Every 3 months")
+
+    def test_subscription_frequency_none_without_subscription(self):
+        # GIVEN
+        html = """
+<div class="a-fixed-left-grid-col a-col-right">
+<div class="" data-component="itemTitle">
+    <a class="a-link-normal" href="/dp/B001PN4Z7A">Item Title</a>
+</div>
+<div class="" data-component="deliveryFrequency">
+</div>
+</div>
+"""
+        parsed = BeautifulSoup(html, self.test_config.bs4_parser)
+
+        # WHEN
+        item = Item(parsed, self.test_config)
+
+        # THEN
+        self.assertIsNone(item.subscription_frequency)

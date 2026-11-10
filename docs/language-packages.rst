@@ -25,8 +25,7 @@ second tier above. If it isn't, reading it needs a language package.
 Sites in English
 ~~~~~~~~~~~~~~~~
 
-These sites are supported on a best-effort basis, alongside amazon.com. This list is generated from the region data
-``amazon-orders`` reads from Amazon's own pages, so it matches the version of the docs you're reading:
+These sites are supported on a best-effort basis, alongside amazon.com:
 
 .. supported-sites::
 
@@ -47,10 +46,7 @@ Available Language Packages
 Adding a Site
 -------------
 
-Which Amazon sites offer English, and how to request it, is generated from Amazon's own pages, so a new site that
-offers English is supported in the next release without a pull request. The cookie that marks it signed in can't be
-read that way, since Amazon only sets it on sign-in, so a pull request adding it, from someone who uses that site, is
-welcome.
+A new Amazon site that offers English is supported in the next release, without a pull request.
 
 To improve a site's support, open a pull request to ``amazon-orders`` itself with tests using real pages from that site
 (anonymized). English wording that differs from amazon.com (e.g. British labels like "Postage & Packing") belongs there,
@@ -160,8 +156,7 @@ placeholder text.
   rather than HTML, build each with :func:`~amazonorders.entity.transaction.Transaction.from_fields`.
 - **Entities**: :class:`~amazonorders.entity.order.Order`, :class:`~amazonorders.entity.shipment.Shipment`,
   :class:`~amazonorders.entity.item.Item`, and :class:`~amazonorders.entity.transaction.Transaction` can be subclassed
-  for anything the above doesn't cover. Their ``_parse_*``
-  methods are private, though, so an override of one isn't covered under `Compatibility`_.
+  for anything the above doesn't cover.
 
 Compatibility
 -------------
@@ -174,7 +169,7 @@ Starting with ``amazon-orders`` 4.7.0, everything a language package relies on i
 
 These will only be renamed or removed in a major release. New ones may be added in any release, so set your
 package's minimum version to the release that added the newest one you use, and cap it below the next major version
-(e.g. ``amazon-orders>=4.7.0,<5``).
+(e.g. ``amazon-orders>=5.3.0,<6``).
 
 If you need to enforce a minimum version with your language package, also check the installed version when the
 package is imported, since an older version ignores an attribute it doesn't have without any error (e.g.
@@ -203,8 +198,7 @@ Testing
   it more often signs in more often, which makes Amazon more likely to challenge the login, so weekly is usually
   enough. Start from the
   `integration.yml <https://github.com/alexdlaird/amazon-orders/blob/main/.github/workflows/integration.yml>`_
-  workflow in ``amazon-orders``. GitHub disables a public repo's scheduled workflows after 60 days without activity,
-  so check that yours is still enabled if your repo goes quiet.
+  workflow in ``amazon-orders``.
 
 Getting Listed
 --------------

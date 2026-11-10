@@ -3,6 +3,7 @@ __license__ = "MIT"
 
 from amazonauth.exception import (
     AmazonAuthBrowserNotInstalledError as AmazonOrdersBrowserNotInstalledError,
+    AmazonAuthChallengeUnsolvedError as AmazonOrdersChallengeUnsolvedError,
     AmazonAuthError as AmazonOrdersError,
     AmazonAuthRedirectError as AmazonOrdersAuthRedirectError,
     AmazonAuthSignInError as AmazonOrdersAuthError,
@@ -16,6 +17,7 @@ __all__ = [
     "AmazonOrdersAuthError",
     "AmazonOrdersAuthRedirectError",
     "AmazonOrdersEntityError",
+    "AmazonOrdersChallengeUnsolvedError",
     "AmazonOrdersWafSolverError",
     "AmazonOrdersBrowserNotInstalledError",
 ]

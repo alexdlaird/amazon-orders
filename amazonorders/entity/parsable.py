@@ -83,9 +83,13 @@ class Parsable:
         them as warnings to the logger (suppressing them as exceptions). A field that fails is listed in
         :attr:`parse_failures` until it parses.
 
-        :param parse_function: The parse function to attempt safe execution.
+        :param parse_function: The parse function to attempt safe execution, named for the field it parses,
+            ``_parse_<field>``, which is the name the field is listed under in :attr:`parse_failures`, or
+            :func:`simple_parse`.
         :param kwargs: The ``kwargs`` will be passed to ``parse_function``.
         :return: The return value from ``parse_function``.
+        :raises AmazonOrdersError: If ``parse_function`` is neither named ``_parse_<field>`` nor
+            :func:`simple_parse`.
         """
         if not parse_function.__name__.startswith("_parse_") and parse_function.__name__ != "simple_parse":
             raise AmazonOrdersError("The name of the \"parse_function\" passed to this method must start with "

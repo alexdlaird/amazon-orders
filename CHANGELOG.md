@@ -4,7 +4,23 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.3.1...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.3.2...HEAD)
+
+## [5.3.2](https://github.com/alexdlaird/amazon-orders/compare/5.3.1...5.3.2) - 2026-11-10
+
+### Added
+
+- `AmazonOrdersChallengeUnsolvedError`, raised when a sign-in challenge form can't handle the challenge it was given, so the next one registered for it is tried.
+- `Item.subscription_frequency`, the Subscribe & Save delivery frequency of an Item (e.g. "Every 2 months").
+
+### Changed
+
+- Documentation improvements.
+
+### Fixed
+
+- `OutputFormatter.format()` raises an error for an unknown output format, instead of rendering CSV.
+- Bug fixes and stability improvements.
 
 ## [5.3.1](https://github.com/alexdlaird/amazon-orders/compare/5.3.0...5.3.1) - 2026-11-09
 

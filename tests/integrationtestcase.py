@@ -36,7 +36,6 @@ class IntegrationTestCase(TestCase):
     def setUpClass(cls):
         cls.set_up_class_conf()
 
-        cls.debug = os.environ.get("DEBUG", "False") == "True"
         cls.amazon_session = AmazonSession(debug=cls.debug,
                                            config=cls.test_config)
         if cls.reuse_session:
@@ -55,6 +54,7 @@ class IntegrationTestCase(TestCase):
 
     @classmethod
     def set_up_class_conf(cls):
+        cls.debug = os.environ.get("DEBUG", "False") == "True"
         cls.teardown_sleep_time = int(os.environ.get("AMAZON_INTEGRATION_TEST_TEARDOWN_SLEEP", 40))
 
         if cls.reuse_session:

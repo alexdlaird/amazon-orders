@@ -208,7 +208,7 @@ def amazon_orders_cli(ctx: Context,
 @click.option("--family-member-id", "family_member_id", default=None,
               help="Get the Orders of this Amazon Household member, such as a linked Teen account, instead, or use "
                    "self for only your own Orders. The members' IDs are listed after the Orders.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def orders(ctx: Context,
            **kwargs: Any) -> None:
@@ -284,7 +284,7 @@ Order History for {filter_description}{optional_start_index}{optional_full_detai
                                                                     time=int(end_time - start_time)), err=True)
         if orders_page.household_members:
             click.echo("Amazon Household members, for --family-member-id:\n\n{members}".format(
-                members=formatter.format(orders_page.household_members, "text")), err=True)
+                members=formatter.format(orders_page.household_members, OutputFormatter.TEXT_FORMAT)), err=True)
     except AmazonOrdersAuthRedirectError:
         IOClick.echo_session_expired()
     except AmazonOrdersError as e:
@@ -295,7 +295,7 @@ Order History for {filter_description}{optional_start_index}{optional_full_detai
 @amazon_orders_cli.command()
 @click.pass_context
 @click.argument("order_id")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def order(ctx: Context,
           order_id: str,
@@ -330,7 +330,7 @@ def order(ctx: Context,
 @click.option("--download", "download_dir", type=click.Path(file_okay=False),
               help="Save the documents (HTML and PDFs) to this directory, replacing any of the same name from an "
                    "earlier run.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def invoices(ctx: Context,
              order_ids: Tuple[str, ...],
@@ -380,7 +380,7 @@ def invoices(ctx: Context,
 @click.argument("query")
 @click.option("--single-page", is_flag=True, default=False,
               help="Only one page should be fetched.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def search_orders(ctx: Context,
                   query: str,
@@ -418,7 +418,7 @@ def search_orders(ctx: Context,
 
 @amazon_orders_cli.command("prime-payments")
 @click.pass_context
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def prime_payments(ctx: Context, **kwargs: Any) -> None:
     """
@@ -455,7 +455,7 @@ def prime_payments(ctx: Context, **kwargs: Any) -> None:
               help="The number of days of Transactions to get. Ignored with --order-id.")
 @click.option("--order-id",
               help="Get only the Transactions for this Amazon Order ID.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def transactions(ctx: Context, **kwargs: Any) -> None:
     """
@@ -503,7 +503,7 @@ def transactions(ctx: Context, **kwargs: Any) -> None:
 @amazon_orders_cli.command("order-transactions", hidden=True, deprecated=True)
 @click.pass_context
 @click.argument("order_id")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def order_transactions(ctx: Context,
                        order_id: str,
@@ -516,7 +516,7 @@ def order_transactions(ctx: Context,
 
 @amazon_orders_cli.command("family-members", hidden=True, deprecated=True)
 @click.pass_context
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def family_members(ctx: Context, **kwargs: Any) -> None:
     """
@@ -553,7 +553,7 @@ def family_members(ctx: Context, **kwargs: Any) -> None:
               help="The number of days of Gift Card activity to get. 0 gets only the balance (and today's activity).")
 @click.option("--single-page", is_flag=True, default=False,
               help="Only one page should be fetched.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def gift_cards(ctx: Context, **kwargs: Any) -> None:
     """
@@ -588,7 +588,7 @@ Gift Cards, with {days} days of activity
 
         click.echo(config.output_cls(config).format_gift_cards(gift_card_results, output))
 
-        if output == "csv" and gift_card_results.balance is not None:
+        if output == OutputFormatter.CSV_FORMAT and gift_card_results.balance is not None:
             click.echo(f"Gift Card Balance: {config.constants.format_currency(gift_card_results.balance)}",
                        err=True)
         click.echo(

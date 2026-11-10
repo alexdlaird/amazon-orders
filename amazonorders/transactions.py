@@ -285,8 +285,8 @@ class AmazonTransactions:
 
         :param days: The number of days worth of Transactions to get. Ignored when ``order_id`` is given.
         :param keep_paging: ``False`` if only one page should be fetched.
-        :param order_id: If given, only Transactions for this Amazon Order ID are returned, scoped
-            server-side via Amazon's ``transactionTag`` filter (the ``days`` window does not apply).
+        :param order_id: If given, only Transactions for this Amazon Order ID are returned, and ``days`` doesn't
+            apply.
         :param progress: Called after each page of history is fetched, with the number of Transactions found so far.
         :return: A list of the requested Transactions.
         """
