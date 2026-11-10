@@ -72,6 +72,10 @@ class OutputFormatter:
         if output_format == "text":
             return "\n".join(f"{self.text(entity)}\n" for entity in entities)
 
+        if output_format not in ("json", "yaml", "csv"):
+            raise ValueError(f"Unknown output format: {output_format!r}. "
+                             f"Must be one of: {', '.join(self.OUTPUT_FORMATS)}.")
+
         serialized = [entity.to_dict() for entity in entities]
         if output_format in ("json", "yaml"):
             return self._dump(serialized, output_format)
