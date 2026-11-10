@@ -19,7 +19,12 @@ from amazonorders.entity.invoice import Invoice
 from amazonorders.entity.order import Order
 from amazonorders.entity.order_search_result import OrderSearchResult
 from amazonorders.entity.tracking import Tracking
-from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError, AmazonOrdersUnavailableError
+from amazonorders.exception import (
+    AmazonOrdersEncryptedPageError,
+    AmazonOrdersError,
+    AmazonOrdersNotFoundError,
+    AmazonOrdersUnavailableError,
+)
 from amazonorders.paging import PagedResults
 from amazonorders.session import AmazonSession
 
@@ -97,13 +102,16 @@ class AmazonOrders:
         confirms the window is empty at ``start_index``; otherwise it raises, since that is a page
         that failed to render.
 
-        A page whose Orders can't be read raises rather than being parsed as empty Orders.
+        A page whose Orders can't be read raises rather than being parsed as empty Orders. When Amazon served
+        the Order cards encrypted, the error is :class:`~amazonorders.exception.AmazonOrdersEncryptedPageError`,
+        and the same URL with ``disableCsd=no-js`` renders them readable.
 
         :param html: The Order history page HTML to parse.
         :param config: The config providing the selectors and entity classes used for parsing.
         :param start_index: The index of the first Order on the page within its window, seeding
             :attr:`~amazonorders.entity.order.Order.index` the way ``get_orders()`` does.
         :return: A list of the parsed Orders.
+        :raises AmazonOrdersEncryptedPageError: If the page's Order cards were served encrypted.
         """
         parsed = BeautifulSoup(html, config.bs4_parser)
 
@@ -828,8 +836,9 @@ class AmazonOrders:
         order_tags = select(parsed, config.selectors.ORDER_HISTORY_ENTITY_SELECTOR)
 
         if any(cls._is_csd_encrypted(order_tag, config) for order_tag in order_tags):
-            raise AmazonOrdersError("Could not parse Order history. Amazon served the page with its Order cards "
-                                    "encrypted; the same URL with disableCsd=no-js renders them readable.")
+            raise AmazonOrdersEncryptedPageError("Could not parse Order history. Amazon served the page with its "
+                                                 "Order cards encrypted; the same URL with disableCsd=no-js renders "
+                                                 "them readable.")
 
         if not order_tags:
             order_count = cls._parse_order_count(
@@ -909,7 +918,7 @@ class AmazonOrders:
         :param url: The Order history page URL.
         :param index: The index to resume from, for the error's ``meta``.
         :return: The page's response.
-        :raises AmazonOrdersError: If the fallback's Order cards are encrypted too.
+        :raises AmazonOrdersEncryptedPageError: If the fallback's Order cards are encrypted too.
         """
         constants = self.config.constants
         # The fallback never carries over from the previous page
@@ -926,9 +935,9 @@ class AmazonOrders:
             self.amazon_session.check_response(page_response, meta={"index": index})
 
             if self._has_csd_encrypted_orders(page_response.parsed, self.config):
-                raise AmazonOrdersError("Could not parse Order history. Amazon served the page and its "
-                                        "no-JavaScript fallback with the Order cards encrypted.",
-                                        meta={"index": index})
+                raise AmazonOrdersEncryptedPageError("Could not parse Order history. Amazon served the page and its "
+                                                     "no-JavaScript fallback with the Order cards encrypted.",
+                                                     meta={"index": index})
 
         return page_response
 
