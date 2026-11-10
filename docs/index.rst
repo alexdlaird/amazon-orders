@@ -243,9 +243,9 @@ AI Assistants
 An AI assistant has two ways to use ``amazon-orders``. One that runs commands uses the CLI or the library directly, just
 as shown above. Any MCP client gets the same as tools through
 |amazon-orders-mcp|_, a server built on ``amazon-orders``.
-See its README for setup.
+See its documentation for setup.
 
-The server signs you in with a browser, so it needs a display. Without one, use the CLI or library with
+The server signs you in with a browser. Without a display, sign in with the CLI first, or use the library with
 :ref:`Automating Authentication <automating-authentication>`.
 
 .. _known-limitations:
