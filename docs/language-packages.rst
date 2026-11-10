@@ -25,8 +25,7 @@ second tier above. If it isn't, reading it needs a language package.
 Sites in English
 ~~~~~~~~~~~~~~~~
 
-These sites are supported on a best-effort basis, alongside amazon.com. This list is generated from the region data
-``amazon-orders`` reads from Amazon's own pages, so it matches the version of the docs you're reading:
+These sites are supported on a best-effort basis, alongside amazon.com:
 
 .. supported-sites::
 
