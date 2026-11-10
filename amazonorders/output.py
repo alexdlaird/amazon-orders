@@ -18,6 +18,7 @@ from amazonorders.entity.order_search_result import OrderSearchResult
 from amazonorders.entity.parsable import Parsable
 from amazonorders.entity.prime_payment import PrimePayment
 from amazonorders.entity.transaction import Transaction
+from amazonorders.exception import AmazonOrdersError
 
 if TYPE_CHECKING:  # pragma: no cover
     from amazonorders.gift_cards import GiftCards
@@ -47,8 +48,13 @@ class OutputFormatter:
     ``yaml`` render as an empty list.
     """
 
+    TEXT_FORMAT = "text"
+    JSON_FORMAT = "json"
+    YAML_FORMAT = "yaml"
+    CSV_FORMAT = "csv"
+    DUMP_FORMATS = [JSON_FORMAT, YAML_FORMAT]
     #: The formats accepted by the CLI's ``--output`` option.
-    OUTPUT_FORMATS = ["text", "json", "yaml", "csv"]
+    OUTPUT_FORMATS = [TEXT_FORMAT] + DUMP_FORMATS + [CSV_FORMAT]
     #: Joins a list's values within a single CSV column.
     CSV_LIST_DELIMITER = "; "
     #: Fields tried, in order, to summarize a nested entity in a CSV column.
@@ -68,16 +74,17 @@ class OutputFormatter:
         :param entities: The entities to render.
         :param output_format: One of :attr:`OUTPUT_FORMATS`.
         :return: The rendered output.
+        :raises AmazonOrdersError: If the format isn't one of :attr:`OUTPUT_FORMATS`.
         """
-        if output_format == "text":
+        if output_format not in self.OUTPUT_FORMATS:
+            raise AmazonOrdersError(f"\"{output_format}\" isn't an output format. Supported formats: "
+                                    f"{', '.join(self.OUTPUT_FORMATS)}.")
+
+        if output_format == self.TEXT_FORMAT:
             return "\n".join(f"{self.text(entity)}\n" for entity in entities)
 
-        if output_format not in ("json", "yaml", "csv"):
-            raise ValueError(f"Unknown output format: {output_format!r}. "
-                             f"Must be one of: {', '.join(self.OUTPUT_FORMATS)}.")
-
         serialized = [entity.to_dict() for entity in entities]
-        if output_format in ("json", "yaml"):
+        if output_format in self.DUMP_FORMATS:
             return self._dump(serialized, output_format)
 
         return self._csv(serialized)
@@ -92,11 +99,12 @@ class OutputFormatter:
         :param gift_cards: The Gift Cards to render.
         :param output_format: One of :attr:`OUTPUT_FORMATS`.
         :return: The rendered output.
+        :raises AmazonOrdersError: If the format isn't one of :attr:`OUTPUT_FORMATS`.
         """
-        if output_format == "text":
+        if output_format == self.TEXT_FORMAT:
             balance = "" if gift_cards.balance is None else self.config.constants.format_currency(gift_cards.balance)
             return f"Gift Card Balance: {balance}\n\n{self.format(gift_cards.items, output_format)}"
-        elif output_format in ("json", "yaml"):
+        elif output_format in self.DUMP_FORMATS:
             return self._dump(gift_cards.to_dict(), output_format)
 
         return self.format(gift_cards.items, output_format)
@@ -281,7 +289,7 @@ Order #{order_number}
     def _dump(self,
               serialized: Any,
               output_format: str) -> str:
-        if output_format == "json":
+        if output_format == self.JSON_FORMAT:
             return f"{json.dumps(serialized, indent=2)}\n"
 
         return yaml.safe_dump(serialized, sort_keys=False, allow_unicode=True, default_flow_style=False)

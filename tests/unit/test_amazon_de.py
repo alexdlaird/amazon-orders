@@ -112,7 +112,6 @@ class TestAmazonDe(UnitTestCase):
         self.assertEqual(9.13, order.estimated_tax)
         self.assertEqual(3, order.items[0].quantity)
         self.assertEqual("Amazon.de", order.items[0].seller.name)
-        # The Subscribe & Save discount is labeled "Promotion Applied", only the Item tells it is a subscription
         self.assertIsNone(order.subscription_discount)
         self.assertEqual("Every 1 month", order.items[0].subscription_frequency)
 

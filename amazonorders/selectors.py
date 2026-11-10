@@ -155,7 +155,6 @@ class Selectors(AuthSelectors):
     FIELD_ITEM_CONDITION_PREFIX = "Condition:"
     FIELD_ITEM_SUBSCRIPTION_FREQUENCY_SELECTOR = (["[data-component='deliveryFrequency']"]
                                                   + FIELD_ITEM_TAG_ITERATOR_SELECTOR
-                                                  # Order history .item-box
                                                   + ["span.a-size-small"])
     FIELD_ITEM_SUBSCRIPTION_FREQUENCY_PREFIX = "Auto-delivered:"
     FIELD_ITEM_PRICE_SELECTOR = ["[data-component='unitPrice'] .a-text-price :not(.a-offscreen)",

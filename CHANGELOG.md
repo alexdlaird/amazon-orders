@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `AmazonOrdersChallengeUnsolvedError`, raised when a sign-in challenge form can't handle the challenge it was given, so the next one registered for it is tried.
+- `Item.subscription_frequency`, the Subscribe & Save delivery frequency of an Item (e.g. "Every 2 months").
 
 ### Changed
 
@@ -16,6 +17,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- `OutputFormatter.format()` raises an error for an unknown output format, instead of rendering CSV.
 - Bug fixes and stability improvements.
 
 ## [5.3.1](https://github.com/alexdlaird/amazon-orders/compare/5.3.0...5.3.1) - 2026-11-09
@@ -63,7 +65,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `parse_failures` on every entity, the fields that failed to parse and were left `None`, to tell them apart from fields that are `None` by design.
-- `Item.subscription_frequency`, the Subscribe & Save delivery frequency of an Item (e.g. "Every 2 months"), `None` if the Item is not part of a subscription, from the Order details and the Order history.
 
 ### Changed
 
