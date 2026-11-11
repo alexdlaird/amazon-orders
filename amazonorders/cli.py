@@ -119,6 +119,9 @@ class IOClick(amazonauth_cli.IOClick):
 @click.option("--domain",
               help="The Amazon domain to target (e.g. amazon.com, amazon.co.uk, amazon.com.au). It must be one of "
                    "Amazon's sites. Defaults to amazon.com.")
+@click.option("--account",
+              help="The Amazon account to use, by the name it was given when signing in to it (e.g. --account spouse "
+                   "login). Defaults to the account config value, or else \"default\".")
 @click.option("--progress/--no-progress", default=None,
               help="Show a running count while fetching. Defaults to showing it only in an interactive terminal, "
                    "and not with --debug.")
@@ -160,6 +163,8 @@ def amazon_orders_cli(ctx: Context,
         data["max_auth_attempts"] = kwargs["max_auth_attempts"]
     if kwargs.get("domain"):
         data["domain"] = kwargs["domain"]
+    if kwargs.get("account"):
+        data["account"] = kwargs["account"]
     ctx.obj["conf_data"] = data
 
     if ctx.invoked_subcommand == "version":
@@ -620,7 +625,7 @@ def update_config(ctx: Context,
 
     try:
         conf = AmazonOrdersConfig(config_path=ctx.obj.get("config_path"),
-                                  data={**ctx.obj["conf_data"], key: typed_value})
+                                  data={key: typed_value})
     except AmazonOrdersError as e:
         ctx.fail(f"Config \"{key}\" was not updated: {e}")
 

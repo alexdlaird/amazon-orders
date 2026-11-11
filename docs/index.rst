@@ -237,6 +237,27 @@ directory, and every other site's beside it, named for the site (e.g. ``cookies.
 ``--domain amazon.de`` leaves the ``amazon.com`` session as it is. An explicit ``cookie_jar_path`` is used for every
 site.
 
+Accounts
+--------
+
+To use more than one Amazon account, like a partner's, sign in to each other account with a name for it:
+
+.. code:: sh
+
+    amazon-orders --account spouse login --browser
+
+Then pass the same ``--account`` to read it, or ``account`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>`
+from Python. Without one, the default account is read: the account signed in to without ``--account``, which is
+named ``default``. To make another account the default:
+
+.. code:: sh
+
+    amazon-orders update-config account spouse
+
+Each account keeps its own sessions, in a directory named for it in the config directory (e.g.
+``accounts/spouse/cookies.json``), so signing in to one leaves the others as they are. An account's name is letters,
+digits, ``-`` and ``_``, in any case, and an explicit ``cookie_jar_path`` can only be used with the ``default`` account.
+
 AI Assistants
 -------------
 

@@ -7,6 +7,7 @@ import os
 from typing import Any, Dict, Optional
 
 from amazonauth.conf import (
+    DEFAULT_ACCOUNT,
     DEFAULT_COOKIE_JAR_SITE,
     ENVIRONMENT_VARIABLE_PREFIX,
     AmazonAuthConfig,
@@ -29,6 +30,7 @@ __all__ = [
     "debug_output_file_lock",
     "ENVIRONMENT_VARIABLE_PREFIX",
     "DEFAULT_COOKIE_JAR_SITE",
+    "DEFAULT_ACCOUNT",
     "AmazonOrdersConfig",
 ]
 
