@@ -493,7 +493,7 @@ class AmazonOrders:
         :param time_filter: The time filter to use. Supported values are ``"last30"`` (last 30 days),
             ``"months-3"`` (past 3 months), or ``"year-YYYY"`` (specific year). Only one of ``year`` or
             ``time_filter`` may be given.
-        :param order_filter: The order type filter to use, e.g. ``"digital-orders"`` for Kindle and other digital
+        :param order_filter: The order type filter to use, e.g. ``"digital"`` for Kindle and other digital
             purchases, which the default history doesn't include. If provided, appended alongside the time filter.
         :param progress: Called after each page of history is fetched, with the number of Orders found so far
             (before their full details are fetched, if ``full_details`` is ``True``).

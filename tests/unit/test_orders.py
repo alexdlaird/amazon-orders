@@ -1882,13 +1882,13 @@ class TestOrders(UnitTestCase):
         resp = self.given_any_order_history_exists("order-history-2018-0.html")
 
         # WHEN
-        orders = self.amazon_orders.get_orders(year=year, order_filter="digital-orders", keep_paging=False)
+        orders = self.amazon_orders.get_orders(year=year, order_filter="digital", keep_paging=False)
 
         # THEN - URL must include both timeFilter and orderFilter
         self.assertEqual(1, resp.call_count)
         request_url = resp.calls[0].request.url
         self.assertIn(f"timeFilter=year-{year}", request_url)
-        self.assertIn("orderFilter=digital-orders", request_url)
+        self.assertIn("orderFilter=digital", request_url)
         self.assertEqual(10, len(orders))
 
     @responses.activate

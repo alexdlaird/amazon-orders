@@ -133,12 +133,13 @@ class TestIntegrationGeneric(IntegrationTestCase):
     @skip_unless_digital_orders
     def test_get_orders_digital(self):
         # WHEN
-        orders = self.amazon_orders.get_orders(year=self.year, order_filter="digital-orders", keep_paging=False)
+        orders = self.amazon_orders.get_orders(year=self.year, order_filter="digital", keep_paging=False)
 
         # THEN
         self.assertGreaterEqual(len(orders), 1)
         for order in orders:
-            self.assertIsNotNone(order.order_number)
+            self.assertTrue(order.order_number.startswith("D01-"),
+                            f"{order.order_number} isn't a digital Order, so the Digital Orders filter wasn't applied")
             self.assertIsNotNone(order.order_placed_date)
 
     def test_search_orders(self):

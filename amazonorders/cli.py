@@ -208,7 +208,7 @@ def amazon_orders_cli(ctx: Context,
               help="Get the full details for each Order in the history. "
                    "This will execute an additional request per Order.")
 @click.option("--order-filter", "order_filter", default=None,
-              help="The order type filter to use, e.g. digital-orders for Kindle and other digital purchases, "
+              help="The order type filter to use, e.g. digital for Kindle and other digital purchases, "
                    "which the default history doesn't include.")
 @click.option("--family-member-id", "family_member_id", default=None,
               help="Get the Orders of this Amazon Household member, such as a linked Teen account, instead, or use "
