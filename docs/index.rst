@@ -64,7 +64,7 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==5.3.*``, not ``==5.3.0``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==5.4.*``, not ``==5.4.0``)
 to ensure you always get the latest stable release.
 
 Basic Usage
@@ -236,6 +236,27 @@ Each site has its own sign-in, so each keeps its own session: ``amazon.com``'s i
 directory, and every other site's beside it, named for the site (e.g. ``cookies.amazon.de.json``). Signing in with
 ``--domain amazon.de`` leaves the ``amazon.com`` session as it is. An explicit ``cookie_jar_path`` is used for every
 site.
+
+Accounts
+--------
+
+To use more than one Amazon account, like a partner's, sign in to each other account with a name for it:
+
+.. code:: sh
+
+    amazon-orders --account spouse login --browser
+
+Then pass the same ``--account`` to read it, or ``account`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>`
+from Python. Without one, the default account is read: the account signed in to without ``--account``, which is
+named ``default``. To make another account the default:
+
+.. code:: sh
+
+    amazon-orders update-config account spouse
+
+Each account keeps its own sessions, in a directory named for it in the config directory (e.g.
+``accounts/spouse/cookies.json``), so signing in to one leaves the others as they are. An account's name is letters,
+digits, ``-`` and ``_``, in any case, and an explicit ``cookie_jar_path`` can only be used with the ``default`` account.
 
 AI Assistants
 -------------

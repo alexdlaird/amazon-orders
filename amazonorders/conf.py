@@ -7,6 +7,7 @@ import os
 from typing import Any, Dict, Optional
 
 from amazonauth.conf import (
+    DEFAULT_ACCOUNT,
     DEFAULT_COOKIE_JAR_SITE,
     ENVIRONMENT_VARIABLE_PREFIX,
     AmazonAuthConfig,
@@ -29,6 +30,7 @@ __all__ = [
     "debug_output_file_lock",
     "ENVIRONMENT_VARIABLE_PREFIX",
     "DEFAULT_COOKIE_JAR_SITE",
+    "DEFAULT_ACCOUNT",
     "AmazonOrdersConfig",
 ]
 
@@ -83,14 +85,14 @@ class AmazonOrdersConfig(AmazonAuthConfig):
                          data)
 
     @staticmethod
-    def _default_data() -> Dict[str, Any]:
+    def default_data() -> Dict[str, Any]:
         """
         Provision the default config values.
 
         :return: The default config values.
         """
         return {
-            **AmazonAuthConfig._default_data(),
+            **AmazonAuthConfig.default_data(),
             # The session for ``amazon.com``; every other site's is kept beside it (see :attr:`cookie_jar_path`)
             "cookie_jar_path": AmazonOrdersConfig._default_cookie_jar_path(),
             "constants_class": "amazonorders.constants.Constants",
@@ -169,11 +171,11 @@ class AmazonOrdersConfig(AmazonAuthConfig):
         :raises AmazonOrdersError: If the ``language_package`` cannot be imported.
         """
         class_path = self._get(key)
-        if class_path == AmazonAuthConfig._default_data().get(key):
-            class_path = self._default_data()[key]
+        if class_path == AmazonAuthConfig.default_data().get(key):
+            class_path = self.default_data()[key]
         language_package = self._get("language_package")
         if (key not in _LANGUAGE_PACKAGE_CLASSES or not language_package or
-                class_path != self._default_data()[key]):
+                class_path != self.default_data()[key]):
             return class_path
 
         try:

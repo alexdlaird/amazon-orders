@@ -17,6 +17,7 @@ __all__ = [
     "AmazonOrdersAuthError",
     "AmazonOrdersAuthRedirectError",
     "AmazonOrdersEntityError",
+    "AmazonOrdersEncryptedPageError",
     "AmazonOrdersChallengeUnsolvedError",
     "AmazonOrdersWafSolverError",
     "AmazonOrdersBrowserNotInstalledError",
@@ -42,5 +43,13 @@ class AmazonOrdersUnavailableError(AmazonOrdersError):
 class AmazonOrdersEntityError(AmazonOrdersError):
     """
     Raised when an ``amazon-orders`` entity parsing error has occurred.
+    """
+    pass
+
+
+class AmazonOrdersEncryptedPageError(AmazonOrdersError):
+    """
+    Raised when Amazon serves an Order history page with its Order cards encrypted. The same URL with
+    ``disableCsd=no-js`` renders them readable, which ``get_orders()`` requests itself before raising this.
     """
     pass

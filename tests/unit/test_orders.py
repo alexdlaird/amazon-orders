@@ -13,7 +13,7 @@ import requests
 import responses
 
 from amazonorders.exception import AmazonOrdersError, AmazonOrdersNotFoundError, AmazonOrdersAuthRedirectError, \
-    AmazonOrdersUnavailableError
+    AmazonOrdersUnavailableError, AmazonOrdersEncryptedPageError
 from amazonorders.orders import AmazonOrders
 from amazonorders.session import AmazonSession
 from tests.unittestcase import UnitTestCase
@@ -136,7 +136,7 @@ class TestOrders(UnitTestCase):
         fallback_page = responses.add(responses.GET, f"{url}&disableCsd=no-js", body=body, status=200)
 
         # WHEN
-        with self.assertRaises(AmazonOrdersError) as cm:
+        with self.assertRaises(AmazonOrdersEncryptedPageError) as cm:
             self.amazon_orders.get_orders(year=2018, keep_paging=False)
 
         # THEN
@@ -1216,6 +1216,7 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assertIn("Could not parse Order history", str(cm.exception))
+        self.assertNotIsInstance(cm.exception, AmazonOrdersEncryptedPageError)
 
     def test_parse_orders_csd_encrypted(self):
         # GIVEN
@@ -1224,10 +1225,11 @@ class TestOrders(UnitTestCase):
             html = f.read()
 
         # WHEN
-        with self.assertRaises(AmazonOrdersError) as cm:
+        with self.assertRaises(AmazonOrdersEncryptedPageError) as cm:
             AmazonOrders.parse_orders(html, self.test_config)
 
         # THEN
+        self.assertIsInstance(cm.exception, AmazonOrdersError)
         self.assertIn("encrypted", str(cm.exception))
 
     def test_parse_orders_csd_encrypted_siege(self):
@@ -1237,7 +1239,7 @@ class TestOrders(UnitTestCase):
             html = f.read()
 
         # WHEN
-        with self.assertRaises(AmazonOrdersError) as cm:
+        with self.assertRaises(AmazonOrdersEncryptedPageError) as cm:
             AmazonOrders.parse_orders(html, self.test_config)
 
         # THEN
