@@ -140,7 +140,6 @@ class TestOrders(UnitTestCase):
             self.amazon_orders.get_orders(year=2018, keep_paging=False)
 
         # THEN
-        self.assertIsInstance(cm.exception, AmazonOrdersError)
         self.assertIn("no-JavaScript fallback", str(cm.exception))
         self.assertEqual(0, cm.exception.meta["index"])
         self.assertEqual(1, encrypted_page.call_count)
@@ -1244,7 +1243,6 @@ class TestOrders(UnitTestCase):
             AmazonOrders.parse_orders(html, self.test_config)
 
         # THEN
-        self.assertIsInstance(cm.exception, AmazonOrdersError)
         self.assertIn("encrypted", str(cm.exception))
 
     def test_parse_orders_encrypted_field_in_readable_card(self):

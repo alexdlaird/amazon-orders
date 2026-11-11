@@ -8,7 +8,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- `AmazonOrdersEncryptedPageError`, raised when an Order history page is served with its Order cards encrypted, by `parse_orders()` and by `get_orders()` when its `disableCsd=no-js` fallback is encrypted too, so a page that failed to render can be told apart from one to request again with the fallback.
+- `AmazonOrdersEncryptedPageError`, raised when Amazon serves an Order history page with its Order cards encrypted.
+
+### Changed
+
+- The `update-config` command no longer prints the value it saved.
 
 ## [5.3.2](https://github.com/alexdlaird/amazon-orders/compare/5.3.1...5.3.2) - 2026-11-10
 

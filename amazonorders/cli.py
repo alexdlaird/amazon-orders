@@ -626,7 +626,7 @@ def update_config(ctx: Context,
 
     conf.update_config(key, typed_value)
 
-    click.echo(f"Info: Config \"{key}\" updated to \"{value}\".\n")
+    click.echo(f"Info: Config \"{key}\" updated.\n")
 
 
 @amazon_orders_cli.command()
