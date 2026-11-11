@@ -6,10 +6,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.4.0...HEAD)
 
-### Changed
-
-- **Breaking:** Requires `amazon-auth` 1.0.
-
 ### Removed
 
 - The deprecated `AmazonOrders.parse_order_details()` and `parse_order_search()`, use `parse_order()` and `parse_search_orders()`.
