@@ -16,7 +16,7 @@ dependencies = [
     "PyYAML>=6.0.3",
     "python-dateutil>=2.9.0.post0",
     "pyotp>=2.9",
-    "amazon-auth>=0.3.0,<0.4",
+    "amazon-auth>=1.0.0,<2",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -89,7 +89,7 @@ amazon-orders = "amazonorders.cli:amazon_orders_cli"
 Changelog = "https://github.com/alexdlaird/amazon-orders/blob/main/CHANGELOG.md"
 Documentation = "https://amazon-orders.readthedocs.io"
 Sponsor = "https://github.com/sponsors/alexdlaird"
-"Authentication (amazon-auth)" = "https://github.com/alexdlaird/amazon-auth"
+"Authentication (amazon-auth)" = "https://amazon-auth.readthedocs.io"
 "Source Code" = "https://github.com/alexdlaird/amazon-orders"
 
 [tool.setuptools]
