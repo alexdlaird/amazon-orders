@@ -363,7 +363,7 @@ class TestCli(UnitTestCase):
                                           "--config-path", self.test_config.config_path,
                                           "--username", "some-username@gmail.com",
                                           "--password", "some-password",
-                                          "orders", "--year", year, "--order-filter", "digital-orders",
+                                          "orders", "--year", year, "--order-filter", "digital",
                                           "--single-page"])
 
         # THEN
@@ -372,7 +372,7 @@ class TestCli(UnitTestCase):
         self.assertEqual(1, resp.call_count)
         request_url = resp.calls[0].request.url
         self.assertIn(f"timeFilter=year-{year}", request_url)
-        self.assertIn("orderFilter=digital-orders", request_url)
+        self.assertIn("orderFilter=digital", request_url)
 
     @responses.activate
     def test_history_command_with_family_member_id(self):

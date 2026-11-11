@@ -42,7 +42,7 @@ class TestItem(UnitTestCase):
         parsable = Parsable(BeautifulSoup("<html />", self.test_config.bs4_parser), self.test_config)
 
         def _parse_deep():
-            return json.loads("[" * 100000 + "]" * 100000)
+            return _parse_deep()
 
         def _parse_wrong_shape():
             return BeautifulSoup(json.loads("[[]]"), self.test_config.bs4_parser)
