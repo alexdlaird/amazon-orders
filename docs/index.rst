@@ -237,8 +237,8 @@ directory, and every other site's beside it, named for the site (e.g. ``cookies.
 ``--domain amazon.de`` leaves the ``amazon.com`` session as it is. An explicit ``cookie_jar_path`` is used for every
 site.
 
-Accounts
---------
+Multiple Accounts
+-----------------
 
 To use more than one Amazon account, like a partner's, sign in to each other account with a name for it:
 
