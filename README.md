@@ -9,7 +9,7 @@
 [![GitHub License](https://img.shields.io/github/license/alexdlaird/amazon-orders)](https://github.com/alexdlaird/amazon-orders/blob/main/LICENSE)
 
 `amazon-orders` is an unofficial library that provides a Python API (and CLI) for Amazon order history, line items, and transactions.
-Signing in to Amazon is handled by [`amazon-auth`](https://github.com/alexdlaird/amazon-auth), the authentication
+Signing in to Amazon is handled by [`amazon-auth`](https://amazon-auth.readthedocs.io), the authentication
 package `amazon-orders` is built on.
 
 > **Note:** This package works by parsing data from Amazon's consumer-facing website. A periodic build validates

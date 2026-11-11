@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.4.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.4.1...HEAD)
 
 ### Removed
 
@@ -13,6 +13,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - The deprecated `AmazonOrders.get_family_members()` and `family-members` command, use `get_orders_page()`'s `household_members` and `orders`.
 - The deprecated `amazonorders.forms`, `amazonorders.contrib`, `amazonorders.region_data`, and `amazonorders.session.IODefault`, use their `amazonauth` equivalents.
 - The deprecated `amazonorders.util` `AmazonSessionResponse`, `cleanup_html_text`, `has_display`, `load_class`, `select`, and `select_one`, and `amazonorders.selectors` `Selector` and `SelectorsFromText`, use `amazonauth.util` and `amazonauth.selectors`.
+
+## [5.4.1](https://github.com/alexdlaird/amazon-orders/compare/5.4.0...5.4.1) - 2026-11-11
+
+### Changed
+
+- Requires `amazon-auth` 1.0.
 
 ## [5.4.0](https://github.com/alexdlaird/amazon-orders/compare/5.3.2...5.4.0) - 2026-11-11
 
