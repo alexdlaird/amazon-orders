@@ -52,9 +52,6 @@ anticaptcha = [
 lxml = [
     "lxml",
 ]
-captcha = [
-    "amazon-auth[captcha]",
-]
 dev = [
     "pytest",
     "coverage[toml]",
@@ -154,10 +151,6 @@ warn_unreachable = true
 warn_unused_configs = true
 strict_equality = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "redundant-self", "truthy-bool", "unused-awaitable"]
-
-[[tool.mypy.overrides]]
-module = "amazoncaptcha.*"
-ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "capsolver.*"

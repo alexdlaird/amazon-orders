@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - The deprecated `AmazonOrders.get_family_members()` and `family-members` command, use `get_orders_page()`'s `household_members` and `orders`.
 - The deprecated `amazonorders.forms`, `amazonorders.contrib`, `amazonorders.region_data`, and `amazonorders.session.IODefault`, use their `amazonauth` equivalents.
 - The deprecated `amazonorders.util` `AmazonSessionResponse`, `cleanup_html_text`, `has_display`, `load_class`, `select`, and `select_one`, and `amazonorders.selectors` `Selector` and `SelectorsFromText`, use `amazonauth.util` and `amazonauth.selectors`.
+- The `captcha` extra, since `amazon-auth` 1.1 no longer auto-solves the legacy image Captcha. To keep auto-solve, pin `amazon-auth[captcha]<1.1`.
 
 ## [5.4.1](https://github.com/alexdlaird/amazon-orders/compare/5.4.0...5.4.1) - 2026-11-11
 
