@@ -34,8 +34,8 @@ class Item(Parsable):
         #: The Item title.
         self.title: str = self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_TITLE_SELECTOR,
                                                  required=True)
-        #: The Item link. ``None`` for items without an Amazon detail page (e.g. ASINLESS Whole Foods
-        #: Market line items).
+        #: The Item link. ``None`` for items without an Amazon detail page (e.g. some Whole Foods Market line
+        #: items).
         self.link: Optional[str] = self.safe_simple_parse(selector=self.config.selectors.FIELD_ITEM_LINK_SELECTOR,
                                                           attr_name="href")
         #: The product ASIN, derived from :attr:`link`; ``None`` when the link is not a product page.
@@ -58,6 +58,10 @@ class Item(Parsable):
             selector=self.config.selectors.FIELD_ITEM_RETURN_SELECTOR,
             text_contains=self.config.selectors.FIELD_ITEM_RETURN_TEXT,
             parse_date=True)
+        #: The Item's Subscribe & Save delivery frequency (e.g. "Every 2 months"), ``None`` if it isn't a subscription.
+        self.subscription_frequency: Optional[str] = self.safe_simple_parse(
+            selector=self.config.selectors.FIELD_ITEM_SUBSCRIPTION_FREQUENCY_SELECTOR,
+            prefix_split=self.config.selectors.FIELD_ITEM_SUBSCRIPTION_FREQUENCY_PREFIX)
         #: The Item image URL.
         self.image_link: Optional[str] = self.safe_simple_parse(
             selector=self.config.selectors.FIELD_ITEM_IMG_LINK_SELECTOR,

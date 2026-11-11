@@ -16,7 +16,7 @@ dependencies = [
     "PyYAML>=6.0.3",
     "python-dateutil>=2.9.0.post0",
     "pyotp>=2.9",
-    "amazon-auth>=0.2.3,<0.3",
+    "amazon-auth>=1.0,<2",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",

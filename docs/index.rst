@@ -64,7 +64,7 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==5.3.*``, not ``==5.3.0``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==5.4.*``, not ``==5.4.0``)
 to ensure you always get the latest stable release.
 
 Basic Usage
@@ -107,7 +107,7 @@ what fields are only populated with full details.
 Command Line Usage
 ------------------
 
-You can also run any command available to the main Python interface from the command line:
+You can also run most of the main Python interface from the command line:
 
 .. code:: sh
 
@@ -237,15 +237,36 @@ directory, and every other site's beside it, named for the site (e.g. ``cookies.
 ``--domain amazon.de`` leaves the ``amazon.com`` session as it is. An explicit ``cookie_jar_path`` is used for every
 site.
 
+Multiple Accounts
+-----------------
+
+To use more than one Amazon account, like a partner's, sign in to each other account with a name for it:
+
+.. code:: sh
+
+    amazon-orders --account spouse login --browser
+
+Then pass the same ``--account`` to read it, or ``account`` in the :class:`config <amazonorders.conf.AmazonOrdersConfig>`
+from Python. Without one, the default account is read: the account signed in to without ``--account``, which is
+named ``default``. To make another account the default:
+
+.. code:: sh
+
+    amazon-orders update-config account spouse
+
+Each account keeps its own sessions, in a directory named for it in the config directory (e.g.
+``accounts/spouse/cookies.json``), so signing in to one leaves the others as they are. An account's name is letters,
+digits, ``-`` and ``_``, in any case, and an explicit ``cookie_jar_path`` can only be used with the ``default`` account.
+
 AI Assistants
 -------------
 
 An AI assistant has two ways to use ``amazon-orders``. One that runs commands uses the CLI or the library directly, just
 as shown above. Any MCP client gets the same as tools through
 |amazon-orders-mcp|_, a server built on ``amazon-orders``.
-See its README for setup.
+See its documentation for setup.
 
-The server signs you in with a browser, so it needs a display. Without one, use the CLI or library with
+The server signs you in with a browser. Without a display, sign in with the CLI first, or use the library with
 :ref:`Automating Authentication <automating-authentication>`.
 
 .. _known-limitations:
@@ -254,11 +275,6 @@ Known Limitations
 -----------------
 
 - Amazon Business accounts are not supported
-- Device not remembered for OTP
-    - Amazon will sometimes re-prompt for OTP even when a device has been remembered.
-    - The recommended workaround for this is persisting the :attr:`~amazonorders.session.AmazonSession.otp_secret_key`
-      in the config or the environment so that re-prompts are auto-solved.
-    - See `issue #55 <https://github.com/alexdlaird/amazon-orders/issues/55>`_ for more details.
 
 Dive Deeper
 ===========

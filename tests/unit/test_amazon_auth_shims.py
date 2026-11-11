@@ -20,6 +20,7 @@ class TestAmazonAuthShims(UnitTestCase):
             "AmazonOrdersError": "AmazonAuthError",
             "AmazonOrdersAuthError": "AmazonAuthSignInError",
             "AmazonOrdersAuthRedirectError": "AmazonAuthRedirectError",
+            "AmazonOrdersChallengeUnsolvedError": "AmazonAuthChallengeUnsolvedError",
             "AmazonOrdersWafSolverError": "AmazonAuthWafSolverError",
             "AmazonOrdersBrowserNotInstalledError": "AmazonAuthBrowserNotInstalledError",
         }

@@ -43,6 +43,10 @@ class UnitTestCase(TestCase):
         # Reset environment variables that were temporarily cleared
         os.environ.update(self.cleared_environment)
 
+    def given_resource(self, *path):
+        with open(os.path.join(self.RESOURCES_DIR, *path), "r", encoding="utf-8") as f:
+            return f.read()
+
     def given_unauthenticated_home_page(self,
                                         auth_file="unauth-index.html"):
         with open(os.path.join(self.RESOURCES_DIR, "auth", auth_file), "r", encoding="utf-8") as f:

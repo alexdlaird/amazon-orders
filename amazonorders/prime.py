@@ -64,10 +64,9 @@ class AmazonPrime:
         """
         Get every charge in the Prime membership payment history.
 
-        This is best-effort: Membership Central serves an error page in place of the payments for a few minutes after
-        many requests in a row, like the Order history with full details. If that happens,
-        :class:`~amazonorders.exception.AmazonOrdersUnavailableError` is raised, and the page fetched in a browser can
-        be parsed with :func:`parse_prime_payments`.
+        This is best-effort: if Amazon shows an error page in place of the payments,
+        :class:`~amazonorders.exception.AmazonOrdersUnavailableError` is raised. Try again later, or parse the page
+        fetched in a browser with :func:`parse_prime_payments`.
 
         :return: A list of the PrimePayments, newest first.
         """

@@ -32,7 +32,7 @@ command:
 
 .. code-block:: shell
 
-  amazon-orders --debug history
+  amazon-orders --debug orders
 
 Integrating with Amazon.com via scraping is complicated and requires ``form`` data from the
 website's HTML. Before submitting a bug report or requesting a new feature, try running
@@ -93,7 +93,7 @@ something else.
 To see what the affected page looks like, `enable debug mode`_, then rerun your code. Running in
 ``debug`` mode will save parsed HTML files locally for you so that you can inspect the DOM and compare it to
 the parsing code within ``amazon-orders``. This may give you some insight in to what changed.
-In ``amazon-orders``, look for code that uses `BeautifulSoup's CSS select() methods <https://www.crummy.com/software/BeautifulSoup/bs4/doc/#css-selectors-through-the-css-property>`_.
+In ``amazon-orders``, compare the page to the selectors in :class:`~amazonorders.selectors.Selectors`.
 
 More advanced troubleshooting can be done by extending :class:`~amazonorders.selectors.Selectors`,
 :class:`~amazonorders.constants.Constants`, and :class:`~amazonorders.transactions.TransactionsPage`, for instance to
@@ -109,14 +109,15 @@ Found a Missing / Broken Field on an Entity
 
 If you find that a useful field on an entity (for instance, an :class:`~amazonorders.entity.order.Order` or an
 :class:`~amazonorders.entity.item.Item`) is missing (or one that exists isn't being populated for you), consider
-contributing it! Fields are populated by simple ``_parse()`` methods on the entity, and many fields are able to
-utilize :class:`~amazonorders.entity.parsable.Parsable`'s :func:`~amazonorders.entity.parsable.Parsable.simple_parse`
-function, which just needs a selector.
+contributing it! Each field is populated by a method on the entity named for it, ``_parse_<field>``, passed to
+:class:`~amazonorders.entity.parsable.Parsable`'s :func:`~amazonorders.entity.parsable.Parsable.safe_parse`, and many
+fields are able to utilize its :func:`~amazonorders.entity.parsable.Parsable.simple_parse` function instead, which just
+needs a selector.
 
 To tell a field that broke from one the page doesn't have, check the entity's
 :attr:`~amazonorders.entity.parsable.Parsable.parse_failures`, which lists the fields that could not be parsed.
 
-If you can't fetch the field's value with just a selector, implementing a new ``_parse()`` function on the
-entity will give you a lot more flexibility.
+If you can't fetch the field's value with just a selector, implementing a new ``_parse_<field>`` method on the entity
+will give you a lot more flexibility.
 
 Once you've implemented and tested the new field, `submit a PR <https://github.com/alexdlaird/amazon-orders/compare>`_!

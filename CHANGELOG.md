@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.3.0...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.4.0...HEAD)
+
+### Changed
+
+- **Breaking:** Requires `amazon-auth` 1.0.
 
 ### Removed
 
@@ -13,6 +17,40 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - The deprecated `AmazonOrders.get_family_members()` and `family-members` command, use `get_orders_page()`'s `household_members` and `orders`.
 - The deprecated `amazonorders.forms`, `amazonorders.contrib`, `amazonorders.region_data`, and `amazonorders.session.IODefault`, use their `amazonauth` equivalents.
 - The deprecated `amazonorders.util` `AmazonSessionResponse`, `cleanup_html_text`, `has_display`, `load_class`, `select`, and `select_one`, and `amazonorders.selectors` `Selector` and `SelectorsFromText`, use `amazonauth.util` and `amazonauth.selectors`.
+
+## [5.4.0](https://github.com/alexdlaird/amazon-orders/compare/5.3.2...5.4.0) - 2026-11-11
+
+### Added
+
+- Multiple Amazon accounts, each with its own sessions, chosen with `--account` or the `account` config key.
+- `AmazonOrdersEncryptedPageError`, raised when Amazon serves an Order history page with its Order cards encrypted.
+
+### Changed
+
+- The `update-config` command saves only the key it's given, not the other options it's run with, and no longer prints the value it saved.
+
+## [5.3.2](https://github.com/alexdlaird/amazon-orders/compare/5.3.1...5.3.2) - 2026-11-10
+
+### Added
+
+- `AmazonOrdersChallengeUnsolvedError`, raised when a sign-in challenge form can't handle the challenge it was given, so the next one registered for it is tried.
+- `Item.subscription_frequency`, the Subscribe & Save delivery frequency of an Item (e.g. "Every 2 months").
+
+### Changed
+
+- Documentation improvements.
+
+### Fixed
+
+- `OutputFormatter.format()` raises an error for an unknown output format, instead of rendering CSV.
+- Bug fixes and stability improvements.
+
+## [5.3.1](https://github.com/alexdlaird/amazon-orders/compare/5.3.0...5.3.1) - 2026-11-09
+
+### Deprecated
+
+- `AmazonOrders.parse_order_details()` and `parse_order_search()`, renamed to `parse_order()` and `parse_search_orders()`.
+- The `order-transactions` command, use `transactions --order-id`.
 
 ### Fixed
 

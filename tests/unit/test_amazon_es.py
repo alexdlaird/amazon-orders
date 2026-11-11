@@ -2,7 +2,6 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import datetime
-import os
 
 from amazonorders.conf import AmazonOrdersConfig
 from amazonorders.orders import AmazonOrders
@@ -110,10 +109,6 @@ class TestAmazonEs(UnitTestCase):
         self.assertEqual(13.49, order.items[0].price)
         self.assertEqual(2, order.items[0].quantity)
         self.assertEqual("Amazon.es", order.items[0].seller.name)
-
-    def given_resource(self, *path):
-        with open(os.path.join(self.RESOURCES_DIR, *path), "r", encoding="utf-8") as f:
-            return f.read()
 
     def given_order_history(self, name):
         return AmazonOrders.parse_orders(self.given_resource("orders", "es", f"order-history-{name}.html"),

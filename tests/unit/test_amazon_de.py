@@ -4,7 +4,6 @@ __license__ = "MIT"
 import datetime
 import json
 import logging
-import os
 from unittest.mock import patch
 
 import responses
@@ -39,6 +38,14 @@ class TestAmazonDe(UnitTestCase):
         self.assertEqual("Test Item 1", order.items[0].title)
         self.assertEqual("Delivered 01 September", orders[3].shipments[0].delivery_status)
         self.assertEqual([14.37, 0.0, 45.76, 22.52], [o.grand_total for o in orders])
+
+    def test_order_history_subscription_frequency(self):
+        # WHEN
+        orders = self.given_order_history("2026-0")
+
+        # THEN
+        self.assertEqual([[None, None], [None], ["Every 1 month"], [None]],
+                         [[item.subscription_frequency for item in order.items] for order in orders])
 
     def test_order_history_older_year(self):
         # WHEN
@@ -105,6 +112,8 @@ class TestAmazonDe(UnitTestCase):
         self.assertEqual(9.13, order.estimated_tax)
         self.assertEqual(3, order.items[0].quantity)
         self.assertEqual("Amazon.de", order.items[0].seller.name)
+        self.assertIsNone(order.subscription_discount)
+        self.assertEqual("Every 1 month", order.items[0].subscription_frequency)
 
     def test_order_details_multiple_shipments_and_gift_card(self):
         # WHEN
@@ -267,10 +276,6 @@ class TestAmazonDe(UnitTestCase):
             "domain": "amazon.de",
             **data,
         })
-
-    def given_resource(self, *path):
-        with open(os.path.join(self.RESOURCES_DIR, *path), "r", encoding="utf-8") as f:
-            return f.read()
 
     def given_order_history(self, name):
         return AmazonOrders.parse_orders(self.given_resource("orders", "de", f"order-history-{name}.html"),

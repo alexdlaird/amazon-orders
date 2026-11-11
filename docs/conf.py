@@ -251,7 +251,7 @@ rst_epilog = """
 .. |amazon-auth| replace:: ``amazon-auth``
 .. _amazon-auth: https://amazon-auth.readthedocs.io
 .. |amazon-orders-mcp| replace:: ``amazon-orders-mcp``
-.. _amazon-orders-mcp: https://github.com/alexdlaird/amazon-orders-mcp#readme
+.. _amazon-orders-mcp: https://amazon-orders-mcp.readthedocs.io
 """
 
 

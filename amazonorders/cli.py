@@ -119,6 +119,9 @@ class IOClick(amazonauth_cli.IOClick):
 @click.option("--domain",
               help="The Amazon domain to target (e.g. amazon.com, amazon.co.uk, amazon.com.au). It must be one of "
                    "Amazon's sites. Defaults to amazon.com.")
+@click.option("--account",
+              help="The Amazon account to use, by the name it was given when signing in to it (e.g. --account spouse "
+                   "login). Defaults to the account config value, or else \"default\".")
 @click.option("--progress/--no-progress", default=None,
               help="Show a running count while fetching. Defaults to showing it only in an interactive terminal, "
                    "and not with --debug.")
@@ -160,6 +163,8 @@ def amazon_orders_cli(ctx: Context,
         data["max_auth_attempts"] = kwargs["max_auth_attempts"]
     if kwargs.get("domain"):
         data["domain"] = kwargs["domain"]
+    if kwargs.get("account"):
+        data["account"] = kwargs["account"]
     ctx.obj["conf_data"] = data
 
     if ctx.invoked_subcommand == "version":
@@ -208,7 +213,7 @@ def amazon_orders_cli(ctx: Context,
 @click.option("--family-member-id", "family_member_id", default=None,
               help="Get the Orders of this Amazon Household member, such as a linked Teen account, instead, or use "
                    "self for only your own Orders. The members' IDs are listed after the Orders.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def orders(ctx: Context,
            **kwargs: Any) -> None:
@@ -284,7 +289,7 @@ Order History for {filter_description}{optional_start_index}{optional_full_detai
                                                                     time=int(end_time - start_time)), err=True)
         if orders_page.household_members:
             click.echo("Amazon Household members, for --family-member-id:\n\n{members}".format(
-                members=formatter.format(orders_page.household_members, "text")), err=True)
+                members=formatter.format(orders_page.household_members, OutputFormatter.TEXT_FORMAT)), err=True)
     except AmazonOrdersAuthRedirectError:
         IOClick.echo_session_expired()
     except AmazonOrdersError as e:
@@ -295,7 +300,7 @@ Order History for {filter_description}{optional_start_index}{optional_full_detai
 @amazon_orders_cli.command()
 @click.pass_context
 @click.argument("order_id")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def order(ctx: Context,
           order_id: str,
@@ -330,7 +335,7 @@ def order(ctx: Context,
 @click.option("--download", "download_dir", type=click.Path(file_okay=False),
               help="Save the documents (HTML and PDFs) to this directory, replacing any of the same name from an "
                    "earlier run.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def invoices(ctx: Context,
              order_ids: Tuple[str, ...],
@@ -380,7 +385,7 @@ def invoices(ctx: Context,
 @click.argument("query")
 @click.option("--single-page", is_flag=True, default=False,
               help="Only one page should be fetched.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def search_orders(ctx: Context,
                   query: str,
@@ -418,7 +423,7 @@ def search_orders(ctx: Context,
 
 @amazon_orders_cli.command("prime-payments")
 @click.pass_context
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def prime_payments(ctx: Context, **kwargs: Any) -> None:
     """
@@ -455,7 +460,7 @@ def prime_payments(ctx: Context, **kwargs: Any) -> None:
               help="The number of days of Transactions to get. Ignored with --order-id.")
 @click.option("--order-id",
               help="Get only the Transactions for this Amazon Order ID.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def transactions(ctx: Context, **kwargs: Any) -> None:
     """
@@ -506,7 +511,7 @@ def transactions(ctx: Context, **kwargs: Any) -> None:
               help="The number of days of Gift Card activity to get. 0 gets only the balance (and today's activity).")
 @click.option("--single-page", is_flag=True, default=False,
               help="Only one page should be fetched.")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default="text",
+@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
               help="The output format. Defaults to text.")
 def gift_cards(ctx: Context, **kwargs: Any) -> None:
     """
@@ -541,7 +546,7 @@ Gift Cards, with {days} days of activity
 
         click.echo(config.output_cls(config).format_gift_cards(gift_card_results, output))
 
-        if output == "csv" and gift_card_results.balance is not None:
+        if output == OutputFormatter.CSV_FORMAT and gift_card_results.balance is not None:
             click.echo(f"Gift Card Balance: {config.constants.format_currency(gift_card_results.balance)}",
                        err=True)
         click.echo(
@@ -573,13 +578,13 @@ def update_config(ctx: Context,
 
     try:
         conf = AmazonOrdersConfig(config_path=ctx.obj.get("config_path"),
-                                  data={**ctx.obj["conf_data"], key: typed_value})
+                                  data={key: typed_value})
     except AmazonOrdersError as e:
         ctx.fail(f"Config \"{key}\" was not updated: {e}")
 
     conf.update_config(key, typed_value)
 
-    click.echo(f"Info: Config \"{key}\" updated to \"{value}\".\n")
+    click.echo(f"Info: Config \"{key}\" updated.\n")
 
 
 @amazon_orders_cli.command()
