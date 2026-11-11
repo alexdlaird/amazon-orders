@@ -25,11 +25,11 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Internet :: WWW/HTTP :: Browsers",
     "Topic :: Office/Business :: Financial",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -51,9 +51,6 @@ anticaptcha = [
 ]
 lxml = [
     "lxml",
-]
-captcha = [
-    "amazon-auth[captcha]",
 ]
 dev = [
     "pytest",
@@ -154,10 +151,6 @@ warn_unreachable = true
 warn_unused_configs = true
 strict_equality = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "redundant-self", "truthy-bool", "unused-awaitable"]
-
-[[tool.mypy.overrides]]
-module = "amazoncaptcha.*"
-ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "capsolver.*"

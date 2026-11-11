@@ -4,7 +4,23 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/5.4.1...HEAD)
+## [Unreleased](https://github.com/alexdlaird/amazon-orders/compare/6.0.0...HEAD)
+
+## [6.0.0](https://github.com/alexdlaird/amazon-orders/compare/5.4.1...6.0.0) - 2026-11-11
+
+### Added
+
+- Support for Python 3.14 and 3.15.
+- Documentation improvements.
+
+### Removed
+
+- The deprecated `AmazonOrders.parse_order_details()` and `parse_order_search()`, use `parse_order()` and `parse_search_orders()`.
+- The deprecated `order-transactions` command, use `transactions --order-id`.
+- The deprecated `AmazonOrders.get_family_members()` and `family-members` command, use `get_orders_page()`'s `household_members` and `orders`.
+- The deprecated `amazonorders.forms`, `amazonorders.contrib`, `amazonorders.region_data`, and `amazonorders.session.IODefault`, use their `amazonauth` equivalents.
+- The deprecated `amazonorders.util` `AmazonSessionResponse`, `cleanup_html_text`, `has_display`, `load_class`, `select`, and `select_one`, and `amazonorders.selectors` `Selector` and `SelectorsFromText`, use `amazonauth.util` and `amazonauth.selectors`.
+- The `captcha` extra, since `amazon-auth` 1.1 no longer auto-solves the legacy image Captcha. To keep auto-solve, pin `amazon-auth[captcha]<1.1`.
 
 ## [5.4.1](https://github.com/alexdlaird/amazon-orders/compare/5.4.0...5.4.1) - 2026-11-11
 

@@ -45,10 +45,6 @@ Sign-in is |amazon-auth|_'s. :class:`~amazonorders.session.AmazonSession` is its
     :undoc-members:
     :show-inheritance:
 
-.. deprecated:: 5.3.0
-    ``amazonorders.forms``, ``amazonorders.contrib``, ``amazonorders.region_data``, and
-    ``amazonorders.session.IODefault`` will be removed in 6.0. Use ``amazonauth.forms``, ``amazonauth.contrib``,
-    ``amazonauth.region_data``, and ``amazonauth.session.IODefault`` instead.
 
 Configuration
 -------------
@@ -228,7 +224,3 @@ Utility Functions
     :undoc-members:
     :show-inheritance:
 
-.. deprecated:: 5.3.0
-    ``amazonorders.util``'s ``AmazonSessionResponse``, ``cleanup_html_text``, ``has_display``, ``load_class``,
-    ``select``, and ``select_one``, and ``amazonorders.selectors``' ``Selector`` and ``SelectorsFromText``, will be
-    removed in 6.0. Use ``amazonauth.util`` and ``amazonauth.selectors`` instead.

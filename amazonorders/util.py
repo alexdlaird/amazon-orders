@@ -4,12 +4,10 @@ __license__ = "MIT"
 import logging
 import re
 import unicodedata
-import warnings
 from datetime import date, datetime
-from typing import Any, Iterable, Optional, Union
+from typing import Iterable, Optional, Union
 from urllib.parse import SplitResult, parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
-from amazonauth import util as amazonauth_util
 from dateutil import parser
 
 
@@ -217,11 +215,3 @@ def attribute_text(value: Union[str, Iterable[str]]) -> str:
         return value
 
     return " ".join(value)
-
-
-def __getattr__(name: str) -> Any:
-    if name in ("AmazonSessionResponse", "cleanup_html_text", "has_display", "load_class", "select", "select_one"):
-        warnings.warn(f"amazonorders.util.{name} is deprecated and will be removed in 6.0. Use "
-                      f"amazonauth.util.{name} instead.", DeprecationWarning, stacklevel=2)
-        return getattr(amazonauth_util, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

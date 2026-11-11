@@ -1882,13 +1882,13 @@ class TestOrders(UnitTestCase):
         resp = self.given_any_order_history_exists("order-history-2018-0.html")
 
         # WHEN
-        orders = self.amazon_orders.get_orders(year=year, order_filter="digital-orders", keep_paging=False)
+        orders = self.amazon_orders.get_orders(year=year, order_filter="digital", keep_paging=False)
 
         # THEN - URL must include both timeFilter and orderFilter
         self.assertEqual(1, resp.call_count)
         request_url = resp.calls[0].request.url
         self.assertIn(f"timeFilter=year-{year}", request_url)
-        self.assertIn("orderFilter=digital-orders", request_url)
+        self.assertIn("orderFilter=digital", request_url)
         self.assertEqual(10, len(orders))
 
     @responses.activate
@@ -1954,37 +1954,6 @@ class TestOrders(UnitTestCase):
         self.assertEqual([member.to_dict() for member in page.household_members],
                          page.to_dict()["household_members"])
 
-    @responses.activate
-    def test_deprecated_get_family_members(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        resp = self.given_family_members_page_exists("order-history-family-members-snippet.html")
-
-        # WHEN
-        with self.assertWarns(DeprecationWarning):
-            members = self.amazon_orders.get_family_members()
-
-        # THEN
-        self.assertEqual(1, resp.call_count)
-        self.assertEqual([("A1EXAMPLETEEN1", "Jane Doe"), ("A2EXAMPLETEEN2", "John Doe")],
-                         [(member.id, member.name) for member in members])
-
-    @responses.activate
-    def test_deprecated_get_family_members_household_filter(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        resp = self.given_family_members_page_exists("order-history-household-members-snippet.html")
-
-        # WHEN
-        with self.assertWarns(DeprecationWarning):
-            members = self.amazon_orders.get_family_members()
-
-        # THEN
-        self.assertEqual(1, resp.call_count)
-        self.assertEqual([("AAAAAAAAAAEXAMPLETOKENJANExxxxxxxxxxxxxxxxxxxx", "Jane Doe"),
-                          ("AAAAAAAAAAEXAMPLETOKENJOHNxxxxxxxxxxxxxxxxxxxx", "John Doe")],
-                         [(member.id, member.name) for member in members])
-
     def test_parse_family_members_strips_nul_byte(self):
         # GIVEN
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-family-members-snippet.html"), "r",
@@ -1996,23 +1965,6 @@ class TestOrders(UnitTestCase):
 
         # THEN
         self.assertEqual(["Jane Doe", "John Doe"], [member.name for member in members])
-
-    @responses.activate
-    def test_deprecated_get_family_members_none(self):
-        # GIVEN
-        self.amazon_session.is_authenticated = True
-        self.given_family_members_page_exists("order-history-2018-0.html")
-
-        # WHEN
-        with self.assertWarns(DeprecationWarning):
-            members = self.amazon_orders.get_family_members()
-
-        # THEN
-        self.assertEqual([], members)
-
-    def test_deprecated_get_family_members_unauthenticated(self):
-        with self.assertRaises(AmazonOrdersError), self.assertWarns(DeprecationWarning):
-            self.amazon_orders.get_family_members()
 
     @responses.activate
     def test_get_orders_digital_empty_window(self):

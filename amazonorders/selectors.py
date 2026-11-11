@@ -2,8 +2,6 @@ __copyright__ = "Copyright (c) 2024-2025 Alex Laird"
 __license__ = "MIT"
 
 import re
-import warnings
-from typing import Any
 
 from amazonauth import selectors as amazonauth_selectors
 from amazonauth.selectors import AuthSelectors
@@ -402,11 +400,3 @@ class Selectors(AuthSelectors):
     FIELD_GIFT_CARD_ACTIVITY_CLOSING_BALANCE_SELECTOR = "td:nth-of-type(4)"
     FIELD_GIFT_CARD_ACTIVITY_ORDER_NUMBER_SELECTOR = "td:nth-of-type(2) a.a-link-normal span"
     FIELD_GIFT_CARD_ACTIVITY_ORDER_LINK_SELECTOR = "td:nth-of-type(2) a.a-link-normal"
-
-
-def __getattr__(name: str) -> Any:
-    if name in ("Selector", "SelectorsFromText"):
-        warnings.warn(f"amazonorders.selectors.{name} is deprecated and will be removed in 6.0. Use "
-                      f"amazonauth.selectors.{name} instead.", DeprecationWarning, stacklevel=2)
-        return getattr(amazonauth_selectors, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

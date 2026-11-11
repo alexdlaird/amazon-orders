@@ -208,7 +208,7 @@ def amazon_orders_cli(ctx: Context,
               help="Get the full details for each Order in the history. "
                    "This will execute an additional request per Order.")
 @click.option("--order-filter", "order_filter", default=None,
-              help="The order type filter to use, e.g. digital-orders for Kindle and other digital purchases, "
+              help="The order type filter to use, e.g. digital for Kindle and other digital purchases, "
                    "which the default history doesn't include.")
 @click.option("--family-member-id", "family_member_id", default=None,
               help="Get the Orders of this Amazon Household member, such as a linked Teen account, instead, or use "
@@ -498,53 +498,6 @@ def transactions(ctx: Context, **kwargs: Any) -> None:
         click.echo(
             "... {total} Transactions parsed in {time} seconds.\n".format(total=len(transaction_list),
                                                                           time=int(end_time - start_time)), err=True)
-    except AmazonOrdersAuthRedirectError:
-        IOClick.echo_session_expired()
-    except AmazonOrdersError as e:
-        logger.debug("An error occurred.", exc_info=True)
-        ctx.fail(str(e))
-
-
-@amazon_orders_cli.command("order-transactions", hidden=True, deprecated=True)
-@click.pass_context
-@click.argument("order_id")
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
-              help="The output format. Defaults to text.")
-def order_transactions(ctx: Context,
-                       order_id: str,
-                       **kwargs: Any) -> None:
-    """
-    Deprecated, use transactions --order-id instead.
-    """
-    ctx.invoke(transactions, order_id=order_id, output=kwargs["output"])
-
-
-@amazon_orders_cli.command("family-members", hidden=True, deprecated=True)
-@click.pass_context
-@click.option("-o", "--output", type=click.Choice(OutputFormatter.OUTPUT_FORMATS), default=OutputFormatter.TEXT_FORMAT,
-              help="The output format. Defaults to text.")
-def family_members(ctx: Context, **kwargs: Any) -> None:
-    """
-    Deprecated, use orders instead, which lists the Amazon Household members after the Orders.
-    """
-    amazon_session = ctx.obj["amazon_session"]
-
-    try:
-        CliAuth(amazon_session).authenticate()
-
-        config = ctx.obj["conf"]
-        amazon_orders = AmazonOrders(amazon_session,
-                                     config=config)
-
-        start_time = time.time()
-        members = amazon_orders.get_family_members()
-        end_time = time.time()
-
-        click.echo(config.output_cls(config).format(members, kwargs["output"]))
-
-        click.echo(
-            "... {total} Amazon Household members parsed in {time} seconds.\n".format(
-                total=len(members), time=int(end_time - start_time)), err=True)
     except AmazonOrdersAuthRedirectError:
         IOClick.echo_session_expired()
     except AmazonOrdersError as e:

@@ -64,7 +64,7 @@ using ``pip``:
 
 That's it! ``amazon-orders`` is now available as a package to your Python projects and from the command line.
 
-If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==5.4.*``, not ``==5.4.0``)
+If pinning, be sure to use a wildcard for the `minor version <https://semver.org/>`_ (e.g. ``==6.0.*``, not ``==6.0.0``)
 to ensure you always get the latest stable release.
 
 Basic Usage
@@ -212,14 +212,6 @@ a headless browser, install with the ``browser`` extra:
     pip install amazon-orders[browser]
 
 See :doc:`browser` for setup.
-
-For **legacy Captcha auto-solve** on Python <=3.12, install with ``captcha`` extra:
-
-.. code:: sh
-
-    pip install amazon-orders[captcha]
-
-See :ref:`amazonauth:login-challenges` for details.
 
 Languages and Regions
 ---------------------

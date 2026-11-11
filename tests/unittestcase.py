@@ -308,16 +308,6 @@ class UnitTestCase(TestCase):
                 status=200,
             )
 
-    def given_family_members_page_exists(self, order_history_html_file):
-        with open(os.path.join(self.RESOURCES_DIR, "orders", order_history_html_file), "r",
-                  encoding="utf-8") as f:
-            return responses.add(
-                responses.GET,
-                self.test_config.constants.ORDER_HISTORY_URL,
-                body=f.read(),
-                status=200,
-            )
-
     def given_order_history_page_exists(self, status=200):
         with open(os.path.join(self.RESOURCES_DIR, "orders", "order-history-2018-0.html"), "r",
                   encoding="utf-8") as f:
