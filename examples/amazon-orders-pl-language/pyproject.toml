@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "amazon-orders-pl-language"
+version = "0.1.0"
+description = "Polish language package for amazon-orders"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["amazon-orders>=6.0,<7"]
+
+[tool.setuptools]
+packages = ["amazon_orders_pl_language"]
